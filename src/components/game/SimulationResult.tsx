@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -13,8 +13,18 @@ interface ConfettiPiece {
   duration: number;
 }
 
+interface MatchDetail {
+  matchday: number;
+  opponent: string;
+  isHome: boolean;
+  homeGoals: number;
+  awayGoals: number;
+  result: 'W' | 'D' | 'L';
+}
+
 export default function SimulationResult() {
   const { seasonResult, resetGame } = useGameStore();
+  const [showMatches, setShowMatches] = useState(false);
 
   const shouldConfetti = seasonResult
     ? ((seasonResult as { position: number }).position === 1 || (seasonResult as { wins: number }).wins === 30)
@@ -23,7 +33,7 @@ export default function SimulationResult() {
   const confetti = useMemo<ConfettiPiece[]>(() => {
     if (!shouldConfetti) return [];
     const emojis = ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊'];
-    return Array.from({ length: 20 }, (_, i) => ({
+    return Array.from({ length: 24 }, (_, i) => ({
       id: i,
       emoji: emojis[i % emojis.length],
       x: Math.random() * 100,
@@ -34,17 +44,43 @@ export default function SimulationResult() {
 
   const handleShare = useCallback(() => {
     if (!seasonResult) return;
-    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number };
-    const text = `🏆 30-0 RPL\n${r.wins}В ${r.draws}Н ${r.losses}П · ${r.points} очков · ${r.position} место\nМожешь лучше?`;
+    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string };
+    const text = `🏆 30-0 RPL\nФормация: ${r.formation}\n${r.wins}В ${r.draws}Н ${r.losses}П · ${r.points} очков · ${r.position} место\nМожешь лучше?`;
+
+    // Try Telegram WebApp share first
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      try {
+        window.Telegram.WebApp.openTelegramLink(
+          `https://t.me/share/url?url=${encodeURIComponent('https://30-0.app')}&text=${encodeURIComponent(text)}`,
+        );
+        return;
+      } catch {
+        // fall through to navigator.share
+      }
+    }
+
     if (navigator.share) {
-      navigator.share({
-        title: '30-0 RPL',
-        text,
-      }).catch(() => {});
+      navigator.share({ title: '30-0 RPL', text }).catch(() => {});
     } else {
       navigator.clipboard.writeText(text).catch(() => {});
     }
   }, [seasonResult]);
+
+  // Calculate win streak before early return to satisfy hooks rules
+  const matches = (seasonResult as { matches?: MatchDetail[] } | null)?.matches || [];
+  const winStreak = useMemo(() => {
+    let max = 0;
+    let current = 0;
+    for (const m of matches) {
+      if (m.result === 'W') {
+        current++;
+        max = Math.max(max, current);
+      } else {
+        current = 0;
+      }
+    }
+    return max;
+  }, [matches]);
 
   if (!seasonResult) return null;
 
@@ -68,12 +104,17 @@ export default function SimulationResult() {
       goalDifference: number;
       points: number;
     }>;
+    matches?: MatchDetail[];
     formation: string;
     difficulty: string;
+    managerName?: string | null;
+    managerRating?: number | null;
+    squadRating?: number;
   };
 
   const isChampion = result.position === 1;
-  const isPerfect = result.wins === 30;
+  const isPerfect = result.wins === 30 && result.draws === 0 && result.losses === 0;
+  const isUnbeaten = result.losses === 0;
 
   const getMedalColor = (pos: number) => {
     if (pos === 1) return '🥇';
@@ -97,6 +138,8 @@ export default function SimulationResult() {
     if (pos <= 10) return '#f97316';
     return '#ef4444';
   };
+
+  const matchesList = result.matches || [];
 
   return (
     <div className="space-y-6 animate-fade-in-up relative">
@@ -163,6 +206,26 @@ export default function SimulationResult() {
           <div className="text-sm font-bold text-[#e2e8f0] mt-1">
             {getPositionLabel(result.position)}
           </div>
+          <div className="text-xs text-[#94a3b8] mt-1">место в таблице</div>
+        </motion.div>
+      )}
+
+      {/* Manager info (if used) */}
+      {result.managerName && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl bg-[#1a1a2e] p-3 flex items-center gap-3 border border-[#22c55e]/20"
+        >
+          <div className="text-2xl">👨‍💼</div>
+          <div className="flex-1">
+            <div className="text-xs text-[#94a3b8]">Тренер</div>
+            <div className="text-sm font-bold text-[#e2e8f0]">{result.managerName}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-[#94a3b8]">Рейтинг</div>
+            <div className="text-sm font-bold text-[#22c55e]">{result.managerRating}</div>
+          </div>
         </motion.div>
       )}
 
@@ -203,6 +266,64 @@ export default function SimulationResult() {
           <div className="text-xs text-[#94a3b8]">Разница</div>
         </div>
       </div>
+
+      {/* Extra stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+          <div className="text-2xl font-black text-[#8b5cf6]">{winStreak}</div>
+          <div className="text-xs text-[#94a3b8]">Лучшая серия побед</div>
+        </div>
+        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+          <div className="text-2xl font-black text-[#3b82f6]">{result.squadRating || '-'}</div>
+          <div className="text-xs text-[#94a3b8]">Рейтинг состава</div>
+        </div>
+      </div>
+
+      {/* Match-by-match view */}
+      {matchesList.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+          <button
+            onClick={() => setShowMatches(!showMatches)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+          >
+            <span className="text-sm font-bold text-[#e2e8f0]">📋 Матчи по турам</span>
+            <motion.span animate={{ rotate: showMatches ? 180 : 0 }} className="text-[#94a3b8]">
+              ▼
+            </motion.span>
+          </button>
+          {showMatches && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="px-3 pb-3 max-h-80 overflow-y-auto custom-scrollbar"
+            >
+              <div className="space-y-1">
+                {matchesList.map((m) => (
+                  <div
+                    key={m.matchday}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0a0a0f]/30 transition-colors"
+                  >
+                    <span className="text-xs text-[#94a3b8] w-6">{m.matchday}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${
+                      m.result === 'W' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+                      m.result === 'D' ? 'bg-[#f97316]/20 text-[#f97316]' :
+                      'bg-[#ef4444]/20 text-[#ef4444]'
+                    }`}>
+                      {m.result === 'W' ? 'В' : m.result === 'D' ? 'Н' : 'П'}
+                    </span>
+                    <span className="text-xs text-[#94a3b8] flex-1 text-right">
+                      {m.isHome ? '🏠' : '✈️'} {m.opponent}
+                    </span>
+                    <span className="text-sm font-bold text-[#e2e8f0]">
+                      {m.homeGoals}:{m.awayGoals}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Tournament Table */}
       {result.table && result.table.length > 0 && (
@@ -258,7 +379,7 @@ export default function SimulationResult() {
       )}
 
       {/* Achievements */}
-      {(isChampion || isPerfect) && (
+      {(isChampion || isPerfect || isUnbeaten) && (
         <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
           <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">Достижения</h3>
           <div className="flex flex-wrap gap-2">
@@ -272,14 +393,24 @@ export default function SimulationResult() {
                 ✨ Идеальный сезон 30-0
               </span>
             )}
+            {isUnbeaten && !isPerfect && (
+              <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
+                🛡️ Непобедимый (0 поражений)
+              </span>
+            )}
             {result.goalsFor >= 60 && (
               <span className="text-xs px-4 py-2 rounded-full bg-[#f97316]/20 text-[#f97316] font-bold border border-[#f97316]/30">
-                ⚡ Голевая машина
+                ⚡ Голевая машина (60+ голов)
               </span>
             )}
             {result.goalsAgainst <= 15 && (
               <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
-                🛡️ Железная оборона
+                🧱 Железная оборона (≤15 пропущено)
+              </span>
+            )}
+            {result.goalsFor - result.goalsAgainst >= 50 && (
+              <span className="text-xs px-4 py-2 rounded-full bg-[#8b5cf6]/20 text-[#8b5cf6] font-bold border border-[#8b5cf6]/30">
+                💪 Доминирование (+50 разница)
               </span>
             )}
           </div>

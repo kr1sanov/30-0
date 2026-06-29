@@ -15,6 +15,7 @@ import ManagerChoice from '@/components/game/ManagerChoice';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
+import ProfileScreen from '@/components/game/ProfileScreen';
 
 /* ─── Icon helpers (inline SVGs) ─── */
 function RotateIcon({ className }: { className?: string }) {
@@ -320,50 +321,7 @@ function SimulationScreen() {
   );
 }
 
-/* ─── Profile Screen ─── */
-function ProfileScreen() {
-  const { profileStats, resetGame } = useGameStore();
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="text-center">
-        <h2 className="text-xl font-bold text-[#e2e8f0]">Профиль</h2>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]">
-          <div className="text-3xl font-black text-[#22c55e]">{profileStats.totalSeasons}</div>
-          <div className="text-xs text-[#94a3b8]">Сезонов</div>
-        </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]">
-          <div className="text-3xl font-black text-[#e2e8f0]">{profileStats.bestPoints}</div>
-          <div className="text-xs text-[#94a3b8]">Лучшие очки</div>
-        </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]">
-          <div className="text-3xl font-black text-[#f97316]">{profileStats.titles}</div>
-          <div className="text-xs text-[#94a3b8]">Титулы</div>
-        </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]">
-          <div className="text-3xl font-black text-yellow-400">{profileStats.perfect}</div>
-          <div className="text-xs text-[#94a3b8]">30-0</div>
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-[#1a1a2e] p-6 text-center border border-[#1a1a2e]">
-        <div className="text-4xl mb-2">🏆</div>
-        <div className="text-sm text-[#94a3b8]">Витрина трофеев</div>
-        <div className="text-xs text-[#94a3b8]/60 mt-1">Играйте, чтобы заработать достижения!</div>
-      </div>
-
-      <Button
-        onClick={() => { resetGame(); }}
-        className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
-      >
-        Играть
-      </Button>
-    </div>
-  );
-}
+/* ─── Profile Screen ─── (moved to component) */
 
 /* ─── Leaderboard Screen ─── */
 function LeaderboardScreen() {

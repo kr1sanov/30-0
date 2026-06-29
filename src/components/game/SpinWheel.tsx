@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const CLUB_EMOJIS: Record<string, string> = {
   'Зенит': '🔵',
@@ -39,6 +40,7 @@ const SPIN_NAMES = [
 
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, config, slots } = useGameStore();
+  const { haptic, notify } = useTelegram();
   const [displayText, setDisplayText] = useState<string>('');
   const [displayEmoji, setDisplayEmoji] = useState<string>('⚽');
   const [animating, setAnimating] = useState(false);
@@ -46,6 +48,16 @@ export default function SpinWheel() {
   const [wheelRotation, setWheelRotation] = useState(0);
 
   const openCount = slots.filter((s) => !s.playerId).length;
+
+  const handleSpin = () => {
+    haptic('medium');
+    spin();
+  };
+
+  const handleReroll = () => {
+    haptic('light');
+    reroll();
+  };
 
   // Spinning animation
   useEffect(() => {
@@ -170,7 +182,7 @@ export default function SpinWheel() {
       {!hasResult && (
         <motion.div whileTap={{ scale: 0.97 }}>
           <Button
-            onClick={spin}
+            onClick={handleSpin}
             disabled={isSpinning}
             className="w-full h-14 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all"
           >
@@ -183,7 +195,7 @@ export default function SpinWheel() {
       {hasResult && rerollsLeft > 0 && (
         <motion.div whileTap={{ scale: 0.97 }}>
           <Button
-            onClick={reroll}
+            onClick={handleReroll}
             disabled={isSpinning}
             variant="outline"
             className="w-full h-12 text-sm font-bold border-[#22c55e]/40 text-[#22c55e] hover:bg-[#22c55e]/10 rounded-2xl transition-all"

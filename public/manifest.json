@@ -1,0 +1,17 @@
+{
+  "name": "30-0 RPL",
+  "short_name": "30-0",
+  "description": "Футбольный драфт Российской Премьер-Лиги",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

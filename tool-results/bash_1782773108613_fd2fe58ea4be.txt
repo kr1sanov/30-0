@@ -1,0 +1,778 @@
+---CONSOLE---
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-81eg7, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-mfb88, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-ene8g, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-kflg6, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-78phv, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-6mtx0, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-o0ntz, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-byynh, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-7in47, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-el02l, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-3nt40, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-9skd6, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-9sutm, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-mcqfn, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-exowo, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-vidhm, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-pxsj0, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-rhbn7, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-4x4cr, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-dlnls, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-nr1d0, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-biz47, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-8x49e, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-b808f, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-de8q5, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-2a2sh, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-q0nog, consider using turnstile.remove() to clean up a widget.
+[warning] [Cloudflare Turnstile] Ignored message from unexpected source for event: interactiveEnd.
+[warning] [Cloudflare Turnstile] Cannot find Widget cf-chl-widget-k36nh, consider using turnstile.remove() to clean up a widget.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 388ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 178ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 191ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 289ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 344ms
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:17:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  15 | import { Button } from '@/components/ui/button';
+  16 | import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+> 17 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  18 |
+  19 | /* ─── Icon helpers (inline SVGs) ─── */
+  20 | function RotateIcon({ className }: { className?: string }) {
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Footer.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Footer() {
+  8 |   const [showHowToPlay, setShowHowToPlay] = useState(false);
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Footer.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Footer.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[error] ./src/components/layout/Header.tsx:5:1
+Module not found: Can't resolve '@/components/game/HowToPlayModal'
+  3 | import { useState } from 'react';
+  4 | import { useGameStore } from '@/store/gameStore';
+> 5 | import HowToPlayModal from '@/components/game/HowToPlayModal';
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 |
+  7 | export default function Header() {
+  8 |   const { screen, resetGame } = useGameStore();
+
+Import map: aliased to relative './src/components/game/HowToPlayModal' inside of [project]/
+
+Import traces:
+  Client Component Browser:
+    ./src/components/layout/Header.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/layout/Header.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 1371ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 232ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 76ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 182ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 100ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 288ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 188ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 313ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 230ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 295ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 221ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 167ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 153ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Telegram.WebView] > postEvent web_app_set_header_color {color_key: "bg_color"}
+[log] [Telegram.WebView] > postEvent web_app_set_bottom_bar_color {color: "#ffffff"}
+[log] [Telegram.WebView] > postEvent web_app_request_theme 
+[log] [Telegram.WebView] > postEvent web_app_request_viewport 
+[log] [Telegram.WebView] > postEvent web_app_request_safe_area 
+[log] [Telegram.WebView] > postEvent web_app_request_content_safe_area 
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 214ms
+[log] [Fast Refresh] rebuilding
+[error] ./src/app/page.tsx:325:10
+Ecmascript file had an error
+  323 |
+  324 | /* ─── Profile Screen ─── */
+> 325 | function ProfileScreen() {
+      |          ^^^^^^^^^^^^^
+  326 |   const { profileStats, resetGame } = useGameStore();
+  327 |
+  328 |   return (
+
+the name `ProfileScreen` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 233ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 224ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 200ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 226ms
+[log] [Fast Refresh] rebuilding
+[error] ./src/components/game/SimulationResult.tsx:142:9
+Ecmascript file had an error
+  140 |   };
+  141 |
+> 142 |   const matches = result.matches || [];
+      |         ^^^^^^^
+  143 |   const winStreak = useMemo(() => {
+  144 |     let max = 0;
+  145 |     let current = 0;
+
+the name `matches` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/components/game/SimulationResult.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/game/SimulationResult.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+[error] ./src/components/game/SimulationResult.tsx:143:9
+Ecmascript file had an error
+  141 |
+  142 |   const matches = result.matches || [];
+> 143 |   const winStreak = useMemo(() => {
+      |         ^^^^^^^^^
+  144 |     let max = 0;
+  145 |     let current = 0;
+  146 |     for (const m of matches) {
+
+the name `winStreak` is defined multiple times
+
+Import traces:
+  Client Component Browser:
+    ./src/components/game/SimulationResult.tsx [Client Component Browser]
+    ./src/app/page.tsx [Client Component Browser]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/game/SimulationResult.tsx [Client Component SSR]
+    ./src/app/page.tsx [Client Component SSR]
+    ./src/app/page.tsx [Server Component]
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 208ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 188ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 162ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 185ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 171ms
+[log] [Telegram.WebView] > postEvent web_app_set_header_color {color_key: "bg_color"}
+[log] [Telegram.WebView] > postEvent web_app_set_bottom_bar_color {color: "#ffffff"}
+[log] [Telegram.WebView] > postEvent web_app_request_theme 
+[log] [Telegram.WebView] > postEvent web_app_request_viewport 
+[log] [Telegram.WebView] > postEvent web_app_request_safe_area 
+[log] [Telegram.WebView] > postEvent web_app_request_content_safe_area 
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_set_header_color {color_key: "bg_color"}
+[log] [Telegram.WebView] > postEvent web_app_set_bottom_bar_color {color: "#ffffff"}
+[log] [Telegram.WebView] > postEvent web_app_request_theme 
+[log] [Telegram.WebView] > postEvent web_app_request_viewport 
+[log] [Telegram.WebView] > postEvent web_app_request_safe_area 
+[log] [Telegram.WebView] > postEvent web_app_request_content_safe_area 
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Telegram.WebView] > postEvent web_app_ready 
+[log] [Telegram.WebView] > postEvent web_app_expand 
+[warning] [Telegram.WebApp] Header color is not supported in version 6.0
+[warning] [Telegram.WebApp] Background color is not supported in version 6.0
+[warning] [Telegram.WebApp] Closing confirmation is not supported in version 6.0
+[warning] [Telegram.WebApp] HapticFeedback is not supported in version 6.0
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 309ms
