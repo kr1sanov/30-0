@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,118 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Club {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  nameRu    String
+  nameEn    String?
+  city      String?
+  logoUrl   String?
+  seasons   ClubSeason[]
+  
+  @@unique([nameRu])
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Season {
+  id              String   @id @default(cuid())
+  startYear       Int
+  endYear         Int
+  label           String
+  matchesPerTeam  Int      @default(30)
+  clubSeasons     ClubSeason[]
+  
+  @@unique([startYear, endYear])
+}
+
+model ClubSeason {
+  id            String   @id @default(cuid())
+  clubId        String
+  seasonId      String
+  position      Int?
+  points        Int?
+  played        Int?
+  won           Int?
+  drawn         Int?
+  lost          Int?
+  goalsFor      Int?
+  goalsAgainst  Int?
+  
+  club          Club     @relation(fields: [clubId], references: [id])
+  season        Season   @relation(fields: [seasonId], references: [id])
+  players       PlayerSeason[]
+  
+  @@unique([clubId, seasonId])
+}
+
+model Player {
+  id          String   @id @default(cuid())
+  lastName    String
+  firstName   String?
+  fullName    String
+  nationality String?
+  birthYear   Int?
+  
+  seasons     PlayerSeason[]
+  
+  @@unique([fullName])
+}
+
+model PlayerSeason {
+  id              String   @id @default(cuid())
+  playerId        String
+  clubSeasonId    String
+  rating          Int
+  mainPosition    String
+  otherPositions  String?
+  age             Int?
+  matches         Int?
+  goals           Int?
+  assists         Int?
+  
+  player          Player     @relation(fields: [playerId], references: [id])
+  clubSeason      ClubSeason @relation(fields: [clubSeasonId], references: [id])
+  
+  @@unique([playerId, clubSeasonId])
+}
+
+model GameRun {
+  id            String   @id @default(cuid())
+  formation     String   @default("4-3-3")
+  difficulty    String   @default("normal")
+  draftMode     String   @default("squad_first")
+  ratingMode    String   @default("season")
+  eraFilter     String   @default("all")
+  rerollsTotal  Int      @default(1)
+  rerollsUsed   Int      @default(0)
+  
+  completed     Boolean  @default(false)
+  wins          Int?
+  draws         Int?
+  losses        Int?
+  points        Int?
+  position      Int?
+  goalsFor      Int?
+  goalsAgainst  Int?
+  overallRating Int?
+  
+  managerName   String?
+  managerRating Int?
+  
+  createdAt     DateTime @default(now())
+  
+  slots         GameSlot[]
+}
+
+model GameSlot {
+  id                String   @id @default(cuid())
+  runId             String
+  slotPosition      String
+  playerSeasonId    String?
+  playerName        String?
+  playerRating      Int?
+  playerPosition    String?
+  isCompatible      Boolean  @default(true)
+  
+  run               GameRun  @relation(fields: [runId], references: [id])
+  
+  @@unique([runId, slotPosition])
 }
