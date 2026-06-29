@@ -232,6 +232,9 @@ export default function PlayerList() {
         ) : (
           filteredPlayers.map((player, idx) => {
             const isSelected = selectedPlayer?.playerSeasonId === player.playerSeasonId;
+            // Determine position category for gradient border
+            const posCategory = POSITION_CATEGORY[player.mainPosition as Position] ?? 'mid';
+            const posBorderClass = `pos-border-${posCategory}`;
             return (
               <motion.button
                 key={player.playerSeasonId}
@@ -240,14 +243,19 @@ export default function PlayerList() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
+                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left relative ${
                   isSelected
-                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/10'
+                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/10 animate-pulse-green'
                     : player.canFillAny
-                    ? 'bg-[#1a1a2e] border-2 border-transparent hover:border-[#22c55e]/30 hover:bg-[#1a1a2e]/80 card-glow'
+                    ? `bg-[#1a1a2e] border-2 border-transparent hover:border-[#22c55e]/30 animate-elevation-hover ${posBorderClass}`
                     : 'bg-[#1a1a2e]/30 border-2 border-transparent opacity-40 cursor-not-allowed'
                 }`}
               >
+                {/* Index badge */}
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#0a0a0f] border border-[#1a1a2e] flex items-center justify-center z-10">
+                  <span className="text-[8px] font-bold text-[#94a3b8]">{idx + 1}</span>
+                </div>
+
                 {/* Rating Square with gradient */}
                 <div
                   className="w-12 h-12 rounded-xl flex flex-col items-center justify-center text-sm font-black text-white shrink-0 shadow-inner relative overflow-hidden"

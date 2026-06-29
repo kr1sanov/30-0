@@ -1,11 +1,11 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { POSITION_CATEGORY, POSITION_COLOR } from '@/lib/positions';
-import type { PositionCategory } from '@/lib/positions';
-import { canFillSlot } from '@/lib/positions';
-import type { Position } from '@/lib/positions';
+import { POSITION_CATEGORY, POSITION_COLOR, canFillSlot, getCompatiblePositions } from '@/lib/positions';
+import type { PositionCategory, Position } from '@/lib/positions';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 // Formation position layout coordinates (percentage-based)
 const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
@@ -194,8 +194,9 @@ export default function FormationView() {
     movePlayer,
     screen,
     rerollsLeft,
-    rerollsUsed,
   } = useGameStore();
+
+  const [shakingSlot, setShakingSlot] = useState<number | null>(null);
 
   const layout = FORMATION_LAYOUTS[config.formation] ?? FORMATION_LAYOUTS['4-3-3'];
 
@@ -203,6 +204,16 @@ export default function FormationView() {
   const openCount = 11 - filledCount;
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+
+  // Get compatible positions for the selected player
+  const compatiblePositions = selectedPlayer
+    ? getCompatiblePositions(selectedPlayer.mainPosition as Position)
+    : [];
+
+  const triggerShake = useCallback((index: number) => {
+    setShakingSlot(index);
+    setTimeout(() => setShakingSlot(null), 400);
+  }, []);
 
   const handleSlotClick = (index: number) => {
     const slot = slots[index];
@@ -216,7 +227,12 @@ export default function FormationView() {
         slot.position as Position,
       );
       if (canFill) {
+        toast.success(`✅ ${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
         assignToSlot(index);
+      } else {
+        // Trigger shake animation on incompatible slot
+        triggerShake(index);
+        toast.error(`❌ ${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
       }
       return;
     }
@@ -233,6 +249,27 @@ export default function FormationView() {
 
   return (
     <div className="relative w-full">
+      {/* Compatible positions info bar — only shown when a player is selected */}
+      {selectedPlayer && compatiblePositions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-3 px-3 py-2 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
+        >
+          <span className="text-xs text-[#94a3b8] shrink-0">Совместимые позиции:</span>
+          <div className="flex gap-1.5 flex-wrap">
+            {compatiblePositions.map((pos) => (
+              <span
+                key={pos}
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]"
+              >
+                {pos}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Header with formation name and rerolls */}
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm font-medium text-[#94a3b8]">
@@ -245,13 +282,16 @@ export default function FormationView() {
 
       {/* Pitch */}
       <div
-        className="relative w-full rounded-2xl overflow-hidden shadow-xl border border-[#1a5c30]/50"
+        className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
         style={{ paddingBottom: '130%' }}
       >
         {/* Pitch stripe pattern */}
         <div
           className="absolute inset-0 pitch-stripes"
         />
+
+        {/* Pitch grass texture lines */}
+        <div className="absolute inset-0 pitch-grass-lines" />
 
         {/* Pitch gradient overlay for depth */}
         <div
@@ -260,6 +300,9 @@ export default function FormationView() {
             background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%)',
           }}
         />
+
+        {/* Pitch vignette overlay — darker at edges */}
+        <div className="absolute inset-0 pitch-vignette pointer-events-none" />
 
         {/* Pitch border outline */}
         <div className="absolute inset-3 sm:inset-4 rounded-sm border-2 border-white/20" />
@@ -317,6 +360,8 @@ export default function FormationView() {
                 slot.position as Position,
               ).canFill
             : false;
+          const isIncompatible = selectedPlayer && !isFilled && !isCompatible;
+          const isShaking = shakingSlot === index;
 
           return (
             <motion.button
@@ -324,7 +369,7 @@ export default function FormationView() {
               onClick={() => handleSlotClick(index)}
               className={`absolute -translate-x-1/2 -translate-y-1/2 ${
                 isSelected ? 'z-10' : ''
-              }`}
+              } ${isShaking ? 'animate-shake' : ''}`}
               style={{
                 top: `${pos.row}%`,
                 left: `${pos.col}%`,
@@ -335,13 +380,15 @@ export default function FormationView() {
               <div
                 className={`flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 transition-all duration-200 ${
                   isFilled
-                    ? 'border-white/50 shadow-lg backdrop-blur-sm'
+                    ? 'border-white/50 shadow-lg backdrop-blur-sm player-inner-glow animate-subtle-pulse'
+                    : isIncompatible
+                    ? 'border-[#ef4444]/40 border-dashed'
                     : isCompatible && !isFilled
-                    ? 'border-[#22c55e] border-dashed animate-pulse-green'
+                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
                     : 'border-white/25 border-dashed'
                 } ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]' : ''}`}
                 style={{
-                  backgroundColor: isFilled ? `${color}dd` : `${color}22`,
+                  backgroundColor: isFilled ? `${color}dd` : isIncompatible ? `${color}15` : `${color}22`,
                 }}
               >
                 {isFilled ? (
@@ -358,6 +405,11 @@ export default function FormationView() {
                       </span>
                     ) : null}
                   </>
+                ) : isIncompatible ? (
+                  <div className="flex flex-col items-center">
+                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60">{slot.positionLabel}</span>
+                    <span className="text-[8px] leading-none">❌</span>
+                  </div>
                 ) : (
                   <span className="text-[10px] sm:text-xs font-bold text-white/60">{slot.positionLabel}</span>
                 )}

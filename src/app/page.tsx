@@ -70,6 +70,91 @@ const FAQ_ITEMS = [
   { q: 'Сложно ли достичь 30-0?', a: 'Очень сложно! Это требует идеального подбора игроков и немного удачи. Даже с лучшим составом РПЛ есть вероятность неожиданных результатов. Это и делает игру увлекательной!' },
 ];
 
+/* ─── Recent Results Section ─── */
+function RecentResults() {
+  const { profileStats, setScreen } = useGameStore();
+  const recentSeasons = profileStats.history.slice(-3).reverse();
+
+  const DIFF_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+    easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]', label: 'Легко' },
+    normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]', label: 'Нормально' },
+    hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]', label: 'Сложно' },
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.55 }}
+      className="space-y-4"
+    >
+      <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+        📈 Последние результаты
+      </h2>
+
+      {recentSeasons.length === 0 ? (
+        <div className="rounded-2xl bg-[#1a1a2e] p-8 text-center border border-[#1a1a2e]">
+          <div className="text-3xl mb-2">⚽</div>
+          <div className="text-sm text-[#94a3b8]">Сыграйте первый сезон!</div>
+          <Button
+            onClick={() => setScreen('setup')}
+            variant="outline"
+            className="mt-3 border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 hover:text-[#22c55e] rounded-xl"
+          >
+            Начать игру
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {recentSeasons.map((h, i) => {
+            const diff = DIFF_BADGE[h.difficulty] || DIFF_BADGE.normal;
+            const posEmoji = h.position === 1 ? '🥇' : h.position === 2 ? '🥈' : h.position === 3 ? '🥉' : '';
+            return (
+              <motion.div
+                key={h.id}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-xl bg-[#1a1a2e] p-3 border border-[#1a1a2e] flex items-center gap-3"
+              >
+                {/* Formation badge */}
+                <div className="w-12 h-12 rounded-lg bg-[#3b82f6]/15 flex flex-col items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-[#3b82f6]">{h.formation}</span>
+                </div>
+
+                {/* W-D-L */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">{h.wins}В</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316] font-bold">{h.draws}Н</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ef4444]/15 text-[#ef4444] font-bold">{h.losses}П</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${diff.bg} ${diff.text}`}>
+                      {diff.label}
+                    </span>
+                    {h.managerName && (
+                      <span className="text-[9px] text-[#94a3b8]/50 truncate">👨‍💼 {h.managerName}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Points & Position */}
+                <div className="text-right shrink-0">
+                  <div className="text-lg font-black text-[#22c55e]">{h.points}</div>
+                  <div className="text-[10px] text-[#94a3b8]">
+                    {posEmoji} {h.position} место
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 /* ─── Home Page ─── */
 function HomePage() {
   const { setScreen } = useGameStore();
@@ -84,25 +169,62 @@ function HomePage() {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center justify-center text-center space-y-6 pt-8"
       >
-        <div className="relative">
-          <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none">
-            30-0
-          </h1>
-          <div className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 text-3xl sm:text-4xl animate-bounce">
-            ⚽
+        {/* Hero container with animated gradient border */}
+        <div className="relative rounded-3xl p-8 sm:p-12 border-2 border-[#22c55e]/20 animate-border-gradient overflow-hidden">
+          {/* Green radial glow behind title */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.15) 0%, transparent 60%)',
+            }}
+          />
+
+          {/* Floating particles */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <span className="animate-float absolute text-lg" style={{ top: '10%', left: '8%', animationDelay: '0s' }}>⚽</span>
+            <span className="animate-float absolute text-sm" style={{ top: '20%', right: '12%', animationDelay: '1s' }}>🟢</span>
+            <span className="animate-float absolute text-base" style={{ bottom: '25%', left: '5%', animationDelay: '2s' }}>🟡</span>
+            <span className="animate-float absolute text-sm" style={{ top: '60%', right: '8%', animationDelay: '3s' }}>⚽</span>
+            <span className="animate-float absolute text-lg" style={{ bottom: '15%', right: '20%', animationDelay: '4s' }}>🟢</span>
+            <span className="animate-float absolute text-xs" style={{ top: '40%', left: '15%', animationDelay: '5s' }}>🟡</span>
+          </div>
+
+          <div className="relative">
+            <div className="relative inline-block">
+              <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none">
+                30-0
+              </h1>
+              {/* Framer Motion bouncing football */}
+              <motion.div
+                className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 text-3xl sm:text-4xl"
+                animate={{
+                  y: [0, -12, 0],
+                  rotate: [0, 15, -15, 0],
+                }}
+                transition={{
+                  duration: 1.8,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  times: [0, 0.4, 0.7, 1],
+                }}
+              >
+                ⚽
+              </motion.div>
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-[#e2e8f0] mt-4">
+              Футбольный драфт РПЛ
+            </p>
+            <p className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-2">
+              Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
+              Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
+            </p>
           </div>
         </div>
-        <p className="text-2xl sm:text-3xl font-bold text-[#e2e8f0]">
-          Футбольный драфт РПЛ
-        </p>
-        <p className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg">
-          Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
-          Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
-        </p>
 
+        {/* Play button with gradient glow */}
         <Button
           onClick={() => setScreen('setup')}
-          className="h-16 px-14 text-xl font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40 hover:scale-105 active:scale-95"
+          className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all hover:scale-105 active:scale-95 animate-button-glow"
         >
           Играть 30-0
         </Button>
@@ -193,6 +315,9 @@ function HomePage() {
         </div>
       </motion.div>
 
+      {/* Recent Results */}
+      <RecentResults />
+
       {/* FAQ Accordion */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
@@ -243,20 +368,47 @@ function PositionAssignScreen() {
 
   const openCount = slots.filter((s) => !s.playerId).length;
 
+  // Get compatible positions for the info banner
+  const mainPos = selectedPlayer?.mainPosition || '';
+  const otherPos = selectedPlayer?.otherPositions || [];
+  const allPosLabels = [mainPos, ...otherPos].filter(Boolean);
+
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-3 rounded-xl bg-[#1a1a2e] p-3 border border-[#22c55e]/20">
-        <div className="w-8 h-8 rounded-lg bg-[#22c55e]/20 flex items-center justify-center shrink-0">
-          <svg className="w-4 h-4 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
-          </svg>
+      <div className="rounded-xl bg-[#1a1a2e] p-4 border border-[#22c55e]/20">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-[#22c55e]/20 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[#e2e8f0]">
+              Выберите позицию для <span className="text-[#22c55e] font-bold">{selectedPlayer?.fullName}</span>
+            </p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]">
+                {selectedPlayer?.rating}
+              </span>
+              <span className="text-xs text-[#94a3b8]">Позиции:</span>
+              {allPosLabels.map((pos) => (
+                <span key={pos} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#3b82f6]/15 text-[#3b82f6]">
+                  {pos}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-[#94a3b8] mt-1">Нажмите на свободную позицию на поле ({openCount} осталось)</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-medium text-[#e2e8f0]">
-            Выберите позицию для <span className="text-[#22c55e] font-bold">{selectedPlayer?.fullName}</span>
-          </p>
-          <p className="text-xs text-[#94a3b8]">Нажмите на свободную позицию на поле ({openCount} осталось)</p>
-        </div>
+        <button
+          onClick={() => {
+            useGameStore.setState({ selectedPlayer: null });
+            setScreen('draft');
+          }}
+          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0a0a0f]/50 text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#0a0a0f] transition-colors text-sm font-medium"
+        >
+          🔙 Назад
+        </button>
       </div>
       <FormationView />
     </div>
@@ -324,56 +476,129 @@ function SimulationScreen() {
 /* ─── Profile Screen ─── (moved to component) */
 
 /* ─── Leaderboard Screen ─── */
+function getRelativeTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffSec < 60) return 'только что';
+    if (diffMin < 60) return `${diffMin} мин назад`;
+    if (diffHour < 24) return `${diffHour} ч назад`;
+    if (diffDay < 7) return `${diffDay} дн назад`;
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  } catch {
+    return '';
+  }
+}
+
+const DIFFICULTY_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
+  easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]' },
+  normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]' },
+  hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]' },
+};
+
+const DIFFICULTY_LABELS_MAP: Record<string, string> = {
+  easy: 'Легко',
+  normal: 'Нормально',
+  hard: 'Сложно',
+};
+
 function LeaderboardScreen() {
-  const { leaderboard, resetGame } = useGameStore();
+  const { leaderboard, resetGame, setScreen } = useGameStore();
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-[#e2e8f0]">Лидерборд</h2>
+        <h2 className="text-xl font-bold text-[#e2e8f0]">🏆 Лидерборд</h2>
         <p className="text-sm text-[#94a3b8] mt-1">Лучшие результаты</p>
       </div>
 
       {leaderboard.length === 0 ? (
-        <div className="rounded-2xl bg-[#1a1a2e] p-8 text-center border border-[#1a1a2e]">
-          <div className="text-4xl mb-3">🏆</div>
-          <div className="text-[#94a3b8]">Пока нет результатов</div>
-          <div className="text-xs text-[#94a3b8]/60 mt-1">Сыграйте первый сезон!</div>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl bg-[#1a1a2e] p-10 text-center border border-[#1a1a2e]"
+        >
+          <div className="text-6xl mb-4">🏆</div>
+          <div className="text-lg font-bold text-[#e2e8f0] mb-2">Пока нет результатов</div>
+          <div className="text-sm text-[#94a3b8] mb-6">Сыграйте первый сезон и попадите в таблицу лидеров!</div>
+          <Button
+            onClick={() => { resetGame(); setScreen('setup'); }}
+            className="h-12 px-8 text-base font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
+          >
+            ⚽ Сыграть сезон
+          </Button>
+        </motion.div>
       ) : (
-        <div className="rounded-2xl bg-[#1a1a2e] overflow-hidden border border-[#1a1a2e]">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-[#94a3b8] border-b border-[#0a0a0f]">
-                  <th className="py-3 px-3 text-left">#</th>
-                  <th className="py-3 px-3 text-left">Формация</th>
-                  <th className="py-3 px-3 text-center">Сложность</th>
-                  <th className="py-3 px-3 text-center">Очки</th>
-                  <th className="py-3 px-3 text-center">Место</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((entry, idx) => (
-                  <tr key={entry.id} className="border-b border-[#0a0a0f]/50">
-                    <td className="py-3 px-3 text-[#94a3b8]">{idx + 1}</td>
-                    <td className="py-3 px-3 font-medium text-[#e2e8f0]">{entry.formation}</td>
-                    <td className="py-3 px-3 text-center text-[#94a3b8]">{entry.difficulty}</td>
-                    <td className="py-3 px-3 text-center font-bold text-[#22c55e]">{entry.seasonPoints}</td>
-                    <td className="py-3 px-3 text-center text-[#e2e8f0]">{entry.seasonPosition}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-3">
+          {leaderboard.map((entry, idx) => {
+            const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+            const diffBadge = DIFFICULTY_BADGE_COLORS[entry.difficulty] || DIFFICULTY_BADGE_COLORS.normal;
+            const diffLabel = DIFFICULTY_LABELS_MAP[entry.difficulty] || entry.difficulty;
+            const posEmoji = entry.seasonPosition === 1 ? '🥇' : entry.seasonPosition === 2 ? '🥈' : entry.seasonPosition === 3 ? '🥉' : entry.seasonPosition <= 4 ? '🏟️' : '';
+
+            return (
+              <motion.div
+                key={entry.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.08, duration: 0.35 }}
+                className={`rounded-2xl p-4 border transition-all hover:scale-[1.01] ${
+                  idx === 0
+                    ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border-yellow-500/20'
+                    : idx === 1
+                    ? 'bg-gradient-to-r from-gray-400/10 to-gray-400/5 border-gray-400/20'
+                    : idx === 2
+                    ? 'bg-gradient-to-r from-amber-700/10 to-amber-700/5 border-amber-700/20'
+                    : 'bg-[#1a1a2e] border-[#1a1a2e]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Rank */}
+                  <div className="w-10 h-10 rounded-xl bg-[#0a0a0f]/50 flex items-center justify-center shrink-0">
+                    <span className="text-lg">{rankEmoji || <span className="text-sm font-bold text-[#94a3b8]">{idx + 1}</span>}</span>
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* Formation badge */}
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
+                        {entry.formation}
+                      </span>
+                      {/* Difficulty badge */}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diffBadge.bg} ${diffBadge.text}`}>
+                        {diffLabel}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-[#94a3b8]/60 mt-1">
+                      {getRelativeTime(entry.createdAt)} · Рейтинг: {entry.squadRating || '-'}
+                    </div>
+                  </div>
+
+                  {/* Points & Position */}
+                  <div className="text-right shrink-0">
+                    <div className="text-2xl font-black text-[#22c55e]">{entry.seasonPoints}</div>
+                    <div className="text-xs text-[#94a3b8]">
+                      {posEmoji} {entry.seasonPosition} место
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
       <Button
-        onClick={resetGame}
+        onClick={() => { resetGame(); setScreen('setup'); }}
         className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
       >
-        Играть
+        ⚽ Сыграть сезон
       </Button>
     </div>
   );
@@ -411,7 +636,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={screen}

@@ -39,14 +39,23 @@ const SPIN_NAMES = [
   'Крылья Советов', 'Торпедо', 'Факел', 'Оренбург',
 ];
 
+/* Particle burst items for spin result reveal */
+const BURST_PARTICLES = [
+  { emoji: '⚽', x: '50px', y: '-40px' },
+  { emoji: '🟢', x: '-45px', y: '-35px' },
+  { emoji: '⭐', x: '40px', y: '35px' },
+  { emoji: '🎯', x: '-50px', y: '30px' },
+];
+
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, config, slots } = useGameStore();
-  const { haptic, notify } = useTelegram();
+  const { haptic } = useTelegram();
   const { play } = useSound();
   const [displayText, setDisplayText] = useState<string>('');
   const [displayEmoji, setDisplayEmoji] = useState<string>('⚽');
   const [animating, setAnimating] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
   const [wheelRotation, setWheelRotation] = useState(0);
 
   const openCount = slots.filter((s) => !s.playerId).length;
@@ -73,6 +82,7 @@ export default function SpinWheel() {
 
     setAnimating(true);
     setShowResult(false);
+    setShowParticles(false);
 
     let i = 0;
     const interval = setInterval(() => {
@@ -103,7 +113,10 @@ export default function SpinWheel() {
       setDisplayText(currentSpin.clubName);
       setDisplayEmoji(getClubEmoji(currentSpin.clubName));
       // Dramatic reveal delay
-      const timer = setTimeout(() => setShowResult(true), 300);
+      const timer = setTimeout(() => {
+        setShowResult(true);
+        setShowParticles(true);
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [currentSpin, isSpinning, play]);
@@ -134,6 +147,24 @@ export default function SpinWheel() {
           />
         </div>
 
+        {/* Particle burst effect on result reveal */}
+        {showParticles && hasResult && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            {BURST_PARTICLES.map((p, i) => (
+              <span
+                key={i}
+                className="absolute text-lg animate-particle-burst"
+                style={{
+                  '--burst-x': p.x,
+                  '--burst-y': p.y,
+                } as React.CSSProperties}
+              >
+                {p.emoji}
+              </span>
+            ))}
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           {animating ? (
             <motion.div
@@ -152,13 +183,13 @@ export default function SpinWheel() {
           ) : hasResult ? (
             <motion.div
               key="result"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: showResult ? 1 : 0.8 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+              initial={{ opacity: 0, scale: 0.3 }}
+              animate={{ opacity: 1, scale: showResult ? 1 : 0.3 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
               className="relative z-10"
             >
               <div className="text-4xl mb-2">{getClubEmoji(currentSpin.clubName)}</div>
-              <div className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">
+              <div className={`text-2xl sm:text-3xl font-black text-[#e2e8f0] ${showResult ? 'animate-club-glow' : ''}`}>
                 {currentSpin.clubName}
               </div>
               <div className="text-lg text-[#22c55e] font-bold mt-1">
@@ -203,9 +234,9 @@ export default function SpinWheel() {
             onClick={handleReroll}
             disabled={isSpinning}
             variant="outline"
-            className="w-full h-12 text-sm font-bold border-[#22c55e]/40 text-[#22c55e] hover:bg-[#22c55e]/10 rounded-2xl transition-all"
+            className="reroll-hover w-full h-12 text-sm font-bold border-[#22c55e]/40 text-[#22c55e] hover:bg-[#22c55e]/10 rounded-2xl transition-all"
           >
-            🔄 Переброс ({rerollsLeft} осталось)
+            <span className="reroll-icon inline-block">🔄</span> Переброс ({rerollsLeft} осталось)
           </Button>
         </motion.div>
       )}

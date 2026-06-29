@@ -323,7 +323,7 @@ export const useGameStore = create<GameState>()(
       },
 
       movePlayer: (fromSlotIndex, toSlotIndex) => {
-        const { slots } = get();
+        const { slots, runId } = get();
         const from = slots[fromSlotIndex];
         const to = slots[toSlotIndex];
 
@@ -367,6 +367,19 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ slots: newSlots, movingPlayerSlotIndex: null });
+
+        // Persist swap to database
+        if (runId) {
+          const fromSlotPosition = `${from.position}_${fromSlotIndex}`;
+          const toSlotPosition = `${to.position}_${toSlotIndex}`;
+          fetch(`/api/runs/${runId}/swap`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromSlotPosition, toSlotPosition }),
+          }).catch((err) => {
+            console.error('Failed to persist swap:', err);
+          });
+        }
       },
 
       finishMoving: () => {

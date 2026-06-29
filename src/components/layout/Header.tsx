@@ -77,6 +77,14 @@ export default function Header() {
             </button>
 
             <button
+              onClick={() => useGameStore.getState().setScreen('profile')}
+              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#1a1a2e] transition-all"
+            >
+              <span className="hidden sm:inline">Профиль</span>
+              <span className="sm:hidden">👤</span>
+            </button>
+
+            <button
               onClick={() => useGameStore.getState().loadLeaderboard()}
               className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#1a1a2e] transition-all"
             >

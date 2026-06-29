@@ -148,26 +148,41 @@ export default function GameSetup() {
       <div>
         <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">Формация</h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-          {FORMATIONS.map((f) => (
-            <motion.button
-              key={f.id}
-              onClick={() => setConfig({ formation: f.id })}
-              className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 overflow-hidden ${
-                config.formation === f.id
-                  ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                  : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
-              }`}
-              whileTap={{ scale: 0.97 }}
-            >
-              <MiniPitch formationId={f.id} />
-              <div className={`text-sm font-bold mt-2 ${
-                config.formation === f.id ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-              }`}>
-                {f.name}
-              </div>
-              <div className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">{f.description}</div>
-            </motion.button>
-          ))}
+          {FORMATIONS.map((f) => {
+            const isSelected = config.formation === f.id;
+            return (
+              <motion.button
+                key={f.id}
+                onClick={() => setConfig({ formation: f.id })}
+                className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 overflow-hidden relative ${
+                  isSelected
+                    ? 'border-l-4 border-l-[#22c55e] border-t-[#22c55e] border-r-[#22c55e] border-b-[#22c55e] shadow-lg shadow-[#22c55e]/15'
+                    : 'border-[#1a1a2e] hover:border-[#22c55e]/30'
+                }`}
+                style={{
+                  background: isSelected
+                    ? 'linear-gradient(135deg, #1a1a2e 0%, #22c55e/10 100%)'
+                    : 'linear-gradient(135deg, #1a1a2e 0%, #151528 100%)',
+                }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {/* Subtle glow effect on selected */}
+                {isSelected && (
+                  <div
+                    className="absolute inset-0 pointer-events-none rounded-2xl"
+                    style={{ boxShadow: 'inset 0 0 20px rgba(34, 197, 94, 0.1)' }}
+                  />
+                )}
+                <MiniPitch formationId={f.id} />
+                <div className={`text-sm font-bold mt-2 ${
+                  isSelected ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+                }`}>
+                  {f.name}
+                </div>
+                <div className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">{f.description}</div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -176,27 +191,38 @@ export default function GameSetup() {
         <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">Сложность</h3>
         <div className="grid grid-cols-3 gap-3">
           {(Object.entries(DIFFICULTY_CONFIG) as [Difficulty, typeof DIFFICULTY_CONFIG[Difficulty]][]).map(
-            ([key, val]) => (
-              <button
-                key={key}
-                onClick={() => setConfig({ difficulty: key })}
-                className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
-                  config.difficulty === key
-                    ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                    : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
-                }`}
-              >
-                <div className={`text-lg font-bold ${
-                  config.difficulty === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                }`}>
-                  {val.label}
-                </div>
-                <div className="text-xs text-[#94a3b8] mt-1">Перебросы: {val.rerolls}</div>
-                <div className="text-[10px] text-[#94a3b8]/70 mt-0.5">
-                  {val.showRatings ? 'Рейтинги видны' : 'Рейтинги скрыты'}
-                </div>
-              </button>
-            )
+            ([key, val]) => {
+              const isSelected = config.difficulty === key;
+              // Difficulty-specific tint colors
+              const tints: Record<Difficulty, { bg: string; selectedBg: string; text: string; border: string }> = {
+                easy: { bg: 'rgba(34, 197, 94, 0.05)', selectedBg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e', border: 'rgba(34, 197, 94, 0.3)' },
+                normal: { bg: 'rgba(245, 158, 11, 0.05)', selectedBg: 'rgba(245, 158, 11, 0.12)', text: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)' },
+                hard: { bg: 'rgba(239, 68, 68, 0.05)', selectedBg: 'rgba(239, 68, 68, 0.12)', text: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' },
+              };
+              const tint = tints[key];
+              return (
+                <button
+                  key={key}
+                  onClick={() => setConfig({ difficulty: key })}
+                  className={`rounded-2xl p-4 text-center transition-all duration-200 border-2`}
+                  style={{
+                    background: isSelected ? tint.selectedBg : tint.bg,
+                    borderColor: isSelected ? tint.border : '#1a1a2e',
+                    boxShadow: isSelected ? `0 4px 16px ${tint.border}` : 'none',
+                  }}
+                >
+                  <div className={`text-lg font-bold ${
+                    isSelected ? '' : 'text-[#e2e8f0]'
+                  }`} style={isSelected ? { color: tint.text } : undefined}>
+                    {val.label}
+                  </div>
+                  <div className="text-xs text-[#94a3b8] mt-1">Перебросы: {val.rerolls}</div>
+                  <div className="text-[10px] text-[#94a3b8]/70 mt-0.5">
+                    {val.showRatings ? 'Рейтинги видны' : 'Рейтинги скрыты'}
+                  </div>
+                </button>
+              );
+            }
           )}
         </div>
       </div>
@@ -302,7 +328,7 @@ export default function GameSetup() {
       <motion.div whileTap={{ scale: 0.98 }}>
         <Button
           onClick={handleStart}
-          className="w-full h-16 text-xl font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40"
+          className="w-full h-18 text-xl font-black bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl shadow-lg shadow-[#22c55e]/30 transition-all hover:shadow-[#22c55e]/50 hover:scale-[1.02] active:scale-[0.98] animate-button-glow"
         >
           ⚽ Начать драфт
         </Button>

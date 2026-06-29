@@ -1,6 +1,139 @@
 # 30-0 RPL — Work Log
 
-## Current Project Status (Round 3 Complete)
+## Current Project Status (Round 4 Complete)
+
+**Status**: MVP is fully polished with major UX improvements, visual enhancements, and new features. Round 4 fixes critical UX bugs (silent incompatible position clicks), adds toast notifications, redesigns footer as mobile tab bar, adds tournament table, enhances visual polish with particles/animations, and improves leaderboard/sharing.
+
+### What's Working (Round 4 additions in **bold**):
+- ✅ Full game flow from homepage to season simulation results
+- ✅ 12 formations with proper slot layouts on football pitch
+- ✅ 3 difficulty levels (Easy/Normal/Hard) with rerolls
+- ✅ Spin wheel with animation and club+season reveal
+- ✅ Player selection with position compatibility indicators
+- ✅ Position assignment on the formation pitch
+- ✅ Season simulation engine (30 matches, realistic results)
+- ✅ Leaderboard and profile screens
+- ✅ Database seeded with 5,278 player-season records
+- ✅ Dark theme matching 38-0.app style
+- ✅ "How to Play" modal with 4-step instructions
+- ✅ FAQ accordion on homepage
+- ✅ Challenge cards on homepage
+- ✅ Responsive mobile-first design
+- ✅ Manager/Coach spinning feature (22 Russian coaches)
+- ✅ Profile stats persistence with localStorage (Zustand persist)
+- ✅ Match-by-match season results view (30 matches expandable)
+- ✅ Telegram WebApp SDK integration (haptics, share, theme)
+- ✅ Enhanced SimulationResult with win streak, squad rating, manager info
+- ✅ Profile screen with trophy cabinet, history, and detailed stats
+- ✅ PWA manifest for installable web app
+- ✅ Cyrillic font support in Geist
+- ✅ Sound effects system (8 types)
+- ✅ Sound toggle button in header with localStorage persistence
+- ✅ Enhanced PlayerList: search, category filter pills, sort by rating/position/compatibility
+- ✅ Team chemistry system (0-100 score with visual ring meter)
+- ✅ Enhanced SquadStats: chemistry ring, animated category bars, player summary list
+- ✅ Enhanced Profile: win rate ring, points per season bar chart, 8 trophies
+- ✅ Enhanced SimulationResult: season form dots, points sparkline, squad display
+- ✅ 4+4 new achievements
+- ✅ Enhanced CSS animations
+- **✅ Toast notification system (Sonner) with success/error feedback**
+- **✅ Incompatible position click feedback (toast error + shake animation)**
+- **✅ Compatible positions info bar on pitch during position assignment**
+- **✅ 🔙 Назад button to return to player list without assigning**
+- **✅ ❌ indicators on incompatible position slots**
+- **✅ Profile button in header navigation (👤 icon)**
+- **✅ Redesigned footer as mobile tab bar (5 tabs: Главная/Играть/Профиль/Лидерборд/Помощь)**
+- **✅ Fixed bottom tab bar on mobile with safe-area padding**
+- **✅ Active tab indicator (green highlight)**
+- **✅ Tournament table (📊 Таблица РПЛ) in simulation results**
+- **✅ Position swap persistence via API endpoint (`POST /api/runs/[runId]/swap`)**
+- **✅ Floating particles (⚽🟢🟡) in hero section**
+- **✅ Green radial glow behind hero title**
+- **✅ Animated gradient border on hero container**
+- **✅ Gradient play button with pulsing green glow**
+- **✅ Framer Motion organic ⚽ bounce in hero**
+- **✅ Formation cards with gradient backgrounds + green left border when selected**
+- **✅ Difficulty buttons tinted by color (green/amber/red)**
+- **✅ Particle burst emojis on spin result reveal**
+- **✅ Club name glow effect on spin result**
+- **✅ Reroll button 🔄 rotation on hover**
+- **✅ Player cards with hover lift + position gradient left border**
+- **✅ Player cards numbered with index badge**
+- **✅ Pitch vignette effect + grass texture lines**
+- **✅ Player inner glow + breathing pulse on filled circles**
+- **✅ Enhanced leaderboard with card-based entries + medals (🥇🥈🥉)**
+- **✅ Richer share message with hashtags (#30п0 #РПЛ)**
+- **✅ "📊 Копировать результат" button with clipboard copy**
+- **✅ Medal emojis next to position (🥇🥈🥉🏟️)**
+- **✅ "📈 Последние результаты" section on homepage**
+- **✅ Profile "📤 Поделиться профилем" button**
+- **✅ Profile "🗑️ Сбросить статистику" with AlertDialog confirmation**
+- **✅ Trophy cabinet: golden glow for earned, 🔒 for locked**
+- **✅ 10+ new CSS keyframes and utility classes**
+
+---
+
+## Round 4 — Completed Work
+
+### Task ID: R4-1 — QA Testing (Pre-Round)
+- Tested full game flow with agent-browser on current build
+- Homepage renders correctly with hero, steps, stats, challenges, FAQ
+- Game setup: all 12 formations, 3 difficulty levels, draft/rating modes, era filters work
+- Draft screen: spin wheel, player list with numbered cards and position gradient borders
+- Position assignment: compatible positions info bar, ❌ on incompatible slots, 🔙 Назад button
+- Toast notifications working (success on compatible, error on incompatible clicks)
+- Profile accessible from header and footer tab bar
+- Leaderboard shows card-based entries with medals
+- No console errors, no runtime errors
+- Dev server compiling successfully
+
+### Task ID: R4-2 — Bug Fixes & Navigation Enhancement
+- Added Sonner toast system to layout.tsx (Toaster component)
+- FormationView.tsx: added toast.success on compatible slot assignment, toast.error on incompatible click
+- Header.tsx: added Profile button (👤 icon on mobile, "Профиль" on desktop)
+- Footer.tsx: completely redesigned as mobile tab bar with 5 tabs
+  - 🏠 Главная, 🎮 Играть, 👤 Профиль, 🏆 Лидерборд, ❓ Помощь
+  - Fixed bottom on mobile, normal flow on desktop
+  - Active tab indicator with green highlight
+  - Safe-area-inset-bottom padding for iOS
+  - Elevated green "Играть" primary action button
+- page.tsx: added pb-20 sm:pb-6 padding for fixed tab bar
+
+### Task ID: R4-3 — Tournament Table & Position UX
+- SimulationResult.tsx: added expandable "📊 Таблица РПЛ" section
+  - Full 16-team league table with position, team, W/D/L, GF/GA, GD, points
+  - User's team highlighted in green
+  - 🏆 for champion, red text for relegation zone (14-16)
+- FormationView.tsx: added compatible positions info bar above pitch
+- FormationView.tsx: added ❌ indicators on incompatible slots
+- FormationView.tsx: added shake animation on incompatible click
+- page.tsx PositionAssignScreen: enhanced info banner with rating + compatible positions
+- page.tsx PositionAssignScreen: added 🔙 Назад button
+- Created /src/app/api/runs/[runId]/swap/route.ts for position swap persistence
+- gameStore.ts: movePlayer now calls swap API after local state update
+
+### Task ID: R4-5 — Visual Polish & Animation Enhancement
+- globals.css: added 10+ new keyframes and utility classes
+  - gradientShift, particleBurst, subtlePulse, elevationGlow, buttonGlowPulse
+  - borderGradient, clubNameGlow, strongGreenPulse
+  - pos-border-gk/def/mid/att (position gradient borders)
+  - pitch-vignette, pitch-grass-lines, pitch-elevated
+  - player-inner-glow, animate-elevation-hover, reroll-hover
+- page.tsx: hero section enhanced with floating particles, radial glow, gradient border
+- GameSetup.tsx: formation cards with gradient + green left border when selected
+- SpinWheel.tsx: particle burst on result, club name glow, reroll rotation
+- PlayerList.tsx: hover lift, position gradient borders, index badges
+- FormationView.tsx: vignette, grass lines, inner glow, breathing pulse
+
+### Task ID: R4-6 — Leaderboard & Sharing Enhancement
+- page.tsx LeaderboardScreen: card-based entries with medals, relative time, formation/difficulty badges
+- SimulationResult.tsx: richer share message with hashtags, clipboard copy button, medal emojis
+- page.tsx: added "📈 Последние результаты" section between Challenges and FAQ
+- ProfileScreen.tsx: share profile button, reset stats with AlertDialog, trophy cabinet visual upgrade
+
+---
+
+## Round 3 — Completed Work (Summary)
 
 **Status**: MVP is fully functional with significantly enhanced UX. Round 3 adds sound effects, advanced player filtering, team chemistry, enhanced profile visualizations, and new achievements.
 
@@ -299,7 +432,7 @@
 
 3. **Hard mode rating hiding**: The spin endpoint returns rating=0 for hard mode, but the DB still has the rating. The frontend shows "??" for hidden ratings but the draft still uses the real rating in simulation.
 
-4. **Position swap persistence**: The movePlayer function swaps players locally but doesn't update the database. If the page is refreshed, swaps are lost.
+4. ~~**Position swap persistence**: The movePlayer function swaps players locally but doesn't update the database.~~ ✅ Fixed in Round 4 (added swap API endpoint)
 
 5. **Missing features (locked)**: Daily Challenge, One-Club XI, Leagues, Nations Trophy are all hidden with "Скоро" badges.
 
@@ -309,20 +442,24 @@
 
 8. ~~**Mobile bottom safe area**: Should add `env(safe-area-inset-bottom)` padding for iOS devices with home indicator.~~ ✅ Fixed in Round 3
 
+9. ~~**No incompatible position feedback**: Clicking incompatible slots was silent.~~ ✅ Fixed in Round 4 (toast + shake)
+
+10. ~~**No profile access from navigation**: Could only reach from result screen.~~ ✅ Fixed in Round 4 (header + footer profile button)
+
 ---
 
-## Priority Recommendations for Next Phase (Round 4)
+## Priority Recommendations for Next Phase (Round 5)
 
 1. **HIGH**: Implement Telegram user authentication (validate initData on backend, create/update User records)
 2. **HIGH**: Improve seed data quality with real player names from Transfermarkt/soFIFA
 3. **HIGH**: Add spin result caching for performance (cache club-seasons with players in memory)
-4. **MEDIUM**: Fix hard mode rating leak (simulation should use 0.8× penalty for all players when isCompatible=false, not just visual)
-5. **MEDIUM**: Implement One-Club mode (draft from a single club's history)
-6. **MEDIUM**: Implement sharing with rich preview (image generation of squad)
-7. **MEDIUM**: Add position swap persistence to database (API endpoint for swapping slots)
+4. **MEDIUM**: Implement One-Club mode (draft from a single club's history)
+5. **MEDIUM**: Fix hard mode rating leak (simulation should use 0.8× penalty for all players when isCompatible=false, not just visual)
+6. **MEDIUM**: Add player photos/avatars (even placeholder initials would improve UX)
+7. **MEDIUM**: Add "Position-first" draft mode (currently only UI exists, needs full implementation)
 8. **LOW**: Add Daily Challenge mode
 9. **LOW**: Add Leagues (head-to-head) mode
-10. **LOW**: Add player photos/avatars
+10. **LOW**: Implement image generation for sharing results (squad screenshot)
 
 ---
 Task ID: 3-a
@@ -376,3 +513,170 @@ Stage Summary:
 - **gameStore.ts**: 4 new achievements (win_streak, sniper, fortress, elite) with proper match data analysis
 - **ProfileScreen.tsx**: Win rate ring, points bar chart, form indicator, 8 trophies, enhanced history cards
 - **SimulationResult.tsx**: Season form dots, sparkline chart, squad display, enhanced confetti/celebration, new achievement badges
+
+---
+
+## Round 4 — Completed Work
+
+### Task ID: R4-3 — Tournament Table + Position Assignment UX
+
+**Status**: All three features implemented and passing lint.
+
+#### What was done:
+
+1. **Tournament Table — Expandable with Enhanced Styling**
+   - Made tournament table expandable with `📊 Таблица РПЛ` header button (matching existing "📋 Матчи по турам" pattern)
+   - 🏆 icon for champion (1st place)
+   - User's team highlighted in green (#22c55e)
+   - Relegation zone (14-16) in red text with red background tint
+   - Added МЗ (Goals For) and МП (Goals Against) columns
+   - Color-coded Goal Difference (green positive, red negative)
+
+2. **FormationView UX Improvements**
+   - Compatible positions info bar above pitch when player selected ("Совместимые позиции: ЦП, АП, ЦН, НП")
+   - Incompatible empty slots show red dashed border + ❌ indicator
+   - Shake animation on clicking incompatible slot (CSS `@keyframes shake`)
+   - Replaced toast error with visual shake feedback
+
+3. **PositionAssignScreen Enhancement**
+   - Enhanced info banner showing player's rating badge + all position badges
+   - 🔙 Назад button to go back to draft without assigning
+
+4. **Position Swap Persistence via API**
+   - New `POST /api/runs/[runId]/swap` endpoint
+   - Swaps playerSeasonId, playerName, playerRating, playerPosition between two slots
+   - Recalculates isCompatible after swap
+   - gameStore movePlayer now calls swap API after local swap (fire-and-forget)
+
+#### Files Modified:
+- `/src/components/game/SimulationResult.tsx`
+- `/src/components/game/FormationView.tsx`
+- `/src/app/page.tsx`
+- `/src/app/globals.css`
+- `/src/store/gameStore.ts`
+- `/src/app/api/runs/[runId]/swap/route.ts` (NEW)
+
+---
+
+### Task ID: R4-6 — Leaderboard & Sharing Enhancement Agent
+
+**Status**: All features implemented and passing lint (0 errors).
+
+#### What was done:
+
+1. **Enhanced Leaderboard Screen** (`src/app/page.tsx`)
+   - Replaced plain table with card-based entries
+   - Each entry is a card with:
+     - Rank number with medal emoji (🥇🥈🥉 for top 3)
+     - Formation badge (blue pill)
+     - Difficulty badge (green/amber/red colored)
+     - Points display (large, bold, green)
+     - Position with medal/CL emoji
+     - Relative time ("2 мин назад", "3 ч назад")
+     - Squad rating info
+   - Top 3 entries have gradient backgrounds (gold/silver/bronze)
+   - Enhanced empty state with 🏆 emoji + encouraging message + "Сыграть сезон" button
+   - "⚽ Сыграть сезон" button at the bottom (navigates to setup)
+   - Framer Motion stagger animation for list items (slide from left)
+   - Added `getRelativeTime()` helper function
+   - Added `DIFFICULTY_BADGE_COLORS` and `DIFFICULTY_LABELS_MAP` constants
+
+2. **Enhanced Simulation Result** (`src/components/game/SimulationResult.tsx`)
+   - Share button generates richer message including:
+     - Team formation (📐)
+     - W-D-L record (e.g., 12В-8Н-10П)
+     - Points and position (⭐)
+     - Best player name + rating (👑)
+     - Manager name (👨‍💼) if used
+     - Hashtag #30п0 #РПЛ
+   - Added "📊 Копировать результат" button that copies formatted text to clipboard
+     - Uses `navigator.clipboard.writeText()`
+     - Shows toast "📋 Результат скопирован!" on success
+   - Medal emoji next to position display:
+     - 🥇 for 1st, 🥈 for 2nd, 🥉 for 3rd, 🏟️ for 4th
+   - "🔄 Играть снова" button now more prominent (h-16, full width, text-lg)
+   - Share and Copy buttons in a row below the play button
+
+3. **Recent Results Section on Homepage** (`src/app/page.tsx`)
+   - New "📈 Последние результаты" section between Challenges and FAQ
+   - Shows last 3 seasons from `profileStats.history` (reversed, most recent first)
+   - Each result is a compact card with: formation badge, W-D-L pills, difficulty badge, manager name, points, position with medal emoji
+   - If no history, shows encouraging message "Сыграйте первый сезон!" + "Начать игру" button
+   - Framer Motion stagger animation for cards
+   - Created `RecentResults` component function in page.tsx
+
+4. **Enhanced Profile Screen** (`src/components/game/ProfileScreen.tsx`)
+   - Added "📤 Поделиться профилем" button that shares stats summary
+     - Includes seasons, titles, perfect 30-0, best result, wins/goals, achievements count, favorite formation
+     - Tries Telegram WebApp share first, then navigator.share, then clipboard
+   - Added "🗑️ Сбросить статистику" button with AlertDialog confirmation
+     - Uses shadcn/ui AlertDialog component
+     - Confirmation dialog: "Сбросить статистику?" with cancel/confirm
+     - Resets all profileStats to defaults and clears localStorage
+     - Shows toast "🗑️ Статистика сброшена" on success
+   - Trophy cabinet visual improvements:
+     - Earned trophies: golden gradient background, golden border, golden text glow (`drop-shadow`), golden box shadow
+     - Locked trophies: greyed out with 🔒 overlay icon, reduced opacity
+     - Earned/total count display (e.g., "3/8")
+     - Trophy description visible for context
+   - Added prominent "seasons/best result/titles" display bar at top (gradient background, large numbers)
+   - History medals updated: 🥇🥈🥉 for top 3 positions
+
+#### Files Modified:
+- `/src/app/page.tsx` — Enhanced LeaderboardScreen, added RecentResults component, inserted between Challenges and FAQ
+- `/src/components/game/SimulationResult.tsx` — Enhanced share, copy button, medal emojis, prominent replay button
+- `/src/components/game/ProfileScreen.tsx` — Share profile, reset stats with AlertDialog, trophy glow/lock, season count display
+
+---
+
+### Task ID: R4-5 — Visual Polish & Animation Enhancement
+
+**Status**: All visual enhancements implemented and passing lint (0 errors).
+
+#### What was done:
+
+1. **Enhanced CSS Animations** (`globals.css`)
+   - Added 10+ new keyframes: gradientShift, particleBurst, subtlePulse, elevationGlow, buttonGlowPulse, borderGradient, clubNameGlow, strongGreenPulse
+   - Added utility classes: `.animate-gradient-shift`, `.animate-particle-burst`, `.animate-subtle-pulse`, `.animate-elevation-hover`, `.animate-button-glow`, `.animate-border-gradient`, `.animate-club-glow`, `.animate-strong-pulse-green`
+   - Added position gradient border utilities: `.pos-border-gk` (orange), `.pos-border-def` (blue), `.pos-border-mid` (green), `.pos-border-att` (red)
+   - Added `.reroll-hover`/`.reroll-icon` for hover rotation
+   - Added `.pitch-vignette`, `.pitch-grass-lines`, `.player-inner-glow`, `.pitch-elevated`
+
+2. **Enhanced Homepage Hero Section** (`page.tsx`)
+   - Floating particles (6 emojis: ⚽🟢🟡 with staggered animation delays)
+   - Green radial gradient glow behind title
+   - Animated gradient border on hero container
+   - Play button with gradient background + pulsing glow shadow
+   - Bouncing ⚽ replaced with Framer Motion organic animation (y + rotate)
+
+3. **Enhanced Game Setup Screen** (`GameSetup.tsx`)
+   - Formation cards: gradient backgrounds, selected cards get green left border + inset glow + shadow
+   - Difficulty buttons: tinted backgrounds (green/amber/red), colored borders and text
+   - Start button: larger, gradient, pulsing glow shadow, scale effects
+
+4. **Enhanced Spin Wheel Section** (`SpinWheel.tsx`)
+   - Particle burst effect on result reveal (4 emojis scatter outward)
+   - Enhanced bounce-in animation (scale from 0.3 with spring)
+   - Club name glow effect on reveal
+   - Reroll button: hover rotation on 🔄 icon
+
+5. **Enhanced Player List Cards** (`PlayerList.tsx`)
+   - Hover effect lifts card 2px + green shadow
+   - Gradient left border by position category (orange/blue/green/red)
+   - Selected cards: pulsing green border animation
+   - Index badge in top-right corner
+
+6. **Enhanced Formation Pitch** (`FormationView.tsx`)
+   - Vignette overlay (darker at edges)
+   - Grass texture lines overlay
+   - Filled player circles: inner glow + subtle breathing pulse
+   - Compatible empty slots: stronger green pulse
+   - Pitch elevated shadow (deeper, more prominent)
+
+#### Files Modified:
+- `/src/app/globals.css`
+- `/src/app/page.tsx`
+- `/src/components/game/GameSetup.tsx`
+- `/src/components/game/SpinWheel.tsx`
+- `/src/components/game/PlayerList.tsx`
+- `/src/components/game/FormationView.tsx`

@@ -2,8 +2,20 @@
 
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 
 const TROPHIES = [
   { id: 'champion', icon: '🏆', name: 'Чемпион', desc: 'Выиграть чемпионат' },
@@ -28,6 +40,30 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   hard: '#ef4444',
 };
 
+const DEFAULT_PROFILE_STATS = {
+  totalSeasons: 0,
+  bestPoints: 0,
+  bestRecord: '0-0-0',
+  titles: 0,
+  perfect: 0,
+  totalWins: 0,
+  totalGoals: 0,
+  favoriteFormation: '4-3-3',
+  achievements: [] as string[],
+  history: [] as Array<{
+    id: string;
+    date: string;
+    formation: string;
+    difficulty: string;
+    wins: number;
+    draws: number;
+    losses: number;
+    points: number;
+    position: number;
+    managerName?: string | null;
+  }>,
+};
+
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
   const [showHistory, setShowHistory] = useState(false);
@@ -43,6 +79,58 @@ export default function ProfileScreen() {
   // Points chart data (last 10 seasons)
   const recentHistory = profileStats.history.slice(-10);
   const maxPoints = useMemo(() => Math.max(...recentHistory.map(h => h.points), 90), [recentHistory]);
+
+  // Total earned trophies
+  const earnedTrophies = TROPHIES.filter(t => profileStats.achievements.includes(t.id)).length;
+
+  const handleShareProfile = () => {
+    const lines = [
+      '👤 Профиль 30-0 RPL',
+      `📊 ${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'}`,
+      `🏆 Титулов: ${profileStats.titles}`,
+      `✨ Идеальных 30-0: ${profileStats.perfect}`,
+      `⭐ Лучший результат: ${profileStats.bestPoints} очков`,
+      `🎯 Побед: ${profileStats.totalWins} · Голов: ${profileStats.totalGoals}`,
+      `🏅 Достижений: ${earnedTrophies}/${TROPHIES.length}`,
+    ];
+    if (profileStats.favoriteFormation) {
+      lines.push(`📐 Любимая формация: ${profileStats.favoriteFormation}`);
+    }
+    lines.push('#30п0 #РПЛ');
+
+    const text = lines.join('\n');
+
+    // Try Telegram WebApp share first
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      try {
+        window.Telegram.WebApp.openTelegramLink(
+          `https://t.me/share/url?url=${encodeURIComponent('https://30-0.app')}&text=${encodeURIComponent(text)}`,
+        );
+        return;
+      } catch {
+        // fall through
+      }
+    }
+
+    if (navigator.share) {
+      navigator.share({ title: '30-0 RPL — Профиль', text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => {
+        toast.success('📋 Профиль скопирован!');
+      }).catch(() => {});
+    }
+  };
+
+  const handleResetStats = () => {
+    useGameStore.setState({ profileStats: DEFAULT_PROFILE_STATS });
+    // Also clear localStorage
+    try {
+      localStorage.removeItem('30-0-rpl-storage');
+    } catch {
+      // ignore
+    }
+    toast.success('🗑️ Статистика сброшена');
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
@@ -70,6 +158,30 @@ export default function ProfileScreen() {
           }
         </p>
       </div>
+
+      {/* Prominent Season Count + Best Result */}
+      {profileStats.totalSeasons > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl bg-gradient-to-r from-[#22c55e]/10 to-[#3b82f6]/10 p-5 border border-[#22c55e]/20 flex items-center justify-between"
+        >
+          <div className="text-center flex-1">
+            <div className="text-3xl font-black text-[#22c55e]">{profileStats.totalSeasons}</div>
+            <div className="text-xs text-[#94a3b8]">Сезонов</div>
+          </div>
+          <div className="w-px h-10 bg-[#1a1a2e]" />
+          <div className="text-center flex-1">
+            <div className="text-3xl font-black text-[#e2e8f0]">{profileStats.bestPoints}</div>
+            <div className="text-xs text-[#94a3b8]">Лучший результат</div>
+          </div>
+          <div className="w-px h-10 bg-[#1a1a2e]" />
+          <div className="text-center flex-1">
+            <div className="text-3xl font-black text-[#f97316]">{profileStats.titles}</div>
+            <div className="text-xs text-[#94a3b8]">Титулов</div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Main Stats Grid */}
       <div className="grid grid-cols-4 gap-2">
@@ -178,11 +290,6 @@ export default function ProfileScreen() {
           {(() => {
             const lastSeason = profileStats.history[profileStats.history.length - 1];
             const total = lastSeason.wins + lastSeason.draws + lastSeason.losses;
-            const formDots = [];
-            for (let i = 0; i < lastSeason.wins && formDots.length < 10; i++) formDots.push('W');
-            for (let i = 0; i < lastSeason.draws && formDots.length < 10; i++) formDots.push('D');
-            for (let i = 0; i < lastSeason.losses && formDots.length < 10; i++) formDots.push('L');
-            // Reorder to show W/D/L proportionally
             const ordered: string[] = [];
             const ratio = total > 0 ? 10 / total : 0;
             let wRemain = lastSeason.wins;
@@ -242,25 +349,38 @@ export default function ProfileScreen() {
         </div>
       )}
 
-      {/* Trophy Cabinet */}
+      {/* Trophy Cabinet — Enhanced with golden glow & lock icons */}
       <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
-        <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">🏆 Витрина трофеев</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-bold text-[#e2e8f0]">🏆 Витрина трофеев</h3>
+          <span className="text-xs text-[#94a3b8]">{earnedTrophies}/{TROPHIES.length}</span>
+        </div>
         <div className="grid grid-cols-4 gap-2">
           {TROPHIES.map((trophy) => {
             const earned = profileStats.achievements.includes(trophy.id);
             return (
               <motion.div
                 key={trophy.id}
-                whileHover={{ scale: 1.05 }}
-                className={`rounded-xl p-2 text-center border transition-all ${
+                whileHover={{ scale: earned ? 1.08 : 1.02 }}
+                className={`rounded-xl p-2 text-center border transition-all relative ${
                   earned
-                    ? 'bg-[#22c55e]/10 border-[#22c55e]/30'
-                    : 'bg-[#0a0a0f]/50 border-[#1a1a2e] opacity-40'
+                    ? 'bg-gradient-to-b from-yellow-500/15 to-yellow-500/5 border-yellow-500/30 shadow-[0_0_12px_rgba(234,179,8,0.15)]'
+                    : 'bg-[#0a0a0f]/50 border-[#1a1a2e]'
                 }`}
               >
-                <div className={`text-xl mb-0.5 ${earned ? '' : 'grayscale'}`}>{trophy.icon}</div>
-                <div className={`text-[9px] font-bold leading-tight ${earned ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+                {earned ? (
+                  <div className="text-xl mb-0.5 drop-shadow-[0_0_6px_rgba(234,179,8,0.5)]">{trophy.icon}</div>
+                ) : (
+                  <div className="relative text-xl mb-0.5 grayscale opacity-40">
+                    {trophy.icon}
+                    <span className="absolute inset-0 flex items-center justify-center text-xs">🔒</span>
+                  </div>
+                )}
+                <div className={`text-[9px] font-bold leading-tight ${earned ? 'text-yellow-400' : 'text-[#94a3b8]/40'}`}>
                   {trophy.name}
+                </div>
+                <div className={`text-[8px] leading-tight mt-0.5 ${earned ? 'text-[#94a3b8]/60' : 'text-[#94a3b8]/20'}`}>
+                  {trophy.desc}
                 </div>
               </motion.div>
             );
@@ -312,7 +432,7 @@ export default function ProfileScreen() {
                         h.position === 1 ? 'text-[#22c55e]' :
                         h.position <= 3 ? 'text-[#3b82f6]' : 'text-[#94a3b8]'
                       }`}>
-                        {h.position === 1 ? '🏆' : h.position <= 3 ? '🥈' : ''} {h.position} место
+                        {h.position === 1 ? '🥇' : h.position === 2 ? '🥈' : h.position === 3 ? '🥉' : ''} {h.position} место
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -336,7 +456,48 @@ export default function ProfileScreen() {
         </div>
       )}
 
-      {/* Action */}
+      {/* Share Profile + Reset Stats */}
+      <div className="space-y-3">
+        <Button
+          onClick={handleShareProfile}
+          variant="outline"
+          className="w-full h-12 text-sm font-bold border-[#3b82f6]/30 text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-xl"
+        >
+          📤 Поделиться профилем
+        </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-sm font-bold border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 rounded-xl"
+            >
+              🗑️ Сбросить статистику
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-[#1a1a2e] border-[#1a1a2e]">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-[#e2e8f0]">Сбросить статистику?</AlertDialogTitle>
+              <AlertDialogDescription className="text-[#94a3b8]">
+                Это действие удалит все ваши результаты, достижения и историю. Это невозможно отменить.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-[#0a0a0f] text-[#94a3b8] border-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-[#e2e8f0]">
+                Отмена
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleResetStats}
+                className="bg-[#ef4444] text-white hover:bg-[#dc2626]"
+              >
+                Сбросить
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      {/* New Season */}
       <Button
         onClick={() => { resetGame(); setScreen('setup'); }}
         className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"

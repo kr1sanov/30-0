@@ -4,6 +4,7 @@ import { useMemo, useCallback, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 interface ConfettiPiece {
   id: number;
@@ -26,6 +27,7 @@ interface MatchDetail {
 export default function SimulationResult() {
   const { seasonResult, resetGame } = useGameStore();
   const [showMatches, setShowMatches] = useState(false);
+  const [showTable, setShowTable] = useState(false);
 
   const shouldConfetti = seasonResult
     ? ((seasonResult as { position: number }).position === 1 || (seasonResult as { wins: number }).wins === 30)
@@ -53,9 +55,23 @@ export default function SimulationResult() {
 
   const handleShare = useCallback(() => {
     if (!seasonResult) return;
-    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number };
-    const resultEmoji = r.position === 1 ? '🏆' : r.position <= 3 ? '🥈' : '⚽';
-    const text = `${resultEmoji} 30-0 RPL\n${r.formation} · ${r.wins}В ${r.draws}Н ${r.losses}П\n${r.points} очков · ${r.position} место\n${r.goalsFor} голов забито · ${r.goalsAgainst} пропущено\nМожешь лучше?`;
+    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+    const lines = [
+      `${posEmoji} 30-0 RPL`,
+      `📐 ${r.formation} · ${r.wins}В-${r.draws}Н-${r.losses}П`,
+      `⭐ ${r.points} очков · ${r.position} место`,
+      `⚽ ${r.goalsFor} забито · ${r.goalsAgainst} пропущено`,
+    ];
+    if (bestPlayer) {
+      lines.push(`👑 Лучший: ${bestPlayer.name} (${bestPlayer.rating})`);
+    }
+    if (r.managerName) {
+      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+    }
+    lines.push('#30п0 #РПЛ');
+    const text = lines.join('\n');
 
     // Try Telegram WebApp share first
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -72,8 +88,35 @@ export default function SimulationResult() {
     if (navigator.share) {
       navigator.share({ title: '30-0 RPL', text }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(text).catch(() => {});
+      navigator.clipboard.writeText(text).then(() => {
+        toast.success('📋 Результат скопирован!');
+      }).catch(() => {});
     }
+  }, [seasonResult]);
+
+  const handleCopyResult = useCallback(() => {
+    if (!seasonResult) return;
+    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+    const lines = [
+      `${posEmoji} 30-0 RPL`,
+      `📐 Формация: ${r.formation}`,
+      `📊 ${r.wins}В-${r.draws}Н-${r.losses}П · ${r.points} очков · ${r.position} место`,
+      `⚽ Голы: ${r.goalsFor} забито / ${r.goalsAgainst} пропущено`,
+    ];
+    if (bestPlayer) {
+      lines.push(`👑 Лучший игрок: ${bestPlayer.name} (${bestPlayer.rating})`);
+    }
+    if (r.managerName) {
+      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+    }
+    lines.push('#30п0 #РПЛ');
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      toast.success('📋 Результат скопирован!');
+    }).catch(() => {
+      toast.error('Не удалось скопировать');
+    });
   }, [seasonResult]);
 
   // Calculate win streak before early return to satisfy hooks rules
@@ -148,6 +191,7 @@ export default function SimulationResult() {
     if (pos === 1) return '🥇';
     if (pos === 2) return '🥈';
     if (pos === 3) return '🥉';
+    if (pos === 4) return '🏟️';
     return '';
   };
 
@@ -249,6 +293,7 @@ export default function SimulationResult() {
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
           className="text-center py-6 rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e]"
         >
+          <div className="text-3xl mb-1">{getMedalColor(result.position)}</div>
           <div
             className="text-6xl font-black"
             style={{ color: getPositionColor(result.position) }}
@@ -459,12 +504,24 @@ export default function SimulationResult() {
         </div>
       )}
 
-      {/* Tournament Table */}
+      {/* Tournament Table — expandable */}
       {result.table && result.table.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold text-[#e2e8f0] mb-2">Турнирная таблица</h3>
-          <div className="rounded-2xl bg-[#1a1a2e] overflow-hidden border border-[#1a1a2e]">
-            <div className="overflow-x-auto">
+        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+          <button
+            onClick={() => setShowTable(!showTable)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+          >
+            <span className="text-sm font-bold text-[#e2e8f0]">📊 Таблица РПЛ</span>
+            <motion.span animate={{ rotate: showTable ? 180 : 0 }} className="text-[#94a3b8]">
+              ▼
+            </motion.span>
+          </button>
+          {showTable && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="overflow-x-auto"
+            >
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-[#94a3b8] border-b border-[#0a0a0f] bg-[#0a0a0f]/50">
@@ -474,6 +531,8 @@ export default function SimulationResult() {
                     <th className="py-2.5 px-2 text-center">В</th>
                     <th className="py-2.5 px-2 text-center">Н</th>
                     <th className="py-2.5 px-2 text-center">П</th>
+                    <th className="py-2.5 px-2 text-center">МЗ</th>
+                    <th className="py-2.5 px-2 text-center">МП</th>
                     <th className="py-2.5 px-2 text-center">РМ</th>
                     <th className="py-2.5 px-2 text-center font-bold">О</th>
                   </tr>
@@ -481,24 +540,39 @@ export default function SimulationResult() {
                 <tbody>
                   {result.table.map((team) => {
                     const isMyTeam = team.name === 'Моя команда';
+                    const isRelegation = team.position >= 14;
                     return (
                       <tr
                         key={team.position}
                         className={`border-b border-[#0a0a0f]/50 transition-colors ${
-                          isMyTeam ? 'bg-[#22c55e]/10' : 'hover:bg-[#0a0a0f]/30'
+                          isMyTeam
+                            ? 'bg-[#22c55e]/10'
+                            : isRelegation
+                            ? 'bg-[#ef4444]/5'
+                            : 'hover:bg-[#0a0a0f]/30'
                         }`}
                       >
                         <td className="py-2 px-2 text-[#94a3b8]">
-                          {getMedalColor(team.position)} {team.position}
+                          {team.position === 1 ? '🏆' : getMedalColor(team.position)} {team.position}
                         </td>
-                        <td className={`py-2 px-2 font-bold ${isMyTeam ? 'text-[#22c55e]' : 'text-[#e2e8f0]'}`}>
+                        <td className={`py-2 px-2 font-bold ${
+                          isMyTeam
+                            ? 'text-[#22c55e]'
+                            : isRelegation
+                            ? 'text-[#ef4444]'
+                            : 'text-[#e2e8f0]'
+                        }`}>
                           {isMyTeam && '⚽ '}{team.name}
                         </td>
                         <td className="py-2 px-2 text-center text-[#94a3b8]">{team.played}</td>
                         <td className="py-2 px-2 text-center text-[#94a3b8]">{team.won}</td>
                         <td className="py-2 px-2 text-center text-[#94a3b8]">{team.drawn}</td>
                         <td className="py-2 px-2 text-center text-[#94a3b8]">{team.lost}</td>
-                        <td className="py-2 px-2 text-center text-[#94a3b8]">
+                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsFor}</td>
+                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsAgainst}</td>
+                        <td className={`py-2 px-2 text-center ${
+                          team.goalDifference > 0 ? 'text-[#22c55e]' : team.goalDifference < 0 ? 'text-[#ef4444]' : 'text-[#94a3b8]'
+                        }`}>
                           {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
                         </td>
                         <td className="py-2 px-2 text-center font-black text-[#e2e8f0]">{team.points}</td>
@@ -507,8 +581,8 @@ export default function SimulationResult() {
                   })}
                 </tbody>
               </table>
-            </div>
-          </div>
+            </motion.div>
+          )}
         </div>
       )}
 
@@ -580,24 +654,35 @@ export default function SimulationResult() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3">
-        <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+      <div className="space-y-3">
+        <motion.div whileTap={{ scale: 0.97 }}>
           <Button
-            onClick={resetGame}
-            className="w-full h-14 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25"
+            onClick={() => { resetGame(); }}
+            className="w-full h-16 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40"
           >
             🔄 Играть снова
           </Button>
         </motion.div>
-        <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
-          <Button
-            onClick={handleShare}
-            variant="outline"
-            className="w-full h-14 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-2xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
-          >
-            📤 Поделиться
-          </Button>
-        </motion.div>
+        <div className="flex gap-3">
+          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+            >
+              📤 Поделиться
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+            <Button
+              onClick={handleCopyResult}
+              variant="outline"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+            >
+              📊 Копировать
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );
