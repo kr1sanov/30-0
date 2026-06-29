@@ -1,12 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
+import { useSound } from '@/hooks/use-sound';
 
 export default function Header() {
   const { screen, resetGame } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const { toggle, isEnabled } = useSound();
+  const [soundOn, setSoundOn] = useState(true);
+
+  useEffect(() => {
+    setSoundOn(isEnabled());
+  }, [isEnabled]);
+
+  const handleToggleSound = () => {
+    const newState = toggle();
+    setSoundOn(newState);
+  };
 
   const isPlaying = screen !== 'home' && screen !== 'setup' && screen !== 'profile' && screen !== 'leaderboard';
 
@@ -46,6 +58,15 @@ export default function Header() {
                 Рестарт
               </button>
             )}
+
+            <button
+              onClick={handleToggleSound}
+              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#22c55e] rounded-lg hover:bg-[#22c55e]/10 transition-all"
+              title={soundOn ? 'Выключить звук' : 'Включить звук'}
+            >
+              <span className="hidden sm:inline">{soundOn ? '🔊 Звук' : '🔇 Звук'}</span>
+              <span className="sm:hidden">{soundOn ? '🔊' : '🔇'}</span>
+            </button>
 
             <button
               onClick={() => setShowHowToPlay(true)}

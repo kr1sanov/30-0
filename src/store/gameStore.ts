@@ -421,10 +421,13 @@ export const useGameStore = create<GameState>()(
           points: number;
           position: number;
           goalsFor: number;
+          goalsAgainst: number;
           formation: string;
           difficulty: string;
           managerName?: string | null;
           runId: string;
+          squadRating?: number;
+          matches?: Array<{ matchday: number; isHome: boolean; result: 'W' | 'D' | 'L' }>;
         };
 
         set((state) => {
@@ -471,9 +474,34 @@ export const useGameStore = create<GameState>()(
             if (!newAchievements.includes(id)) newAchievements.push(id);
           };
           if (r.position === 1) addAch('champion');
-          if (r.wins === 30) addAch('perfect');
+          if (r.wins === 30 && r.draws === 0 && r.losses === 0) addAch('perfect');
           if (r.goalsFor >= 60) addAch('goal_machine');
-          if (r.goalsFor - (r as { goalsAgainst?: number }).goalsAgainst! > 50) addAch('iron_defense');
+          if (r.goalsFor - r.goalsAgainst > 50) addAch('iron_defense');
+
+          // New achievements
+          // Win streak: 5+ wins in a row
+          const matches = r.matches || [];
+          let maxStreak = 0;
+          let currentStreak = 0;
+          for (const m of matches) {
+            if (m.result === 'W') {
+              currentStreak++;
+              maxStreak = Math.max(maxStreak, currentStreak);
+            } else {
+              currentStreak = 0;
+            }
+          }
+          if (maxStreak >= 5) addAch('win_streak');
+
+          // Sniper: 2+ goals per match average
+          if (r.goalsFor / 30 >= 2) addAch('sniper');
+
+          // Fortress: 0 home losses
+          const homeLosses = matches.filter((m) => m.isHome && m.result === 'L').length;
+          if (homeLosses === 0 && matches.length > 0) addAch('fortress');
+
+          // Elite: squad rating 80+
+          if (r.squadRating && r.squadRating >= 80) addAch('elite');
 
           stats.achievements = newAchievements;
           stats.history = allHistory.slice(-50); // Keep last 50

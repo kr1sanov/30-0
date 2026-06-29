@@ -11,6 +11,7 @@ interface ConfettiPiece {
   x: number;
   delay: number;
   duration: number;
+  size: number;
 }
 
 interface MatchDetail {
@@ -30,22 +31,31 @@ export default function SimulationResult() {
     ? ((seasonResult as { position: number }).position === 1 || (seasonResult as { wins: number }).wins === 30)
     : false;
 
+  const isPerfectSeason = seasonResult
+    ? ((seasonResult as { wins: number }).wins === 30 && (seasonResult as { draws: number }).draws === 0 && (seasonResult as { losses: number }).losses === 0)
+    : false;
+
   const confetti = useMemo<ConfettiPiece[]>(() => {
     if (!shouldConfetti) return [];
-    const emojis = ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊'];
-    return Array.from({ length: 24 }, (_, i) => ({
+    const emojis = isPerfectSeason
+      ? ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊', '👑', '💎', '🌟', '🎯']
+      : ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊'];
+    const count = isPerfectSeason ? 40 : 24;
+    return Array.from({ length: count }, (_, i) => ({
       id: i,
       emoji: emojis[i % emojis.length],
       x: Math.random() * 100,
-      delay: Math.random() * 2,
-      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 2.5,
+      duration: 1.5 + Math.random() * 3.5,
+      size: isPerfectSeason ? (Math.random() > 0.5 ? 36 : 24) : 24,
     }));
-  }, [shouldConfetti]);
+  }, [shouldConfetti, isPerfectSeason]);
 
   const handleShare = useCallback(() => {
     if (!seasonResult) return;
-    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string };
-    const text = `🏆 30-0 RPL\nФормация: ${r.formation}\n${r.wins}В ${r.draws}Н ${r.losses}П · ${r.points} очков · ${r.position} место\nМожешь лучше?`;
+    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number };
+    const resultEmoji = r.position === 1 ? '🏆' : r.position <= 3 ? '🥈' : '⚽';
+    const text = `${resultEmoji} 30-0 RPL\n${r.formation} · ${r.wins}В ${r.draws}Н ${r.losses}П\n${r.points} очков · ${r.position} место\n${r.goalsFor} голов забито · ${r.goalsAgainst} пропущено\nМожешь лучше?`;
 
     // Try Telegram WebApp share first
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -82,6 +92,18 @@ export default function SimulationResult() {
     return max;
   }, [matches]);
 
+  // Calculate points accumulation for sparkline
+  const pointsAccumulation = useMemo(() => {
+    const acc: number[] = [];
+    let total = 0;
+    for (const m of matches) {
+      if (m.result === 'W') total += 3;
+      else if (m.result === 'D') total += 1;
+      acc.push(total);
+    }
+    return acc;
+  }, [matches]);
+
   if (!seasonResult) return null;
 
   const result = seasonResult as {
@@ -110,6 +132,12 @@ export default function SimulationResult() {
     managerName?: string | null;
     managerRating?: number | null;
     squadRating?: number;
+    players?: Array<{
+      name: string;
+      position: string;
+      rating: number;
+      isCompatible: boolean;
+    }>;
   };
 
   const isChampion = result.position === 1;
@@ -149,10 +177,15 @@ export default function SimulationResult() {
           {confetti.map((piece) => (
             <motion.div
               key={piece.id}
-              className="absolute text-2xl"
-              style={{ left: `${piece.x}%` }}
-              initial={{ y: -50, opacity: 1, rotate: 0 }}
-              animate={{ y: '100vh', opacity: 0, rotate: 720 }}
+              className="absolute"
+              style={{ left: `${piece.x}%`, fontSize: piece.size }}
+              initial={{ y: -50, opacity: 1, rotate: 0, scale: 1 }}
+              animate={{
+                y: '100vh',
+                opacity: 0,
+                rotate: isPerfectSeason ? 1080 : 720,
+                scale: isPerfectSeason ? [1, 1.3, 1, 1.2, 0.8] : [1, 1.1, 1, 0.9],
+              }}
               transition={{
                 duration: piece.duration,
                 delay: piece.delay,
@@ -171,21 +204,40 @@ export default function SimulationResult() {
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-          className="text-center py-8 rounded-2xl bg-gradient-to-b from-[#22c55e]/20 via-[#22c55e]/5 to-transparent border border-[#22c55e]/20"
+          className={`text-center py-8 rounded-2xl border ${
+            isPerfect
+              ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/5 to-transparent border-yellow-500/30'
+              : 'bg-gradient-to-b from-[#22c55e]/20 via-[#22c55e]/5 to-transparent border-[#22c55e]/20'
+          }`}
         >
           <motion.div
             className="text-7xl mb-4"
-            animate={{ rotate: [0, -5, 5, -5, 0] }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+            animate={isPerfect
+              ? { rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1, 1.1, 1] }
+              : { rotate: [0, -5, 5, -5, 0] }
+            }
+            transition={{ duration: isPerfect ? 0.8 : 0.5, delay: 0.5 }}
           >
-            🏆
+            {isPerfect ? '👑' : '🏆'}
           </motion.div>
-          <div className="text-3xl font-black text-gradient-green">
+          <div className={`text-3xl font-black ${isPerfect ? 'text-yellow-400' : 'text-gradient-green'}`}>
             {isPerfect ? '30-0! Идеальный сезон!' : 'Чемпион!'}
           </div>
           <div className="text-sm text-[#94a3b8] mt-2">
             {isPerfect ? 'Невероятно! Все 30 матчей выиграны!' : 'Вы выиграли чемпионат!'}
           </div>
+          {isPerfect && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              className="mt-3 inline-block"
+            >
+              <span className="text-xs px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
+                ✨ Это легендарное достижение!
+              </span>
+            </motion.div>
+          )}
         </motion.div>
       )}
 
@@ -278,6 +330,88 @@ export default function SimulationResult() {
           <div className="text-xs text-[#94a3b8]">Рейтинг состава</div>
         </div>
       </div>
+
+      {/* Season Form - colored dots */}
+      {matchesList.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Форма сезона</h4>
+          <div className="flex flex-wrap gap-1">
+            {matchesList.map((m) => (
+              <div
+                key={m.matchday}
+                className="w-5 h-5 rounded-sm flex items-center justify-center text-[8px] font-bold text-white"
+                style={{
+                  backgroundColor: m.result === 'W' ? '#22c55e' : m.result === 'D' ? '#f97316' : '#ef4444',
+                }}
+                title={`Тур ${m.matchday}: ${m.homeGoals}-${m.awayGoals} vs ${m.opponent}`}
+              >
+                {m.matchday}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Points accumulation sparkline */}
+      {pointsAccumulation.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Набранные очки</h4>
+            <span className="text-xs font-bold text-[#22c55e]">{result.points}</span>
+          </div>
+          <div className="relative h-16">
+            <svg className="w-full h-full" viewBox={`0 0 ${pointsAccumulation.length - 1} 100`} preserveAspectRatio="none">
+              {/* Grid lines */}
+              {[30, 60, 90].map((pts) => {
+                const y = 100 - (pts / 90) * 100;
+                return (
+                  <line
+                    key={pts}
+                    x1="0"
+                    y1={y}
+                    x2={pointsAccumulation.length - 1}
+                    y2={y}
+                    stroke="#1a1a2e"
+                    strokeWidth="2"
+                  />
+                );
+              })}
+              {/* Fill area */}
+              <path
+                d={`M0 100 ${pointsAccumulation.map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`).join(' ')} L${pointsAccumulation.length - 1} 100 Z`}
+                fill="url(#pointsGradient)"
+                fillOpacity="0.3"
+              />
+              {/* Line */}
+              <path
+                d={`M0 ${100 - (pointsAccumulation[0] / 90) * 100} ${pointsAccumulation.map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`).join(' ')}`}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* End point */}
+              <circle
+                cx={pointsAccumulation.length - 1}
+                cy={100 - (pointsAccumulation[pointsAccumulation.length - 1] / 90) * 100}
+                r="3"
+                fill="#22c55e"
+              />
+              <defs>
+                <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div className="flex justify-between text-[9px] text-[#94a3b8]/40 mt-1">
+            <span>Тур 1</span>
+            <span>Тур {pointsAccumulation.length}</span>
+          </div>
+        </div>
+      )}
 
       {/* Match-by-match view */}
       {matchesList.length > 0 && (
@@ -378,8 +512,26 @@ export default function SimulationResult() {
         </div>
       )}
 
+      {/* Squad that played */}
+      {result.players && result.players.length > 0 && (
+        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Ваш состав</h4>
+          <div className="grid grid-cols-2 gap-1.5">
+            {result.players.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-[#0a0a0f]/30">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">{p.position}</span>
+                <span className="text-xs font-medium text-[#e2e8f0] flex-1 truncate">{p.name}</span>
+                <span className={`text-xs font-bold ${p.rating >= 80 ? 'text-[#22c55e]' : p.rating >= 70 ? 'text-[#3b82f6]' : 'text-[#94a3b8]'}`}>
+                  {p.rating}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Achievements */}
-      {(isChampion || isPerfect || isUnbeaten) && (
+      {(isChampion || isPerfect || isUnbeaten || result.goalsFor >= 60 || result.goalsAgainst <= 15 || result.goalsFor - result.goalsAgainst >= 50 || winStreak >= 5 || result.goalsFor / 30 >= 2) && (
         <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
           <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">Достижения</h3>
           <div className="flex flex-wrap gap-2">
@@ -411,6 +563,16 @@ export default function SimulationResult() {
             {result.goalsFor - result.goalsAgainst >= 50 && (
               <span className="text-xs px-4 py-2 rounded-full bg-[#8b5cf6]/20 text-[#8b5cf6] font-bold border border-[#8b5cf6]/30">
                 💪 Доминирование (+50 разница)
+              </span>
+            )}
+            {winStreak >= 5 && (
+              <span className="text-xs px-4 py-2 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">
+                🔥 Серия побед ({winStreak} подряд)
+              </span>
+            )}
+            {result.goalsFor / 30 >= 2 && (
+              <span className="text-xs px-4 py-2 rounded-full bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/30">
+                🎯 Снайпер (2+ гола/матч)
               </span>
             )}
           </div>

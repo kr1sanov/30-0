@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelegram } from '@/hooks/use-telegram';
+import { useSound } from '@/hooks/use-sound';
 
 const CLUB_EMOJIS: Record<string, string> = {
   'Зенит': '🔵',
@@ -41,6 +42,7 @@ const SPIN_NAMES = [
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, config, slots } = useGameStore();
   const { haptic, notify } = useTelegram();
+  const { play } = useSound();
   const [displayText, setDisplayText] = useState<string>('');
   const [displayEmoji, setDisplayEmoji] = useState<string>('⚽');
   const [animating, setAnimating] = useState(false);
@@ -51,11 +53,13 @@ export default function SpinWheel() {
 
   const handleSpin = () => {
     haptic('medium');
+    play('spin');
     spin();
   };
 
   const handleReroll = () => {
     haptic('light');
+    play('reroll');
     reroll();
   };
 
@@ -95,13 +99,14 @@ export default function SpinWheel() {
   // When spin result arrives, show it with dramatic reveal
   useEffect(() => {
     if (currentSpin && !isSpinning) {
+      play('spin_result');
       setDisplayText(currentSpin.clubName);
       setDisplayEmoji(getClubEmoji(currentSpin.clubName));
       // Dramatic reveal delay
       const timer = setTimeout(() => setShowResult(true), 300);
       return () => clearTimeout(timer);
     }
-  }, [currentSpin, isSpinning]);
+  }, [currentSpin, isSpinning, play]);
 
   const hasResult = currentSpin && !isSpinning;
 
