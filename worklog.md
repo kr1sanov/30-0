@@ -1526,3 +1526,70 @@ Stage Summary:
 4. Add keyboard shortcuts for draft actions
 5. Performance optimization — reduce CSS animation count for mobile
 6. Add `prefers-reduced-motion` media query for accessibility
+
+---
+
+## QA-1 — Dev Server Restart & QA (2025-03-05)
+
+### Task: Restart dev server, QA the full app, report bugs
+
+### Critical Bug Found & Fixed: AnimatePresence `mode="wait"` broken
+
+**Symptom**: Clicking "Играть 30-0" button on homepage does NOT navigate to the Game Setup screen. The screen fades to black (opacity 0) but the new screen never appears.
+
+**Root Cause**: Framer Motion 12.26.2's `AnimatePresence mode="wait"` is broken with React 19. When the `key` prop changes (from "home" to "setup"), the exit animation fires and completes, but `onExitComplete` never triggers. As a result, AnimatePresence never mounts the new child component.
+
+**Debug Evidence**:
+- `setScreen('setup')` IS called successfully (confirmed via `useGameStore.getState().screen` → "setup")
+- The `Home` component DOES re-render with `screen: 'setup'` (confirmed via console.log)
+- The exit animation fires and completes (`onAnimationComplete` fires for key "home")
+- `AnimatePresence`'s internal `onExitComplete` NEVER fires
+- The new child (key="setup") is NEVER mounted into the DOM
+- DOM shows only one child: the exiting "home" screen at `opacity: 0; transform: translateX(-80px)`
+
+**Fix Applied**: Changed `AnimatePresence mode="wait"` to `AnimatePresence mode="popLayout"` with `layout` prop on the `motion.div`. This uses layout animations instead of sequential exit→enter, which works correctly with React 19.
+
+**File Changed**: `/home/z/my-project/src/app/page.tsx`
+- Line 922: `mode="wait"` → `mode="popLayout"`
+- Line 931: Added `layout` prop to `motion.div`
+
+**Note**: `SpinWheel.tsx` and `ManagerChoice.tsx` also use `mode="wait"` but with conditional rendering (not key changes), so they may still work. Should be tested separately.
+
+### QA Test Results
+
+| Test | Result | Notes |
+|------|--------|-------|
+| Dev server starts | ✅ | `next dev` starts successfully, ready in ~1s |
+| Homepage loads | ✅ | HTTP 200, all elements render correctly |
+| API: /api/formations | ✅ | 12 formations with 11 slots each |
+| API: /api/clubs | ✅ | 15 clubs returned |
+| API: /api/seasons | ✅ | 33 seasons returned |
+| API: /api/leaderboard | ✅ | 2 entries returned |
+| API: POST /api/runs | ✅ | Creates run with 11 slots |
+| API: POST /api/runs/:id/spin | ✅ | Returns club+season+players (e.g., "Ростов 2000", "Динамо Москва 2000") |
+| API: POST /api/runs/:id/simulate | ⚠️ | Returns 400 if slots not filled (expected) |
+| Screen transition: Home→Setup | ✅ (after fix) | Was broken with mode="wait", fixed with mode="popLayout" |
+| Screen transition: Setup→Draft | ❓ | Could not test — server crashes before completing flow |
+| Game setup UI | ✅ | Formation selector, difficulty, draft mode, rating mode, era filter all visible |
+| Quick Pick button | ✅ | "⚡ Быстрый старт" button visible in game setup |
+| "Начать игру" button | ❓ | API call fails (server crashes during fetch) |
+
+### Dev Server Stability Issue
+
+**Problem**: The Next.js dev server (and production server) crash after serving a few requests. This appears to be a sandbox environment issue where background processes are killed between shell sessions, NOT an application bug.
+
+**Evidence**:
+- Server responds to curl within a single bash command (multiple requests OK)
+- Server dies between separate bash tool calls (process cleanup)
+- Both `next dev` and `next start` / standalone server exhibit the same behavior
+- No error logs or OOM indicators in server output
+
+### Other Potential Issues (Not Confirmed via Browser)
+1. `AnimatePresence mode="wait"` in `SpinWheel.tsx:464` and `ManagerChoice.tsx:633` may also be broken — needs testing
+2. Quick Pick flow not tested end-to-end
+3. Draft → Position Assign → Squad Complete → Simulation flow not tested
+4. Profile and Leaderboard screens not tested via browser
+5. Mobile responsiveness not tested
+
+### Files Modified
+- `src/app/page.tsx`: Fixed AnimatePresence mode from "wait" to "popLayout", added `layout` prop

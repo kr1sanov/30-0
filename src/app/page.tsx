@@ -919,7 +919,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
       <Header />
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6">
-        <AnimatePresence mode="wait" custom={direction}>
+        <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={screen}
             custom={direction}
@@ -928,6 +928,7 @@ export default function Home() {
             animate="center"
             exit="exit"
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+            layout
           >
             {renderScreen()}
           </motion.div>
