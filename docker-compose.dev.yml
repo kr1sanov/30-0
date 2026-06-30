@@ -1,0 +1,31 @@
+# ──────────────────────────────────────────────
+# 30-0 RPL — Docker Compose for Development
+# ──────────────────────────────────────────────
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# This starts a local PostgreSQL database for development
+# while you run the Next.js dev server on the host.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: 30-0-dev-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: thirtyzero_dev
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d thirtyzero_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata_dev:
+    driver: local

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Club {
@@ -42,8 +43,8 @@ model ClubSeason {
   goalsFor      Int?
   goalsAgainst  Int?
   
-  club          Club     @relation(fields: [clubId], references: [id])
-  season        Season   @relation(fields: [seasonId], references: [id])
+  club          Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season        Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
   players       PlayerSeason[]
   
   @@unique([clubId, seasonId])
@@ -74,8 +75,8 @@ model PlayerSeason {
   goals           Int?
   assists         Int?
   
-  player          Player     @relation(fields: [playerId], references: [id])
-  clubSeason      ClubSeason @relation(fields: [clubSeasonId], references: [id])
+  player          Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  clubSeason      ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
   
   @@unique([playerId, clubSeasonId])
 }
@@ -119,7 +120,7 @@ model GameSlot {
   playerPosition    String?
   isCompatible      Boolean  @default(true)
   
-  run               GameRun  @relation(fields: [runId], references: [id])
+  run               GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
   
   @@unique([runId, slotPosition])
 }
