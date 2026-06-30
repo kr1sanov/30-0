@@ -65,6 +65,9 @@ interface GameState {
   // Leaderboard
   leaderboard: LeaderboardEntry[];
 
+  // Last config for quick replay
+  lastConfig: GameConfig | null;
+
   // Actions
   startRun: () => Promise<void>;
   spin: () => Promise<void>;
@@ -137,6 +140,9 @@ export const useGameStore = create<GameState>()(
       // Leaderboard
       leaderboard: [],
 
+      // Last config for quick replay
+      lastConfig: null,
+
       // Actions
       startRun: async () => {
         const { config } = get();
@@ -197,6 +203,7 @@ export const useGameStore = create<GameState>()(
             seasonResult: null,
             currentManager: null,
             screen: 'draft',
+            lastConfig: { ...config },
           });
         } catch (error) {
           console.error('Failed to start run:', error);
@@ -564,8 +571,8 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      // Only persist profileStats
-      partialize: (state) => ({ profileStats: state.profileStats }),
+      // Persist profileStats and lastConfig for quick replay
+      partialize: (state) => ({ profileStats: state.profileStats, lastConfig: state.lastConfig }),
     },
   ),
 );

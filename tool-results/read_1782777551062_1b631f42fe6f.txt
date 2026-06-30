@@ -1,0 +1,690 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useMemo, useCallback, useState } from 'react';
+     4→     4→import { useGameStore } from '@/store/gameStore';
+     5→     5→import { Button } from '@/components/ui/button';
+     6→     6→import { motion } from 'framer-motion';
+     7→     7→import { toast } from 'sonner';
+     8→     8→
+     9→     9→interface ConfettiPiece {
+    10→    10→  id: number;
+    11→    11→  emoji: string;
+    12→    12→  x: number;
+    13→    13→  delay: number;
+    14→    14→  duration: number;
+    15→    15→  size: number;
+    16→    16→}
+    17→    17→
+    18→    18→interface MatchDetail {
+    19→    19→  matchday: number;
+    20→    20→  opponent: string;
+    21→    21→  isHome: boolean;
+    22→    22→  homeGoals: number;
+    23→    23→  awayGoals: number;
+    24→    24→  result: 'W' | 'D' | 'L';
+    25→    25→}
+    26→    26→
+    27→    27→export default function SimulationResult() {
+    28→    28→  const { seasonResult, resetGame } = useGameStore();
+    29→    29→  const [showMatches, setShowMatches] = useState(false);
+    30→    30→  const [showTable, setShowTable] = useState(false);
+    31→    31→
+    32→    32→  const shouldConfetti = seasonResult
+    33→    33→    ? ((seasonResult as { position: number }).position === 1 || (seasonResult as { wins: number }).wins === 30)
+    34→    34→    : false;
+    35→    35→
+    36→    36→  const isPerfectSeason = seasonResult
+    37→    37→    ? ((seasonResult as { wins: number }).wins === 30 && (seasonResult as { draws: number }).draws === 0 && (seasonResult as { losses: number }).losses === 0)
+    38→    38→    : false;
+    39→    39→
+    40→    40→  const confetti = useMemo<ConfettiPiece[]>(() => {
+    41→    41→    if (!shouldConfetti) return [];
+    42→    42→    const emojis = isPerfectSeason
+    43→    43→      ? ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊', '👑', '💎', '🌟', '🎯']
+    44→    44→      : ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊'];
+    45→    45→    const count = isPerfectSeason ? 40 : 24;
+    46→    46→    return Array.from({ length: count }, (_, i) => ({
+    47→    47→      id: i,
+    48→    48→      emoji: emojis[i % emojis.length],
+    49→    49→      x: Math.random() * 100,
+    50→    50→      delay: Math.random() * 2.5,
+    51→    51→      duration: 1.5 + Math.random() * 3.5,
+    52→    52→      size: isPerfectSeason ? (Math.random() > 0.5 ? 36 : 24) : 24,
+    53→    53→    }));
+    54→    54→  }, [shouldConfetti, isPerfectSeason]);
+    55→    55→
+    56→    56→  const handleShare = useCallback(() => {
+    57→    57→    if (!seasonResult) return;
+    58→    58→    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+    59→    59→    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+    60→    60→    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+    61→    61→    const lines = [
+    62→    62→      `${posEmoji} 30-0 RPL`,
+    63→    63→      `📐 ${r.formation} · ${r.wins}В-${r.draws}Н-${r.losses}П`,
+    64→    64→      `⭐ ${r.points} очков · ${r.position} место`,
+    65→    65→      `⚽ ${r.goalsFor} забито · ${r.goalsAgainst} пропущено`,
+    66→    66→    ];
+    67→    67→    if (bestPlayer) {
+    68→    68→      lines.push(`👑 Лучший: ${bestPlayer.name} (${bestPlayer.rating})`);
+    69→    69→    }
+    70→    70→    if (r.managerName) {
+    71→    71→      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+    72→    72→    }
+    73→    73→    lines.push('#30п0 #РПЛ');
+    74→    74→    const text = lines.join('\n');
+    75→    75→
+    76→    76→    // Try Telegram WebApp share first
+    77→    77→    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+    78→    78→      try {
+    79→    79→        window.Telegram.WebApp.openTelegramLink(
+    80→    80→          `https://t.me/share/url?url=${encodeURIComponent('https://30-0.app')}&text=${encodeURIComponent(text)}`,
+    81→    81→        );
+    82→    82→        return;
+    83→    83→      } catch {
+    84→    84→        // fall through to navigator.share
+    85→    85→      }
+    86→    86→    }
+    87→    87→
+    88→    88→    if (navigator.share) {
+    89→    89→      navigator.share({ title: '30-0 RPL', text }).catch(() => {});
+    90→    90→    } else {
+    91→    91→      navigator.clipboard.writeText(text).then(() => {
+    92→    92→        toast.success('📋 Результат скопирован!');
+    93→    93→      }).catch(() => {});
+    94→    94→    }
+    95→    95→  }, [seasonResult]);
+    96→    96→
+    97→    97→  const handleCopyResult = useCallback(() => {
+    98→    98→    if (!seasonResult) return;
+    99→    99→    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+   100→   100→    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+   101→   101→    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+   102→   102→    const lines = [
+   103→   103→      `${posEmoji} 30-0 RPL`,
+   104→   104→      `📐 Формация: ${r.formation}`,
+   105→   105→      `📊 ${r.wins}В-${r.draws}Н-${r.losses}П · ${r.points} очков · ${r.position} место`,
+   106→   106→      `⚽ Голы: ${r.goalsFor} забито / ${r.goalsAgainst} пропущено`,
+   107→   107→    ];
+   108→   108→    if (bestPlayer) {
+   109→   109→      lines.push(`👑 Лучший игрок: ${bestPlayer.name} (${bestPlayer.rating})`);
+   110→   110→    }
+   111→   111→    if (r.managerName) {
+   112→   112→      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+   113→   113→    }
+   114→   114→    lines.push('#30п0 #РПЛ');
+   115→   115→    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+   116→   116→      toast.success('📋 Результат скопирован!');
+   117→   117→    }).catch(() => {
+   118→   118→      toast.error('Не удалось скопировать');
+   119→   119→    });
+   120→   120→  }, [seasonResult]);
+   121→   121→
+   122→   122→  // Calculate win streak before early return to satisfy hooks rules
+   123→   123→  const matches = (seasonResult as { matches?: MatchDetail[] } | null)?.matches || [];
+   124→   124→  const winStreak = useMemo(() => {
+   125→   125→    let max = 0;
+   126→   126→    let current = 0;
+   127→   127→    for (const m of matches) {
+   128→   128→      if (m.result === 'W') {
+   129→   129→        current++;
+   130→   130→        max = Math.max(max, current);
+   131→   131→      } else {
+   132→   132→        current = 0;
+   133→   133→      }
+   134→   134→    }
+   135→   135→    return max;
+   136→   136→  }, [matches]);
+   137→   137→
+   138→   138→  // Calculate points accumulation for sparkline
+   139→   139→  const pointsAccumulation = useMemo(() => {
+   140→   140→    const acc: number[] = [];
+   141→   141→    let total = 0;
+   142→   142→    for (const m of matches) {
+   143→   143→      if (m.result === 'W') total += 3;
+   144→   144→      else if (m.result === 'D') total += 1;
+   145→   145→      acc.push(total);
+   146→   146→    }
+   147→   147→    return acc;
+   148→   148→  }, [matches]);
+   149→   149→
+   150→   150→  if (!seasonResult) return null;
+   151→   151→
+   152→   152→  const result = seasonResult as {
+   153→   153→    wins: number;
+   154→   154→    draws: number;
+   155→   155→    losses: number;
+   156→   156→    points: number;
+   157→   157→    position: number;
+   158→   158→    goalsFor: number;
+   159→   159→    goalsAgainst: number;
+   160→   160→    table: Array<{
+   161→   161→      position: number;
+   162→   162→      name: string;
+   163→   163→      played: number;
+   164→   164→      won: number;
+   165→   165→      drawn: number;
+   166→   166→      lost: number;
+   167→   167→      goalsFor: number;
+   168→   168→      goalsAgainst: number;
+   169→   169→      goalDifference: number;
+   170→   170→      points: number;
+   171→   171→    }>;
+   172→   172→    matches?: MatchDetail[];
+   173→   173→    formation: string;
+   174→   174→    difficulty: string;
+   175→   175→    managerName?: string | null;
+   176→   176→    managerRating?: number | null;
+   177→   177→    squadRating?: number;
+   178→   178→    players?: Array<{
+   179→   179→      name: string;
+   180→   180→      position: string;
+   181→   181→      rating: number;
+   182→   182→      isCompatible: boolean;
+   183→   183→    }>;
+   184→   184→  };
+   185→   185→
+   186→   186→  const isChampion = result.position === 1;
+   187→   187→  const isPerfect = result.wins === 30 && result.draws === 0 && result.losses === 0;
+   188→   188→  const isUnbeaten = result.losses === 0;
+   189→   189→
+   190→   190→  const getMedalColor = (pos: number) => {
+   191→   191→    if (pos === 1) return '🥇';
+   192→   192→    if (pos === 2) return '🥈';
+   193→   193→    if (pos === 3) return '🥉';
+   194→   194→    if (pos === 4) return '🏟️';
+   195→   195→    return '';
+   196→   196→  };
+   197→   197→
+   198→   198→  const getPositionLabel = (pos: number): string => {
+   199→   199→    if (pos === 1) return 'Чемпион';
+   200→   200→    if (pos <= 3) return 'Призёр';
+   201→   201→    if (pos <= 6) return 'Еврозона';
+   202→   202→    if (pos <= 10) return 'Середина';
+   203→   203→    return 'Зона вылета';
+   204→   204→  };
+   205→   205→
+   206→   206→  const getPositionColor = (pos: number): string => {
+   207→   207→    if (pos === 1) return '#22c55e';
+   208→   208→    if (pos <= 3) return '#3b82f6';
+   209→   209→    if (pos <= 6) return '#8b5cf6';
+   210→   210→    if (pos <= 10) return '#f97316';
+   211→   211→    return '#ef4444';
+   212→   212→  };
+   213→   213→
+   214→   214→  const matchesList = result.matches || [];
+   215→   215→
+   216→   216→  return (
+   217→   217→    <div className="space-y-6 animate-fade-in-up relative">
+   218→   218→      {/* Confetti for champions */}
+   219→   219→      {confetti.length > 0 && (
+   220→   220→        <div className="fixed inset-0 pointer-events-none z-50">
+   221→   221→          {confetti.map((piece) => (
+   222→   222→            <motion.div
+   223→   223→              key={piece.id}
+   224→   224→              className="absolute"
+   225→   225→              style={{ left: `${piece.x}%`, fontSize: piece.size }}
+   226→   226→              initial={{ y: -50, opacity: 1, rotate: 0, scale: 1 }}
+   227→   227→              animate={{
+   228→   228→                y: '100vh',
+   229→   229→                opacity: 0,
+   230→   230→                rotate: isPerfectSeason ? 1080 : 720,
+   231→   231→                scale: isPerfectSeason ? [1, 1.3, 1, 1.2, 0.8] : [1, 1.1, 1, 0.9],
+   232→   232→              }}
+   233→   233→              transition={{
+   234→   234→                duration: piece.duration,
+   235→   235→                delay: piece.delay,
+   236→   236→                ease: 'easeIn',
+   237→   237→              }}
+   238→   238→            >
+   239→   239→              {piece.emoji}
+   240→   240→            </motion.div>
+   241→   241→          ))}
+   242→   242→        </div>
+   243→   243→      )}
+   244→   244→
+   245→   245→      {/* Trophy / Celebration */}
+   246→   246→      {(isChampion || isPerfect) && (
+   247→   247→        <motion.div
+   248→   248→          initial={{ scale: 0.5, opacity: 0 }}
+   249→   249→          animate={{ scale: 1, opacity: 1 }}
+   250→   250→          transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+   251→   251→          className={`text-center py-8 rounded-2xl border ${
+   252→   252→            isPerfect
+   253→   253→              ? 'bg-gradient-to-b from-yellow-500/20 via-yellow-500/5 to-transparent border-yellow-500/30'
+   254→   254→              : 'bg-gradient-to-b from-[#22c55e]/20 via-[#22c55e]/5 to-transparent border-[#22c55e]/20'
+   255→   255→          }`}
+   256→   256→        >
+   257→   257→          <motion.div
+   258→   258→            className="text-7xl mb-4"
+   259→   259→            animate={isPerfect
+   260→   260→              ? { rotate: [0, -10, 10, -10, 0], scale: [1, 1.2, 1, 1.1, 1] }
+   261→   261→              : { rotate: [0, -5, 5, -5, 0] }
+   262→   262→            }
+   263→   263→            transition={{ duration: isPerfect ? 0.8 : 0.5, delay: 0.5 }}
+   264→   264→          >
+   265→   265→            {isPerfect ? '👑' : '🏆'}
+   266→   266→          </motion.div>
+   267→   267→          <div className={`text-3xl font-black ${isPerfect ? 'text-yellow-400' : 'text-gradient-green'}`}>
+   268→   268→            {isPerfect ? '30-0! Идеальный сезон!' : 'Чемпион!'}
+   269→   269→          </div>
+   270→   270→          <div className="text-sm text-[#94a3b8] mt-2">
+   271→   271→            {isPerfect ? 'Невероятно! Все 30 матчей выиграны!' : 'Вы выиграли чемпионат!'}
+   272→   272→          </div>
+   273→   273→          {isPerfect && (
+   274→   274→            <motion.div
+   275→   275→              initial={{ opacity: 0 }}
+   276→   276→              animate={{ opacity: 1 }}
+   277→   277→              transition={{ delay: 1.5 }}
+   278→   278→              className="mt-3 inline-block"
+   279→   279→            >
+   280→   280→              <span className="text-xs px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
+   281→   281→                ✨ Это легендарное достижение!
+   282→   282→              </span>
+   283→   283→            </motion.div>
+   284→   284→          )}
+   285→   285→        </motion.div>
+   286→   286→      )}
+   287→   287→
+   288→   288→      {/* Position Display (when not champion) */}
+   289→   289→      {!isChampion && (
+   290→   290→        <motion.div
+   291→   291→          initial={{ scale: 0.8, opacity: 0 }}
+   292→   292→          animate={{ scale: 1, opacity: 1 }}
+   293→   293→          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+   294→   294→          className="text-center py-6 rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e]"
+   295→   295→        >
+   296→   296→          <div className="text-3xl mb-1">{getMedalColor(result.position)}</div>
+   297→   297→          <div
+   298→   298→            className="text-6xl font-black"
+   299→   299→            style={{ color: getPositionColor(result.position) }}
+   300→   300→          >
+   301→   301→            {result.position}
+   302→   302→          </div>
+   303→   303→          <div className="text-sm font-bold text-[#e2e8f0] mt-1">
+   304→   304→            {getPositionLabel(result.position)}
+   305→   305→          </div>
+   306→   306→          <div className="text-xs text-[#94a3b8] mt-1">место в таблице</div>
+   307→   307→        </motion.div>
+   308→   308→      )}
+   309→   309→
+   310→   310→      {/* Manager info (if used) */}
+   311→   311→      {result.managerName && (
+   312→   312→        <motion.div
+   313→   313→          initial={{ opacity: 0, y: 10 }}
+   314→   314→          animate={{ opacity: 1, y: 0 }}
+   315→   315→          className="rounded-xl bg-[#1a1a2e] p-3 flex items-center gap-3 border border-[#22c55e]/20"
+   316→   316→        >
+   317→   317→          <div className="text-2xl">👨‍💼</div>
+   318→   318→          <div className="flex-1">
+   319→   319→            <div className="text-xs text-[#94a3b8]">Тренер</div>
+   320→   320→            <div className="text-sm font-bold text-[#e2e8f0]">{result.managerName}</div>
+   321→   321→          </div>
+   322→   322→          <div className="text-right">
+   323→   323→            <div className="text-xs text-[#94a3b8]">Рейтинг</div>
+   324→   324→            <div className="text-sm font-bold text-[#22c55e]">{result.managerRating}</div>
+   325→   325→          </div>
+   326→   326→        </motion.div>
+   327→   327→      )}
+   328→   328→
+   329→   329→      {/* Results Summary */}
+   330→   330→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   331→   331→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   332→   332→          <div className="text-2xl font-black text-[#22c55e]">{result.wins}</div>
+   333→   333→          <div className="text-xs text-[#94a3b8]">Победы</div>
+   334→   334→        </div>
+   335→   335→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   336→   336→          <div className="text-2xl font-black text-[#f97316]">{result.draws}</div>
+   337→   337→          <div className="text-xs text-[#94a3b8]">Ничьи</div>
+   338→   338→        </div>
+   339→   339→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   340→   340→          <div className="text-2xl font-black text-[#ef4444]">{result.losses}</div>
+   341→   341→          <div className="text-xs text-[#94a3b8]">Поражения</div>
+   342→   342→        </div>
+   343→   343→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   344→   344→          <div className="text-2xl font-black text-[#e2e8f0]">{result.points}</div>
+   345→   345→          <div className="text-xs text-[#94a3b8]">Очки</div>
+   346→   346→        </div>
+   347→   347→      </div>
+   348→   348→
+   349→   349→      {/* Goals */}
+   350→   350→      <div className="grid grid-cols-3 gap-3">
+   351→   351→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   352→   352→          <div className="text-3xl font-black text-[#22c55e]">{result.goalsFor}</div>
+   353→   353→          <div className="text-xs text-[#94a3b8]">Забито</div>
+   354→   354→        </div>
+   355→   355→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   356→   356→          <div className="text-3xl font-black text-[#ef4444]">{result.goalsAgainst}</div>
+   357→   357→          <div className="text-xs text-[#94a3b8]">Пропущено</div>
+   358→   358→        </div>
+   359→   359→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   360→   360→          <div className={`text-3xl font-black ${result.goalsFor - result.goalsAgainst > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+   361→   361→            {result.goalsFor - result.goalsAgainst > 0 ? '+' : ''}{result.goalsFor - result.goalsAgainst}
+   362→   362→          </div>
+   363→   363→          <div className="text-xs text-[#94a3b8]">Разница</div>
+   364→   364→        </div>
+   365→   365→      </div>
+   366→   366→
+   367→   367→      {/* Extra stats */}
+   368→   368→      <div className="grid grid-cols-2 gap-3">
+   369→   369→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   370→   370→          <div className="text-2xl font-black text-[#8b5cf6]">{winStreak}</div>
+   371→   371→          <div className="text-xs text-[#94a3b8]">Лучшая серия побед</div>
+   372→   372→        </div>
+   373→   373→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   374→   374→          <div className="text-2xl font-black text-[#3b82f6]">{result.squadRating || '-'}</div>
+   375→   375→          <div className="text-xs text-[#94a3b8]">Рейтинг состава</div>
+   376→   376→        </div>
+   377→   377→      </div>
+   378→   378→
+   379→   379→      {/* Season Form - colored dots */}
+   380→   380→      {matchesList.length > 0 && (
+   381→   381→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   382→   382→          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Форма сезона</h4>
+   383→   383→          <div className="flex flex-wrap gap-1">
+   384→   384→            {matchesList.map((m) => (
+   385→   385→              <div
+   386→   386→                key={m.matchday}
+   387→   387→                className="w-5 h-5 rounded-sm flex items-center justify-center text-[8px] font-bold text-white"
+   388→   388→                style={{
+   389→   389→                  backgroundColor: m.result === 'W' ? '#22c55e' : m.result === 'D' ? '#f97316' : '#ef4444',
+   390→   390→                }}
+   391→   391→                title={`Тур ${m.matchday}: ${m.homeGoals}-${m.awayGoals} vs ${m.opponent}`}
+   392→   392→              >
+   393→   393→                {m.matchday}
+   394→   394→              </div>
+   395→   395→            ))}
+   396→   396→          </div>
+   397→   397→        </div>
+   398→   398→      )}
+   399→   399→
+   400→   400→      {/* Points accumulation sparkline */}
+   401→   401→      {pointsAccumulation.length > 0 && (
+   402→   402→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   403→   403→          <div className="flex items-center justify-between mb-2">
+   404→   404→            <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Набранные очки</h4>
+   405→   405→            <span className="text-xs font-bold text-[#22c55e]">{result.points}</span>
+   406→   406→          </div>
+   407→   407→          <div className="relative h-16">
+   408→   408→            <svg className="w-full h-full" viewBox={`0 0 ${pointsAccumulation.length - 1} 100`} preserveAspectRatio="none">
+   409→   409→              {/* Grid lines */}
+   410→   410→              {[30, 60, 90].map((pts) => {
+   411→   411→                const y = 100 - (pts / 90) * 100;
+   412→   412→                return (
+   413→   413→                  <line
+   414→   414→                    key={pts}
+   415→   415→                    x1="0"
+   416→   416→                    y1={y}
+   417→   417→                    x2={pointsAccumulation.length - 1}
+   418→   418→                    y2={y}
+   419→   419→                    stroke="#1a1a2e"
+   420→   420→                    strokeWidth="2"
+   421→   421→                  />
+   422→   422→                );
+   423→   423→              })}
+   424→   424→              {/* Fill area */}
+   425→   425→              <path
+   426→   426→                d={`M0 100 ${pointsAccumulation.map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`).join(' ')} L${pointsAccumulation.length - 1} 100 Z`}
+   427→   427→                fill="url(#pointsGradient)"
+   428→   428→                fillOpacity="0.3"
+   429→   429→              />
+   430→   430→              {/* Line */}
+   431→   431→              <path
+   432→   432→                d={`M0 ${100 - (pointsAccumulation[0] / 90) * 100} ${pointsAccumulation.map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`).join(' ')}`}
+   433→   433→                fill="none"
+   434→   434→                stroke="#22c55e"
+   435→   435→                strokeWidth="2"
+   436→   436→                strokeLinecap="round"
+   437→   437→                strokeLinejoin="round"
+   438→   438→              />
+   439→   439→              {/* End point */}
+   440→   440→              <circle
+   441→   441→                cx={pointsAccumulation.length - 1}
+   442→   442→                cy={100 - (pointsAccumulation[pointsAccumulation.length - 1] / 90) * 100}
+   443→   443→                r="3"
+   444→   444→                fill="#22c55e"
+   445→   445→              />
+   446→   446→              <defs>
+   447→   447→                <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
+   448→   448→                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+   449→   449→                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+   450→   450→                </linearGradient>
+   451→   451→              </defs>
+   452→   452→            </svg>
+   453→   453→          </div>
+   454→   454→          <div className="flex justify-between text-[9px] text-[#94a3b8]/40 mt-1">
+   455→   455→            <span>Тур 1</span>
+   456→   456→            <span>Тур {pointsAccumulation.length}</span>
+   457→   457→          </div>
+   458→   458→        </div>
+   459→   459→      )}
+   460→   460→
+   461→   461→      {/* Match-by-match view */}
+   462→   462→      {matchesList.length > 0 && (
+   463→   463→        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+   464→   464→          <button
+   465→   465→            onClick={() => setShowMatches(!showMatches)}
+   466→   466→            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+   467→   467→          >
+   468→   468→            <span className="text-sm font-bold text-[#e2e8f0]">📋 Матчи по турам</span>
+   469→   469→            <motion.span animate={{ rotate: showMatches ? 180 : 0 }} className="text-[#94a3b8]">
+   470→   470→              ▼
+   471→   471→            </motion.span>
+   472→   472→          </button>
+   473→   473→          {showMatches && (
+   474→   474→            <motion.div
+   475→   475→              initial={{ height: 0, opacity: 0 }}
+   476→   476→              animate={{ height: 'auto', opacity: 1 }}
+   477→   477→              className="px-3 pb-3 max-h-80 overflow-y-auto custom-scrollbar"
+   478→   478→            >
+   479→   479→              <div className="space-y-1">
+   480→   480→                {matchesList.map((m) => (
+   481→   481→                  <div
+   482→   482→                    key={m.matchday}
+   483→   483→                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#0a0a0f]/30 transition-colors"
+   484→   484→                  >
+   485→   485→                    <span className="text-xs text-[#94a3b8] w-6">{m.matchday}</span>
+   486→   486→                    <span className={`text-xs px-1.5 py-0.5 rounded font-bold ${
+   487→   487→                      m.result === 'W' ? 'bg-[#22c55e]/20 text-[#22c55e]' :
+   488→   488→                      m.result === 'D' ? 'bg-[#f97316]/20 text-[#f97316]' :
+   489→   489→                      'bg-[#ef4444]/20 text-[#ef4444]'
+   490→   490→                    }`}>
+   491→   491→                      {m.result === 'W' ? 'В' : m.result === 'D' ? 'Н' : 'П'}
+   492→   492→                    </span>
+   493→   493→                    <span className="text-xs text-[#94a3b8] flex-1 text-right">
+   494→   494→                      {m.isHome ? '🏠' : '✈️'} {m.opponent}
+   495→   495→                    </span>
+   496→   496→                    <span className="text-sm font-bold text-[#e2e8f0]">
+   497→   497→                      {m.homeGoals}:{m.awayGoals}
+   498→   498→                    </span>
+   499→   499→                  </div>
+   500→   500→                ))}
+   501→   501→              </div>
+   502→   502→            </motion.div>
+   503→   503→          )}
+   504→   504→        </div>
+   505→   505→      )}
+   506→   506→
+   507→   507→      {/* Tournament Table — expandable */}
+   508→   508→      {result.table && result.table.length > 0 && (
+   509→   509→        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+   510→   510→          <button
+   511→   511→            onClick={() => setShowTable(!showTable)}
+   512→   512→            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+   513→   513→          >
+   514→   514→            <span className="text-sm font-bold text-[#e2e8f0]">📊 Таблица РПЛ</span>
+   515→   515→            <motion.span animate={{ rotate: showTable ? 180 : 0 }} className="text-[#94a3b8]">
+   516→   516→              ▼
+   517→   517→            </motion.span>
+   518→   518→          </button>
+   519→   519→          {showTable && (
+   520→   520→            <motion.div
+   521→   521→              initial={{ height: 0, opacity: 0 }}
+   522→   522→              animate={{ height: 'auto', opacity: 1 }}
+   523→   523→              className="overflow-x-auto"
+   524→   524→            >
+   525→   525→              <table className="w-full text-xs">
+   526→   526→                <thead>
+   527→   527→                  <tr className="text-[#94a3b8] border-b border-[#0a0a0f] bg-[#0a0a0f]/50">
+   528→   528→                    <th className="py-2.5 px-2 text-left">#</th>
+   529→   529→                    <th className="py-2.5 px-2 text-left">Команда</th>
+   530→   530→                    <th className="py-2.5 px-2 text-center">И</th>
+   531→   531→                    <th className="py-2.5 px-2 text-center">В</th>
+   532→   532→                    <th className="py-2.5 px-2 text-center">Н</th>
+   533→   533→                    <th className="py-2.5 px-2 text-center">П</th>
+   534→   534→                    <th className="py-2.5 px-2 text-center">МЗ</th>
+   535→   535→                    <th className="py-2.5 px-2 text-center">МП</th>
+   536→   536→                    <th className="py-2.5 px-2 text-center">РМ</th>
+   537→   537→                    <th className="py-2.5 px-2 text-center font-bold">О</th>
+   538→   538→                  </tr>
+   539→   539→                </thead>
+   540→   540→                <tbody>
+   541→   541→                  {result.table.map((team) => {
+   542→   542→                    const isMyTeam = team.name === 'Моя команда';
+   543→   543→                    const isRelegation = team.position >= 14;
+   544→   544→                    return (
+   545→   545→                      <tr
+   546→   546→                        key={team.position}
+   547→   547→                        className={`border-b border-[#0a0a0f]/50 transition-colors ${
+   548→   548→                          isMyTeam
+   549→   549→                            ? 'bg-[#22c55e]/10'
+   550→   550→                            : isRelegation
+   551→   551→                            ? 'bg-[#ef4444]/5'
+   552→   552→                            : 'hover:bg-[#0a0a0f]/30'
+   553→   553→                        }`}
+   554→   554→                      >
+   555→   555→                        <td className="py-2 px-2 text-[#94a3b8]">
+   556→   556→                          {team.position === 1 ? '🏆' : getMedalColor(team.position)} {team.position}
+   557→   557→                        </td>
+   558→   558→                        <td className={`py-2 px-2 font-bold ${
+   559→   559→                          isMyTeam
+   560→   560→                            ? 'text-[#22c55e]'
+   561→   561→                            : isRelegation
+   562→   562→                            ? 'text-[#ef4444]'
+   563→   563→                            : 'text-[#e2e8f0]'
+   564→   564→                        }`}>
+   565→   565→                          {isMyTeam && '⚽ '}{team.name}
+   566→   566→                        </td>
+   567→   567→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.played}</td>
+   568→   568→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.won}</td>
+   569→   569→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.drawn}</td>
+   570→   570→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.lost}</td>
+   571→   571→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsFor}</td>
+   572→   572→                        <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsAgainst}</td>
+   573→   573→                        <td className={`py-2 px-2 text-center ${
+   574→   574→                          team.goalDifference > 0 ? 'text-[#22c55e]' : team.goalDifference < 0 ? 'text-[#ef4444]' : 'text-[#94a3b8]'
+   575→   575→                        }`}>
+   576→   576→                          {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+   577→   577→                        </td>
+   578→   578→                        <td className="py-2 px-2 text-center font-black text-[#e2e8f0]">{team.points}</td>
+   579→   579→                      </tr>
+   580→   580→                    );
+   581→   581→                  })}
+   582→   582→                </tbody>
+   583→   583→              </table>
+   584→   584→            </motion.div>
+   585→   585→          )}
+   586→   586→        </div>
+   587→   587→      )}
+   588→   588→
+   589→   589→      {/* Squad that played */}
+   590→   590→      {result.players && result.players.length > 0 && (
+   591→   591→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   592→   592→          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Ваш состав</h4>
+   593→   593→          <div className="grid grid-cols-2 gap-1.5">
+   594→   594→            {result.players.map((p, i) => (
+   595→   595→              <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-[#0a0a0f]/30">
+   596→   596→                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">{p.position}</span>
+   597→   597→                <span className="text-xs font-medium text-[#e2e8f0] flex-1 truncate">{p.name}</span>
+   598→   598→                <span className={`text-xs font-bold ${p.rating >= 80 ? 'text-[#22c55e]' : p.rating >= 70 ? 'text-[#3b82f6]' : 'text-[#94a3b8]'}`}>
+   599→   599→                  {p.rating}
+   600→   600→                </span>
+   601→   601→              </div>
+   602→   602→            ))}
+   603→   603→          </div>
+   604→   604→        </div>
+   605→   605→      )}
+   606→   606→
+   607→   607→      {/* Achievements */}
+   608→   608→      {(isChampion || isPerfect || isUnbeaten || result.goalsFor >= 60 || result.goalsAgainst <= 15 || result.goalsFor - result.goalsAgainst >= 50 || winStreak >= 5 || result.goalsFor / 30 >= 2) && (
+   609→   609→        <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
+   610→   610→          <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">Достижения</h3>
+   611→   611→          <div className="flex flex-wrap gap-2">
+   612→   612→            {isChampion && (
+   613→   613→              <span className="text-xs px-4 py-2 rounded-full bg-[#22c55e]/20 text-[#22c55e] font-bold border border-[#22c55e]/30">
+   614→   614→                🏆 Чемпион
+   615→   615→              </span>
+   616→   616→            )}
+   617→   617→            {isPerfect && (
+   618→   618→              <span className="text-xs px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
+   619→   619→                ✨ Идеальный сезон 30-0
+   620→   620→              </span>
+   621→   621→            )}
+   622→   622→            {isUnbeaten && !isPerfect && (
+   623→   623→              <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
+   624→   624→                🛡️ Непобедимый (0 поражений)
+   625→   625→              </span>
+   626→   626→            )}
+   627→   627→            {result.goalsFor >= 60 && (
+   628→   628→              <span className="text-xs px-4 py-2 rounded-full bg-[#f97316]/20 text-[#f97316] font-bold border border-[#f97316]/30">
+   629→   629→                ⚡ Голевая машина (60+ голов)
+   630→   630→              </span>
+   631→   631→            )}
+   632→   632→            {result.goalsAgainst <= 15 && (
+   633→   633→              <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
+   634→   634→                🧱 Железная оборона (≤15 пропущено)
+   635→   635→              </span>
+   636→   636→            )}
+   637→   637→            {result.goalsFor - result.goalsAgainst >= 50 && (
+   638→   638→              <span className="text-xs px-4 py-2 rounded-full bg-[#8b5cf6]/20 text-[#8b5cf6] font-bold border border-[#8b5cf6]/30">
+   639→   639→                💪 Доминирование (+50 разница)
+   640→   640→              </span>
+   641→   641→            )}
+   642→   642→            {winStreak >= 5 && (
+   643→   643→              <span className="text-xs px-4 py-2 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">
+   644→   644→                🔥 Серия побед ({winStreak} подряд)
+   645→   645→              </span>
+   646→   646→            )}
+   647→   647→            {result.goalsFor / 30 >= 2 && (
+   648→   648→              <span className="text-xs px-4 py-2 rounded-full bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/30">
+   649→   649→                🎯 Снайпер (2+ гола/матч)
+   650→   650→              </span>
+   651→   651→            )}
+   652→   652→          </div>
+   653→   653→        </div>
+   654→   654→      )}
+   655→   655→
+   656→   656→      {/* Action Buttons */}
+   657→   657→      <div className="space-y-3">
+   658→   658→        <motion.div whileTap={{ scale: 0.97 }}>
+   659→   659→          <Button
+   660→   660→            onClick={() => { resetGame(); }}
+   661→   661→            className="w-full h-16 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40"
+   662→   662→          >
+   663→   663→            🔄 Играть снова
+   664→   664→          </Button>
+   665→   665→        </motion.div>
+   666→   666→        <div className="flex gap-3">
+   667→   667→          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+   668→   668→            <Button
+   669→   669→              onClick={handleShare}
+   670→   670→              variant="outline"
+   671→   671→              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+   672→   672→            >
+   673→   673→              📤 Поделиться
+   674→   674→            </Button>
+   675→   675→          </motion.div>
+   676→   676→          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+   677→   677→            <Button
+   678→   678→              onClick={handleCopyResult}
+   679→   679→              variant="outline"
+   680→   680→              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+   681→   681→            >
+   682→   682→              📊 Копировать
+   683→   683→            </Button>
+   684→   684→          </motion.div>
+   685→   685→        </div>
+   686→   686→      </div>
+   687→   687→    </div>
+   688→   688→  );
+   689→   689→}
+   690→   690→

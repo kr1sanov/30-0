@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 
@@ -67,13 +68,13 @@ export default function Footer() {
       id: 'play',
       label: 'Играть',
       icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <rect x="2" y="6" width="20" height="12" rx="2" />
           <path d="M10 9l5 3-5 3V9z" fill="#0a0a0f" />
         </svg>
       ),
       activeIcon: (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <rect x="2" y="6" width="20" height="12" rx="2" />
           <path d="M10 9l5 3-5 3V9z" fill="#0a0a0f" />
         </svg>
@@ -143,36 +144,54 @@ export default function Footer() {
     <>
       {/* Mobile Tab Bar — fixed to bottom */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden"
+        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden footer-gradient-border"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="bg-[#0a0a0f] border-t border-[#1a1a2e]/80">
-          <div className="flex items-center justify-around h-14">
+        <div className="bg-[#0a0a0f]/95 backdrop-blur-md">
+          <div className="flex items-center justify-around h-16">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               const isPlay = tab.id === 'play';
 
               return (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => handleTabClick(tab.id)}
+                  whileTap={{ scale: 0.88 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                   className={`flex flex-col items-center justify-center gap-0.5 min-w-[48px] h-14 transition-colors ${
-                    isPlay ? '-mt-3' : ''
+                    isPlay ? '-mt-4' : ''
                   }`}
                 >
                   {isPlay ? (
-                    <div
-                      className={`flex items-center justify-center w-12 h-12 rounded-2xl transition-all ${
+                    <motion.div
+                      className={`flex items-center justify-center rounded-2xl transition-all ${
                         isActive
-                          ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/30'
-                          : 'bg-[#1a1a2e] text-[#94a3b8]'
+                          ? 'bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/40 w-14 h-14'
+                          : 'bg-[#1a1a2e] text-[#94a3b8] w-12 h-12'
                       }`}
+                      animate={isActive ? {
+                        boxShadow: [
+                          '0 0 15px rgba(34, 197, 94, 0.3)',
+                          '0 0 25px rgba(34, 197, 94, 0.5)',
+                          '0 0 15px rgba(34, 197, 94, 0.3)',
+                        ],
+                      } : {}}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     >
                       {isActive ? tab.activeIcon : tab.icon}
-                    </div>
+                    </motion.div>
                   ) : (
-                    <span className={isActive ? 'text-[#22c55e]' : 'text-[#94a3b8]'}>
+                    <span className={`relative ${isActive ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
                       {isActive ? tab.activeIcon : tab.icon}
+                      {/* Active dot indicator */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeTabDot"
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#22c55e]"
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      )}
                     </span>
                   )}
                   <span
@@ -182,7 +201,7 @@ export default function Footer() {
                   >
                     {tab.label}
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -190,24 +209,40 @@ export default function Footer() {
       </nav>
 
       {/* Desktop Footer — normal flow */}
-      <footer className="hidden sm:block w-full border-t border-[#1a1a2e]/80 bg-[#0a0a0f] mt-auto">
+      <footer className="hidden sm:block w-full bg-[#0a0a0f] mt-auto footer-gradient-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Desktop nav links */}
             <div className="flex items-center gap-5">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
+                const isPlay = tab.id === 'play';
+
                 return (
-                  <button
+                  <motion.button
                     key={tab.id}
                     onClick={() => handleTabClick(tab.id)}
-                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      isActive ? 'text-[#22c55e]' : 'text-[#94a3b8] hover:text-[#e2e8f0]'
+                    whileTap={{ scale: 0.92 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
+                      isPlay
+                        ? 'px-4 py-2 rounded-xl bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/25'
+                        : isActive
+                        ? 'text-[#22c55e]'
+                        : 'text-[#94a3b8] hover:text-[#e2e8f0]'
                     }`}
                   >
-                    <span className="w-4 h-4">{tab.icon}</span>
+                    <span className={isPlay ? 'w-5 h-5' : 'w-4 h-4'}>{tab.icon}</span>
                     {tab.label}
-                  </button>
+                    {/* Active indicator for non-play tabs */}
+                    {isActive && !isPlay && (
+                      <motion.div
+                        layoutId="desktopActiveTab"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#22c55e] rounded-full"
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                  </motion.button>
                 );
               })}
             </div>

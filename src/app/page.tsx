@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import GameSetup from '@/components/game/GameSetup';
@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
+import DraftProgressTracker from '@/components/game/DraftProgressTracker';
 
 /* ─── Icon helpers (inline SVGs) ─── */
 function RotateIcon({ className }: { className?: string }) {
@@ -55,11 +56,66 @@ const STEPS = [
   { icon: TrophyIcon, title: 'Сыграй сезон', desc: 'Симулируй 30 матчей — сможешь ли добиться 30-0?' },
 ];
 
-const CHALLENGES = [
-  { emoji: '🔥', title: '30-0', desc: 'Выиграйте все 30 матчей сезона' },
-  { emoji: '🛡️', title: 'Железная защита', desc: 'Пропустите менее 15 голов за сезон' },
-  { emoji: '⚡', title: 'Голая атака', desc: 'Забейте 60+ голов за сезон' },
-  { emoji: '🎯', title: 'Минималист', desc: 'Соберите состав без перебросов' },
+interface ChallengeDef {
+  emoji: string;
+  title: string;
+  desc: string;
+  gradientClass: string;
+  checkFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => boolean;
+  progressFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => number;
+}
+
+const CHALLENGES: ChallengeDef[] = [
+  {
+    emoji: '🔥',
+    title: '30-0',
+    desc: 'Выиграйте все 30 матчей сезона',
+    gradientClass: 'challenge-gradient-fire',
+    checkFn: (s) => s.perfect > 0,
+    progressFn: (s) => {
+      if (s.perfect > 0) return 100;
+      if (s.totalSeasons === 0) return 0;
+      const best = s.bestRecord || '0-0-0';
+      const wins = parseInt(best.split('-')[0] || '0', 10);
+      return Math.round((wins / 30) * 100);
+    },
+  },
+  {
+    emoji: '🛡️',
+    title: 'Железная защита',
+    desc: 'Пропустите менее 15 голов за сезон',
+    gradientClass: 'challenge-gradient-shield',
+    checkFn: (s) => s.achievements?.includes('iron_defense') ?? false,
+    progressFn: (s) => {
+      if (s.achievements?.includes('iron_defense')) return 100;
+      if (s.totalSeasons === 0) return 0;
+      return Math.min(60, s.totalSeasons * 20);
+    },
+  },
+  {
+    emoji: '⚡',
+    title: 'Голая атака',
+    desc: 'Забейте 60+ голов за сезон',
+    gradientClass: 'challenge-gradient-bolt',
+    checkFn: (s) => s.achievements?.includes('goal_machine') ?? false,
+    progressFn: (s) => {
+      if (s.achievements?.includes('goal_machine')) return 100;
+      if (s.totalSeasons === 0) return 0;
+      return Math.min(70, Math.round((s.totalGoals / Math.max(1, s.totalSeasons)) / 60 * 100));
+    },
+  },
+  {
+    emoji: '🎯',
+    title: 'Минималист',
+    desc: 'Соберите состав без перебросов',
+    gradientClass: 'challenge-gradient-target',
+    checkFn: (s) => s.achievements?.includes('minimalist') ?? false,
+    progressFn: (s) => {
+      if (s.achievements?.includes('minimalist')) return 100;
+      if (s.totalSeasons === 0) return 0;
+      return Math.min(50, s.totalSeasons * 15);
+    },
+  },
 ];
 
 const FAQ_ITEMS = [
@@ -69,6 +125,78 @@ const FAQ_ITEMS = [
   { q: 'Как считается рейтинг состава?', a: 'Рейтинг каждого игрока зависит от выбранного режима: сезонный (рейтинг в конкретном сезоне) или прайм (лучший рейтинг за карьеру). Общий рейтинг команды — среднее всех игроков.' },
   { q: 'Сложно ли достичь 30-0?', a: 'Очень сложно! Это требует идеального подбора игроков и немного удачи. Даже с лучшим составом РПЛ есть вероятность неожиданных результатов. Это и делает игру увлекательной!' },
 ];
+
+/* ─── Animated Score Counter ─── */
+function AnimatedCounter({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) {
+  const [count, setCount] = useState(0);
+  const [flashed, setFlashed] = useState(false);
+  const hasPlayed = useRef(false);
+
+  useEffect(() => {
+    if (hasPlayed.current) return;
+    hasPlayed.current = true;
+
+    const timeout = setTimeout(() => {
+      const start = performance.now();
+      const step = (now: number) => {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        // easeOutExpo
+        const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        setCount(Math.round(eased * target));
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          setFlashed(true);
+          setTimeout(() => setFlashed(false), 600);
+        }
+      };
+      requestAnimationFrame(step);
+    }, delay);
+
+    return () => clearTimeout(timeout);
+  }, [target, duration, delay]);
+
+  return (
+    <span className={flashed ? 'animate-number-flash' : ''}>
+      {count}
+    </span>
+  );
+}
+
+/* ─── Stats Counter with useInView ─── */
+function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: string; label: string; color?: string }) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const numericPart = value.replace(/[^0-9]/g, '');
+  const prefix = value.match(/^[^0-9]*/)?.[0] || '';
+  const suffix = value.match(/[^0-9]*$/)?.[0] || '';
+  const targetNum = parseInt(numericPart, 10) || 0;
+  const [displayNum, setDisplayNum] = useState(0);
+
+  useEffect(() => {
+    if (!isInView || targetNum === 0) return;
+    const duration = 1200;
+    const start = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      setDisplayNum(Math.round(eased * targetNum));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [isInView, targetNum]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className={`text-2xl sm:text-3xl font-black ${color}`}>
+        {targetNum > 0 && isInView ? `${prefix}${displayNum}${suffix}` : value}
+      </div>
+      <div className="text-xs text-[#94a3b8]">{label}</div>
+    </div>
+  );
+}
 
 /* ─── Recent Results Section ─── */
 function RecentResults() {
@@ -155,9 +283,23 @@ function RecentResults() {
   );
 }
 
+/* ─── Floating particles data ─── */
+const PARTICLES = [
+  { emoji: '⚽', size: 'text-lg', top: '8%', left: '6%', anim: 'animate-float-organic-1', delay: '0s' },
+  { emoji: '🏆', size: 'text-xl', top: '15%', right: '10%', anim: 'animate-float-organic-2', delay: '0.5s' },
+  { emoji: '⭐', size: 'text-sm', top: '35%', left: '3%', anim: 'animate-float-organic-3', delay: '1s' },
+  { emoji: '💚', size: 'text-base', bottom: '30%', right: '5%', anim: 'animate-float-organic-1', delay: '1.5s' },
+  { emoji: '⚽', size: 'text-sm', top: '60%', left: '12%', anim: 'animate-float-organic-2', delay: '2s' },
+  { emoji: '🏆', size: 'text-base', bottom: '15%', right: '18%', anim: 'animate-float-organic-3', delay: '2.5s' },
+  { emoji: '⭐', size: 'text-xs', top: '20%', left: '20%', anim: 'animate-float-organic-1', delay: '3s' },
+  { emoji: '💚', size: 'text-sm', bottom: '40%', left: '8%', anim: 'animate-float-organic-2', delay: '3.5s' },
+  { emoji: '⚽', size: 'text-lg', top: '45%', right: '8%', anim: 'animate-float-organic-3', delay: '4s' },
+  { emoji: '⭐', size: 'text-xs', bottom: '20%', right: '25%', anim: 'animate-float-organic-1', delay: '4.5s' },
+];
+
 /* ─── Home Page ─── */
 function HomePage() {
-  const { setScreen } = useGameStore();
+  const { setScreen, profileStats } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
@@ -169,8 +311,8 @@ function HomePage() {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center justify-center text-center space-y-6 pt-8"
       >
-        {/* Hero container with animated gradient border */}
-        <div className="relative rounded-3xl p-8 sm:p-12 border-2 border-[#22c55e]/20 animate-border-gradient overflow-hidden">
+        {/* Hero container with noise, scanlines, and animated gradient border */}
+        <div className="relative rounded-3xl p-8 sm:p-12 border-2 animate-border-gradient-shift overflow-hidden noise-overlay scanlines">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -179,20 +321,39 @@ function HomePage() {
             }}
           />
 
-          {/* Floating particles */}
+          {/* Enhanced floating particles */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            <span className="animate-float absolute text-lg" style={{ top: '10%', left: '8%', animationDelay: '0s' }}>⚽</span>
-            <span className="animate-float absolute text-sm" style={{ top: '20%', right: '12%', animationDelay: '1s' }}>🟢</span>
-            <span className="animate-float absolute text-base" style={{ bottom: '25%', left: '5%', animationDelay: '2s' }}>🟡</span>
-            <span className="animate-float absolute text-sm" style={{ top: '60%', right: '8%', animationDelay: '3s' }}>⚽</span>
-            <span className="animate-float absolute text-lg" style={{ bottom: '15%', right: '20%', animationDelay: '4s' }}>🟢</span>
-            <span className="animate-float absolute text-xs" style={{ top: '40%', left: '15%', animationDelay: '5s' }}>🟡</span>
+            {PARTICLES.map((p, i) => (
+              <span
+                key={i}
+                className={`absolute ${p.size} ${p.anim}`}
+                style={{
+                  top: p.top,
+                  left: p.left,
+                  right: p.right,
+                  bottom: p.bottom,
+                  animationDelay: p.delay,
+                }}
+              >
+                {p.emoji}
+              </span>
+            ))}
           </div>
 
-          <div className="relative">
+          <div className="relative z-10">
+            {/* Animated Score Counter */}
             <div className="relative inline-block">
               <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none">
-                30-0
+                <AnimatedCounter target={30} duration={1000} delay={200} />
+                <span className="text-[#1a1a2e]">-</span>
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.3, duration: 0.5, type: 'spring', stiffness: 200 }}
+                  className="inline-block"
+                >
+                  0
+                </motion.span>
               </h1>
               {/* Framer Motion bouncing football */}
               <motion.div
@@ -211,13 +372,36 @@ function HomePage() {
                 ⚽
               </motion.div>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-[#e2e8f0] mt-4">
+
+            {/* Subtitle with gradient text */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="text-2xl sm:text-3xl font-bold text-gradient-subtitle mt-4"
+            >
               Футбольный драфт РПЛ
-            </p>
-            <p className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-2">
+            </motion.p>
+
+            {/* Pulsing underline */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+              className="mx-auto mt-2 h-0.5 w-24 rounded-full bg-gradient-to-r from-transparent via-[#22c55e] to-transparent animate-pulse-underline"
+              style={{ transformOrigin: 'center' }}
+            />
+
+            {/* Description with delayed fade-in */}
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.5 }}
+              className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3"
+            >
               Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
               Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
-            </p>
+            </motion.p>
           </div>
         </div>
 
@@ -267,27 +451,18 @@ function HomePage() {
         </div>
       </motion.div>
 
-      {/* Stats Section */}
+      {/* Stats Section with animated counters */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
         className="flex items-center justify-center gap-4 sm:gap-8 flex-wrap"
       >
-        <div className="text-center">
-          <div className="text-2xl sm:text-3xl font-black text-[#22c55e]">~15</div>
-          <div className="text-xs text-[#94a3b8]">клубов</div>
-        </div>
+        <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
         <div className="w-px h-8 bg-[#1a1a2e]" />
-        <div className="text-center">
-          <div className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">5000+</div>
-          <div className="text-xs text-[#94a3b8]">игроков</div>
-        </div>
+        <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
         <div className="w-px h-8 bg-[#1a1a2e]" />
-        <div className="text-center">
-          <div className="text-2xl sm:text-3xl font-black text-[#f97316]">1992-2026</div>
-          <div className="text-xs text-[#94a3b8]">сезонов</div>
-        </div>
+        <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
       </motion.div>
 
       {/* Popular Challenges */}
@@ -301,17 +476,43 @@ function HomePage() {
           Челленджи
         </h2>
         <div className="grid grid-cols-2 gap-4">
-          {CHALLENGES.map((ch) => (
-            <button
-              key={ch.title}
-              onClick={() => setScreen('setup')}
-              className="rounded-2xl bg-[#1a1a2e] p-5 text-left border border-[#1a1a2e] card-glow transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <div className="text-2xl mb-2">{ch.emoji}</div>
-              <div className="text-sm font-bold text-[#e2e8f0] mb-1">{ch.title}</div>
-              <div className="text-xs text-[#94a3b8]">{ch.desc}</div>
-            </button>
-          ))}
+          {CHALLENGES.map((ch) => {
+            const isCompleted = ch.checkFn(profileStats);
+            const progress = ch.progressFn(profileStats);
+
+            return (
+              <motion.button
+                key={ch.title}
+                onClick={() => setScreen('setup')}
+                whileTap={{ scale: 0.97 }}
+                className={`relative rounded-2xl p-5 text-left border border-[#1a1a2e] card-glow transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
+              >
+                {/* Emoji with bounce on hover */}
+                <motion.div
+                  className="text-2xl mb-2 inline-block"
+                  whileHover={{ scale: 1.3, rotate: 10 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
+                  {ch.emoji}
+                </motion.div>
+                <div className="text-sm font-bold text-[#e2e8f0] mb-1">{ch.title}</div>
+                <div className="text-xs text-[#94a3b8]">{ch.desc}</div>
+
+                {/* Progress bar */}
+                <div className="challenge-progress-bar">
+                  <div
+                    className="challenge-progress-fill"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                {/* Completed green tint overlay */}
+                {isCompleted && (
+                  <div className="absolute inset-0 bg-[#22c55e]/5 pointer-events-none" />
+                )}
+              </motion.button>
+            );
+          })}
         </div>
       </motion.div>
 
@@ -355,6 +556,7 @@ function HomePage() {
 function DraftScreen() {
   return (
     <div className="space-y-6 animate-fade-in">
+      <DraftProgressTracker />
       <FormationView />
       <SpinWheel />
       <PlayerList />
@@ -439,10 +641,17 @@ function SquadCompleteScreen() {
   );
 }
 
-/* ─── Simulation Screen ─── */
+/* ─── Simulation Screen with shimmer ─── */
 function SimulationScreen() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+      {/* Shimmer skeleton effect */}
+      <div className="w-full max-w-sm space-y-3 mb-4">
+        <div className="h-6 rounded-lg shimmer-loading" />
+        <div className="h-4 rounded-lg shimmer-loading w-3/4" />
+        <div className="h-4 rounded-lg shimmer-loading w-1/2" />
+      </div>
+
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -604,11 +813,60 @@ function LeaderboardScreen() {
   );
 }
 
+/* ─── Screen transition variants ─── */
+const SCREEN_ORDER = ['home', 'setup', 'draft', 'position-assign', 'squad-complete', 'manager-choice', 'simulation', 'result'];
+
+function getDirection(from: string, to: string): number {
+  // Forward = 1, Backward = -1, Scale = 0
+  const scaleScreens = ['profile', 'leaderboard'];
+  if (scaleScreens.includes(to) || scaleScreens.includes(from)) return 0;
+
+  const fromIdx = SCREEN_ORDER.indexOf(from);
+  const toIdx = SCREEN_ORDER.indexOf(to);
+  if (fromIdx === -1 || toIdx === -1) return 1;
+  return fromIdx < toIdx ? 1 : -1;
+}
+
+const pageVariants = {
+  enter: (direction: number) => {
+    if (direction === 0) {
+      return { opacity: 0, scale: 0.92 };
+    }
+    return {
+      opacity: 0,
+      x: direction > 0 ? 80 : -80,
+    };
+  },
+  center: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+  },
+  exit: (direction: number) => {
+    if (direction === 0) {
+      return { opacity: 0, scale: 1.08 };
+    }
+    return {
+      opacity: 0,
+      x: direction > 0 ? -80 : 80,
+    };
+  },
+};
+
 /* ─── Main Home Component ─── */
 export default function Home() {
   const { screen } = useGameStore();
+  const prevScreen = useRef(screen);
+  const [direction, setDirection] = useState(0);
 
-  const renderScreen = () => {
+  useEffect(() => {
+    if (prevScreen.current !== screen) {
+      setDirection(getDirection(prevScreen.current, screen));
+      prevScreen.current = screen;
+    }
+  }, [screen]);
+
+  const renderScreen = useCallback(() => {
     switch (screen) {
       case 'home':
         return <HomePage />;
@@ -631,19 +889,21 @@ export default function Home() {
       default:
         return <HomePage />;
     }
-  };
+  }, [screen]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
       <Header />
       <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={screen}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.25 }}
+            custom={direction}
+            variants={pageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             {renderScreen()}
           </motion.div>

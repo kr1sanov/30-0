@@ -1,6 +1,157 @@
 # 30-0 RPL — Work Log
 
-## Current Project Status (Round 4 Complete)
+## Current Project Status (Round 5 Complete)
+
+**Status**: Major visual overhaul and feature additions. Round 5 redesigns the SpinWheel as a real animated wheel with SVG segments, adds player avatar initials and detail popups, creates a DraftProgressTracker component, enhances the homepage with animated counters and improved transitions, adds live match-by-match season replay animation, and significantly expands CSS animation library.
+
+### What's Working (Round 5 additions in **bold**):
+- ✅ Full game flow from homepage to season simulation results
+- ✅ 12 formations with proper slot layouts on football pitch
+- ✅ 3 difficulty levels (Easy/Normal/Hard) with rerolls
+- ✅ Spin wheel with animation and club+season reveal
+- ✅ Player selection with position compatibility indicators
+- ✅ Position assignment on the formation pitch
+- ✅ Season simulation engine (30 matches, realistic results)
+- ✅ Leaderboard and profile screens
+- ✅ Database seeded with 5,278 player-season records
+- ✅ Dark theme matching 38-0.app style
+- ✅ "How to Play" modal with 4-step instructions
+- ✅ FAQ accordion on homepage
+- ✅ Challenge cards on homepage
+- ✅ Responsive mobile-first design
+- ✅ Manager/Coach spinning feature (22 Russian coaches)
+- ✅ Profile stats persistence with localStorage (Zustand persist)
+- ✅ Match-by-match season results view (30 matches expandable)
+- ✅ Telegram WebApp SDK integration (haptics, share, theme)
+- ✅ Enhanced SimulationResult with win streak, squad rating, manager info
+- ✅ Profile screen with trophy cabinet, history, and detailed stats
+- ✅ PWA manifest for installable web app
+- ✅ Cyrillic font support in Geist
+- ✅ Sound effects system (8 types)
+- ✅ Sound toggle button in header with localStorage persistence
+- ✅ Enhanced PlayerList: search, category filter pills, sort by rating/position/compatibility
+- ✅ Team chemistry system (0-100 score with visual ring meter)
+- ✅ Enhanced SquadStats: chemistry ring, animated category bars, player summary list
+- ✅ Enhanced Profile: win rate ring, points per season bar chart, 8 trophies
+- ✅ Enhanced SimulationResult: season form dots, points sparkline, squad display
+- ✅ 4+4 new achievements
+- ✅ Enhanced CSS animations
+- ✅ Toast notification system (Sonner) with success/error feedback
+- ✅ Incompatible position click feedback (toast error + shake animation)
+- ✅ Compatible positions info bar on pitch during position assignment
+- ✅ 🔙 Назад button to return to player list without assigning
+- ✅ ❌ indicators on incompatible position slots
+- ✅ Profile button in header navigation
+- ✅ Redesigned footer as mobile tab bar
+- ✅ Tournament table in simulation results
+- ✅ Position swap persistence via API endpoint
+- ✅ Visual polish with particles/animations
+- **✅ Real SVG SpinWheel with 14 colored club segments, pointer, and casino-style lights**
+- **✅ Realistic wheel deceleration animation (2.5s with cubic-bezier easing)**
+- **✅ Tick sound effects during wheel spin (24 decelerating ticks)**
+- **✅ Winning segment glow overlay with animated SVG stroke**
+- **✅ Player avatar circles with position-based gradient backgrounds**
+- **✅ Player detail popup (slide-up overlay with compatibility, stats, rating bar)**
+- **✅ DraftProgressTracker component (11 position circles, progress bar, squad rating)**
+- **✅ Animated hero counter (30 counts up from 0 with easeOutExpo)**
+- **✅ Improved floating particles (10 organic patterns with rotation)**
+- **✅ Hero container with noise texture, scanlines, color-shifting gradient border**
+- **✅ Stats counter animation with Framer Motion useInView**
+- **✅ Directional page transitions (forward=slide left, backward=slide right, profile=scale)**
+- **✅ Enhanced challenge cards (gradient overlay, progress bar, completed state, bounce emoji)**
+- **✅ Enhanced footer (gradient border, active dot indicator, scale animation on tap, glowing play button)**
+- **✅ Live match-by-match season replay animation (▶️ Повтор сезона)**
+- **✅ Animated position badge (golden gradient for 1st, silver/bronze for 2nd-3rd, green for European)**
+- **✅ Animated result counters (useAnimatedValue hook with requestAnimationFrame)**
+- **✅ Enhanced match cards (club color dots, grouped by period, hover tooltips on form dots)**
+- **✅ Quick replay feature (Повторить с этими настройками, saves lastConfig)**
+- **✅ 12+ new CSS keyframe animations (rotateGlow, dramaticEntrance, ripple, progressFill, etc.)**
+- **✅ 20+ new CSS utility classes (glass-card-green, premium-card, avatar-ring-*, rating-tier-*, etc.)**
+- **✅ Match result styling utilities (.match-win, .match-draw, .match-loss)**
+- **✅ Draft step styling (.draft-step-filled, .draft-step-current, .draft-step-empty)**
+- **✅ Trophy earned shine effect with sweeping gold animation**
+
+---
+
+## Round 5 — Completed Work
+
+### Task ID: R5-1 — SpinWheel Redesign
+- Completely rewrote `/src/components/game/SpinWheel.tsx` (250→545 lines)
+- Real SVG spinning wheel with 14 colored club segments (pie-slice paths)
+- Club abbreviations on each segment (ЗЕН, СПА, ЦСК, etc.)
+- Green pointer triangle at top with drop-shadow glow
+- 28 decorative light dots around wheel edge that alternate during spin
+- Football ⚽ icon at center hub with gradient fill
+- CSS transition with cubic-bezier(0.12, 0.8, 0.14, 1) for realistic deceleration
+- 4-5 full rotations before landing on winning segment
+- Precise rotation math: pointer lands exactly on target segment center
+- 24 tick sounds with decelerating frequency during spin
+- Winning segment gets green overlay + animated SVG stroke
+- Glowing ring effect around wheel after result
+- Particle burst effect preserved from original
+- All existing functionality preserved: haptics, sounds, rerolls
+
+### Task ID: R5-2 — PlayerList Enhancement & DraftProgressTracker
+- Enhanced `/src/components/game/PlayerList.tsx` with:
+  - Player avatar circles with position-based gradient (GK=orange, DEF=blue, MID=green, ATT=red)
+  - Rating badge overlapping bottom-right of avatar, color-coded by tier
+  - Nationality flag emoji (60+ country mapping)
+  - Player detail popup (slide-up overlay) for incompatible players showing full info
+  - Escape key and backdrop click to close popup
+- Created `/src/components/game/DraftProgressTracker.tsx` (NEW):
+  - Progress bar showing fill percentage (X/11)
+  - 11 position circles: filled=green gradient with initials, current=pulsing green outline, empty=gray outline
+  - Position abbreviation below each circle
+  - Squad overall rating calculated from filled slots
+  - Smooth spring animations when positions are filled
+- Integrated DraftProgressTracker in `/src/app/page.tsx` DraftScreen
+
+### Task ID: R5-3 — Homepage Enhancement & Page Transitions
+- Enhanced `/src/app/page.tsx` with:
+  - AnimatedCounter component (counts up from 0 to 30 with easeOutExpo)
+  - StatsCounter component with Framer Motion useInView
+  - Better hero hierarchy: gradient subtitle, pulsing underline, delayed description fade-in
+  - 10 floating particles with 3 organic movement patterns including rotation
+  - Hero container with noise texture overlay, scanlines, color-shifting gradient border
+  - Directional page transitions using AnimatePresence custom variants
+  - Forward=slide left+fade, backward=slide right+fade, profile/leaderboard=scale from center
+  - Enhanced challenge cards with gradient overlays, progress bars, completed state, bounce emoji
+  - Enhanced SimulationScreen with shimmer skeleton loading effect
+- Enhanced `/src/components/layout/Footer.tsx` with:
+  - Gradient border at top
+  - Active dot indicator below non-play tabs with layout animation
+  - Scale animation on tap (whileTap={{ scale: 0.88 }})
+  - Larger, glowing "Играть" play button
+  - Backdrop blur on mobile nav bar
+
+### Task ID: R5-4 — Live Match Simulation & Season Summary
+- Updated `/src/store/gameStore.ts`:
+  - Added `lastConfig` state field for quick replay feature
+  - Modified `startRun()` to persist lastConfig
+  - Updated persist partialize to save lastConfig to localStorage
+- Enhanced `/src/components/game/SimulationResult.tsx` with:
+  - Live match-by-match season replay animation (▶️ Повтор сезона)
+  - 200ms delay between match reveals, running points total, form dots build-up
+  - Skip button (⏭ Пропустить) and completion message (Сезон завершён!)
+  - Animated position badge: golden gradient for 1st, silver/bronze for 2nd-3rd, green for European, red for relegation
+  - useAnimatedValue hook with requestAnimationFrame for counter animations
+  - Enhanced match cards with club color dots, color-coded scores
+  - Matches grouped into 3 collapsible periods (Туры 1-10, 11-20, 21-30)
+  - Hover tooltips on form dots showing matchday and result
+  - Quick replay button (Повторить с этими настройками)
+- Added streak pulse animation to globals.css
+
+### Task ID: R5-5 — CSS Animations & Visual Polish
+- Enhanced `/src/app/globals.css` (481→690+ lines):
+  - Improved pitch stripes with tighter intervals and radial vignette overlay
+  - 12 new keyframe animations (rotateGlow, dramaticEntrance, ripple, progressFill, trophyShine, matchReveal, checkPop, glowPulse, countUp, breathe, confettiSpin, streakPulse)
+  - 20+ new utility classes (glass-card-green, premium-card, avatar-ring-gk/def/mid/att, rating-tier-gold/silver/bronze/common, number-animate, screen-enter, btn-ripple, draft-step-*, match-win/draw/loss, trophy-earned)
+  - 9 animated utility class definitions (.animate-dramatic-entrance, .animate-ripple, .animate-progress-fill, .animate-trophy-shine, .animate-match-reveal, .animate-check-pop, .animate-glow-pulse, .animate-count-up, .animate-breathe)
+  - All existing CSS preserved — no removals
+
+---
+
+## Round 4 — Completed Work (Summary)
 
 **Status**: MVP is fully polished with major UX improvements, visual enhancements, and new features. Round 4 fixes critical UX bugs (silent incompatible position clicks), adds toast notifications, redesigns footer as mobile tab bar, adds tournament table, enhances visual polish with particles/animations, and improves leaderboard/sharing.
 
@@ -446,9 +597,11 @@
 
 10. ~~**No profile access from navigation**: Could only reach from result screen.~~ ✅ Fixed in Round 4 (header + footer profile button)
 
+11. **agent-browser QA limitation**: agent-browser has difficulty triggering React state changes from button clicks in the headless browser (clicks register but client-side navigation doesn't always reflect in the accessibility tree). Visual QA via screenshots works but interactive testing is limited.
+
 ---
 
-## Priority Recommendations for Next Phase (Round 5)
+## Priority Recommendations for Next Phase (Round 6)
 
 1. **HIGH**: Implement Telegram user authentication (validate initData on backend, create/update User records)
 2. **HIGH**: Improve seed data quality with real player names from Transfermarkt/soFIFA
@@ -457,9 +610,11 @@
 5. **MEDIUM**: Fix hard mode rating leak (simulation should use 0.8× penalty for all players when isCompatible=false, not just visual)
 6. **MEDIUM**: Add player photos/avatars (even placeholder initials would improve UX)
 7. **MEDIUM**: Add "Position-first" draft mode (currently only UI exists, needs full implementation)
-8. **LOW**: Add Daily Challenge mode
-9. **LOW**: Add Leagues (head-to-head) mode
-10. **LOW**: Implement image generation for sharing results (squad screenshot)
+8. **MEDIUM**: Add club logos/crests for visual identification in the wheel and results
+9. **MEDIUM**: Implement achievements for the minimal challenge (no rerolls used)
+10. **LOW**: Add Daily Challenge mode
+11. **LOW**: Add Leagues (head-to-head) mode
+12. **LOW**: Implement image generation for sharing results (squad screenshot)
 
 ---
 Task ID: 3-a
@@ -680,3 +835,98 @@ Stage Summary:
 - `/src/components/game/SpinWheel.tsx`
 - `/src/components/game/PlayerList.tsx`
 - `/src/components/game/FormationView.tsx`
+
+---
+Task ID: R5-1
+Agent: SpinWheel Redesign Agent
+Task: Redesign SpinWheel with real SVG wheel and animated segments
+
+Work Log:
+- Completely rewrote SpinWheel.tsx from 250 to 545 lines
+- Implemented SVG wheel with 14 colored club segments using pie-slice geometry
+- Added club abbreviations (ЗЕН, СПА, ЦСК, etc.) on each segment
+- Created green pointer triangle with drop-shadow glow
+- Added 28 decorative light dots that alternate during spin (casino effect)
+- Implemented CSS transition with cubic-bezier(0.12, 0.8, 0.14, 1) for realistic deceleration
+- Added 24 decelerating tick sounds during spin
+- Implemented winning segment glow overlay with animated SVG stroke
+- Added football ⚽ icon at center hub with gradient fill
+- Preserved all existing functionality: haptics, sounds, rerolls, particle burst
+
+Stage Summary:
+- SpinWheel.tsx: Complete redesign with real animated SVG wheel
+- Key technical: SVG geometry helpers (segPath, segText, lightPos), needsAnimation flag pattern, onTransitionEnd for wheel stop detection
+
+---
+Task ID: R5-2
+Agent: PlayerList & DraftProgressTracker Enhancement Agent
+Task: Add player avatar initials, detail popup, and draft progress tracker
+
+Work Log:
+- Enhanced PlayerList.tsx with player avatar circles (position-based gradient backgrounds)
+- Added nationality flag emoji mapping (60+ countries)
+- Created player detail popup (slide-up overlay) with compatibility status, rating bar
+- Created new DraftProgressTracker.tsx component with 11 position circles, progress bar, squad rating
+- Integrated DraftProgressTracker in page.tsx DraftScreen
+- Lint passed with 0 errors
+
+Stage Summary:
+- PlayerList.tsx: Avatar initials, flag emojis, detail popup for incompatible players
+- DraftProgressTracker.tsx: NEW component with progress visualization
+- page.tsx: Integrated new tracker in draft screen
+
+---
+Task ID: R5-3
+Agent: Homepage Enhancement & Page Transitions Agent
+Task: Enhance hero section, page transitions, challenge cards, and footer
+
+Work Log:
+- Added AnimatedCounter component (counts up from 0 to 30 with easeOutExpo)
+- Added StatsCounter component with Framer Motion useInView
+- Enhanced hero hierarchy: gradient subtitle, pulsing underline, delayed description
+- Added 10 floating particles with 3 organic movement patterns
+- Added hero container with noise texture, scanlines, color-shifting gradient border
+- Implemented directional page transitions (forward=slide left, backward=slide right, profile=scale)
+- Enhanced challenge cards with gradient overlays, progress bars, completed state, bounce emoji
+- Enhanced footer with gradient border, active dot indicator, scale animation, glowing play button
+- Added shimmer skeleton loading effect for simulation screen
+
+Stage Summary:
+- page.tsx: Animated hero, directional transitions, enhanced challenges
+- Footer.tsx: Gradient border, active indicators, haptic-like scale feedback
+
+---
+Task ID: R5-4
+Agent: Live Match Simulation & Season Summary Enhancement Agent
+Task: Add live match replay animation and enhance season summary
+
+Work Log:
+- Added lastConfig state to gameStore for quick replay feature
+- Enhanced SimulationResult with live match-by-match replay animation
+- Added animated position badge (golden/silver/bronze/green/red based on position)
+- Created useAnimatedValue hook with requestAnimationFrame for counter animations
+- Enhanced match cards with club color dots, grouped by 3 collapsible periods
+- Added hover tooltips on form dots, quick replay button
+- Added streak pulse animation to globals.css
+- Lint passed with 0 errors
+
+Stage Summary:
+- gameStore.ts: Added lastConfig persistence for quick replay
+- SimulationResult.tsx: Live replay animation, animated badges, enhanced match display
+- globals.css: streak pulse animation
+
+---
+Task ID: R5-5
+Agent: CSS Animations & Visual Polish Agent
+Task: Enhance CSS animations and add visual utility classes
+
+Work Log:
+- Enhanced pitch stripes with tighter intervals and radial vignette overlay
+- Added 12 new keyframe animations (rotateGlow, dramaticEntrance, ripple, progressFill, trophyShine, matchReveal, checkPop, glowPulse, countUp, breathe, confettiSpin, streakPulse)
+- Added 20+ new utility classes (glass-card-green, premium-card, avatar-ring-*, rating-tier-*, number-animate, screen-enter, btn-ripple, draft-step-*, match-win/draw/loss, trophy-earned)
+- Added 9 animated utility class definitions
+- All existing CSS preserved
+
+Stage Summary:
+- globals.css: Expanded from 481 to 690+ lines
+- Key additions: Animation library, position-based avatar rings, rating tier badges, match result styling, draft step classes, trophy shine effects
