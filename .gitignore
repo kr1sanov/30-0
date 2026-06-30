@@ -30,12 +30,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — keep .env.example, ignore the rest
+.env
+.env.local
+.env.production
+.env*.local
 
 # vercel
 .vercel
-
 
 # typescript
 *.tsbuildinfo
@@ -43,12 +45,26 @@ next-env.d.ts
 local-*
 .claude
 .z-ai-config
+
+# logs
 *.log
 dev.log
 dev.out.log
+server.log
+
+# database
+db/*.db
+db/*.db-journal
+
+# docker
+docker-compose.override.yml
+
+# test & prompt
 test
 prompt
 
-server.log
 # Skills directory
 /skills/
+
+# Prisma migrations are tracked in git
+!prisma/migrations/

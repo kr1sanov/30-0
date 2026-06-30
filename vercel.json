@@ -1,12 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npx prisma generate && next build",
-  "installCommand": "bun install",
-  "devCommand": "bun run dev",
-  "regions": ["hel1"],
-  "env": {
-    "DATABASE_URL": "@database_url",
-    "DIRECT_URL": "@direct_url"
-  }
+  "buildCommand": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate && next build",
+  "installCommand": "npm install",
+  "regions": ["hel1"]
 }

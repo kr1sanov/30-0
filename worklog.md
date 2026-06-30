@@ -1593,3 +1593,108 @@ Stage Summary:
 
 ### Files Modified
 - `src/app/page.tsx`: Fixed AnimatePresence mode from "wait" to "popLayout", added `layout` prop
+
+---
+
+## Round 7 — Deployment Configuration (Vercel + Supabase + Docker)
+
+### Task ID: R7-1 — Prisma Dual-Schema Architecture
+- Created `prisma/schema.sqlite.prisma` for local development (SQLite)
+- Created `prisma/schema.postgresql.prisma` for production (Supabase PostgreSQL with `directUrl`)
+- Active `prisma/schema.prisma` is SQLite for sandbox dev
+- Added `schema:sqlite` and `schema:postgres` npm scripts for easy switching
+- PostgreSQL schema includes `onDelete: Cascade` for proper foreign key behavior
+
+### Task ID: R7-2 — PostgreSQL Migration
+- Created initial migration at `prisma/migrations/00000000000000_init/migration.sql`
+- Includes all 6 models: Club, Season, ClubSeason, Player, PlayerSeason, GameRun, GameSlot
+- All unique constraints and foreign keys properly defined
+- `migration_lock.toml` set to PostgreSQL provider
+
+### Task ID: R7-3 — Vercel Configuration
+- Updated `vercel.json` with build command that:
+  1. Switches to PostgreSQL schema: `cp prisma/schema.postgresql.prisma prisma/schema.prisma`
+  2. Generates Prisma client: `npx prisma generate`
+  3. Builds Next.js: `next build`
+- Set region to `hel1` (Helsinki, closest to Russia)
+
+### Task ID: R7-4 — Docker Configuration
+- **Dockerfile**: Multi-stage build (deps → builder → runner)
+  - Stage 1: Install dependencies
+  - Stage 2: Build with PostgreSQL schema
+  - Stage 3: Minimal production image with standalone output
+  - Health check on `/api/formations`
+  - Non-root user (nextjs:nodejs)
+- **docker-compose.yml**: Production setup
+  - App container + PostgreSQL 16 Alpine
+  - pgAdmin (optional, profile: tools)
+  - Proper health checks and dependency ordering
+- **docker-compose.dev.yml**: Development PostgreSQL only
+  - Just PostgreSQL on port 5432 for local dev
+
+### Task ID: R7-5 — Supabase Configuration
+- Created `supabase/config.toml` with full project configuration
+- Enabled: API, Realtime, Studio, Storage, Auth (with Telegram provider)
+- Local dev ports: API 54321, DB 54322, Studio 54323
+
+### Task ID: R7-6 — Environment & Config Files
+- `.env` — SQLite for sandbox dev
+- `.env.example` — Template with both SQLite and Supabase options
+- `.env.production` — Supabase PostgreSQL template
+- Updated `.gitignore` — Keep .env.example, ignore .env/.env.production
+- Updated `next.config.ts` — Security headers, image optimization
+- Updated `package.json`:
+  - Name: `30-0-rpl`, version `1.0.0`
+  - Build command includes `prisma generate`
+  - Added: `schema:sqlite`, `schema:postgres`, `docker:*`, `vercel:*`, `db:studio`, `db:migrate:deploy`
+
+### Task ID: R7-7 — Deploy Scripts & Documentation
+- `scripts/deploy.sh` — Multi-command deploy script:
+  - `vercel` — Deploy to Vercel
+  - `docker` — Build & run Docker
+  - `supabase` — Setup Supabase project
+  - `migrate` — Run Prisma migrations
+  - `seed` — Seed the database
+  - `migration` — Create new migration
+- `DEPLOY.md` — Comprehensive deployment guide in Russian
+  - Architecture diagram
+  - 3 deployment options (Vercel+Supabase, Docker, SQLite dev)
+  - Step-by-step Supabase setup
+  - Environment variables reference
+  - Useful commands
+
+### Task ID: R7-8 — QA Verification
+- ✅ Dev server starts with SQLite schema
+- ✅ Homepage renders correctly (dark theme, 30-0 title, green Play button)
+- ✅ API endpoints respond (formations, clubs, game runs)
+- ✅ Lint passes clean
+- ⚠️ Agent-browser server instability (known sandbox issue, not production bug)
+
+### Files Created/Modified:
+- **Created**: `prisma/schema.sqlite.prisma`, `prisma/schema.postgresql.prisma`, `prisma/migrations/00000000000000_init/migration.sql`, `prisma/migrations/00000000000000_init/migration_lock.toml`, `prisma/migrations/migration_lock.toml`, `.env.example`, `.env.production`, `Dockerfile`, `docker-compose.yml`, `docker-compose.dev.yml`, `vercel.json`, `supabase/config.toml`, `scripts/deploy.sh`, `DEPLOY.md`
+- **Modified**: `prisma/schema.prisma` (SQLite active), `.env` (SQLite), `.gitignore`, `next.config.ts`, `package.json`, `src/lib/db.ts`
+
+### How to Deploy (Quick Start):
+
+**Vercel + Supabase:**
+```bash
+# 1. Create Supabase project at supabase.com
+# 2. Get DATABASE_URL and DIRECT_URL from Settings → Database
+# 3. Deploy to Vercel:
+vercel --prod
+# Add env vars in Vercel Dashboard: DATABASE_URL, DIRECT_URL
+# 4. Run migrations:
+DATABASE_URL="..." DIRECT_URL="..." npx prisma migrate deploy
+# 5. Seed database:
+DATABASE_URL="..." bun run db:seed
+```
+
+**Docker:**
+```bash
+# 1. Configure .env.production with your DATABASE_URL
+# 2. Start services:
+docker compose up -d
+# 3. Run migrations + seed:
+docker compose exec app npx prisma migrate deploy
+docker compose exec app bun run db:seed
+```
