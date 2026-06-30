@@ -165,17 +165,22 @@ function AnimatedCounter({ target, duration = 1000, delay = 0 }: { target: numbe
 }
 
 /* ─── Stats Counter with useInView ─── */
+/* Parses "5000+" -> target=5000, suffix="+"
+ * Falls back to static display for multi-number values like "1992-2026" */
 function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: string; label: string; color?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
-  const numericPart = value.replace(/[^0-9]/g, '');
-  const prefix = value.match(/^[^0-9]*/)?.[0] || '';
-  const suffix = value.match(/[^0-9]*$/)?.[0] || '';
-  const targetNum = parseInt(numericPart, 10) || 0;
-  const [displayNum, setDisplayNum] = useState(0);
+
+  // Match exactly one integer in the string (first occurrence). For ranges like "1992-2026", returns null.
+  const match = value.match(/^[^\d]*(\d+)([^\d]*)$/);
+  const prefix = match ? value.slice(0, value.indexOf(match[1])) : '';
+  const targetNum = match ? parseInt(match[1], 10) : 0;
+  const suffix = match ? match[2] : '';
+  const canAnimate = targetNum > 0 && targetNum <= 100000;
+  const [displayNum, setDisplayNum] = useState(canAnimate ? 0 : targetNum);
 
   useEffect(() => {
-    if (!isInView || targetNum === 0) return;
+    if (!isInView || !canAnimate) return;
     const duration = 1200;
     const start = performance.now();
     const step = (now: number) => {
@@ -186,12 +191,12 @@ function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: strin
       if (progress < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
-  }, [isInView, targetNum]);
+  }, [isInView, canAnimate, targetNum]);
 
   return (
     <div ref={ref} className="text-center">
       <div className={`text-2xl sm:text-3xl font-black ${color}`}>
-        {targetNum > 0 && isInView ? `${prefix}${displayNum}${suffix}` : value}
+        {canAnimate && isInView ? `${prefix}${displayNum}${suffix}` : value}
       </div>
       <div className="text-xs text-[#94a3b8]">{label}</div>
     </div>

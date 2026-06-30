@@ -1,13 +1,167 @@
 # 30-0 RPL — Work Log
 
-## Current Project Status (Round 5 Complete)
+## Current Project Status (Round 6 Complete)
 
-**Status**: Major visual overhaul and feature additions. Round 5 redesigns the SpinWheel as a real animated wheel with SVG segments, adds player avatar initials and detail popups, creates a DraftProgressTracker component, enhances the homepage with animated counters and improved transitions, adds live match-by-match season replay animation, and significantly expands CSS animation library.
+**Status**: Bug fixes and major feature additions. Round 6 fixes critical StatsCounter regex bug (was breaking "1992-2026" display) and GameSetup invalid CSS gradient bug. Adds Quick Pick feature for instant random team generation, completely redesigns ManagerChoice with slot-machine animation, enhances FormationView with position color rings and connection lines, and polishes GameSetup with formation type badges and difficulty icons.
 
-### What's Working (Round 5 additions in **bold**):
+### What's Working (Round 6 additions in **bold**):
 - ✅ Full game flow from homepage to season simulation results
 - ✅ 12 formations with proper slot layouts on football pitch
 - ✅ 3 difficulty levels (Easy/Normal/Hard) with rerolls
+- ✅ Spin wheel with animation and club+season reveal
+- ✅ Player selection with position compatibility indicators
+- ✅ Position assignment on the formation pitch
+- ✅ Season simulation engine (30 matches, realistic results)
+- ✅ Leaderboard and profile screens
+- ✅ Database seeded with 5,278 player-season records
+- ✅ Dark theme matching 38-0.app style
+- ✅ "How to Play" modal with 4-step instructions
+- ✅ FAQ accordion on homepage
+- ✅ Challenge cards on homepage
+- ✅ Responsive mobile-first design
+- ✅ Manager/Coach spinning feature (22 Russian coaches)
+- ✅ Profile stats persistence with localStorage (Zustand persist)
+- ✅ Match-by-match season results view (30 matches expandable)
+- ✅ Telegram WebApp SDK integration (haptics, share, theme)
+- ✅ Enhanced SimulationResult with win streak, squad rating, manager info
+- ✅ Profile screen with trophy cabinet, history, and detailed stats
+- ✅ PWA manifest for installable web app
+- ✅ Cyrillic font support in Geist
+- ✅ Sound effects system (8 types)
+- ✅ Sound toggle button in header with localStorage persistence
+- ✅ Enhanced PlayerList: search, category filter pills, sort by rating/position/compatibility
+- ✅ Team chemistry system (0-100 score with visual ring meter)
+- ✅ Enhanced SquadStats: chemistry ring, animated category bars, player summary list
+- ✅ Enhanced Profile: win rate ring, points per season bar chart, 8 trophies
+- ✅ Enhanced SimulationResult: season form dots, points sparkline, squad display
+- ✅ 4+4 new achievements
+- ✅ Enhanced CSS animations
+- ✅ Toast notification system (Sonner) with success/error feedback
+- ✅ Incompatible position click feedback (toast error + shake animation)
+- ✅ Compatible positions info bar on pitch during position assignment
+- ✅ 🔙 Назад button to return to player list without assigning
+- ✅ ❌ indicators on incompatible position slots
+- ✅ Profile button in header navigation
+- ✅ Redesigned footer as mobile tab bar
+- ✅ Tournament table in simulation results
+- ✅ Position swap persistence via API endpoint
+- ✅ Visual polish with particles/animations
+- ✅ Real SVG SpinWheel with 14 colored club segments, pointer, and casino-style lights
+- ✅ Realistic wheel deceleration animation (2.5s with cubic-bezier easing)
+- ✅ Tick sound effects during wheel spin (24 decelerating ticks)
+- ✅ Winning segment glow overlay with animated SVG stroke
+- ✅ Player avatar circles with position-based gradient backgrounds
+- ✅ Player detail popup (slide-up overlay with compatibility, stats, rating bar)
+- ✅ DraftProgressTracker component (11 position circles, progress bar, squad rating)
+- ✅ Animated hero counter (30 counts up from 0 with easeOutExpo)
+- ✅ Improved floating particles (10 organic patterns with rotation)
+- ✅ Hero container with noise texture, scanlines, color-shifting gradient border
+- ✅ Stats counter animation with Framer Motion useInView
+- ✅ Directional page transitions (forward=slide left, backward=slide right, profile=scale)
+- ✅ Enhanced challenge cards (gradient overlay, progress bar, completed state, bounce emoji)
+- ✅ Enhanced footer (gradient border, active dot indicator, scale animation on tap, glowing play button)
+- ✅ Live match-by-match season replay animation (▶️ Повтор сезона)
+- ✅ Animated position badge (golden gradient for 1st, silver/bronze for 2nd-3rd, green for European)
+- ✅ Animated result counters (useAnimatedValue hook with requestAnimationFrame)
+- ✅ Enhanced match cards (club color dots, grouped by period, hover tooltips on form dots)
+- ✅ Quick replay feature (Повторить с этими настройками, saves lastConfig)
+- ✅ 12+ new CSS keyframe animations (rotateGlow, dramaticEntrance, ripple, progressFill, etc.)
+- ✅ 20+ new CSS utility classes (glass-card-green, premium-card, avatar-ring-*, rating-tier-*, etc.)
+- ✅ Match result styling utilities (.match-win, .match-draw, .match-loss)
+- ✅ Draft step styling (.draft-step-filled, .draft-step-current, .draft-step-empty)
+- ✅ Trophy earned shine effect with sweeping gold animation
+- **✅ Fixed StatsCounter regex bug (was extracting "19922026" from "1992-2026", showing wrong number)**
+- **✅ Fixed GameSetup invalid CSS gradient (#22c55e/10 → rgba(34, 197, 94, 0.1))**
+- **✅ Quick Pick feature (⚡ Быстрый старт) — random formation/difficulty/era + instant start**
+- **✅ Formation type badges (⚔️ Attack, 🛡️ Defensive, ⚖️ Balanced, 🎯 Midfield)**
+- **✅ Difficulty icons (🌱 Easy, ⚖️ Normal, 🔥 Hard) with flavor text**
+- **✅ Settings summary bar (formation, difficulty, draft mode, rating mode, era)**
+- **✅ Enhanced start button (h-16, gradient, pulsing glow, rotating ⚽ icon)**
+- **✅ ManagerChoice complete redesign: 3-reel slot machine animation**
+- **✅ Slot machine: Reel 1 = manager initial, Reel 2 = rating, Reel 3 = nationality flag**
+- **✅ Sequential reel stops (0.8s, 1.3s, 1.8s) with cubic-bezier deceleration**
+- **✅ JACKPOT effect for rating ≥ 87 managers (gold burst)**
+- **✅ Enhanced manager card with tier-colored rings (gold/silver/bronze)**
+- **✅ Manager pool preview (5 avatars with initials, "+17" trailing chip)**
+- **✅ FormationView: Position color rings (GK=orange, DEF=blue, MID=green, ATT=red)**
+- **✅ FormationView: Compatibility badges (✓ for full, ⚠ for partial with dimmed rating)**
+- **✅ FormationView: Rating tier colors (78+ gold, 73-77 green, 68-72 orange, <68 red)**
+- **✅ FormationView: Hover tooltips showing full player info and rating breakdown**
+- **✅ FormationView: Numbered slots (1-11) showing draft order**
+- **✅ FormationView: SVG connection lines during player swap (dashed yellow)**
+- **✅ FormationView: Formation info header (formation name, category counts, avg rating, chemistry)**
+- **✅ FormationView: Diagonal mowing pattern, drop shadows, center ⚽, penalty spots**
+
+---
+
+## Round 6 — Completed Work
+
+### Task ID: R6-1 — StatsCounter Bug Fix
+- **Bug**: The regex `value.replace(/[^0-9]/g, '')` extracted all digits from the string, so "1992-2026" became "19922026" (a 19 million count-up animation)
+- **Fix**: Changed to `/^[^\d]*(\d+)([^\d]*)$/` regex that only matches single integers. For multi-number values like "1992-2026", the match fails and the value is displayed statically without animation
+- **Verification**: VLM confirmed stats now correctly show "~15, 5000+, 1992-2026"
+- **Files Modified**: `/src/app/page.tsx`
+
+### Task ID: R6-2 — GameSetup CSS Bug Fix
+- **Bug**: `linear-gradient(135deg, #1a1a2e 0%, #22c55e/10 100%)` was invalid CSS — Tailwind's `color/opacity` syntax doesn't work in raw CSS gradients
+- **Fix**: Changed to `rgba(34, 197, 94, 0.1)` for proper opacity specification
+- **Also**: Simplified the duplicated border classes (`border-l-4 border-l-[#22c55e] border-t-... border-b-...` → `border-[#22c55e]`)
+- **Files Modified**: `/src/components/game/GameSetup.tsx`
+
+### Task ID: R6-3 — ManagerChoice Slot-Machine Redesign
+- Completely rewrote `/src/components/game/ManagerChoice.tsx` (122 → ~590 lines)
+- Added 3-reel slot machine animation:
+  - Reel 1: Manager initials (first letter of last name)
+  - Reel 2: Rating number
+  - Reel 3: Nationality flag emoji (🇷🇺, 🇮🇹, 🇷🇴, etc.)
+  - Each reel has different item count (22/30/40) and duration (0.8s/1.3s/1.8s)
+  - Cubic-bezier deceleration, sequential reel stops
+  - Stop-flash overlay per reel
+- Enhanced manager card with:
+  - 80px avatar with rotating conic-gradient ring (tier-colored)
+  - Tier labels: ЛЕГЕНДА (87+), МАСТЕР (83+), ПРОФИ (below)
+  - +2 bonus pill with Zap icon
+  - Special ability buff pill with Sparkles icon
+  - JACKPOT effect for rating ≥ 87 (gold burst animation)
+- Manager pool preview: 5 staggered-spring avatar circles with last-name initials
+- Updated `/src/store/gameStore.ts`: spinManager now picks manager upfront and sets currentManager synchronously
+- **Files Modified**: `/src/components/game/ManagerChoice.tsx`, `/src/store/gameStore.ts`
+
+### Task ID: R6-5 — FormationView Enhancement
+- Enhanced `/src/components/game/FormationView.tsx` (432 → ~520 lines)
+- Position color rings: 3px outer box-shadow ring colored by category
+- Compatibility indicators: ✓ (full) or ⚠ (partial) badges at top-right
+- Rating tier colors inside circles (gold/green/orange/red)
+- Direction-aware hover tooltips showing full player info
+- Numbered slots (1-11) showing draft order at top-left
+- SVG connection lines during player swap (dashed yellow with animated stroke)
+- Formation info header: formation name, category counts, avg rating, chemistry %
+- Pitch enhancements: diagonal mowing pattern, drop shadows, center ⚽, penalty spots
+- **Files Modified**: `/src/components/game/FormationView.tsx`
+
+### Task ID: R6-6 — GameSetup Visual Polish & Quick Pick
+- Completely rewrote `/src/components/game/GameSetup.tsx` (339 → ~921 lines)
+- Quick Pick feature (⚡ Быстрый старт):
+  - Yellow→orange gradient button with shimmer and pulse animation
+  - Random formation, weighted difficulty (50/30/20), random era
+  - 1.6s confirmation overlay showing randomly selected options
+  - Then calls startRun() automatically
+- Formation cards enhanced:
+  - Type badges (⚔️ Attack, 🛡️ Defensive, ⚖️ Balanced, 🎯 Midfield) in top-left
+  - Spring-animated ✓ checkmark on selected, pulsing glow ring
+  - "✓ Выбрано" label that fades in/out for 1.4s
+  - Better mini pitch with vertical gradient, stripes, position-colored dots
+- Difficulty cards enhanced:
+  - Icons: 🌱 Easy, ⚖️ Normal, 🔥 Hard (with pulse when selected)
+  - Flavor text: "Идеально для новичков" / "Баланс риска и награды" / "Только для экспертов"
+  - Stronger selected treatment with inner+outer glow
+- Settings summary bar: horizontally scrollable, shows all 5 config options
+- Enhanced start button: h-16, 3-stop green gradient, pulsing glow, rotating ⚽ icon
+- **Files Modified**: `/src/components/game/GameSetup.tsx`
+
+---
+
+## Round 5 — Completed Work (Summary)
 - ✅ Spin wheel with animation and club+season reveal
 - ✅ Player selection with position compatibility indicators
 - ✅ Position assignment on the formation pitch
@@ -599,22 +753,30 @@
 
 11. **agent-browser QA limitation**: agent-browser has difficulty triggering React state changes from button clicks in the headless browser (clicks register but client-side navigation doesn't always reflect in the accessibility tree). Visual QA via screenshots works but interactive testing is limited.
 
+12. ~~**StatsCounter regex bug**: Was extracting "19922026" from "1992-2026" causing a 19 million count-up animation.~~ ✅ Fixed in Round 6
+
+13. ~~**GameSetup invalid CSS gradient**: `#22c55e/10` is invalid CSS (Tailwind slash syntax doesn't work in raw CSS gradients).~~ ✅ Fixed in Round 6 (changed to rgba)
+
+14. **Quick Pick may start before config fully updates**: The Quick Pick feature calls setConfig multiple times then startRun() — there's a small chance React batches state updates and startRun reads stale config. Should verify this works in production.
+
 ---
 
-## Priority Recommendations for Next Phase (Round 6)
+## Priority Recommendations for Next Phase (Round 7)
 
 1. **HIGH**: Implement Telegram user authentication (validate initData on backend, create/update User records)
 2. **HIGH**: Improve seed data quality with real player names from Transfermarkt/soFIFA
 3. **HIGH**: Add spin result caching for performance (cache club-seasons with players in memory)
-4. **MEDIUM**: Implement One-Club mode (draft from a single club's history)
-5. **MEDIUM**: Fix hard mode rating leak (simulation should use 0.8× penalty for all players when isCompatible=false, not just visual)
-6. **MEDIUM**: Add player photos/avatars (even placeholder initials would improve UX)
-7. **MEDIUM**: Add "Position-first" draft mode (currently only UI exists, needs full implementation)
-8. **MEDIUM**: Add club logos/crests for visual identification in the wheel and results
-9. **MEDIUM**: Implement achievements for the minimal challenge (no rerolls used)
-10. **LOW**: Add Daily Challenge mode
-11. **LOW**: Add Leagues (head-to-head) mode
-12. **LOW**: Implement image generation for sharing results (squad screenshot)
+4. **HIGH**: Verify Quick Pick feature works end-to-end (state update timing)
+5. **MEDIUM**: Implement One-Club mode (draft from a single club's history)
+6. **MEDIUM**: Fix hard mode rating leak (simulation should use 0.8× penalty for all players when isCompatible=false, not just visual)
+7. **MEDIUM**: Add player photos/avatars (even placeholder initials would improve UX)
+8. **MEDIUM**: Add "Position-first" draft mode (currently only UI exists, needs full implementation)
+9. **MEDIUM**: Add club logos/crests for visual identification in the wheel and results
+10. **MEDIUM**: Implement achievements for the minimal challenge (no rerolls used)
+11. **MEDIUM**: Add formation comparison view (side-by-side stats comparison)
+12. **LOW**: Add Daily Challenge mode
+13. **LOW**: Add Leagues (head-to-head) mode
+14. **LOW**: Implement image generation for sharing results (squad screenshot)
 
 ---
 Task ID: 3-a
@@ -930,3 +1092,111 @@ Work Log:
 Stage Summary:
 - globals.css: Expanded from 481 to 690+ lines
 - Key additions: Animation library, position-based avatar rings, rating tier badges, match result styling, draft step classes, trophy shine effects
+
+---
+Task ID: R6-1
+Agent: Bug Fix Agent (StatsCounter)
+Task: Fix StatsCounter regex bug that broke "1992-2026" display
+
+Work Log:
+- Identified bug: regex `value.replace(/[^0-9]/g, '')` extracted "19922026" from "1992-2026" string
+- This caused the counter to animate from 0 to 19,922,026 — visible in the VLM QA as "19870117 сезонов"
+- Changed regex to `/^[^\d]*(\d+)([^\d]*)$/` which only matches single integers
+- For multi-number values like "1992-2026", the match fails and value is displayed statically (no animation)
+- Verified fix via VLM: stats now correctly show "~15, 5000+, 1992-2026"
+
+Stage Summary:
+- page.tsx StatsCounter: Fixed regex to handle multi-number strings gracefully
+- VLM-verified: All 3 stats display correctly
+
+---
+Task ID: R6-2
+Agent: Bug Fix Agent (GameSetup CSS)
+Task: Fix invalid CSS gradient in GameSetup formation cards
+
+Work Log:
+- Identified bug: `linear-gradient(135deg, #1a1a2e 0%, #22c55e/10 100%)` — Tailwind's slash opacity syntax doesn't work in raw CSS gradients
+- Changed to `rgba(34, 197, 94, 0.1)` for proper opacity specification
+- Also simplified duplicated border classes: `border-l-4 border-l-[#22c55e] border-t-... border-b-...` → `border-[#22c55e]`
+
+Stage Summary:
+- GameSetup.tsx: Fixed invalid CSS, simplified border classes
+
+---
+Task ID: R6-3
+Agent: ManagerChoice Slot-Machine Redesign Agent
+Task: Redesign ManagerChoice with 3-reel slot machine animation
+
+Work Log:
+- Read worklog.md and existing ManagerChoice.tsx, managers.ts, gameStore.ts
+- Completely rewrote ManagerChoice.tsx (122 → ~590 lines)
+- Added 3-reel slot machine animation:
+  - Reel 1: Manager initials (first letter of last name, e.g., "Г", "К")
+  - Reel 2: Rating number ("88")
+  - Reel 3: Nationality flag emoji (🇷🇺 🇮🇹 🇷🇴)
+  - Each reel has different item count (22/30/40) and duration (0.8s/1.3s/1.8s)
+  - Cubic-bezier [0.12, 0.78, 0.22, 1] deceleration easing
+  - 3-item window with top/bottom gradient fades
+  - Stop-flash overlay per reel
+- Enhanced manager card:
+  - 80px avatar with rotating conic-gradient ring (tier-colored)
+  - Tier labels: ЛЕГЕНДА (87+), МАСТЕР (83+), ПРОФИ (below)
+  - +2 bonus pill with Zap icon
+  - Special ability buff pill with Sparkles icon
+  - JACKPOT effect for rating ≥ 87 (gold burst)
+- Manager pool preview: 5 staggered-spring avatar circles with initials, "+17" trailing chip
+- Updated gameStore.ts: spinManager now picks manager upfront and sets currentManager synchronously
+
+Stage Summary:
+- ManagerChoice.tsx: Complete redesign with slot machine animation
+- gameStore.ts: spinManager signature changed to support upfront manager selection
+
+---
+Task ID: R6-5
+Agent: FormationView Enhancement Agent
+Task: Enhance FormationView with position rings, compatibility badges, and connection lines
+
+Work Log:
+- Read worklog.md and existing FormationView.tsx, positions.ts
+- Enhanced FormationView.tsx (432 → ~520 lines)
+- Position color rings: 3px outer box-shadow ring colored by category (GK=orange, DEF=blue, MID=green, ATT=red)
+- Compatibility indicators: green ✓ badge (full compat) or yellow ⚠ badge (partial)
+- Rating tier colors inside circles (78+ gold, 73-77 green, 68-72 orange, <68 red)
+- Direction-aware hover tooltips showing full player info, positions, rating breakdown
+- Numbered slots (1-11) showing draft order at top-left
+- SVG connection lines during player swap (dashed yellow with animated stroke, yellow ring on valid targets)
+- Formation info header: formation name, category counts (1 ВР · 4 ЗАЩ · 3 ПОЛ · 3 НАП), avg rating, chemistry %
+- Pitch enhancements: diagonal 60° mowing pattern, drop shadows under players, pulsing ⚽ in center circle, penalty spot dots
+
+Stage Summary:
+- FormationView.tsx: Major enhancement with visual indicators, tooltips, connection lines, info header
+- All existing functionality preserved (handleSlotClick, canFillSlot, etc.)
+
+---
+Task ID: R6-6
+Agent: GameSetup Visual Polish & Quick Pick Agent
+Task: Enhance GameSetup with Quick Pick feature and visual polish
+
+Work Log:
+- Read worklog.md and existing GameSetup.tsx, types.ts, gameStore.ts
+- Completely rewrote GameSetup.tsx (339 → ~921 lines)
+- Quick Pick feature (⚡ Быстрый старт):
+  - Yellow→orange gradient button with shimmer and pulse animation
+  - Random formation, weighted difficulty (50/30/20 normal/easy/hard), random era
+  - 1.6s confirmation overlay showing randomly selected options
+  - Then calls startRun() automatically
+- Formation cards enhanced:
+  - Type badges: ⚔️ Attack, 🛡️ Defensive, ⚖️ Balanced, 🎯 Midfield
+  - Spring-animated ✓ checkmark on selected, pulsing glow ring
+  - "✓ Выбрано" label that fades in/out for 1.4s
+  - Better mini pitch with vertical gradient, stripes, position-colored dots
+- Difficulty cards enhanced:
+  - Icons: 🌱 Easy, ⚖️ Normal, 🔥 Hard (with pulse when selected)
+  - Flavor text: "Идеально для новичков" / "Баланс риска и награды" / "Только для экспертов"
+  - Stronger selected treatment with inner+outer glow
+- Settings summary bar: horizontally scrollable, shows all 5 config options
+- Enhanced start button: h-16, 3-stop green gradient, pulsing glow, rotating ⚽ icon
+
+Stage Summary:
+- GameSetup.tsx: Complete rewrite with Quick Pick feature and enhanced visual design
+- Lint passes with 0 errors

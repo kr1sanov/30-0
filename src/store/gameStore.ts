@@ -76,7 +76,7 @@ interface GameState {
   assignToSlot: (slotIndex: number) => Promise<void>;
   movePlayer: (fromSlotIndex: number, toSlotIndex: number) => void;
   finishMoving: () => void;
-  spinManager: () => Promise<void>;
+  spinManager: (manager?: Manager) => Promise<void>;
   simulate: (manager?: Manager | null) => Promise<void>;
   resetGame: () => void;
   loadLeaderboard: () => Promise<void>;
@@ -393,12 +393,14 @@ export const useGameStore = create<GameState>()(
         set({ movingPlayerSlotIndex: null });
       },
 
-      spinManager: async () => {
-        set({ isSpinningManager: true });
-        // Simulate spinning delay
+      spinManager: async (manager?: Manager) => {
+        // Pick the manager immediately so the UI can render reel targets
+        // while the spin animation plays out.
+        const m = manager ?? MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+        set({ isSpinningManager: true, currentManager: m });
+        // Simulate spinning delay (reels animate during this window)
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        const manager = MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
-        set({ currentManager: manager, isSpinningManager: false });
+        set({ isSpinningManager: false });
       },
 
       simulate: async (manager?: Manager | null) => {
