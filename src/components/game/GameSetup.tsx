@@ -429,7 +429,7 @@ export default function GameSetup() {
 
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">
+        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0] section-accent-line inline-block">
           Настройка игры
         </h2>
         <p className="text-sm text-[#94a3b8] mt-1">
@@ -437,10 +437,28 @@ export default function GameSetup() {
         </p>
       </div>
 
+      {/* ─── Team Name ─── */}
+      <div>
+        <label className="text-sm font-bold text-[#e2e8f0] mb-2 block">
+          Название команды
+        </label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">⚽</span>
+          <input
+            type="text"
+            maxLength={24}
+            value={config.teamName || ''}
+            onChange={(e) => setConfig({ teamName: e.target.value || undefined })}
+            placeholder="Моя команда"
+            className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
       {/* ─── Formation Selector ─── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-[#e2e8f0]">Формация</h3>
+          <h3 className="text-lg font-bold text-[#e2e8f0] section-accent-line">Формация</h3>
           {/* Legend */}
           <div className="hidden sm:flex items-center gap-3">
             <LegendDot color="#f97316" label="ВР" />
@@ -468,6 +486,9 @@ export default function GameSetup() {
                   background: isSelected
                     ? 'linear-gradient(135deg, #1a1a2e 0%, rgba(34, 197, 94, 0.12) 100%)'
                     : 'linear-gradient(135deg, #1a1a2e 0%, #151528 100%)',
+                  boxShadow: isSelected
+                    ? '0 0 20px rgba(34,197,94,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
+                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -567,7 +588,7 @@ export default function GameSetup() {
 
       {/* ─── Difficulty Selector ─── */}
       <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">Сложность</h3>
+        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Сложность</h3>
         <div className="grid grid-cols-3 gap-3">
           {(
             Object.entries(DIFFICULTY_CONFIG) as [
@@ -587,11 +608,15 @@ export default function GameSetup() {
                 style={{
                   background: isSelected
                     ? `linear-gradient(160deg, ${meta.color}22 0%, ${meta.color}08 100%)`
-                    : 'rgba(26, 26, 46, 0.6)',
+                    : key === 'easy'
+                    ? 'rgba(34, 197, 94, 0.05)'
+                    : key === 'normal'
+                    ? 'rgba(59, 130, 246, 0.05)'
+                    : 'rgba(239, 68, 68, 0.05)',
                   borderColor: isSelected ? meta.color : '#1a1a2e',
                   boxShadow: isSelected
-                    ? `0 4px 18px ${meta.glow}, inset 0 0 14px ${meta.color}22`
-                    : 'none',
+                    ? `0 4px 18px ${meta.glow}, inset 0 0 14px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.05)`
+                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
                 }}
               >
                 {/* Big icon */}
@@ -666,7 +691,7 @@ export default function GameSetup() {
 
       {/* ─── Draft Mode ─── */}
       <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">Режим драфта</h3>
+        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Режим драфта</h3>
         <div className="grid grid-cols-2 gap-3">
           {(
             Object.entries(DRAFT_MODE_CONFIG) as [
@@ -702,7 +727,7 @@ export default function GameSetup() {
 
       {/* ─── Rating Mode ─── */}
       <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">
+        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">
           Режим рейтинга
         </h3>
         <div className="grid grid-cols-2 gap-3">
@@ -738,7 +763,7 @@ export default function GameSetup() {
 
       {/* ─── Era Filter ─── */}
       <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4">Эпоха</h3>
+        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Эпоха</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
             ([key, val]) => (
@@ -774,6 +799,12 @@ export default function GameSetup() {
         <div className="flex items-center gap-2 sm:gap-3 min-w-max">
           <SummaryItem
             icon="⚽"
+            label="Команда"
+            value={config.teamName || 'Моя команда'}
+          />
+          <Divider />
+          <SummaryItem
+            icon="📐"
             label="Формация"
             value={config.formation}
           />
@@ -806,10 +837,12 @@ export default function GameSetup() {
       </motion.div>
 
       {/* ─── Start Button ─── */}
-      <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.015 }}>
+      <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.015 }} className="relative">
+        {/* Pulsing ring animation */}
+        <div className="absolute inset-0 rounded-2xl border-2 border-[#22c55e]/40 animate-pulse-ring pointer-events-none" />
         <Button
           onClick={handleStart}
-          className="w-full h-16 text-xl font-black text-white rounded-2xl transition-all relative overflow-hidden animate-button-glow"
+          className="w-full h-16 text-xl font-black text-white rounded-2xl transition-all relative overflow-hidden animate-button-glow btn-shimmer"
           style={{
             background:
               'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
@@ -891,7 +924,7 @@ function SummaryItem({
 }) {
   return (
     <div className="flex items-center gap-2 px-1">
-      <div className="flex items-center gap-1.5">
+      <div className="pill-badge bg-gradient-to-r from-[#1a1a2e] to-[#151528] border border-[#22c55e]/10">
         {color ? (
           <span
             className="w-2 h-2 rounded-full"

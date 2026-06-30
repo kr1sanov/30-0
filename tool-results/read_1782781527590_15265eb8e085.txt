@@ -1,0 +1,932 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useRef, useCallback } from 'react';
+     4→import { useGameStore } from '@/store/gameStore';
+     5→import { motion, AnimatePresence, useInView } from 'framer-motion';
+     6→import Header from '@/components/layout/Header';
+     7→import Footer from '@/components/layout/Footer';
+     8→import GameSetup from '@/components/game/GameSetup';
+     9→import FormationView from '@/components/game/FormationView';
+    10→import SpinWheel from '@/components/game/SpinWheel';
+    11→import PlayerList from '@/components/game/PlayerList';
+    12→import SquadStats from '@/components/game/SquadStats';
+    13→import SimulationResult from '@/components/game/SimulationResult';
+    14→import ManagerChoice from '@/components/game/ManagerChoice';
+    15→import SeasonAwards from '@/components/game/SeasonAwards';
+    16→import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
+    17→import { Button } from '@/components/ui/button';
+    18→import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+    19→import HowToPlayModal from '@/components/game/HowToPlayModal';
+    20→import ProfileScreen from '@/components/game/ProfileScreen';
+    21→import DraftProgressTracker from '@/components/game/DraftProgressTracker';
+    22→import AchievementUnlocked from '@/components/game/AchievementUnlocked';
+    23→
+    24→/* ─── Icon helpers (inline SVGs) ─── */
+    25→function RotateIcon({ className }: { className?: string }) {
+    26→  return (
+    27→    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    28→      <path d="M21 12a9 9 0 1 1-6.219-8.56" /><path d="M21 3v9h-9" />
+    29→    </svg>
+    30→  );
+    31→}
+    32→function UserPlusIcon({ className }: { className?: string }) {
+    33→  return (
+    34→    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    35→      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" x2="19" y1="8" y2="14" /><line x1="22" x2="16" y1="11" y2="11" />
+    36→    </svg>
+    37→  );
+    38→}
+    39→function UsersIcon({ className }: { className?: string }) {
+    40→  return (
+    41→    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    42→      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    43→    </svg>
+    44→  );
+    45→}
+    46→function TrophyIcon({ className }: { className?: string }) {
+    47→  return (
+    48→    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+    49→      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    50→    </svg>
+    51→  );
+    52→}
+    53→
+    54→/* ─── Step data ─── */
+    55→const STEPS = [
+    56→  { icon: RotateIcon, title: 'Крути колесо', desc: 'Колесо фортуны выбирает реальный клуб и сезон РПЛ' },
+    57→  { icon: UserPlusIcon, title: 'Выбери игрока', desc: 'Бери игрока из состава этого клуба в свою команду' },
+    58→  { icon: UsersIcon, title: 'Собери XI', desc: 'Повторяй, пока все 11 позиций не будут заполнены' },
+    59→  { icon: TrophyIcon, title: 'Сыграй сезон', desc: 'Симулируй 30 матчей — сможешь ли добиться 30-0?' },
+    60→];
+    61→
+    62→interface ChallengeDef {
+    63→  emoji: string;
+    64→  title: string;
+    65→  desc: string;
+    66→  gradientClass: string;
+    67→  checkFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => boolean;
+    68→  progressFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => number;
+    69→}
+    70→
+    71→const CHALLENGES: ChallengeDef[] = [
+    72→  {
+    73→    emoji: '🔥',
+    74→    title: '30-0',
+    75→    desc: 'Выиграйте все 30 матчей сезона',
+    76→    gradientClass: 'challenge-gradient-fire',
+    77→    checkFn: (s) => s.perfect > 0,
+    78→    progressFn: (s) => {
+    79→      if (s.perfect > 0) return 100;
+    80→      if (s.totalSeasons === 0) return 0;
+    81→      const best = s.bestRecord || '0-0-0';
+    82→      const wins = parseInt(best.split('-')[0] || '0', 10);
+    83→      return Math.round((wins / 30) * 100);
+    84→    },
+    85→  },
+    86→  {
+    87→    emoji: '🛡️',
+    88→    title: 'Железная защита',
+    89→    desc: 'Пропустите менее 15 голов за сезон',
+    90→    gradientClass: 'challenge-gradient-shield',
+    91→    checkFn: (s) => s.achievements?.includes('iron_defense') ?? false,
+    92→    progressFn: (s) => {
+    93→      if (s.achievements?.includes('iron_defense')) return 100;
+    94→      if (s.totalSeasons === 0) return 0;
+    95→      return Math.min(60, s.totalSeasons * 20);
+    96→    },
+    97→  },
+    98→  {
+    99→    emoji: '⚡',
+   100→    title: 'Голая атака',
+   101→    desc: 'Забейте 60+ голов за сезон',
+   102→    gradientClass: 'challenge-gradient-bolt',
+   103→    checkFn: (s) => s.achievements?.includes('goal_machine') ?? false,
+   104→    progressFn: (s) => {
+   105→      if (s.achievements?.includes('goal_machine')) return 100;
+   106→      if (s.totalSeasons === 0) return 0;
+   107→      return Math.min(70, Math.round((s.totalGoals / Math.max(1, s.totalSeasons)) / 60 * 100));
+   108→    },
+   109→  },
+   110→  {
+   111→    emoji: '🎯',
+   112→    title: 'Минималист',
+   113→    desc: 'Соберите состав без перебросов',
+   114→    gradientClass: 'challenge-gradient-target',
+   115→    checkFn: (s) => s.achievements?.includes('minimalist') ?? false,
+   116→    progressFn: (s) => {
+   117→      if (s.achievements?.includes('minimalist')) return 100;
+   118→      if (s.totalSeasons === 0) return 0;
+   119→      return Math.min(50, s.totalSeasons * 15);
+   120→    },
+   121→  },
+   122→];
+   123→
+   124→const FAQ_ITEMS = [
+   125→  { q: 'Что такое 30-0?', a: '30-0 — это футбольный драфт-симулятор РПЛ. Вы крутите колесо, получаете случайный клуб и сезон, выбираете игрока в свой состав, а затем симулируете сезон. Цель — выиграть все 30 матчей и достичь идеального результата 30-0.' },
+   126→  { q: 'Как работают позиции?', a: 'У каждого игрока есть основная и дополнительные позиции. Игрок может играть на совместимых позициях без штрафов, на частично совместимых — с понижением рейтинга на 20%, а на несовместимых — не может быть поставлен вообще.' },
+   127→  { q: 'Что такое перебросы?', a: 'Перебросы позволяют вам крутить колесо заново, если вам не понравился выпавший клуб. На лёгкой сложности — 3 переброса, на нормальной — 1, на сложной — 0.' },
+   128→  { q: 'Как считается рейтинг состава?', a: 'Рейтинг каждого игрока зависит от выбранного режима: сезонный (рейтинг в конкретном сезоне) или прайм (лучший рейтинг за карьеру). Общий рейтинг команды — среднее всех игроков.' },
+   129→  { q: 'Сложно ли достичь 30-0?', a: 'Очень сложно! Это требует идеального подбора игроков и немного удачи. Даже с лучшим составом РПЛ есть вероятность неожиданных результатов. Это и делает игру увлекательной!' },
+   130→];
+   131→
+   132→/* ─── Animated Score Counter ─── */
+   133→function AnimatedCounter({ target, duration = 1000, delay = 0 }: { target: number; duration?: number; delay?: number }) {
+   134→  const [count, setCount] = useState(0);
+   135→  const [flashed, setFlashed] = useState(false);
+   136→  const hasPlayed = useRef(false);
+   137→
+   138→  useEffect(() => {
+   139→    if (hasPlayed.current) return;
+   140→    hasPlayed.current = true;
+   141→
+   142→    const timeout = setTimeout(() => {
+   143→      const start = performance.now();
+   144→      const step = (now: number) => {
+   145→        const elapsed = now - start;
+   146→        const progress = Math.min(elapsed / duration, 1);
+   147→        // easeOutExpo
+   148→        const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+   149→        setCount(Math.round(eased * target));
+   150→        if (progress < 1) {
+   151→          requestAnimationFrame(step);
+   152→        } else {
+   153→          setFlashed(true);
+   154→          setTimeout(() => setFlashed(false), 600);
+   155→        }
+   156→      };
+   157→      requestAnimationFrame(step);
+   158→    }, delay);
+   159→
+   160→    return () => clearTimeout(timeout);
+   161→  }, [target, duration, delay]);
+   162→
+   163→  return (
+   164→    <span className={flashed ? 'animate-number-flash' : ''}>
+   165→      {count}
+   166→    </span>
+   167→  );
+   168→}
+   169→
+   170→/* ─── Stats Counter with useInView ─── */
+   171→/* Parses "5000+" -> target=5000, suffix="+"
+   172→ * Falls back to static display for multi-number values like "1992-2026" */
+   173→function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: string; label: string; color?: string }) {
+   174→  const ref = useRef(null);
+   175→  const isInView = useInView(ref, { once: true, margin: '-50px' });
+   176→
+   177→  // Match exactly one integer in the string (first occurrence). For ranges like "1992-2026", returns null.
+   178→  const match = value.match(/^[^\d]*(\d+)([^\d]*)$/);
+   179→  const prefix = match ? value.slice(0, value.indexOf(match[1])) : '';
+   180→  const targetNum = match ? parseInt(match[1], 10) : 0;
+   181→  const suffix = match ? match[2] : '';
+   182→  const canAnimate = targetNum > 0 && targetNum <= 100000;
+   183→  const [displayNum, setDisplayNum] = useState(canAnimate ? 0 : targetNum);
+   184→
+   185→  useEffect(() => {
+   186→    if (!isInView || !canAnimate) return;
+   187→    const duration = 1200;
+   188→    const start = performance.now();
+   189→    const step = (now: number) => {
+   190→      const elapsed = now - start;
+   191→      const progress = Math.min(elapsed / duration, 1);
+   192→      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+   193→      setDisplayNum(Math.round(eased * targetNum));
+   194→      if (progress < 1) requestAnimationFrame(step);
+   195→    };
+   196→    requestAnimationFrame(step);
+   197→  }, [isInView, canAnimate, targetNum]);
+   198→
+   199→  return (
+   200→    <div ref={ref} className="text-center">
+   201→      <div className={`text-2xl sm:text-3xl font-black ${color}`}>
+   202→        {canAnimate && isInView ? `${prefix}${displayNum}${suffix}` : value}
+   203→      </div>
+   204→      <div className="text-xs text-[#94a3b8]">{label}</div>
+   205→    </div>
+   206→  );
+   207→}
+   208→
+   209→/* ─── Recent Results Section ─── */
+   210→function RecentResults() {
+   211→  const { profileStats, setScreen } = useGameStore();
+   212→  const recentSeasons = profileStats.history.slice(-3).reverse();
+   213→
+   214→  const DIFF_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+   215→    easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]', label: 'Легко' },
+   216→    normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]', label: 'Нормально' },
+   217→    hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]', label: 'Сложно' },
+   218→  };
+   219→
+   220→  return (
+   221→    <motion.div
+   222→      initial={{ opacity: 0, y: 30 }}
+   223→      animate={{ opacity: 1, y: 0 }}
+   224→      transition={{ duration: 0.6, delay: 0.55 }}
+   225→      className="space-y-4"
+   226→    >
+   227→      <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+   228→        📈 Последние результаты
+   229→      </h2>
+   230→
+   231→      {recentSeasons.length === 0 ? (
+   232→        <div className="rounded-2xl bg-[#1a1a2e] p-8 text-center border border-[#1a1a2e]">
+   233→          <div className="text-3xl mb-2">⚽</div>
+   234→          <div className="text-sm text-[#94a3b8]">Сыграйте первый сезон!</div>
+   235→          <Button
+   236→            onClick={() => setScreen('setup')}
+   237→            variant="outline"
+   238→            className="mt-3 border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 hover:text-[#22c55e] rounded-xl"
+   239→          >
+   240→            Начать игру
+   241→          </Button>
+   242→        </div>
+   243→      ) : (
+   244→        <div className="space-y-2">
+   245→          {recentSeasons.map((h, i) => {
+   246→            const diff = DIFF_BADGE[h.difficulty] || DIFF_BADGE.normal;
+   247→            const posEmoji = h.position === 1 ? '🥇' : h.position === 2 ? '🥈' : h.position === 3 ? '🥉' : '';
+   248→            return (
+   249→              <motion.div
+   250→                key={h.id}
+   251→                initial={{ opacity: 0, x: -15 }}
+   252→                animate={{ opacity: 1, x: 0 }}
+   253→                transition={{ delay: i * 0.1 }}
+   254→                className="rounded-xl bg-[#1a1a2e] p-3 border border-[#1a1a2e] flex items-center gap-3"
+   255→              >
+   256→                {/* Formation badge */}
+   257→                <div className="w-12 h-12 rounded-lg bg-[#3b82f6]/15 flex flex-col items-center justify-center shrink-0">
+   258→                  <span className="text-[10px] font-bold text-[#3b82f6]">{h.formation}</span>
+   259→                </div>
+   260→
+   261→                {/* W-D-L */}
+   262→                <div className="flex-1 min-w-0">
+   263→                  <div className="flex items-center gap-1.5 mb-1">
+   264→                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">{h.wins}В</span>
+   265→                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316] font-bold">{h.draws}Н</span>
+   266→                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ef4444]/15 text-[#ef4444] font-bold">{h.losses}П</span>
+   267→                  </div>
+   268→                  <div className="flex items-center gap-1.5">
+   269→                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${diff.bg} ${diff.text}`}>
+   270→                      {diff.label}
+   271→                    </span>
+   272→                    {h.managerName && (
+   273→                      <span className="text-[9px] text-[#94a3b8]/50 truncate">👨‍💼 {h.managerName}</span>
+   274→                    )}
+   275→                    {h.teamName && (
+   276→                      <span className="text-[9px] text-[#94a3b8]/50 truncate">⚽ {h.teamName}</span>
+   277→                    )}
+   278→                  </div>
+   279→                </div>
+   280→
+   281→                {/* Points & Position */}
+   282→                <div className="text-right shrink-0">
+   283→                  <div className="text-lg font-black text-[#22c55e]">{h.points}</div>
+   284→                  <div className="text-[10px] text-[#94a3b8]">
+   285→                    {posEmoji} {h.position} место
+   286→                  </div>
+   287→                </div>
+   288→              </motion.div>
+   289→            );
+   290→          })}
+   291→        </div>
+   292→      )}
+   293→    </motion.div>
+   294→  );
+   295→}
+   296→
+   297→/* ─── Floating particles data ─── */
+   298→const PARTICLES = [
+   299→  { emoji: '⚽', size: 'text-lg', top: '8%', left: '6%', anim: 'animate-float-organic-1', delay: '0s' },
+   300→  { emoji: '🏆', size: 'text-xl', top: '15%', right: '10%', anim: 'animate-float-organic-2', delay: '0.5s' },
+   301→  { emoji: '⭐', size: 'text-sm', top: '35%', left: '3%', anim: 'animate-float-organic-3', delay: '1s' },
+   302→  { emoji: '💚', size: 'text-base', bottom: '30%', right: '5%', anim: 'animate-float-organic-1', delay: '1.5s' },
+   303→  { emoji: '⚽', size: 'text-sm', top: '60%', left: '12%', anim: 'animate-float-organic-2', delay: '2s' },
+   304→  { emoji: '🏆', size: 'text-base', bottom: '15%', right: '18%', anim: 'animate-float-organic-3', delay: '2.5s' },
+   305→  { emoji: '⭐', size: 'text-xs', top: '20%', left: '20%', anim: 'animate-float-organic-1', delay: '3s' },
+   306→  { emoji: '💚', size: 'text-sm', bottom: '40%', left: '8%', anim: 'animate-float-organic-2', delay: '3.5s' },
+   307→  { emoji: '⚽', size: 'text-lg', top: '45%', right: '8%', anim: 'animate-float-organic-3', delay: '4s' },
+   308→  { emoji: '⭐', size: 'text-xs', bottom: '20%', right: '25%', anim: 'animate-float-organic-1', delay: '4.5s' },
+   309→];
+   310→
+   311→/* ─── Home Page ─── */
+   312→function HomePage() {
+   313→  const { setScreen, profileStats } = useGameStore();
+   314→  const [showHowToPlay, setShowHowToPlay] = useState(false);
+   315→
+   316→  return (
+   317→    <div className="space-y-16 pb-8">
+   318→      {/* Hero Section */}
+   319→      <motion.div
+   320→        initial={{ opacity: 0, y: 30 }}
+   321→        animate={{ opacity: 1, y: 0 }}
+   322→        transition={{ duration: 0.6 }}
+   323→        className="flex flex-col items-center justify-center text-center space-y-6 pt-8"
+   324→      >
+   325→        {/* Hero container with noise, scanlines, and animated gradient border */}
+   326→        <div className="relative rounded-3xl p-8 sm:p-12 border-2 animate-border-gradient-shift overflow-hidden noise-overlay scanlines">
+   327→          {/* Green radial glow behind title */}
+   328→          <div
+   329→            className="absolute inset-0 pointer-events-none"
+   330→            style={{
+   331→              background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.15) 0%, transparent 60%)',
+   332→            }}
+   333→          />
+   334→
+   335→          {/* Enhanced floating particles */}
+   336→          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+   337→            {PARTICLES.map((p, i) => (
+   338→              <span
+   339→                key={i}
+   340→                className={`absolute ${p.size} ${p.anim}`}
+   341→                style={{
+   342→                  top: p.top,
+   343→                  left: p.left,
+   344→                  right: p.right,
+   345→                  bottom: p.bottom,
+   346→                  animationDelay: p.delay,
+   347→                }}
+   348→              >
+   349→                {p.emoji}
+   350→              </span>
+   351→            ))}
+   352→          </div>
+   353→
+   354→          <div className="relative z-10">
+   355→            {/* Animated Score Counter */}
+   356→            <div className="relative inline-block">
+   357→              <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none">
+   358→                <AnimatedCounter target={30} duration={1000} delay={200} />
+   359→                <span className="text-[#1a1a2e]">-</span>
+   360→                <motion.span
+   361→                  initial={{ opacity: 0, scale: 0.5 }}
+   362→                  animate={{ opacity: 1, scale: 1 }}
+   363→                  transition={{ delay: 1.3, duration: 0.5, type: 'spring', stiffness: 200 }}
+   364→                  className="inline-block"
+   365→                >
+   366→                  0
+   367→                </motion.span>
+   368→              </h1>
+   369→              {/* Framer Motion bouncing football */}
+   370→              <motion.div
+   371→                className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 text-3xl sm:text-4xl"
+   372→                animate={{
+   373→                  y: [0, -12, 0],
+   374→                  rotate: [0, 15, -15, 0],
+   375→                }}
+   376→                transition={{
+   377→                  duration: 1.8,
+   378→                  repeat: Infinity,
+   379→                  ease: 'easeInOut',
+   380→                  times: [0, 0.4, 0.7, 1],
+   381→                }}
+   382→              >
+   383→                ⚽
+   384→              </motion.div>
+   385→            </div>
+   386→
+   387→            {/* Subtitle with gradient text */}
+   388→            <motion.p
+   389→              initial={{ opacity: 0, y: 10 }}
+   390→              animate={{ opacity: 1, y: 0 }}
+   391→              transition={{ delay: 0.8, duration: 0.5 }}
+   392→              className="text-2xl sm:text-3xl font-bold text-gradient-subtitle mt-4"
+   393→            >
+   394→              Футбольный драфт РПЛ
+   395→            </motion.p>
+   396→
+   397→            {/* Pulsing underline */}
+   398→            <motion.div
+   399→              initial={{ scaleX: 0 }}
+   400→              animate={{ scaleX: 1 }}
+   401→              transition={{ delay: 1.2, duration: 0.6 }}
+   402→              className="mx-auto mt-2 h-0.5 w-24 rounded-full bg-gradient-to-r from-transparent via-[#22c55e] to-transparent animate-pulse-underline"
+   403→              style={{ transformOrigin: 'center' }}
+   404→            />
+   405→
+   406→            {/* Description with delayed fade-in */}
+   407→            <motion.p
+   408→              initial={{ opacity: 0, y: 8 }}
+   409→              animate={{ opacity: 1, y: 0 }}
+   410→              transition={{ delay: 1.4, duration: 0.5 }}
+   411→              className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3"
+   412→            >
+   413→              Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
+   414→              Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
+   415→            </motion.p>
+   416→          </div>
+   417→        </div>
+   418→
+   419→        {/* Play button with gradient glow */}
+   420→        <Button
+   421→          onClick={() => setScreen('setup')}
+   422→          className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all hover:scale-105 active:scale-95 animate-button-glow"
+   423→        >
+   424→          Играть 30-0
+   425→        </Button>
+   426→
+   427→        <button
+   428→          onClick={() => setShowHowToPlay(true)}
+   429→          className="text-sm text-[#94a3b8] hover:text-[#22c55e] transition-colors underline underline-offset-4 decoration-[#94a3b8]/30 hover:decoration-[#22c55e]/50"
+   430→        >
+   431→          Как играть?
+   432→        </button>
+   433→      </motion.div>
+   434→
+   435→      {/* How to Play Steps */}
+   436→      <motion.div
+   437→        initial={{ opacity: 0, y: 30 }}
+   438→        animate={{ opacity: 1, y: 0 }}
+   439→        transition={{ duration: 0.6, delay: 0.2 }}
+   440→        className="space-y-6"
+   441→      >
+   442→        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+   443→          Как играть
+   444→        </h2>
+   445→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+   446→          {STEPS.map((step, i) => (
+   447→            <motion.div
+   448→              key={step.title}
+   449→              initial={{ opacity: 0, y: 20 }}
+   450→              animate={{ opacity: 1, y: 0 }}
+   451→              transition={{ delay: 0.3 + i * 0.1 }}
+   452→              className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e] card-glow"
+   453→            >
+   454→              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#22c55e]/15 flex items-center justify-center">
+   455→                <step.icon className="w-6 h-6 text-[#22c55e]" />
+   456→              </div>
+   457→              <div className="text-xs text-[#22c55e] font-bold mb-1">Шаг {i + 1}</div>
+   458→              <div className="text-sm font-bold text-[#e2e8f0] mb-1">{step.title}</div>
+   459→              <div className="text-xs text-[#94a3b8] leading-relaxed">{step.desc}</div>
+   460→            </motion.div>
+   461→          ))}
+   462→        </div>
+   463→      </motion.div>
+   464→
+   465→      {/* Stats Section with animated counters */}
+   466→      <motion.div
+   467→        initial={{ opacity: 0, y: 30 }}
+   468→        animate={{ opacity: 1, y: 0 }}
+   469→        transition={{ duration: 0.6, delay: 0.4 }}
+   470→        className="flex items-center justify-center gap-4 sm:gap-8 flex-wrap"
+   471→      >
+   472→        <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
+   473→        <div className="w-px h-8 bg-[#1a1a2e]" />
+   474→        <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
+   475→        <div className="w-px h-8 bg-[#1a1a2e]" />
+   476→        <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
+   477→      </motion.div>
+   478→
+   479→      {/* Popular Challenges */}
+   480→      <motion.div
+   481→        initial={{ opacity: 0, y: 30 }}
+   482→        animate={{ opacity: 1, y: 0 }}
+   483→        transition={{ duration: 0.6, delay: 0.5 }}
+   484→        className="space-y-6"
+   485→      >
+   486→        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+   487→          Челленджи
+   488→        </h2>
+   489→        <div className="grid grid-cols-2 gap-4">
+   490→          {CHALLENGES.map((ch) => {
+   491→            const isCompleted = ch.checkFn(profileStats);
+   492→            const progress = ch.progressFn(profileStats);
+   493→
+   494→            return (
+   495→              <motion.button
+   496→                key={ch.title}
+   497→                onClick={() => setScreen('setup')}
+   498→                whileTap={{ scale: 0.97 }}
+   499→                className={`relative rounded-2xl p-5 text-left border border-[#1a1a2e] card-glow transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
+   500→              >
+   501→                {/* Emoji with bounce on hover */}
+   502→                <motion.div
+   503→                  className="text-2xl mb-2 inline-block"
+   504→                  whileHover={{ scale: 1.3, rotate: 10 }}
+   505→                  transition={{ type: 'spring', stiffness: 300 }}
+   506→                >
+   507→                  {ch.emoji}
+   508→                </motion.div>
+   509→                <div className="text-sm font-bold text-[#e2e8f0] mb-1">{ch.title}</div>
+   510→                <div className="text-xs text-[#94a3b8]">{ch.desc}</div>
+   511→
+   512→                {/* Progress bar */}
+   513→                <div className="challenge-progress-bar">
+   514→                  <div
+   515→                    className="challenge-progress-fill"
+   516→                    style={{ width: `${progress}%` }}
+   517→                  />
+   518→                </div>
+   519→
+   520→                {/* Completed green tint overlay */}
+   521→                {isCompleted && (
+   522→                  <div className="absolute inset-0 bg-[#22c55e]/5 pointer-events-none" />
+   523→                )}
+   524→              </motion.button>
+   525→            );
+   526→          })}
+   527→        </div>
+   528→      </motion.div>
+   529→
+   530→      {/* Recent Results */}
+   531→      <RecentResults />
+   532→
+   533→      {/* FAQ Accordion */}
+   534→      <motion.div
+   535→        initial={{ opacity: 0, y: 30 }}
+   536→        animate={{ opacity: 1, y: 0 }}
+   537→        transition={{ duration: 0.6, delay: 0.6 }}
+   538→        className="space-y-4"
+   539→      >
+   540→        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+   541→          Частые вопросы
+   542→        </h2>
+   543→        <Accordion type="single" collapsible className="space-y-3">
+   544→          {FAQ_ITEMS.map((item, i) => (
+   545→            <AccordionItem
+   546→              key={i}
+   547→              value={`faq-${i}`}
+   548→              className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden px-5 card-glow"
+   549→            >
+   550→              <AccordionTrigger className="text-sm font-bold text-[#e2e8f0] hover:text-[#22c55e] hover:no-underline py-4">
+   551→                {item.q}
+   552→              </AccordionTrigger>
+   553→              <AccordionContent className="text-sm text-[#94a3b8] leading-relaxed pb-4">
+   554→                {item.a}
+   555→              </AccordionContent>
+   556→            </AccordionItem>
+   557→          ))}
+   558→        </Accordion>
+   559→      </motion.div>
+   560→
+   561→      <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
+   562→    </div>
+   563→  );
+   564→}
+   565→
+   566→/* ─── Draft Screen ─── */
+   567→function DraftScreen() {
+   568→  return (
+   569→    <div className="space-y-6 animate-fade-in">
+   570→      <DraftProgressTracker />
+   571→      <FormationView />
+   572→      <SpinWheel />
+   573→      <PlayerList />
+   574→    </div>
+   575→  );
+   576→}
+   577→
+   578→/* ─── Position Assign Screen ─── */
+   579→function PositionAssignScreen() {
+   580→  const { selectedPlayer, setScreen, slots } = useGameStore();
+   581→
+   582→  const openCount = slots.filter((s) => !s.playerId).length;
+   583→
+   584→  // Get compatible positions for the info banner
+   585→  const mainPos = selectedPlayer?.mainPosition || '';
+   586→  const otherPos = selectedPlayer?.otherPositions || [];
+   587→  const allPosLabels = [mainPos, ...otherPos].filter(Boolean);
+   588→
+   589→  return (
+   590→    <div className="space-y-4 animate-fade-in">
+   591→      <div className="rounded-xl bg-[#1a1a2e] p-4 border border-[#22c55e]/20">
+   592→        <div className="flex items-center gap-3">
+   593→          <div className="w-10 h-10 rounded-lg bg-[#22c55e]/20 flex items-center justify-center shrink-0">
+   594→            <svg className="w-5 h-5 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+   595→              <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+   596→            </svg>
+   597→          </div>
+   598→          <div className="flex-1 min-w-0">
+   599→            <p className="text-sm font-medium text-[#e2e8f0]">
+   600→              Выберите позицию для <span className="text-[#22c55e] font-bold">{selectedPlayer?.fullName}</span>
+   601→            </p>
+   602→            <div className="flex items-center gap-2 mt-1 flex-wrap">
+   603→              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]">
+   604→                {selectedPlayer?.rating}
+   605→              </span>
+   606→              <span className="text-xs text-[#94a3b8]">Позиции:</span>
+   607→              {allPosLabels.map((pos) => (
+   608→                <span key={pos} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#3b82f6]/15 text-[#3b82f6]">
+   609→                  {pos}
+   610→                </span>
+   611→              ))}
+   612→            </div>
+   613→            <p className="text-xs text-[#94a3b8] mt-1">Нажмите на свободную позицию на поле ({openCount} осталось)</p>
+   614→          </div>
+   615→        </div>
+   616→        <button
+   617→          onClick={() => {
+   618→            useGameStore.setState({ selectedPlayer: null });
+   619→            setScreen('draft');
+   620→          }}
+   621→          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0a0a0f]/50 text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#0a0a0f] transition-colors text-sm font-medium"
+   622→        >
+   623→          🔙 Назад
+   624→        </button>
+   625→      </div>
+   626→      <FormationView />
+   627→    </div>
+   628→  );
+   629→}
+   630→
+   631→/* ─── Squad Complete Screen ─── */
+   632→function SquadCompleteScreen() {
+   633→  return (
+   634→    <div className="space-y-6 animate-fade-in-up">
+   635→      <div className="text-center">
+   636→        <motion.div
+   637→          initial={{ scale: 0 }}
+   638→          animate={{ scale: 1 }}
+   639→          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+   640→          className="text-5xl mb-3"
+   641→        >
+   642→          ✅
+   643→        </motion.div>
+   644→        <h2 className="text-2xl font-black text-[#e2e8f0]">Состав готов!</h2>
+   645→        <p className="text-sm text-[#94a3b8] mt-1">Все 11 позиций заполнены</p>
+   646→      </div>
+   647→
+   648→      <FormationView />
+   649→      <SquadStats />
+   650→      <ManagerChoice />
+   651→    </div>
+   652→  );
+   653→}
+   654→
+   655→/* ─── Simulation Screen with shimmer ─── */
+   656→function SimulationScreen() {
+   657→  return (
+   658→    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+   659→      {/* Shimmer skeleton effect */}
+   660→      <div className="w-full max-w-sm space-y-3 mb-4">
+   661→        <div className="h-6 rounded-lg shimmer-loading" />
+   662→        <div className="h-4 rounded-lg shimmer-loading w-3/4" />
+   663→        <div className="h-4 rounded-lg shimmer-loading w-1/2" />
+   664→      </div>
+   665→
+   666→      <motion.div
+   667→        animate={{ rotate: 360 }}
+   668→        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+   669→        className="text-6xl"
+   670→      >
+   671→        ⚽
+   672→      </motion.div>
+   673→      <motion.div
+   674→        initial={{ opacity: 0 }}
+   675→        animate={{ opacity: 1 }}
+   676→        transition={{ delay: 0.3 }}
+   677→        className="text-2xl font-bold text-[#e2e8f0]"
+   678→      >
+   679→        Симуляция сезона...
+   680→      </motion.div>
+   681→      <div className="text-sm text-[#94a3b8]">30 туров, 16 команд, 1 чемпион</div>
+   682→      <div className="flex gap-1.5">
+   683→        {[0, 1, 2].map((i) => (
+   684→          <motion.div
+   685→            key={i}
+   686→            className="w-2.5 h-2.5 rounded-full bg-[#22c55e]"
+   687→            animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
+   688→            transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
+   689→          />
+   690→        ))}
+   691→      </div>
+   692→    </div>
+   693→  );
+   694→}
+   695→
+   696→/* ─── Profile Screen ─── (moved to component) */
+   697→
+   698→/* ─── Leaderboard Screen ─── */
+   699→function getRelativeTime(dateStr: string): string {
+   700→  try {
+   701→    const date = new Date(dateStr);
+   702→    const now = new Date();
+   703→    const diffMs = now.getTime() - date.getTime();
+   704→    const diffSec = Math.floor(diffMs / 1000);
+   705→    const diffMin = Math.floor(diffSec / 60);
+   706→    const diffHour = Math.floor(diffMin / 60);
+   707→    const diffDay = Math.floor(diffHour / 24);
+   708→    if (diffSec < 60) return 'только что';
+   709→    if (diffMin < 60) return `${diffMin} мин назад`;
+   710→    if (diffHour < 24) return `${diffHour} ч назад`;
+   711→    if (diffDay < 7) return `${diffDay} дн назад`;
+   712→    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+   713→  } catch {
+   714→    return '';
+   715→  }
+   716→}
+   717→
+   718→const DIFFICULTY_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
+   719→  easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]' },
+   720→  normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]' },
+   721→  hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]' },
+   722→};
+   723→
+   724→const DIFFICULTY_LABELS_MAP: Record<string, string> = {
+   725→  easy: 'Легко',
+   726→  normal: 'Нормально',
+   727→  hard: 'Сложно',
+   728→};
+   729→
+   730→function LeaderboardScreen() {
+   731→  const { leaderboard, resetGame, setScreen } = useGameStore();
+   732→
+   733→  return (
+   734→    <div className="space-y-6 animate-fade-in">
+   735→      <div className="text-center">
+   736→        <h2 className="text-xl font-bold text-[#e2e8f0]">🏆 Лидерборд</h2>
+   737→        <p className="text-sm text-[#94a3b8] mt-1">Лучшие результаты</p>
+   738→      </div>
+   739→
+   740→      {leaderboard.length === 0 ? (
+   741→        <motion.div
+   742→          initial={{ opacity: 0, y: 20 }}
+   743→          animate={{ opacity: 1, y: 0 }}
+   744→          className="rounded-2xl bg-[#1a1a2e] p-10 text-center border border-[#1a1a2e]"
+   745→        >
+   746→          <div className="text-6xl mb-4">🏆</div>
+   747→          <div className="text-lg font-bold text-[#e2e8f0] mb-2">Пока нет результатов</div>
+   748→          <div className="text-sm text-[#94a3b8] mb-6">Сыграйте первый сезон и попадите в таблицу лидеров!</div>
+   749→          <Button
+   750→            onClick={() => { resetGame(); setScreen('setup'); }}
+   751→            className="h-12 px-8 text-base font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
+   752→          >
+   753→            ⚽ Сыграть сезон
+   754→          </Button>
+   755→        </motion.div>
+   756→      ) : (
+   757→        <div className="space-y-3">
+   758→          {leaderboard.map((entry, idx) => {
+   759→            const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+   760→            const diffBadge = DIFFICULTY_BADGE_COLORS[entry.difficulty] || DIFFICULTY_BADGE_COLORS.normal;
+   761→            const diffLabel = DIFFICULTY_LABELS_MAP[entry.difficulty] || entry.difficulty;
+   762→            const posEmoji = entry.seasonPosition === 1 ? '🥇' : entry.seasonPosition === 2 ? '🥈' : entry.seasonPosition === 3 ? '🥉' : entry.seasonPosition <= 4 ? '🏟️' : '';
+   763→
+   764→            return (
+   765→              <motion.div
+   766→                key={entry.id}
+   767→                initial={{ opacity: 0, x: -20 }}
+   768→                animate={{ opacity: 1, x: 0 }}
+   769→                transition={{ delay: idx * 0.08, duration: 0.35 }}
+   770→                className={`rounded-2xl p-4 border transition-all hover:scale-[1.01] ${
+   771→                  idx === 0
+   772→                    ? 'bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border-yellow-500/20'
+   773→                    : idx === 1
+   774→                    ? 'bg-gradient-to-r from-gray-400/10 to-gray-400/5 border-gray-400/20'
+   775→                    : idx === 2
+   776→                    ? 'bg-gradient-to-r from-amber-700/10 to-amber-700/5 border-amber-700/20'
+   777→                    : 'bg-[#1a1a2e] border-[#1a1a2e]'
+   778→                }`}
+   779→              >
+   780→                <div className="flex items-center gap-3">
+   781→                  {/* Rank */}
+   782→                  <div className="w-10 h-10 rounded-xl bg-[#0a0a0f]/50 flex items-center justify-center shrink-0">
+   783→                    <span className="text-lg">{rankEmoji || <span className="text-sm font-bold text-[#94a3b8]">{idx + 1}</span>}</span>
+   784→                  </div>
+   785→
+   786→                  {/* Info */}
+   787→                  <div className="flex-1 min-w-0">
+   788→                    <div className="flex items-center gap-2 flex-wrap">
+   789→                      {/* Formation badge */}
+   790→                      <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
+   791→                        {entry.formation}
+   792→                      </span>
+   793→                      {/* Difficulty badge */}
+   794→                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${diffBadge.bg} ${diffBadge.text}`}>
+   795→                        {diffLabel}
+   796→                      </span>
+   797→                    </div>
+   798→                    <div className="text-[10px] text-[#94a3b8]/60 mt-1">
+   799→                      {getRelativeTime(entry.createdAt)} · Рейтинг: {entry.squadRating || '-'}
+   800→                    </div>
+   801→                  </div>
+   802→
+   803→                  {/* Points & Position */}
+   804→                  <div className="text-right shrink-0">
+   805→                    <div className="text-2xl font-black text-[#22c55e]">{entry.seasonPoints}</div>
+   806→                    <div className="text-xs text-[#94a3b8]">
+   807→                      {posEmoji} {entry.seasonPosition} место
+   808→                    </div>
+   809→                  </div>
+   810→                </div>
+   811→              </motion.div>
+   812→            );
+   813→          })}
+   814→        </div>
+   815→      )}
+   816→
+   817→      <Button
+   818→        onClick={() => { resetGame(); setScreen('setup'); }}
+   819→        className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
+   820→      >
+   821→        ⚽ Сыграть сезон
+   822→      </Button>
+   823→    </div>
+   824→  );
+   825→}
+   826→
+   827→/* ─── Screen transition variants ─── */
+   828→const SCREEN_ORDER = ['home', 'setup', 'draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'];
+   829→
+   830→function getDirection(from: string, to: string): number {
+   831→  // Forward = 1, Backward = -1, Scale = 0
+   832→  const scaleScreens = ['profile', 'leaderboard'];
+   833→  if (scaleScreens.includes(to) || scaleScreens.includes(from)) return 0;
+   834→
+   835→  const fromIdx = SCREEN_ORDER.indexOf(from);
+   836→  const toIdx = SCREEN_ORDER.indexOf(to);
+   837→  if (fromIdx === -1 || toIdx === -1) return 1;
+   838→  return fromIdx < toIdx ? 1 : -1;
+   839→}
+   840→
+   841→const pageVariants = {
+   842→  enter: (direction: number) => {
+   843→    if (direction === 0) {
+   844→      return { opacity: 0, scale: 0.92 };
+   845→    }
+   846→    return {
+   847→      opacity: 0,
+   848→      x: direction > 0 ? 80 : -80,
+   849→    };
+   850→  },
+   851→  center: {
+   852→    opacity: 1,
+   853→    x: 0,
+   854→    scale: 1,
+   855→  },
+   856→  exit: (direction: number) => {
+   857→    if (direction === 0) {
+   858→      return { opacity: 0, scale: 1.08 };
+   859→    }
+   860→    return {
+   861→      opacity: 0,
+   862→      x: direction > 0 ? -80 : 80,
+   863→    };
+   864→  },
+   865→};
+   866→
+   867→/* ─── Main Home Component ─── */
+   868→export default function Home() {
+   869→  const { screen } = useGameStore();
+   870→  const prevScreen = useRef(screen);
+   871→  const [direction, setDirection] = useState(0);
+   872→
+   873→  useEffect(() => {
+   874→    if (prevScreen.current !== screen) {
+   875→      setDirection(getDirection(prevScreen.current, screen));
+   876→      prevScreen.current = screen;
+   877→    }
+   878→  }, [screen]);
+   879→
+   880→  const renderScreen = useCallback(() => {
+   881→    switch (screen) {
+   882→      case 'home':
+   883→        return <HomePage />;
+   884→      case 'setup':
+   885→        return <GameSetup />;
+   886→      case 'draft':
+   887→        return <DraftScreen />;
+   888→      case 'position-assign':
+   889→        return <PositionAssignScreen />;
+   890→      case 'squad-complete':
+   891→        return <SquadCompleteScreen />;
+   892→      case 'pre-match':
+   893→        return <PreMatchAnalysis />;
+   894→      case 'simulation':
+   895→        return <SimulationScreen />;
+   896→      case 'result':
+   897→        return <SimulationResult />;
+   898→      case 'awards':
+   899→        return <SeasonAwards />;
+   900→      case 'profile':
+   901→        return <ProfileScreen />;
+   902→      case 'leaderboard':
+   903→        return <LeaderboardScreen />;
+   904→      default:
+   905→        return <HomePage />;
+   906→    }
+   907→  }, [screen]);
+   908→
+   909→  return (
+   910→    <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
+   911→      <Header />
+   912→      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6">
+   913→        <AnimatePresence mode="wait" custom={direction}>
+   914→          <motion.div
+   915→            key={screen}
+   916→            custom={direction}
+   917→            variants={pageVariants}
+   918→            initial="enter"
+   919→            animate="center"
+   920→            exit="exit"
+   921→            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+   922→          >
+   923→            {renderScreen()}
+   924→          </motion.div>
+   925→        </AnimatePresence>
+   926→      </main>
+   927→      <Footer />
+   928→      <AchievementUnlocked />
+   929→    </div>
+   930→  );
+   931→}
+   932→

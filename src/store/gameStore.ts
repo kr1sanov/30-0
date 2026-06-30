@@ -1,11 +1,23 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry } from '@/lib/types';
+import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry, Achievement } from '@/lib/types';
 import { FORMATIONS, POSITION_CATEGORY, canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { DIFFICULTY_CONFIG } from '@/lib/types';
 import { MANAGERS } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
+
+// All available achievements (must match ProfileScreen TROPHIES)
+const ALL_ACHIEVEMENTS: Achievement[] = [
+  { id: 'champion', name: 'Чемпион', description: 'Выиграть чемпионат', icon: '🏆', condition: 'position === 1' },
+  { id: 'perfect', name: '30-0', description: 'Идеальный сезон', icon: '✨', condition: 'wins === 30 && draws === 0 && losses === 0' },
+  { id: 'goal_machine', name: 'Голевая машина', description: '60+ голов за сезон', icon: '⚡', condition: 'goalsFor >= 60' },
+  { id: 'iron_defense', name: 'Железная оборона', description: 'Разница +50', icon: '🧱', condition: 'goalsFor - goalsAgainst > 50' },
+  { id: 'win_streak', name: 'Серия побед', description: '5+ побед подряд', icon: '🔥', condition: 'maxStreak >= 5' },
+  { id: 'sniper', name: 'Снайпер', description: '2+ гола за матч', icon: '🎯', condition: 'goalsFor / 30 >= 2' },
+  { id: 'fortress', name: 'Дом-крепость', description: '0 домашних поражений', icon: '🏟️', condition: 'homeLosses === 0' },
+  { id: 'elite', name: 'Элита', description: 'Средний рейтинг 80+', icon: '💎', condition: 'squadRating >= 80' },
+];
 
 interface ProfileStats {
   totalSeasons: number;
@@ -28,7 +40,15 @@ interface ProfileStats {
     points: number;
     position: number;
     managerName?: string | null;
+    teamName?: string | null;
   }>;
+}
+
+interface LastDraftState {
+  slots: DraftSlot[];
+  currentSpin: SpinResult | null;
+  selectedPlayer: PlayerOption | null;
+  screen: GameScreen;
 }
 
 interface GameState {
@@ -52,6 +72,9 @@ interface GameState {
   selectedPlayer: PlayerOption | null;
   movingPlayerSlotIndex: number | null;
 
+  // Draft undo
+  lastDraftState: LastDraftState | null;
+
   // Manager
   currentManager: Manager | null;
   isSpinningManager: boolean;
@@ -68,6 +91,9 @@ interface GameState {
   // Last config for quick replay
   lastConfig: GameConfig | null;
 
+  // New achievements to show in popup
+  newAchievements: Achievement[];
+
   // Actions
   startRun: () => Promise<void>;
   spin: () => Promise<void>;
@@ -81,6 +107,8 @@ interface GameState {
   resetGame: () => void;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
+  undoLastPick: () => Promise<void>;
+  dismissAchievement: () => void;
 }
 
 const defaultConfig: GameConfig = {
@@ -127,6 +155,9 @@ export const useGameStore = create<GameState>()(
       selectedPlayer: null,
       movingPlayerSlotIndex: null,
 
+      // Draft undo
+      lastDraftState: null,
+
       // Manager
       currentManager: null,
       isSpinningManager: false,
@@ -142,6 +173,9 @@ export const useGameStore = create<GameState>()(
 
       // Last config for quick replay
       lastConfig: null,
+
+      // New achievements
+      newAchievements: [],
 
       // Actions
       startRun: async () => {
@@ -204,6 +238,8 @@ export const useGameStore = create<GameState>()(
             currentManager: null,
             screen: 'draft',
             lastConfig: { ...config },
+            lastDraftState: null,
+            newAchievements: [],
           });
         } catch (error) {
           console.error('Failed to start run:', error);
@@ -267,7 +303,18 @@ export const useGameStore = create<GameState>()(
       },
 
       selectPlayer: (player) => {
-        const { config } = get();
+        const { config, slots, currentSpin } = get();
+
+        // Save state before selection for undo
+        set({
+          lastDraftState: {
+            slots: [...slots],
+            currentSpin,
+            selectedPlayer: null,
+            screen: 'draft',
+          },
+        });
+
         set({ selectedPlayer: player });
         if (config.draftMode === 'squad_first') {
           set({ screen: 'position-assign' });
@@ -318,11 +365,18 @@ export const useGameStore = create<GameState>()(
 
           const allFilled = newSlots.every((s) => s.playerId);
 
+          // Clear lastDraftState after successful assignment — undo only works for the most recent pick
           set({
             slots: newSlots,
             selectedPlayer: null,
             currentSpin: null,
             screen: allFilled ? 'squad-complete' : 'draft',
+            lastDraftState: allFilled ? null : {
+              slots: [...slots],
+              currentSpin: null,
+              selectedPlayer: null,
+              screen: 'draft',
+            },
           });
         } catch (error) {
           console.error('Failed to draft player:', error);
@@ -452,8 +506,11 @@ export const useGameStore = create<GameState>()(
           matches?: Array<{ matchday: number; isHome: boolean; result: 'W' | 'D' | 'L' }>;
         };
 
+        const { config } = get();
+
         set((state) => {
           const stats = { ...state.profileStats };
+          const prevAchievements = [...stats.achievements];
           stats.totalSeasons += 1;
           stats.totalWins += r.wins;
           stats.totalGoals += r.goalsFor;
@@ -484,6 +541,7 @@ export const useGameStore = create<GameState>()(
             points: r.points,
             position: r.position,
             managerName: r.managerName,
+            teamName: config.teamName || null,
           }];
           for (const h of allHistory) {
             formationCounts[h.formation] = (formationCounts[h.formation] || 0) + 1;
@@ -491,16 +549,15 @@ export const useGameStore = create<GameState>()(
           stats.favoriteFormation = Object.entries(formationCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || stats.favoriteFormation;
 
           // Add achievements
-          const newAchievements = [...stats.achievements];
+          const newAchievementIds = [...stats.achievements];
           const addAch = (id: string) => {
-            if (!newAchievements.includes(id)) newAchievements.push(id);
+            if (!newAchievementIds.includes(id)) newAchievementIds.push(id);
           };
           if (r.position === 1) addAch('champion');
           if (r.wins === 30 && r.draws === 0 && r.losses === 0) addAch('perfect');
           if (r.goalsFor >= 60) addAch('goal_machine');
           if (r.goalsFor - r.goalsAgainst > 50) addAch('iron_defense');
 
-          // New achievements
           // Win streak: 5+ wins in a row
           const matches = r.matches || [];
           let maxStreak = 0;
@@ -525,11 +582,45 @@ export const useGameStore = create<GameState>()(
           // Elite: squad rating 80+
           if (r.squadRating && r.squadRating >= 80) addAch('elite');
 
-          stats.achievements = newAchievements;
+          stats.achievements = newAchievementIds;
           stats.history = allHistory.slice(-50); // Keep last 50
 
-          return { profileStats: stats };
+          // Identify newly earned achievements
+          const earned = newAchievementIds.filter((id) => !prevAchievements.includes(id));
+          const newAchievements = ALL_ACHIEVEMENTS.filter((a) => earned.includes(a.id));
+
+          return { profileStats: stats, newAchievements };
         });
+      },
+
+      undoLastPick: async () => {
+        const { runId, lastDraftState } = get();
+        if (!runId || !lastDraftState) return;
+
+        try {
+          const res = await fetch(`/api/runs/${runId}/undo`, { method: 'POST' });
+          if (!res.ok) {
+            console.error('Failed to undo pick:', await res.json());
+            return;
+          }
+
+          // Restore the previous state
+          set({
+            slots: lastDraftState.slots,
+            currentSpin: lastDraftState.currentSpin,
+            selectedPlayer: lastDraftState.selectedPlayer,
+            screen: lastDraftState.screen,
+            lastDraftState: null,
+          });
+        } catch (error) {
+          console.error('Failed to undo pick:', error);
+        }
+      },
+
+      dismissAchievement: () => {
+        set((state) => ({
+          newAchievements: state.newAchievements.slice(1),
+        }));
       },
 
       resetGame: () => {
@@ -546,6 +637,8 @@ export const useGameStore = create<GameState>()(
           seasonResult: null,
           currentManager: null,
           isSpinningManager: false,
+          lastDraftState: null,
+          newAchievements: [],
         });
       },
 

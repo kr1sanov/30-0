@@ -1,0 +1,617 @@
+   201→
+   202→function getInitials(name: string | undefined): string {
+   203→  if (!name) return '??';
+   204→  const parts = name.trim().split(/\s+/);
+   205→  if (parts.length >= 2) {
+   206→    // Last name initial + first name initial
+   207→    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+   208→  }
+   209→  return name.slice(0, 2).toUpperCase();
+   210→}
+   211→
+   212→export default function FormationView() {
+   213→  const {
+   214→    config,
+   215→    slots,
+   216→    selectedPlayer,
+   217→    movingPlayerSlotIndex,
+   218→    assignToSlot,
+   219→    movePlayer,
+   220→    screen,
+   221→    rerollsLeft,
+   222→  } = useGameStore();
+   223→
+   224→  const [shakingSlot, setShakingSlot] = useState<number | null>(null);
+   225→  const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
+   226→
+   227→  const layout = FORMATION_LAYOUTS[config.formation] ?? FORMATION_LAYOUTS['4-3-3'];
+   228→
+   229→  const filledCount = slots.filter((s) => s.playerId).length;
+   230→  const openCount = 11 - filledCount;
+   231→
+   232→  const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+   233→
+   234→  // Get compatible positions for the selected player
+   235→  const compatiblePositions = selectedPlayer
+   236→    ? getCompatiblePositions(selectedPlayer.mainPosition as Position)
+   237→    : [];
+   238→
+   239→  // ----- Task 3: Formation info header computations -----
+   240→  const formationMeta = useMemo(() => {
+   241→    const formation = getFormationById(config.formation);
+   242→    const counts: Record<PositionCategory, number> = { gk: 0, def: 0, mid: 0, att: 0 };
+   243→    for (const slot of slots) {
+   244→      const cat = POSITION_CATEGORY[slot.position as Position] ?? 'mid';
+   245→      counts[cat]++;
+   246→    }
+   247→    return {
+   248→      formation,
+   249→      counts,
+   250→      description: formation?.description ?? '',
+   251→    };
+   252→  }, [config.formation, slots]);
+   253→
+   254→  // Average rating of filled players (with penalty applied — Task 3c)
+   255→  const avgRating = useMemo(() => {
+   256→    const filled = slots.filter((s) => s.playerId && s.playerRating);
+   257→    if (filled.length === 0) return null;
+   258→    const sum = filled.reduce((acc, s) => {
+   259→      let r = s.playerRating!;
+   260→      if (s.playerPosition) {
+   261→        const { penalty } = canFillSlot(
+   262→          s.playerPosition as Position,
+   263→          (s.playerOtherPositions ?? []) as Position[],
+   264→          s.position as Position,
+   265→        );
+   266→        r = Math.round(r * penalty);
+   267→      }
+   268→      return acc + r;
+   269→    }, 0);
+   270→    return Math.round(sum / filled.length);
+   271→  }, [slots]);
+   272→
+   273→  // Chemistry: percentage of filled players fully compatible with their slot
+   274→  const chemistry = useMemo(() => {
+   275→    const filled = slots.filter((s) => s.playerId);
+   276→    if (filled.length === 0) return null;
+   277→    const fullCount = filled.filter((s) => {
+   278→      if (!s.playerPosition) return true;
+   279→      const { penalty } = canFillSlot(
+   280→        s.playerPosition as Position,
+   281→        (s.playerOtherPositions ?? []) as Position[],
+   282→        s.position as Position,
+   283→      );
+   284→      return penalty === 1;
+   285→    }).length;
+   286→    return Math.round((fullCount / filled.length) * 100);
+   287→  }, [slots]);
+   288→
+   289→  const triggerShake = useCallback((index: number) => {
+   290→    setShakingSlot(index);
+   291→    setTimeout(() => setShakingSlot(null), 400);
+   292→  }, []);
+   293→
+   294→  const handleSlotClick = (index: number) => {
+   295→    const slot = slots[index];
+   296→    if (!slot) return;
+   297→
+   298→    // If we have a selected player and the slot is empty, try to assign
+   299→    if (selectedPlayer && !slot.playerId) {
+   300→      const { canFill } = canFillSlot(
+   301→        selectedPlayer.mainPosition as Position,
+   302→        selectedPlayer.otherPositions as Position[],
+   303→        slot.position as Position,
+   304→      );
+   305→      if (canFill) {
+   306→        toast.success(`✅ ${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
+   307→        assignToSlot(index);
+   308→      } else {
+   309→        // Trigger shake animation on incompatible slot
+   310→        triggerShake(index);
+   311→        toast.error(`❌ ${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
+   312→      }
+   313→      return;
+   314→    }
+   315→
+   316→    // If the slot is filled and we're in squad-complete or position-assign, start moving
+   317→    if (slot.playerId && (screen === 'squad-complete' || screen === 'position-assign')) {
+   318→      if (movingPlayerSlotIndex === null) {
+   319→        useGameStore.setState({ movingPlayerSlotIndex: index });
+   320→      } else if (movingPlayerSlotIndex !== index) {
+   321→        movePlayer(movingPlayerSlotIndex, index);
+   322→      }
+   323→    }
+   324→  };
+   325→
+   326→  // ----- Task 2c: Connection lines from moving source to valid swap targets -----
+   327→  // Valid swap targets = every other filled slot (since any two filled slots can swap).
+   328→  const swapTargets = useMemo(() => {
+   329→    if (movingPlayerSlotIndex === null) return [];
+   330→    const source = layout[movingPlayerSlotIndex];
+   331→    if (!source) return [];
+   332→    const targets: { from: { row: number; col: number }; to: { row: number; col: number } }[] = [];
+   333→    slots.forEach((s, i) => {
+   334→      if (i === movingPlayerSlotIndex) return;
+   335→      if (!s.playerId) return;
+   336→      const to = layout[i];
+   337→      if (!to) return;
+   338→      targets.push({ from: source, to });
+   339→    });
+   340→    return targets;
+   341→  }, [movingPlayerSlotIndex, slots, layout]);
+   342→
+   343→  return (
+   344→    <div className="relative w-full">
+   345→      {/* Compatible positions info bar — only shown when a player is selected */}
+   346→      {selectedPlayer && compatiblePositions.length > 0 && (
+   347→        <motion.div
+   348→          initial={{ opacity: 0, y: -8 }}
+   349→          animate={{ opacity: 1, y: 0 }}
+   350→          className="mb-3 px-3 py-2 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
+   351→        >
+   352→          <span className="text-xs text-[#94a3b8] shrink-0">Совместимые позиции:</span>
+   353→          <div className="flex gap-1.5 flex-wrap">
+   354→            {compatiblePositions.map((pos) => (
+   355→              <span
+   356→                key={pos}
+   357→                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]"
+   358→              >
+   359→                {pos}
+   360→              </span>
+   361→            ))}
+   362→          </div>
+   363→        </motion.div>
+   364→      )}
+   365→
+   366→      {/* ===== Task 3: Formation Info Header ===== */}
+   367→      <motion.div
+   368→        initial={{ opacity: 0, y: -6 }}
+   369→        animate={{ opacity: 1, y: 0 }}
+   370→        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#1a1a2e] to-[#16162a] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
+   371→      >
+   372→        {/* Formation name + icon */}
+   373→        <div className="flex items-center gap-1.5 shrink-0">
+   374→          <span className="text-base sm:text-lg" aria-hidden>📐</span>
+   375→          <span className="text-sm sm:text-base font-black text-[#e2e8f0] tracking-wide">
+   376→            {config.formation}
+   377→          </span>
+   378→        </div>
+   379→
+   380→        <div className="h-4 w-px bg-white/15" aria-hidden />
+   381→
+   382→        {/* Player count by category */}
+   383→        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold">
+   384→          <span className="text-[#f97316]">{formationMeta.counts.gk} ВР</span>
+   385→          <span className="text-white/30">·</span>
+   386→          <span className="text-[#3b82f6]">{formationMeta.counts.def} ЗАЩ</span>
+   387→          <span className="text-white/30">·</span>
+   388→          <span className="text-[#22c55e]">{formationMeta.counts.mid} ПОЛ</span>
+   389→          <span className="text-white/30">·</span>
+   390→          <span className="text-[#ef4444]">{formationMeta.counts.att} НАП</span>
+   391→        </div>
+   392→
+   393→        <div className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
+   394→
+   395→        {/* Average rating of filled players */}
+   396→        <div className="flex items-center gap-1.5 shrink-0">
+   397→          <span className="text-[10px] sm:text-xs text-[#94a3b8]">Ср. рейтинг:</span>
+   398→          {avgRating !== null ? (
+   399→            <span
+   400→              className="text-xs sm:text-sm font-black"
+   401→              style={{ color: getRatingColor(avgRating) }}
+   402→            >
+   403→              {avgRating}
+   404→            </span>
+   405→          ) : (
+   406→            <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
+   407→          )}
+   408→        </div>
+   409→
+   410→        <div className="ml-auto flex items-center gap-2 shrink-0">
+   411→          {/* Chemistry indicator */}
+   412→          {chemistry !== null && (
+   413→            <div className="flex items-center gap-1.5">
+   414→              <span className="text-[10px] sm:text-xs text-[#94a3b8]">Химия:</span>
+   415→              <motion.span
+   416→                key={chemistry}
+   417→                initial={{ scale: 0.6, opacity: 0 }}
+   418→                animate={{ scale: 1, opacity: 1 }}
+   419→                transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+   420→                className="flex items-center gap-1"
+   421→              >
+   422→                <span
+   423→                  className="w-2.5 h-2.5 rounded-full"
+   424→                  style={{
+   425→                    backgroundColor: getChemistryColor(chemistry),
+   426→                    boxShadow: `0 0 6px ${getChemistryColor(chemistry)}`,
+   427→                  }}
+   428→                  aria-hidden
+   429→                />
+   430→                <span
+   431→                  className="text-xs sm:text-sm font-black"
+   432→                  style={{ color: getChemistryColor(chemistry) }}
+   433→                >
+   434→                  {chemistry}%
+   435→                </span>
+   436→              </motion.span>
+   437→            </div>
+   438→          )}
+   439→
+   440→          {/* Rerolls badge */}
+   441→          <span className="text-[10px] sm:text-xs font-bold text-[#94a3b8] bg-[#0f0f1e] px-2 py-1 rounded-full border border-white/5">
+   442→            Перебросы: <span className="text-[#22c55e]">{rerollsLeft}</span>/{maxRerolls}
+   443→          </span>
+   444→        </div>
+   445→      </motion.div>
+   446→
+   447→      {/* Pitch */}
+   448→      <div
+   449→        className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
+   450→        style={{ paddingBottom: '130%' }}
+   451→      >
+   452→        {/* Pitch stripe pattern */}
+   453→        <div
+   454→          className="absolute inset-0 pitch-stripes"
+   455→        />
+   456→
+   457→        {/* Pitch grass texture lines (vertical) */}
+   458→        <div className="absolute inset-0 pitch-grass-lines" />
+   459→
+   460→        {/* ===== Task 4a: Diagonal mowing pattern overlay ===== */}
+   461→        <div
+   462→          className="absolute inset-0 pointer-events-none"
+   463→          style={{
+   464→            backgroundImage:
+   465→              'repeating-linear-gradient(60deg, transparent 0px, transparent 36px, rgba(255,255,255,0.025) 36px, rgba(255,255,255,0.025) 72px)',
+   466→          }}
+   467→          aria-hidden
+   468→        />
+   469→
+   470→        {/* Pitch gradient overlay for depth */}
+   471→        <div
+   472→          className="absolute inset-0"
+   473→          style={{
+   474→            background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%)',
+   475→          }}
+   476→        />
+   477→
+   478→        {/* Pitch vignette overlay — darker at edges */}
+   479→        <div className="absolute inset-0 pitch-vignette pointer-events-none" />
+   480→
+   481→        {/* Pitch border outline */}
+   482→        <div className="absolute inset-3 sm:inset-4 rounded-sm border-2 border-white/20" />
+   483→
+   484→        {/* Center line */}
+   485→        <div className="absolute inset-x-3 sm:inset-x-4 top-1/2 h-px bg-white/20" />
+   486→
+   487→        {/* Center circle */}
+   488→        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-white/20 flex items-center justify-center">
+   489→          {/* ===== Task 4c: Center circle logo (⚽ icon) ===== */}
+   490→          <motion.span
+   491→            className="text-base sm:text-xl opacity-60 select-none"
+   492→            animate={{ scale: [1, 1.08, 1], opacity: [0.55, 0.75, 0.55] }}
+   493→            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+   494→            aria-hidden
+   495→          >
+   496→            ⚽
+   497→          </motion.span>
+   498→        </div>
+   499→
+   500→        {/* Center dot */}
+   501→        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/30" />
+   502→
+   503→        {/* Top penalty box */}
+   504→        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-36 sm:w-44 h-16 sm:h-20 border-b border-x border-white/20" />
+   505→        {/* Top goal box */}
+   506→        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-20 sm:w-24 h-8 border-b border-x border-white/20" />
+   507→        {/* Top penalty arc */}
+   508→        <div
+   509→          className="absolute left-1/2 -translate-x-1/2 border-b border-white/15 rounded-b-full"
+   510→          style={{ top: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
+   511→        />
+   512→        {/* ===== Task 4d: Top penalty spot ===== */}
+   513→        <div
+   514→          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
+   515→          style={{ top: 'calc(12px + 42px)' }}
+   516→          aria-hidden
+   517→        />
+   518→
+   519→        {/* Bottom penalty box */}
+   520→        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-36 sm:w-44 h-16 sm:h-20 border-t border-x border-white/20" />
+   521→        {/* Bottom goal box */}
+   522→        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-20 sm:w-24 h-8 border-t border-x border-white/20" />
+   523→        {/* Bottom penalty arc */}
+   524→        <div
+   525→          className="absolute left-1/2 -translate-x-1/2 border-t border-white/15 rounded-t-full"
+   526→          style={{ bottom: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
+   527→        />
+   528→        {/* ===== Task 4d: Bottom penalty spot ===== */}
+   529→        <div
+   530→          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
+   531→          style={{ bottom: 'calc(12px + 42px)' }}
+   532→          aria-hidden
+   533→        />
+   534→
+   535→        {/* Corner arcs */}
+   536→        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 w-4 h-4 border-b border-r border-white/15 rounded-br-full" />
+   537→        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-4 h-4 border-b border-l border-white/15 rounded-bl-full" />
+   538→        <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 w-4 h-4 border-t border-r border-white/15 rounded-tr-full" />
+   539→        <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 border-t border-l border-white/15 rounded-tl-full" />
+   540→
+   541→        {/* ===== Task 2c: SVG connection lines from source slot to valid swap targets ===== */}
+   542→        <svg
+   543→          className="absolute inset-0 w-full h-full pointer-events-none"
+   544→          viewBox="0 0 100 130"
+   545→          preserveAspectRatio="none"
+   546→          aria-hidden
+   547→        >
+   548→          {swapTargets.map((t, i) => (
+   549→            <motion.line
+   550→              key={i}
+   551→              x1={t.from.col}
+   552→              y1={t.from.row * 1.3}
+   553→              x2={t.to.col}
+   554→              y2={t.to.row * 1.3}
+   555→              stroke="rgba(250, 204, 21, 0.7)"
+   556→              strokeWidth={0.4}
+   557→              strokeDasharray="1.5 1"
+   558→              initial={{ pathLength: 0, opacity: 0 }}
+   559→              animate={{ pathLength: 1, opacity: 1 }}
+   560→              transition={{ duration: 0.3, delay: i * 0.03 }}
+   561→            />
+   562→          ))}
+   563→        </svg>
+   564→
+   565→        {/* Position Slots */}
+   566→        {slots.map((slot, index) => {
+   567→          const pos = layout[index];
+   568→          if (!pos) return null;
+   569→
+   570→          const category = POSITION_CATEGORY[slot.position as Position] ?? ('mid' as PositionCategory);
+   571→          const color = POSITION_COLOR[category];
+   572→          const ringColor = CATEGORY_RING_COLOR[category];
+   573→          const isFilled = !!slot.playerId;
+   574→          const isSelected = movingPlayerSlotIndex === index;
+   575→          const isCompatible = selectedPlayer
+   576→            ? canFillSlot(
+   577→                selectedPlayer.mainPosition as Position,
+   578→                selectedPlayer.otherPositions as Position[],
+   579→                slot.position as Position,
+   580→              ).canFill
+   581→            : false;
+   582→          const isIncompatible = selectedPlayer && !isFilled && !isCompatible;
+   583→          const isShaking = shakingSlot === index;
+   584→
+   585→          // Valid swap target = another filled slot while a move is in progress
+   586→          const isSwapTarget =
+   587→            movingPlayerSlotIndex !== null &&
+   588→            movingPlayerSlotIndex !== index &&
+   589→            isFilled;
+   590→
+   591→          // ===== Task 1b: Compatibility info for filled slot =====
+   592→          let compatKind: 'full' | 'partial' | null = null;
+   593→          let effectiveRating = slot.playerRating;
+   594→          let baseRating = slot.playerRating;
+   595→          if (isFilled && slot.playerPosition) {
+   596→            const { penalty } = canFillSlot(
+   597→              slot.playerPosition as Position,
+   598→              (slot.playerOtherPositions ?? []) as Position[],
+   599→              slot.position as Position,
+   600→            );
+   601→            if (penalty === 1) compatKind = 'full';
+   602→            else if (penalty === 0.8) {
+   603→              compatKind = 'partial';
+   604→              if (slot.playerRating) effectiveRating = Math.round(slot.playerRating * 0.8);
+   605→            }
+   606→          }
+   607→
+   608→          // Tooltip direction: above if slot is in bottom half, below if in top half
+   609→          const tooltipBelow = pos.row < 50;
+   610→
+   611→          // All positions the assigned player can play (for tooltip)
+   612→          const playerAllPositions: string[] = isFilled && slot.playerPosition
+   613→            ? [slot.playerPosition, ...(slot.playerOtherPositions ?? [])]
+   614→            : [];
+   615→
+   616→          return (
+   617→            <motion.button
+   618→              key={index}
+   619→              onClick={() => handleSlotClick(index)}
+   620→              onMouseEnter={() => isFilled && setHoveredSlot(index)}
+   621→              onMouseLeave={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
+   622→              onFocus={() => isFilled && setHoveredSlot(index)}
+   623→              onBlur={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
+   624→              className={`absolute -translate-x-1/2 -translate-y-1/2 ${
+   625→                isSelected ? 'z-20' : isSwapTarget ? 'z-10' : ''
+   626→              } ${isShaking ? 'animate-shake' : ''}`}
+   627→              style={{
+   628→                top: `${pos.row}%`,
+   629→                left: `${pos.col}%`,
+   630→              }}
+   631→              whileTap={isFilled || isCompatible ? { scale: 0.92 } : undefined}
+   632→              aria-label={
+   633→                isFilled
+   634→                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
+   635→                  : `Пустая позиция ${slot.positionLabel}`
+   636→              }
+   637→              layout
+   638→            >
+   639→              <div
+   640→                className={`relative flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 transition-all duration-200 ${
+   641→                  isFilled
+   642→                    ? 'border-white/60 backdrop-blur-sm player-inner-glow animate-subtle-pulse'
+   643→                    : isIncompatible
+   644→                    ? 'border-[#ef4444]/40 border-dashed'
+   645→                    : isCompatible && !isFilled
+   646→                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
+   647→                    : 'border-white/25 border-dashed'
+   648→                } ${
+   649→                  isSelected
+   650→                    ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]'
+   651→                    : isSwapTarget
+   652→                    ? 'ring-2 ring-yellow-400/70 ring-offset-1 ring-offset-[#1a5c30]'
+   653→                    : ''
+   654→                }`}
+   655→                style={{
+   656→                  backgroundColor: isFilled
+   657→                    ? `${color}dd`
+   658→                    : isIncompatible
+   659→                    ? `${color}15`
+   660→                    : `${color}22`,
+   661→                  // ===== Task 1a: Position color ring (3px outside) on filled slots =====
+   662→                  boxShadow: isFilled
+   663→                    ? `0 0 0 3px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
+   664→                    : undefined,
+   665→                }}
+   666→              >
+   667→                {/* ===== Task 2b: Slot number badge (draft order 1-11) ===== */}
+   668→                <div
+   669→                  className={`absolute -top-1.5 -left-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[9px] font-black border ${
+   670→                    isFilled
+   671→                      ? 'bg-[#0f0f1e] text-white/80 border-white/30'
+   672→                      : 'bg-[#0f0f1e]/90 text-white/50 border-white/15'
+   673→                  }`}
+   674→                  aria-hidden
+   675→                >
+   676→                  {index + 1}
+   677→                </div>
+   678→
+   679→                {/* ===== Task 1b: Compatibility badge (top-right) ===== */}
+   680→                {isFilled && compatKind && (
+   681→                  <div
+   682→                    className={`absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 border-[#0f0f1e] ${
+   683→                      compatKind === 'full'
+   684→                        ? 'bg-[#22c55e] text-white'
+   685→                        : 'bg-[#facc15] text-black'
+   686→                    }`}
+   687→                    aria-label={
+   688→                      compatKind === 'full'
+   689→                        ? 'Полная совместимость'
+   690→                        : 'Частичная совместимость (-20% к рейтингу)'
+   691→                    }
+   692→                  >
+   693→                    {compatKind === 'full' ? '✓' : '⚠'}
+   694→                  </div>
+   695→                )}
+   696→
+   697→                {isFilled ? (
+   698→                  <>
+   699→                    <span
+   700→                      className="text-[10px] sm:text-xs font-black text-white leading-tight text-center"
+   701→                      style={{ maxWidth: '52px' }}
+   702→                    >
+   703→                      {getInitials(slot.playerName)}
+   704→                    </span>
+   705→                    {slot.playerRating ? (
+   706→                      <span
+   707→                        className="text-[9px] sm:text-[10px] font-bold px-1.5 rounded-sm mt-0.5"
+   708→                        style={{
+   709→                          color: getRatingColor(effectiveRating ?? slot.playerRating),
+   710→                          backgroundColor: 'rgba(0,0,0,0.35)',
+   711→                          // Dim rating for partial-compat players
+   712→                          opacity: compatKind === 'partial' ? 0.78 : 1,
+   713→                        }}
+   714→                      >
+   715→                        {effectiveRating ?? slot.playerRating}
+   716→                      </span>
+   717→                    ) : null}
+   718→                  </>
+   719→                ) : isIncompatible ? (
+   720→                  <div className="flex flex-col items-center">
+   721→                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60">
+   722→                      {slot.positionLabel}
+   723→                    </span>
+   724→                    <span className="text-[8px] leading-none">❌</span>
+   725→                  </div>
+   726→                ) : (
+   727→                  <span className="text-[10px] sm:text-xs font-bold text-white/60">
+   728→                    {slot.positionLabel}
+   729→                  </span>
+   730→                )}
+   731→              </div>
+   732→
+   733→              {/* ===== Task 1d: Hover Info Tooltip ===== */}
+   734→              <AnimatePresence>
+   735→                {hoveredSlot === index && isFilled && (
+   736→                  <motion.div
+   737→                    initial={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
+   738→                    animate={{ opacity: 1, y: 0 }}
+   739→                    exit={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
+   740→                    transition={{ duration: 0.15 }}
+   741→                    className={`absolute left-1/2 -translate-x-1/2 z-30 w-max max-w-[200px] pointer-events-none ${
+   742→                      tooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
+   743→                    }`}
+   744→                  >
+   745→                    <div className="px-2.5 py-2 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
+   746→                      {/* Full name */}
+   747→                      <div className="text-[11px] font-bold text-white leading-tight mb-1 truncate">
+   748→                        {slot.playerName ?? 'Игрок'}
+   749→                      </div>
+   750→
+   751→                      {/* All positions they can play */}
+   752→                      {playerAllPositions.length > 0 && (
+   753→                        <div className="flex items-center gap-1 mb-1 flex-wrap">
+   754→                          <span className="text-[9px] text-[#94a3b8]">Позиции:</span>
+   755→                          {playerAllPositions.map((p) => (
+   756→                            <span
+   757→                              key={p}
+   758→                              className={`text-[8px] font-bold px-1 py-0.5 rounded ${
+   759→                                p === slot.position
+   760→                                  ? 'bg-[#22c55e]/25 text-[#4ade80]'
+   761→                                  : 'bg-white/5 text-white/60'
+   762→                              }`}
+   763→                            >
+   764→                              {p}
+   765→                            </span>
+   766→                          ))}
+   767→                        </div>
+   768→                      )}
+   769→
+   770→                      {/* Rating line — current vs base if penalty applies */}
+   771→                      {slot.playerRating && (
+   772→                        <div className="text-[9px] text-[#94a3b8]">
+   773→                          Рейтинг:{' '}
+   774→                          {compatKind === 'partial' && baseRating ? (
+   775→                            <>
+   776→                              <span className="line-through text-white/40">{baseRating}</span>
+   777→                              <span className="ml-1" style={{ color: getRatingColor(effectiveRating ?? slot.playerRating) }}>
+   778→                                → {effectiveRating}
+   779→                              </span>
+   780→                              <span className="ml-1 text-[#facc15]">(-20%)</span>
+   781→                            </>
+   782→                          ) : (
+   783→                            <span className="font-bold" style={{ color: getRatingColor(slot.playerRating) }}>
+   784→                              {slot.playerRating}
+   785→                            </span>
+   786→                          )}
+   787→                        </div>
+   788→                      )}
+   789→                    </div>
+   790→                    {/* Arrow */}
+   791→                    <div
+   792→                      className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0f0f1e] border-white/15 ${
+   793→                        tooltipBelow
+   794→                          ? 'top-0 -translate-y-1/2 -rotate-45 border-t border-l'
+   795→                          : 'bottom-0 translate-y-1/2 -rotate-45 border-b border-r'
+   796→                      }`}
+   797→                      aria-hidden
+   798→                    />
+   799→                  </motion.div>
+   800→                )}
+   801→              </AnimatePresence>
+   802→            </motion.button>
+   803→          );
+   804→        })}
+   805→      </div>
+   806→
+   807→      {/* Open positions counter */}
+   808→      <div className="flex items-center justify-center mt-3">
+   809→        <span className="text-xs text-[#94a3b8]">
+   810→          Заполнено: <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
+   811→          {openCount > 0 && <span className="ml-1">· Осталось: {openCount} поз.</span>}
+   812→        </span>
+   813→      </div>
+   814→    </div>
+   815→  );
+   816→}
+   817→

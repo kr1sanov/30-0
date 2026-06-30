@@ -12,6 +12,7 @@ export interface GameConfig {
   draftMode: 'squad_first' | 'position_first';
   ratingMode: 'season' | 'prime';
   eraFilter: 'all' | '2000s' | '2010s' | 'modern';
+  teamName?: string; // default: "Моя команда"
 }
 
 // ---------------------------------------------------------------------------
@@ -61,9 +62,11 @@ export type GameScreen =
   | 'draft'
   | 'position-assign'
   | 'squad-complete'
+  | 'pre-match'
   | 'manager-choice'
   | 'simulation'
   | 'result'
+  | 'awards'
   | 'profile'
   | 'leaderboard';
 

@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { POSITION_COLOR, POSITION_CATEGORY } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 /** Category gradient for filled slots */
 const CATEGORY_GRADIENT: Record<PositionCategory, string> = {
@@ -23,7 +24,9 @@ function getInitials(fullName: string): string {
 }
 
 export default function DraftProgressTracker() {
-  const { slots, config } = useGameStore();
+  const { slots, config, lastDraftState, undoLastPick } = useGameStore();
+
+  const teamName = config.teamName || 'Моя команда';
 
   // Calculate squad overall rating
   const squadRating = useMemo(() => {
@@ -42,32 +45,54 @@ export default function DraftProgressTracker() {
     [slots]
   );
 
+  const handleUndo = async () => {
+    await undoLastPick();
+    toast.success('↩ Выбор отменён');
+  };
+
   return (
     <div className="w-full">
-      {/* Progress bar at the very top */}
+      {/* Header with team name and undo button */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-[#e2e8f0]">
-            Драфт
+            {teamName}
           </span>
           <span className="text-xs font-medium text-[#94a3b8]">
             {filledCount}/11
           </span>
         </div>
-        {filledCount > 0 && (
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-[#94a3b8]">Рейтинг состава</span>
-            <motion.span
-              key={squadRating}
-              initial={{ scale: 1.3, color: '#22c55e' }}
-              animate={{ scale: 1, color: '#e2e8f0' }}
-              transition={{ duration: 0.4 }}
-              className="text-sm font-black"
-            >
-              {squadRating}
-            </motion.span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {filledCount > 0 && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-[#94a3b8]">Рейтинг состава</span>
+              <motion.span
+                key={squadRating}
+                initial={{ scale: 1.3, color: '#22c55e' }}
+                animate={{ scale: 1, color: '#e2e8f0' }}
+                transition={{ duration: 0.4 }}
+                className="text-sm font-black"
+              >
+                {squadRating}
+              </motion.span>
+            </div>
+          )}
+          {/* Undo button */}
+          <AnimatePresence>
+            {lastDraftState && (
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: 'spring', damping: 15, stiffness: 300 }}
+                onClick={handleUndo}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#f97316]/40 bg-[#f97316]/10 text-[#f97316] text-[11px] font-bold hover:bg-[#f97316]/20 transition-colors"
+              >
+                ↩ Отменить
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Linear progress bar */}

@@ -228,7 +228,7 @@ function findBestStreakRange(matches: MatchDetail[]): { start: number; end: numb
 // ---------------------------------------------------------------------------
 
 export default function SimulationResult() {
-  const { seasonResult, resetGame, lastConfig, setConfig, setScreen } = useGameStore();
+  const { seasonResult, resetGame, lastConfig, setConfig, setScreen, config } = useGameStore();
   const [showMatches, setShowMatches] = useState(false);
   const [showTable, setShowTable] = useState(false);
 
@@ -271,6 +271,7 @@ export default function SimulationResult() {
     const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
     const lines = [
       `${posEmoji} 30-0 RPL`,
+      `⚽ ${config.teamName || 'Моя команда'}`,
       `📐 ${r.formation} · ${r.wins}В-${r.draws}Н-${r.losses}П`,
       `⭐ ${r.points} очков · ${r.position} место`,
       `⚽ ${r.goalsFor} забито · ${r.goalsAgainst} пропущено`,
@@ -311,6 +312,7 @@ export default function SimulationResult() {
     const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
     const lines = [
       `${posEmoji} 30-0 RPL`,
+      `⚽ Команда: ${config.teamName || 'Моя команда'}`,
       `📐 Формация: ${r.formation}`,
       `📊 ${r.wins}В-${r.draws}Н-${r.losses}П · ${r.points} очков · ${r.position} место`,
       `⚽ Голы: ${r.goalsFor} забито / ${r.goalsAgainst} пропущено`,
@@ -554,7 +556,7 @@ export default function SimulationResult() {
         </motion.div>
         <motion.div
           initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+          animate={{ scale: [0, 1.5, 0.9, 1] }}
           transition={{ type: 'spring', stiffness: 260, damping: 10, delay: 0.3 }}
           className={`text-7xl font-black ${badge.text}`}
         >
@@ -564,6 +566,11 @@ export default function SimulationResult() {
           {getPositionLabel(result.position)}
         </div>
         <div className="text-xs text-[#94a3b8] mt-0.5">место в таблице</div>
+
+        {/* Team name */}
+        <div className="text-xs text-[#94a3b8]/70 mt-2">
+          ⚽ {config.teamName || 'Моя команда'}
+        </div>
 
         {/* Live replay running points */}
         {isReplaying && (
@@ -602,7 +609,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
         >
           <div className="text-2xl font-black text-[#22c55e]">{animatedPoints}</div>
           <div className="text-xs text-[#94a3b8]">Очки</div>
@@ -611,7 +618,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
         >
           <div className="text-2xl font-black text-[#22c55e]">{animatedWins}</div>
           <div className="text-xs text-[#94a3b8]">Победы</div>
@@ -620,7 +627,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.35 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
         >
           <div className="text-2xl font-black text-[#f97316]">{animatedDraws}</div>
           <div className="text-xs text-[#94a3b8]">Ничьи</div>
@@ -629,7 +636,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
         >
           <div className="text-2xl font-black text-[#ef4444]">{animatedLosses}</div>
           <div className="text-xs text-[#94a3b8]">Поражения</div>
@@ -1238,6 +1245,16 @@ export default function SimulationResult() {
 
       {/* Action Buttons */}
       <div className="space-y-3">
+        {/* Season Awards */}
+        <motion.div whileTap={{ scale: 0.97 }}>
+          <Button
+            onClick={() => setScreen('awards')}
+            className="w-full h-14 text-base font-black bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-white rounded-2xl shadow-lg shadow-yellow-500/25 transition-all hover:shadow-yellow-500/40"
+          >
+            🏆 Награды сезона
+          </Button>
+        </motion.div>
+
         {/* Quick Replay with same settings */}
         {lastConfig && (
           <motion.div whileTap={{ scale: 0.97 }}>
@@ -1265,7 +1282,7 @@ export default function SimulationResult() {
             <Button
               onClick={handleShare}
               variant="outline"
-              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40 btn-rainbow-hover"
             >
               📤 Поделиться
             </Button>

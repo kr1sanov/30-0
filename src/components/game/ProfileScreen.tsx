@@ -141,7 +141,7 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-3xl shadow-lg shadow-[#22c55e]/20">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-3xl shadow-lg shadow-[#22c55e]/20 avatar-conic-ring">
             ⚽
           </div>
           {profileStats.titles > 0 && (
@@ -196,7 +196,7 @@ export default function ProfileScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="rounded-2xl bg-[#1a1a2e] p-3 text-center border border-[#1a1a2e] card-glow"
+            className="rounded-2xl bg-[#1a1a2e] p-3 text-center border border-[#1a1a2e] card-glow stat-card-hover"
           >
             <div className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</div>
             <div className="text-[10px] text-[#94a3b8]">{stat.label}</div>
@@ -350,7 +350,7 @@ export default function ProfileScreen() {
       )}
 
       {/* Trophy Cabinet — Enhanced with golden glow & lock icons */}
-      <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
+      <div className="rounded-2xl p-5 border glass-showcase">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-[#e2e8f0]">🏆 Витрина трофеев</h3>
           <span className="text-xs text-[#94a3b8]">{earnedTrophies}/{TROPHIES.length}</span>
@@ -364,8 +364,8 @@ export default function ProfileScreen() {
                 whileHover={{ scale: earned ? 1.08 : 1.02 }}
                 className={`rounded-xl p-2 text-center border transition-all relative ${
                   earned
-                    ? 'bg-gradient-to-b from-yellow-500/15 to-yellow-500/5 border-yellow-500/30 shadow-[0_0_12px_rgba(234,179,8,0.15)]'
-                    : 'bg-[#0a0a0f]/50 border-[#1a1a2e]'
+                    ? 'bg-gradient-to-b from-yellow-500/15 to-yellow-500/5 border-yellow-500/30 shadow-[0_0_12px_rgba(234,179,8,0.15)] trophy-shimmer'
+                    : 'frosted-glass'
                 }`}
               >
                 {earned ? (
@@ -413,7 +413,15 @@ export default function ProfileScreen() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className="rounded-xl bg-[#0a0a0f]/30 p-3 border border-[#1a1a2e]"
+                    className={`rounded-xl bg-[#0a0a0f]/30 p-3 border ${
+                      h.position === 1
+                        ? 'history-border-gold border-[#1a1a2e]'
+                        : h.position === 2
+                        ? 'history-border-silver border-[#1a1a2e]'
+                        : h.position === 3
+                        ? 'history-border-bronze border-[#1a1a2e]'
+                        : 'history-border-gray border-[#1a1a2e]'
+                    }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
@@ -448,6 +456,11 @@ export default function ProfileScreen() {
                         👨‍💼 {h.managerName}
                       </div>
                     )}
+                    {h.teamName && (
+                      <div className="text-[10px] text-[#94a3b8]/60 mt-0.5">
+                        ⚽ {h.teamName}
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -461,7 +474,7 @@ export default function ProfileScreen() {
         <Button
           onClick={handleShareProfile}
           variant="outline"
-          className="w-full h-12 text-sm font-bold border-[#3b82f6]/30 text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-xl"
+          className="w-full h-12 text-sm font-bold border-[#3b82f6]/30 text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-xl btn-rainbow-hover"
         >
           📤 Поделиться профилем
         </Button>

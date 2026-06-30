@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { formation, difficulty, draftMode, ratingMode, eraFilter } = body;
+    const { formation, difficulty, draftMode, ratingMode, eraFilter, teamName } = body;
 
     // Validate formation exists
     const formationData = FORMATIONS.find((f) => f.id === formation);
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,
+        ...(teamName ? { teamName } : {}),
       },
     });
 

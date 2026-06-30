@@ -1,0 +1,1287 @@
+     1→'use client';
+     2→
+     3→import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+     4→import { useGameStore } from '@/store/gameStore';
+     5→import { Button } from '@/components/ui/button';
+     6→import { motion, AnimatePresence } from 'framer-motion';
+     7→import { toast } from 'sonner';
+     8→
+     9→// ---------------------------------------------------------------------------
+    10→// Types
+    11→// ---------------------------------------------------------------------------
+    12→
+    13→interface ConfettiPiece {
+    14→  id: number;
+    15→  emoji: string;
+    16→  x: number;
+    17→  delay: number;
+    18→  duration: number;
+    19→  size: number;
+    20→}
+    21→
+    22→interface MatchDetail {
+    23→  matchday: number;
+    24→  opponent: string;
+    25→  isHome: boolean;
+    26→  homeGoals: number;
+    27→  awayGoals: number;
+    28→  result: 'W' | 'D' | 'L';
+    29→}
+    30→
+    31→// ---------------------------------------------------------------------------
+    32→// RPL Club Color Mapping
+    33→// ---------------------------------------------------------------------------
+    34→
+    35→const CLUB_COLORS: Record<string, string> = {
+    36→  'Зенит': '#0096E6',
+    37→  'Спартак': '#E21A1A',
+    38→  'ЦСКА': '#1E3F7B',
+    39→  'Локомотив': '#CC0000',
+    40→  'Краснодар': '#1A1A1A',
+    41→  'Динамо М': '#2563EB',
+    42→  'Ростов': '#FFD700',
+    43→  'Рубин': '#8B0000',
+    44→  'Ахмат': '#228B22',
+    45→  'Урал': '#FF6600',
+    46→  'Оренбург': '#800080',
+    47→  'Факел': '#FF4444',
+    48→  'Крылья Советов': '#2E8B57',
+    49→  'Торпедо': '#1C1C1C',
+    50→  'Химки': '#FF2040',
+    51→  'Пари НН': '#B22222',
+    52→};
+    53→
+    54→function getClubColor(name: string): string {
+    55→  return CLUB_COLORS[name] || '#64748b';
+    56→}
+    57→
+    58→// ---------------------------------------------------------------------------
+    59→// Animated Counter Hook
+    60→// ---------------------------------------------------------------------------
+    61→
+    62→function useAnimatedValue(target: number, duration: number = 800, delay: number = 0): number {
+    63→  const [current, setCurrent] = useState(0);
+    64→  const startTimeRef = useRef<number | null>(null);
+    65→  const frameRef = useRef<number>(0);
+    66→  const prevTargetRef = useRef(target);
+    67→
+    68→  useEffect(() => {
+    69→    // Reset if target changes to 0
+    70→    if (target === 0 && prevTargetRef.current !== 0) {
+    71→      prevTargetRef.current = 0;
+    72→    }
+    73→    prevTargetRef.current = target;
+    74→
+    75→    if (target === 0) return;
+    76→
+    77→    const delayTimeout = setTimeout(() => {
+    78→      startTimeRef.current = null;
+    79→
+    80→      const animate = (timestamp: number) => {
+    81→        if (!startTimeRef.current) startTimeRef.current = timestamp;
+    82→        const elapsed = timestamp - startTimeRef.current;
+    83→        const progress = Math.min(elapsed / duration, 1);
+    84→        // Ease out cubic
+    85→        const eased = 1 - Math.pow(1 - progress, 3);
+    86→        setCurrent(Math.round(eased * target));
+    87→
+    88→        if (progress < 1) {
+    89→          frameRef.current = requestAnimationFrame(animate);
+    90→        }
+    91→      };
+    92→
+    93→      frameRef.current = requestAnimationFrame(animate);
+    94→    }, delay);
+    95→
+    96→    return () => {
+    97→      clearTimeout(delayTimeout);
+    98→      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    99→    };
+   100→  }, [target]);
+   101→
+   102→  return current;
+   103→}
+   104→
+   105→// ---------------------------------------------------------------------------
+   106→// Position Badge Styles
+   107→// ---------------------------------------------------------------------------
+   108→
+   109→function getPositionBadgeClasses(pos: number): {
+   110→  bg: string;
+   111→  text: string;
+   112→  border: string;
+   113→  glow: string;
+   114→  emoji: string;
+   115→} {
+   116→  if (pos === 1) {
+   117→    return {
+   118→      bg: 'bg-gradient-to-br from-yellow-400/30 via-yellow-500/20 to-yellow-600/10',
+   119→      text: 'text-yellow-400',
+   120→      border: 'border-yellow-500/40',
+   121→      glow: 'shadow-[0_0_30px_rgba(234,179,8,0.3)]',
+   122→      emoji: '🏆',
+   123→    };
+   124→  }
+   125→  if (pos === 2) {
+   126→    return {
+   127→      bg: 'bg-gradient-to-br from-slate-300/25 via-slate-400/15 to-slate-500/5',
+   128→      text: 'text-slate-300',
+   129→      border: 'border-slate-400/30',
+   130→      glow: 'shadow-[0_0_20px_rgba(148,163,184,0.2)]',
+   131→      emoji: '🥈',
+   132→    };
+   133→  }
+   134→  if (pos === 3) {
+   135→    return {
+   136→      bg: 'bg-gradient-to-br from-orange-400/25 via-orange-500/15 to-orange-600/5',
+   137→      text: 'text-orange-400',
+   138→      border: 'border-orange-500/30',
+   139→      glow: 'shadow-[0_0_20px_rgba(251,146,60,0.2)]',
+   140→      emoji: '🥉',
+   141→    };
+   142→  }
+   143→  if (pos <= 6) {
+   144→    return {
+   145→      bg: 'bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent',
+   146→      text: 'text-emerald-400',
+   147→      border: 'border-emerald-500/20',
+   148→      glow: '',
+   149→      emoji: '🏟️',
+   150→    };
+   151→  }
+   152→  if (pos >= 14) {
+   153→    return {
+   154→      bg: 'bg-gradient-to-br from-red-500/20 via-red-600/10 to-transparent',
+   155→      text: 'text-red-400',
+   156→      border: 'border-red-500/20',
+   157→      glow: '',
+   158→      emoji: '⚠️',
+   159→    };
+   160→  }
+   161→  return {
+   162→    bg: 'bg-[#1a1a2e]',
+   163→    text: 'text-[#e2e8f0]',
+   164→    border: 'border-[#1a1a2e]',
+   165→    glow: '',
+   166→    emoji: '⚽',
+   167→  };
+   168→}
+   169→
+   170→// ---------------------------------------------------------------------------
+   171→// Match Period Grouping
+   172→// ---------------------------------------------------------------------------
+   173→
+   174→interface MatchPeriod {
+   175→  label: string;
+   176→  range: string;
+   177→  matches: MatchDetail[];
+   178→  points: number;
+   179→}
+   180→
+   181→function groupMatchesByPeriod(matches: MatchDetail[]): MatchPeriod[] {
+   182→  const periods: MatchPeriod[] = [
+   183→    { label: 'Старт сезона', range: 'Туры 1–10', matches: [], points: 0 },
+   184→    { label: 'Середина сезона', range: 'Туры 11–20', matches: [], points: 0 },
+   185→    { label: 'Финиш сезона', range: 'Туры 21–30', matches: [], points: 0 },
+   186→  ];
+   187→
+   188→  for (const m of matches) {
+   189→    const idx = m.matchday <= 10 ? 0 : m.matchday <= 20 ? 1 : 2;
+   190→    periods[idx].matches.push(m);
+   191→    if (m.result === 'W') periods[idx].points += 3;
+   192→    else if (m.result === 'D') periods[idx].points += 1;
+   193→  }
+   194→
+   195→  return periods;
+   196→}
+   197→
+   198→// ---------------------------------------------------------------------------
+   199→// Find best streak range (start, end)
+   200→// ---------------------------------------------------------------------------
+   201→
+   202→function findBestStreakRange(matches: MatchDetail[]): { start: number; end: number } | null {
+   203→  let maxStreak = 0;
+   204→  let maxStart = 0;
+   205→  let maxEnd = 0;
+   206→  let currentStreak = 0;
+   207→  let currentStart = 0;
+   208→
+   209→  for (let i = 0; i < matches.length; i++) {
+   210→    if (matches[i].result === 'W') {
+   211→      if (currentStreak === 0) currentStart = i;
+   212→      currentStreak++;
+   213→      if (currentStreak > maxStreak) {
+   214→        maxStreak = currentStreak;
+   215→        maxStart = currentStart;
+   216→        maxEnd = i;
+   217→      }
+   218→    } else {
+   219→      currentStreak = 0;
+   220→    }
+   221→  }
+   222→
+   223→  return maxStreak >= 3 ? { start: maxStart, end: maxEnd } : null;
+   224→}
+   225→
+   226→// ---------------------------------------------------------------------------
+   227→// Main Component
+   228→// ---------------------------------------------------------------------------
+   229→
+   230→export default function SimulationResult() {
+   231→  const { seasonResult, resetGame, lastConfig, setConfig, setScreen } = useGameStore();
+   232→  const [showMatches, setShowMatches] = useState(false);
+   233→  const [showTable, setShowTable] = useState(false);
+   234→
+   235→  // Live replay state
+   236→  const [isReplaying, setIsReplaying] = useState(false);
+   237→  const [revealedMatchCount, setRevealedMatchCount] = useState(0);
+   238→  const [replayComplete, setReplayComplete] = useState(false);
+   239→  const [expandedPeriods, setExpandedPeriods] = useState<Record<number, boolean>>({ 0: true, 1: true, 2: true });
+   240→  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
+   241→  const replayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+   242→
+   243→  const shouldConfetti = seasonResult
+   244→    ? ((seasonResult as { position: number }).position === 1 || (seasonResult as { wins: number }).wins === 30)
+   245→    : false;
+   246→
+   247→  const isPerfectSeason = seasonResult
+   248→    ? ((seasonResult as { wins: number }).wins === 30 && (seasonResult as { draws: number }).draws === 0 && (seasonResult as { losses: number }).losses === 0)
+   249→    : false;
+   250→
+   251→  const confetti = useMemo<ConfettiPiece[]>(() => {
+   252→    if (!shouldConfetti) return [];
+   253→    const emojis = isPerfectSeason
+   254→      ? ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊', '👑', '💎', '🌟', '🎯']
+   255→      : ['🏆', '⭐', '🎉', '🔥', '💪', '🥇', '✨', '🎊'];
+   256→    const count = isPerfectSeason ? 40 : 24;
+   257→    return Array.from({ length: count }, (_, i) => ({
+   258→      id: i,
+   259→      emoji: emojis[i % emojis.length],
+   260→      x: Math.random() * 100,
+   261→      delay: Math.random() * 2.5,
+   262→      duration: 1.5 + Math.random() * 3.5,
+   263→      size: isPerfectSeason ? (Math.random() > 0.5 ? 36 : 24) : 24,
+   264→    }));
+   265→  }, [shouldConfetti, isPerfectSeason]);
+   266→
+   267→  const handleShare = useCallback(() => {
+   268→    if (!seasonResult) return;
+   269→    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+   270→    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+   271→    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+   272→    const lines = [
+   273→      `${posEmoji} 30-0 RPL`,
+   274→      `📐 ${r.formation} · ${r.wins}В-${r.draws}Н-${r.losses}П`,
+   275→      `⭐ ${r.points} очков · ${r.position} место`,
+   276→      `⚽ ${r.goalsFor} забито · ${r.goalsAgainst} пропущено`,
+   277→    ];
+   278→    if (bestPlayer) {
+   279→      lines.push(`👑 Лучший: ${bestPlayer.name} (${bestPlayer.rating})`);
+   280→    }
+   281→    if (r.managerName) {
+   282→      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+   283→    }
+   284→    lines.push('#30п0 #РПЛ');
+   285→    const text = lines.join('\n');
+   286→
+   287→    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+   288→      try {
+   289→        window.Telegram.WebApp.openTelegramLink(
+   290→          `https://t.me/share/url?url=${encodeURIComponent('https://30-0.app')}&text=${encodeURIComponent(text)}`,
+   291→        );
+   292→        return;
+   293→      } catch {
+   294→        // fall through
+   295→      }
+   296→    }
+   297→
+   298→    if (navigator.share) {
+   299→      navigator.share({ title: '30-0 RPL', text }).catch(() => {});
+   300→    } else {
+   301→      navigator.clipboard.writeText(text).then(() => {
+   302→        toast.success('📋 Результат скопирован!');
+   303→      }).catch(() => {});
+   304→    }
+   305→  }, [seasonResult]);
+   306→
+   307→  const handleCopyResult = useCallback(() => {
+   308→    if (!seasonResult) return;
+   309→    const r = seasonResult as { wins: number; draws: number; losses: number; points: number; position: number; formation: string; goalsFor: number; goalsAgainst: number; managerName?: string | null; players?: Array<{ name: string; position: string; rating: number }> };
+   310→    const posEmoji = r.position === 1 ? '🥇' : r.position === 2 ? '🥈' : r.position === 3 ? '🥉' : '⚽';
+   311→    const bestPlayer = r.players && r.players.length > 0 ? [...(r.players || [])].sort((a, b) => b.rating - a.rating)[0] : null;
+   312→    const lines = [
+   313→      `${posEmoji} 30-0 RPL`,
+   314→      `📐 Формация: ${r.formation}`,
+   315→      `📊 ${r.wins}В-${r.draws}Н-${r.losses}П · ${r.points} очков · ${r.position} место`,
+   316→      `⚽ Голы: ${r.goalsFor} забито / ${r.goalsAgainst} пропущено`,
+   317→    ];
+   318→    if (bestPlayer) {
+   319→      lines.push(`👑 Лучший игрок: ${bestPlayer.name} (${bestPlayer.rating})`);
+   320→    }
+   321→    if (r.managerName) {
+   322→      lines.push(`👨‍💼 Тренер: ${r.managerName}`);
+   323→    }
+   324→    lines.push('#30п0 #РПЛ');
+   325→    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+   326→      toast.success('📋 Результат скопирован!');
+   327→    }).catch(() => {
+   328→      toast.error('Не удалось скопировать');
+   329→    });
+   330→  }, [seasonResult]);
+   331→
+   332→  // Calculate win streak
+   333→  const matches = (seasonResult as { matches?: MatchDetail[] } | null)?.matches || [];
+   334→  const winStreak = useMemo(() => {
+   335→    let max = 0;
+   336→    let current = 0;
+   337→    for (const m of matches) {
+   338→      if (m.result === 'W') {
+   339→        current++;
+   340→        max = Math.max(max, current);
+   341→      } else {
+   342→        current = 0;
+   343→      }
+   344→    }
+   345→    return max;
+   346→  }, [matches]);
+   347→
+   348→  const bestStreakRange = useMemo(() => findBestStreakRange(matches), [matches]);
+   349→
+   350→  // Calculate points accumulation for sparkline
+   351→  const pointsAccumulation = useMemo(() => {
+   352→    const acc: number[] = [];
+   353→    let total = 0;
+   354→    for (const m of matches) {
+   355→      if (m.result === 'W') total += 3;
+   356→      else if (m.result === 'D') total += 1;
+   357→      acc.push(total);
+   358→    }
+   359→    return acc;
+   360→  }, [matches]);
+   361→
+   362→  // Group matches by period
+   363→  const periods = useMemo(() => groupMatchesByPeriod(matches), [matches]);
+   364→
+   365→  // Live replay: running points
+   366→  const replayPoints = useMemo(() => {
+   367→    if (!isReplaying && revealedMatchCount === 0) return 0;
+   368→    let total = 0;
+   369→    const count = isReplaying ? revealedMatchCount : matches.length;
+   370→    for (let i = 0; i < count && i < matches.length; i++) {
+   371→      if (matches[i].result === 'W') total += 3;
+   372→      else if (matches[i].result === 'D') total += 1;
+   373→    }
+   374→    return total;
+   375→  }, [isReplaying, revealedMatchCount, matches]);
+   376→
+   377→  // Animated counters
+   378→  const animatedWins = useAnimatedValue(
+   379→    (seasonResult as { wins?: number } | null)?.wins ?? 0, 800, 200,
+   380→  );
+   381→  const animatedDraws = useAnimatedValue(
+   382→    (seasonResult as { draws?: number } | null)?.draws ?? 0, 800, 350,
+   383→  );
+   384→  const animatedLosses = useAnimatedValue(
+   385→    (seasonResult as { losses?: number } | null)?.losses ?? 0, 800, 500,
+   386→  );
+   387→  const animatedPoints = useAnimatedValue(
+   388→    (seasonResult as { points?: number } | null)?.points ?? 0, 1000, 0,
+   389→  );
+   390→
+   391→  // Live replay logic
+   392→  const startReplay = useCallback(() => {
+   393→    setRevealedMatchCount(0);
+   394→    setReplayComplete(false);
+   395→    setIsReplaying(true);
+   396→  }, []);
+   397→
+   398→  const skipReplay = useCallback(() => {
+   399→    if (replayTimerRef.current) clearTimeout(replayTimerRef.current);
+   400→    setIsReplaying(false);
+   401→    setRevealedMatchCount(matches.length);
+   402→    setReplayComplete(true);
+   403→  }, [matches.length]);
+   404→
+   405→  useEffect(() => {
+   406→    if (!isReplaying) return;
+   407→    if (revealedMatchCount >= matches.length) {
+   408→      setIsReplaying(false);
+   409→      setReplayComplete(true);
+   410→      return;
+   411→    }
+   412→
+   413→    replayTimerRef.current = setTimeout(() => {
+   414→      setRevealedMatchCount((prev) => prev + 1);
+   415→    }, 200);
+   416→
+   417→    return () => {
+   418→      if (replayTimerRef.current) clearTimeout(replayTimerRef.current);
+   419→    };
+   420→  }, [isReplaying, revealedMatchCount, matches.length]);
+   421→
+   422→  // Quick replay with same settings
+   423→  const handleQuickReplay = useCallback(() => {
+   424→    if (lastConfig) {
+   425→      setConfig(lastConfig);
+   426→    }
+   427→    resetGame();
+   428→    // Navigate to setup so the user can confirm and start with the saved config
+   429→    setScreen('setup');
+   430→  }, [lastConfig, resetGame, setConfig, setScreen]);
+   431→
+   432→  // Toggle period expansion
+   433→  const togglePeriod = useCallback((idx: number) => {
+   434→    setExpandedPeriods((prev) => ({ ...prev, [idx]: !prev[idx] }));
+   435→  }, []);
+   436→
+   437→  if (!seasonResult) return null;
+   438→
+   439→  const result = seasonResult as {
+   440→    wins: number;
+   441→    draws: number;
+   442→    losses: number;
+   443→    points: number;
+   444→    position: number;
+   445→    goalsFor: number;
+   446→    goalsAgainst: number;
+   447→    table: Array<{
+   448→      position: number;
+   449→      name: string;
+   450→      played: number;
+   451→      won: number;
+   452→      drawn: number;
+   453→      lost: number;
+   454→      goalsFor: number;
+   455→      goalsAgainst: number;
+   456→      goalDifference: number;
+   457→      points: number;
+   458→    }>;
+   459→    matches?: MatchDetail[];
+   460→    formation: string;
+   461→    difficulty: string;
+   462→    managerName?: string | null;
+   463→    managerRating?: number | null;
+   464→    squadRating?: number;
+   465→    players?: Array<{
+   466→      name: string;
+   467→      position: string;
+   468→      rating: number;
+   469→      isCompatible: boolean;
+   470→    }>;
+   471→  };
+   472→
+   473→  const isChampion = result.position === 1;
+   474→  const isPerfect = result.wins === 30 && result.draws === 0 && result.losses === 0;
+   475→  const isUnbeaten = result.losses === 0;
+   476→
+   477→  const getMedalColor = (pos: number) => {
+   478→    if (pos === 1) return '🥇';
+   479→    if (pos === 2) return '🥈';
+   480→    if (pos === 3) return '🥉';
+   481→    if (pos === 4) return '🏟️';
+   482→    return '';
+   483→  };
+   484→
+   485→  const getPositionLabel = (pos: number): string => {
+   486→    if (pos === 1) return 'Чемпион';
+   487→    if (pos <= 3) return 'Призёр';
+   488→    if (pos <= 6) return 'Еврозона';
+   489→    if (pos <= 10) return 'Середина';
+   490→    return 'Зона вылета';
+   491→  };
+   492→
+   493→  const getPositionColor = (pos: number): string => {
+   494→    if (pos === 1) return '#22c55e';
+   495→    if (pos <= 3) return '#3b82f6';
+   496→    if (pos <= 6) return '#8b5cf6';
+   497→    if (pos <= 10) return '#f97316';
+   498→    return '#ef4444';
+   499→  };
+   500→
+   501→  const matchesList = result.matches || [];
+   502→
+   503→  // Determine how many matches to show
+   504→  const displayMatchCount = isReplaying ? revealedMatchCount : matchesList.length;
+   505→  const displayMatches = matchesList.slice(0, displayMatchCount);
+   506→
+   507→  // Build form dots for live replay
+   508→  const formDots = matchesList.slice(0, displayMatchCount);
+   509→
+   510→  const badge = getPositionBadgeClasses(result.position);
+   511→
+   512→  return (
+   513→    <div className="space-y-6 animate-fade-in-up relative">
+   514→      {/* Confetti for champions */}
+   515→      {confetti.length > 0 && (
+   516→        <div className="fixed inset-0 pointer-events-none z-50">
+   517→          {confetti.map((piece) => (
+   518→            <motion.div
+   519→              key={piece.id}
+   520→              className="absolute"
+   521→              style={{ left: `${piece.x}%`, fontSize: piece.size }}
+   522→              initial={{ y: -50, opacity: 1, rotate: 0, scale: 1 }}
+   523→              animate={{
+   524→                y: '100vh',
+   525→                opacity: 0,
+   526→                rotate: isPerfectSeason ? 1080 : 720,
+   527→                scale: isPerfectSeason ? [1, 1.3, 1, 1.2, 0.8] : [1, 1.1, 1, 0.9],
+   528→              }}
+   529→              transition={{
+   530→                duration: piece.duration,
+   531→                delay: piece.delay,
+   532→                ease: 'easeIn',
+   533→              }}
+   534→            >
+   535→              {piece.emoji}
+   536→            </motion.div>
+   537→          ))}
+   538→        </div>
+   539→      )}
+   540→
+   541→      {/* Enhanced Position Badge */}
+   542→      <motion.div
+   543→        initial={{ scale: 0.3, opacity: 0 }}
+   544→        animate={{ scale: 1, opacity: 1 }}
+   545→        transition={{ type: 'spring', stiffness: 180, damping: 12, delay: 0.1 }}
+   546→        className={`text-center py-6 rounded-2xl border ${badge.bg} ${badge.border} ${badge.glow}`}
+   547→      >
+   548→        <motion.div
+   549→          className="text-5xl mb-2"
+   550→          animate={result.position === 1 ? { scale: [1, 1.2, 1] } : {}}
+   551→          transition={{ duration: 0.6, delay: 0.5, repeat: result.position === 1 ? 2 : 0 }}
+   552→        >
+   553→          {badge.emoji}
+   554→        </motion.div>
+   555→        <motion.div
+   556→          initial={{ scale: 0 }}
+   557→          animate={{ scale: 1 }}
+   558→          transition={{ type: 'spring', stiffness: 260, damping: 10, delay: 0.3 }}
+   559→          className={`text-7xl font-black ${badge.text}`}
+   560→        >
+   561→          {result.position}
+   562→        </motion.div>
+   563→        <div className="text-sm font-bold text-[#e2e8f0] mt-1">
+   564→          {getPositionLabel(result.position)}
+   565→        </div>
+   566→        <div className="text-xs text-[#94a3b8] mt-0.5">место в таблице</div>
+   567→
+   568→        {/* Live replay running points */}
+   569→        {isReplaying && (
+   570→          <motion.div
+   571→            initial={{ opacity: 0, y: 5 }}
+   572→            animate={{ opacity: 1, y: 0 }}
+   573→            className="mt-3 text-2xl font-black text-[#22c55e]"
+   574→          >
+   575→            {replayPoints} очков
+   576→          </motion.div>
+   577→        )}
+   578→      </motion.div>
+   579→
+   580→      {/* Manager info */}
+   581→      {result.managerName && (
+   582→        <motion.div
+   583→          initial={{ opacity: 0, y: 10 }}
+   584→          animate={{ opacity: 1, y: 0 }}
+   585→          className="rounded-xl bg-[#1a1a2e] p-3 flex items-center gap-3 border border-[#22c55e]/20"
+   586→        >
+   587→          <div className="text-2xl">👨‍💼</div>
+   588→          <div className="flex-1">
+   589→            <div className="text-xs text-[#94a3b8]">Тренер</div>
+   590→            <div className="text-sm font-bold text-[#e2e8f0]">{result.managerName}</div>
+   591→          </div>
+   592→          <div className="text-right">
+   593→            <div className="text-xs text-[#94a3b8]">Рейтинг</div>
+   594→            <div className="text-sm font-bold text-[#22c55e]">{result.managerRating}</div>
+   595→          </div>
+   596→        </motion.div>
+   597→      )}
+   598→
+   599→      {/* Animated Results Summary */}
+   600→      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   601→        <motion.div
+   602→          initial={{ scale: 0.9, opacity: 0 }}
+   603→          animate={{ scale: 1, opacity: 1 }}
+   604→          transition={{ delay: 0.1 }}
+   605→          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+   606→        >
+   607→          <div className="text-2xl font-black text-[#22c55e]">{animatedPoints}</div>
+   608→          <div className="text-xs text-[#94a3b8]">Очки</div>
+   609→        </motion.div>
+   610→        <motion.div
+   611→          initial={{ scale: 0.9, opacity: 0 }}
+   612→          animate={{ scale: 1, opacity: 1 }}
+   613→          transition={{ delay: 0.2 }}
+   614→          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+   615→        >
+   616→          <div className="text-2xl font-black text-[#22c55e]">{animatedWins}</div>
+   617→          <div className="text-xs text-[#94a3b8]">Победы</div>
+   618→        </motion.div>
+   619→        <motion.div
+   620→          initial={{ scale: 0.9, opacity: 0 }}
+   621→          animate={{ scale: 1, opacity: 1 }}
+   622→          transition={{ delay: 0.35 }}
+   623→          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+   624→        >
+   625→          <div className="text-2xl font-black text-[#f97316]">{animatedDraws}</div>
+   626→          <div className="text-xs text-[#94a3b8]">Ничьи</div>
+   627→        </motion.div>
+   628→        <motion.div
+   629→          initial={{ scale: 0.9, opacity: 0 }}
+   630→          animate={{ scale: 1, opacity: 1 }}
+   631→          transition={{ delay: 0.5 }}
+   632→          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]"
+   633→        >
+   634→          <div className="text-2xl font-black text-[#ef4444]">{animatedLosses}</div>
+   635→          <div className="text-xs text-[#94a3b8]">Поражения</div>
+   636→        </motion.div>
+   637→      </div>
+   638→
+   639→      {/* Goals */}
+   640→      <div className="grid grid-cols-3 gap-3">
+   641→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   642→          <div className="text-3xl font-black text-[#22c55e]">{result.goalsFor}</div>
+   643→          <div className="text-xs text-[#94a3b8]">Забито</div>
+   644→        </div>
+   645→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   646→          <div className="text-3xl font-black text-[#ef4444]">{result.goalsAgainst}</div>
+   647→          <div className="text-xs text-[#94a3b8]">Пропущено</div>
+   648→        </div>
+   649→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   650→          <div className={`text-3xl font-black ${result.goalsFor - result.goalsAgainst > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+   651→            {result.goalsFor - result.goalsAgainst > 0 ? '+' : ''}{result.goalsFor - result.goalsAgainst}
+   652→          </div>
+   653→          <div className="text-xs text-[#94a3b8]">Разница</div>
+   654→        </div>
+   655→      </div>
+   656→
+   657→      {/* Extra stats */}
+   658→      <div className="grid grid-cols-2 gap-3">
+   659→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   660→          <div className="text-2xl font-black text-[#8b5cf6]">{winStreak}</div>
+   661→          <div className="text-xs text-[#94a3b8]">Лучшая серия побед</div>
+   662→        </div>
+   663→        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+   664→          <div className="text-2xl font-black text-[#3b82f6]">{result.squadRating || '-'}</div>
+   665→          <div className="text-xs text-[#94a3b8]">Рейтинг состава</div>
+   666→        </div>
+   667→      </div>
+   668→
+   669→      {/* Enhanced Season Form Bar */}
+   670→      {matchesList.length > 0 && (
+   671→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   672→          <div className="flex items-center justify-between mb-2">
+   673→            <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Форма сезона</h4>
+   674→            {isReplaying && (
+   675→              <span className="text-xs font-bold text-[#22c55e]">Тур {displayMatchCount}/30</span>
+   676→            )}
+   677→          </div>
+   678→          <div className="flex flex-wrap gap-1 relative">
+   679→            {formDots.map((m, idx) => {
+   680→              const isStreak = bestStreakRange && idx >= bestStreakRange.start && idx <= bestStreakRange.end;
+   681→              return (
+   682→                <div
+   683→                  key={m.matchday}
+   684→                  className="relative"
+   685→                  onMouseEnter={() => setHoveredDot(idx)}
+   686→                  onMouseLeave={() => setHoveredDot(null)}
+   687→                >
+   688→                  <div
+   689→                    className={`w-5 h-5 rounded-sm flex items-center justify-center text-[8px] font-bold text-white cursor-default transition-transform ${
+   690→                      isStreak && !isReplaying ? 'animate-breathe' : ''
+   691→                    } ${isReplaying && idx === displayMatchCount - 1 ? 'scale-125' : ''}`}
+   692→                    style={{
+   693→                      backgroundColor:
+   694→                        m.result === 'W' ? '#22c55e' : m.result === 'D' ? '#f97316' : '#ef4444',
+   695→                    }}
+   696→                  >
+   697→                    {m.matchday}
+   698→                  </div>
+   699→                  {/* Hover tooltip */}
+   700→                  {hoveredDot === idx && (
+   701→                    <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 bg-[#0a0a0f] border border-[#334155] rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
+   702→                      <div className="text-[#94a3b8]">Тур {m.matchday}</div>
+   703→                      <div className="text-[#e2e8f0] font-bold">
+   704→                        {m.isHome ? '🏠' : '✈️'} {m.homeGoals}-{m.awayGoals} vs {m.opponent}
+   705→                      </div>
+   706→                      <div
+   707→                        className={`font-bold ${
+   708→                          m.result === 'W'
+   709→                            ? 'text-[#22c55e]'
+   710→                            : m.result === 'D'
+   711→                            ? 'text-[#f97316]'
+   712→                            : 'text-[#ef4444]'
+   713→                        }`}
+   714→                      >
+   715→                        {m.result === 'W' ? 'Победа' : m.result === 'D' ? 'Ничья' : 'Поражение'}
+   716→                      </div>
+   717→                    </div>
+   718→                  )}
+   719→                </div>
+   720→              );
+   721→            })}
+   722→            {/* Empty dots for unrevealed matches during replay */}
+   723→            {isReplaying && matchesList.length > displayMatchCount && (
+   724→              <>
+   725→                {matchesList.slice(displayMatchCount).map((m) => (
+   726→                  <div
+   727→                    key={m.matchday}
+   728→                    className="w-5 h-5 rounded-sm bg-[#0a0a0f] border border-[#334155]/30 flex items-center justify-center text-[8px] text-[#334155]"
+   729→                  >
+   730→                    {m.matchday}
+   731→                  </div>
+   732→                ))}
+   733→              </>
+   734→            )}
+   735→          </div>
+   736→        </div>
+   737→      )}
+   738→
+   739→      {/* Points accumulation sparkline */}
+   740→      {pointsAccumulation.length > 0 && (
+   741→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   742→          <div className="flex items-center justify-between mb-2">
+   743→            <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Набранные очки</h4>
+   744→            <span className="text-xs font-bold text-[#22c55e]">
+   745→              {isReplaying ? replayPoints : result.points}
+   746→            </span>
+   747→          </div>
+   748→          <div className="relative h-16">
+   749→            <svg
+   750→              className="w-full h-full"
+   751→              viewBox={`0 0 ${pointsAccumulation.length - 1} 100`}
+   752→              preserveAspectRatio="none"
+   753→            >
+   754→              {[30, 60, 90].map((pts) => {
+   755→                const y = 100 - (pts / 90) * 100;
+   756→                return (
+   757→                  <line
+   758→                    key={pts}
+   759→                    x1="0"
+   760→                    y1={y}
+   761→                    x2={pointsAccumulation.length - 1}
+   762→                    y2={y}
+   763→                    stroke="#1a1a2e"
+   764→                    strokeWidth="2"
+   765→                  />
+   766→                );
+   767→              })}
+   768→              <path
+   769→                d={`M0 100 ${pointsAccumulation
+   770→                  .map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`)
+   771→                  .join(' ')} L${pointsAccumulation.length - 1} 100 Z`}
+   772→                fill="url(#pointsGradient)"
+   773→                fillOpacity="0.3"
+   774→              />
+   775→              <path
+   776→                d={`M0 ${100 - (pointsAccumulation[0] / 90) * 100} ${pointsAccumulation
+   777→                  .map((pts, i) => `L${i} ${100 - (pts / 90) * 100}`)
+   778→                  .join(' ')}`}
+   779→                fill="none"
+   780→                stroke="#22c55e"
+   781→                strokeWidth="2"
+   782→                strokeLinecap="round"
+   783→                strokeLinejoin="round"
+   784→              />
+   785→              <circle
+   786→                cx={pointsAccumulation.length - 1}
+   787→                cy={100 - (pointsAccumulation[pointsAccumulation.length - 1] / 90) * 100}
+   788→                r="3"
+   789→                fill="#22c55e"
+   790→              />
+   791→              <defs>
+   792→                <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
+   793→                  <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+   794→                  <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+   795→                </linearGradient>
+   796→              </defs>
+   797→            </svg>
+   798→          </div>
+   799→          <div className="flex justify-between text-[9px] text-[#94a3b8]/40 mt-1">
+   800→            <span>Тур 1</span>
+   801→            <span>Тур {pointsAccumulation.length}</span>
+   802→          </div>
+   803→        </div>
+   804→      )}
+   805→
+   806→      {/* Season Replay Controls */}
+   807→      {matchesList.length > 0 && (
+   808→        <div className="flex gap-3">
+   809→          {!isReplaying && !replayComplete && (
+   810→            <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+   811→              <Button
+   812→                onClick={startReplay}
+   813→                className="w-full h-12 text-sm font-bold bg-[#8b5cf6] hover:bg-[#7c3aed] text-white rounded-xl shadow-lg shadow-[#8b5cf6]/20 transition-all"
+   814→              >
+   815→                ▶️ Повтор сезона
+   816→              </Button>
+   817→            </motion.div>
+   818→          )}
+   819→          {isReplaying && (
+   820→            <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+   821→              <Button
+   822→                onClick={skipReplay}
+   823→                className="w-full h-12 text-sm font-bold bg-[#f97316] hover:bg-[#ea580c] text-white rounded-xl shadow-lg shadow-[#f97316]/20 transition-all"
+   824→              >
+   825→                ⏭ Пропустить
+   826→              </Button>
+   827→            </motion.div>
+   828→          )}
+   829→          {replayComplete && (
+   830→            <motion.div
+   831→              initial={{ opacity: 0, scale: 0.9 }}
+   832→              animate={{ opacity: 1, scale: 1 }}
+   833→              whileTap={{ scale: 0.97 }}
+   834→              className="flex-1"
+   835→            >
+   836→              <Button
+   837→                onClick={startReplay}
+   838→                variant="outline"
+   839→                className="w-full h-12 text-sm font-bold border-[#8b5cf6]/40 text-[#8b5cf6] hover:bg-[#8b5cf6]/10 rounded-xl"
+   840→              >
+   841→                🔄 Повторить анимацию
+   842→              </Button>
+   843→            </motion.div>
+   844→          )}
+   845→          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+   846→            <Button
+   847→              onClick={() => setShowMatches(!showMatches)}
+   848→              variant="outline"
+   849→              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0]"
+   850→            >
+   851→              📋 Все матчи
+   852→            </Button>
+   853→          </motion.div>
+   854→        </div>
+   855→      )}
+   856→
+   857→      {/* Season Complete message after replay */}
+   858→      <AnimatePresence>
+   859→        {replayComplete && (
+   860→          <motion.div
+   861→            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+   862→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   863→            exit={{ opacity: 0, y: -10 }}
+   864→            transition={{ type: 'spring', stiffness: 200 }}
+   865→            className="text-center py-4 rounded-xl bg-gradient-to-r from-[#22c55e]/10 via-[#22c55e]/5 to-transparent border border-[#22c55e]/20"
+   866→          >
+   867→            <div className="text-lg font-black text-[#22c55e]">Сезон завершён!</div>
+   868→            <div className="text-xs text-[#94a3b8] mt-1">
+   869→              {result.wins}В-{result.draws}Н-{result.losses}П · {result.points} очков
+   870→            </div>
+   871→          </motion.div>
+   872→        )}
+   873→      </AnimatePresence>
+   874→
+   875→      {/* Live Replay Match-by-Match Animation */}
+   876→      <AnimatePresence>
+   877→        {(isReplaying || replayComplete) && !showMatches && displayMatches.length > 0 && (
+   878→          <motion.div
+   879→            initial={{ opacity: 0 }}
+   880→            animate={{ opacity: 1 }}
+   881→            exit={{ opacity: 0 }}
+   882→            className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden"
+   883→          >
+   884→            <div className="px-4 py-3 border-b border-[#0a0a0f]/50">
+   885→              <div className="flex items-center justify-between">
+   886→                <span className="text-sm font-bold text-[#e2e8f0]">🎬 Повтор сезона</span>
+   887→                <span className="text-xs text-[#94a3b8]">{displayMatchCount}/30 туров</span>
+   888→              </div>
+   889→            </div>
+   890→            <div className="max-h-64 overflow-y-auto custom-scrollbar px-3 py-2">
+   891→              <div className="space-y-1">
+   892→                {displayMatches.map((m, idx) => {
+   893→                  const resultClass =
+   894→                    m.result === 'W' ? 'match-win' : m.result === 'D' ? 'match-draw' : 'match-loss';
+   895→                  return (
+   896→                    <motion.div
+   897→                      key={m.matchday}
+   898→                      initial={isReplaying && idx === displayMatchCount - 1 ? { x: -30, opacity: 0 } : false}
+   899→                      animate={{ x: 0, opacity: 1 }}
+   900→                      transition={{ duration: 0.2 }}
+   901→                      className={`flex items-center gap-2 p-2 rounded-lg ${resultClass} transition-colors`}
+   902→                    >
+   903→                      <span className="text-xs text-[#94a3b8] w-6 font-medium">{m.matchday}</span>
+   904→                      <span
+   905→                        className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+   906→                          m.result === 'W'
+   907→                            ? 'bg-[#22c55e]/20 text-[#22c55e]'
+   908→                            : m.result === 'D'
+   909→                            ? 'bg-[#f97316]/20 text-[#f97316]'
+   910→                            : 'bg-[#ef4444]/20 text-[#ef4444]'
+   911→                        }`}
+   912→                      >
+   913→                        {m.result === 'W' ? 'В' : m.result === 'D' ? 'Н' : 'П'}
+   914→                      </span>
+   915→                      <span className="text-xs text-[#94a3b8] flex-1 text-right truncate">
+   916→                        {m.isHome ? '🏠' : '✈️'} {m.opponent}
+   917→                      </span>
+   918→                      <span className="text-sm font-bold text-[#e2e8f0]">
+   919→                        {m.homeGoals}:{m.awayGoals}
+   920→                      </span>
+   921→                    </motion.div>
+   922→                  );
+   923→                })}
+   924→              </div>
+   925→            </div>
+   926→          </motion.div>
+   927→        )}
+   928→      </AnimatePresence>
+   929→
+   930→      {/* Enhanced Match-by-Match view (grouped by period) */}
+   931→      {matchesList.length > 0 && (
+   932→        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+   933→          <button
+   934→            onClick={() => setShowMatches(!showMatches)}
+   935→            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+   936→          >
+   937→            <span className="text-sm font-bold text-[#e2e8f0]">📋 Матчи по турам</span>
+   938→            <motion.span animate={{ rotate: showMatches ? 180 : 0 }} className="text-[#94a3b8]">
+   939→              ▼
+   940→            </motion.span>
+   941→          </button>
+   942→          <AnimatePresence>
+   943→            {showMatches && (
+   944→              <motion.div
+   945→                initial={{ height: 0, opacity: 0 }}
+   946→                animate={{ height: 'auto', opacity: 1 }}
+   947→                exit={{ height: 0, opacity: 0 }}
+   948→                className="overflow-hidden"
+   949→              >
+   950→                <div className="px-3 pb-3 max-h-[28rem] overflow-y-auto custom-scrollbar space-y-3">
+   951→                  {periods.map((period, pIdx) => (
+   952→                    <div key={pIdx} className="rounded-xl bg-[#0a0a0f]/20 overflow-hidden">
+   953→                      {/* Period header */}
+   954→                      <button
+   955→                        onClick={() => togglePeriod(pIdx)}
+   956→                        className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+   957→                      >
+   958→                        <div className="flex items-center gap-2">
+   959→                          <motion.span
+   960→                            animate={{ rotate: expandedPeriods[pIdx] ? 90 : 0 }}
+   961→                            className="text-[10px] text-[#94a3b8]"
+   962→                          >
+   963→                            ▶
+   964→                          </motion.span>
+   965→                          <span className="text-xs font-bold text-[#94a3b8]">{period.range}</span>
+   966→                          <span className="text-[10px] text-[#94a3b8]/60">{period.label}</span>
+   967→                        </div>
+   968→                        <span className="text-xs font-bold text-[#22c55e]">{period.points} очков</span>
+   969→                      </button>
+   970→
+   971→                      {/* Period matches */}
+   972→                      <AnimatePresence>
+   973→                        {expandedPeriods[pIdx] && (
+   974→                          <motion.div
+   975→                            initial={{ height: 0, opacity: 0 }}
+   976→                            animate={{ height: 'auto', opacity: 1 }}
+   977→                            exit={{ height: 0, opacity: 0 }}
+   978→                            className="px-2 pb-2"
+   979→                          >
+   980→                            <div className="space-y-1">
+   981→                              {period.matches.map((m) => {
+   982→                                const resultClass =
+   983→                                  m.result === 'W'
+   984→                                    ? 'match-win'
+   985→                                    : m.result === 'D'
+   986→                                    ? 'match-draw'
+   987→                                    : 'match-loss';
+   988→                                const clubColor = getClubColor(m.opponent);
+   989→                                return (
+   990→                                  <motion.div
+   991→                                    key={m.matchday}
+   992→                                    initial={{ opacity: 0, x: -10 }}
+   993→                                    animate={{ opacity: 1, x: 0 }}
+   994→                                    transition={{ delay: m.matchday * 0.02 }}
+   995→                                    className={`flex items-center gap-2 p-2 rounded-lg ${resultClass} transition-colors hover:bg-[#0a0a0f]/30`}
+   996→                                  >
+   997→                                    {/* Tour number */}
+   998→                                    <span className="text-[10px] text-[#94a3b8] w-5 text-center font-medium">
+   999→                                      {m.matchday}
+  1000→                                    </span>
+  1001→
+  1002→                                    {/* Home/Away */}
+  1003→                                    <span className="text-xs">{m.isHome ? '🏠' : '✈️'}</span>
+  1004→
+  1005→                                    {/* Opponent with color dot */}
+  1006→                                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+  1007→                                      <div
+  1008→                                        className="w-2.5 h-2.5 rounded-full shrink-0"
+  1009→                                        style={{ backgroundColor: clubColor }}
+  1010→                                      />
+  1011→                                      <span className="text-xs font-medium text-[#e2e8f0] truncate">
+  1012→                                        {m.opponent}
+  1013→                                      </span>
+  1014→                                    </div>
+  1015→
+  1016→                                    {/* Score */}
+  1017→                                    <span className="text-sm font-black tabular-nums">
+  1018→                                      <span className={m.result === 'W' || (m.isHome && m.homeGoals > m.awayGoals) || (!m.isHome && m.awayGoals > m.homeGoals) ? 'text-[#22c55e]' : 'text-[#e2e8f0]'}>
+  1019→                                        {m.isHome ? m.homeGoals : m.awayGoals}
+  1020→                                      </span>
+  1021→                                      <span className="text-[#94a3b8]">:</span>
+  1022→                                      <span className={m.result === 'L' || (m.isHome && m.awayGoals > m.homeGoals) || (!m.isHome && m.homeGoals > m.awayGoals) ? 'text-[#ef4444]' : 'text-[#e2e8f0]'}>
+  1023→                                        {m.isHome ? m.awayGoals : m.homeGoals}
+  1024→                                      </span>
+  1025→                                    </span>
+  1026→
+  1027→                                    {/* Result badge */}
+  1028→                                    <span
+  1029→                                      className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+  1030→                                        m.result === 'W'
+  1031→                                          ? 'bg-[#22c55e]/20 text-[#22c55e]'
+  1032→                                          : m.result === 'D'
+  1033→                                          ? 'bg-[#f97316]/20 text-[#f97316]'
+  1034→                                          : 'bg-[#ef4444]/20 text-[#ef4444]'
+  1035→                                      }`}
+  1036→                                    >
+  1037→                                      {m.result === 'W' ? 'В' : m.result === 'D' ? 'Н' : 'П'}
+  1038→                                    </span>
+  1039→                                  </motion.div>
+  1040→                                );
+  1041→                              })}
+  1042→                            </div>
+  1043→                          </motion.div>
+  1044→                        )}
+  1045→                      </AnimatePresence>
+  1046→                    </div>
+  1047→                  ))}
+  1048→                </div>
+  1049→              </motion.div>
+  1050→            )}
+  1051→          </AnimatePresence>
+  1052→        </div>
+  1053→      )}
+  1054→
+  1055→      {/* Tournament Table — expandable */}
+  1056→      {result.table && result.table.length > 0 && (
+  1057→        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+  1058→          <button
+  1059→            onClick={() => setShowTable(!showTable)}
+  1060→            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+  1061→          >
+  1062→            <span className="text-sm font-bold text-[#e2e8f0]">📊 Таблица РПЛ</span>
+  1063→            <motion.span animate={{ rotate: showTable ? 180 : 0 }} className="text-[#94a3b8]">
+  1064→              ▼
+  1065→            </motion.span>
+  1066→          </button>
+  1067→          <AnimatePresence>
+  1068→            {showTable && (
+  1069→              <motion.div
+  1070→                initial={{ height: 0, opacity: 0 }}
+  1071→                animate={{ height: 'auto', opacity: 1 }}
+  1072→                exit={{ height: 0, opacity: 0 }}
+  1073→                className="overflow-x-auto"
+  1074→              >
+  1075→                <table className="w-full text-xs">
+  1076→                  <thead>
+  1077→                    <tr className="text-[#94a3b8] border-b border-[#0a0a0f] bg-[#0a0a0f]/50">
+  1078→                      <th className="py-2.5 px-2 text-left">#</th>
+  1079→                      <th className="py-2.5 px-2 text-left">Команда</th>
+  1080→                      <th className="py-2.5 px-2 text-center">И</th>
+  1081→                      <th className="py-2.5 px-2 text-center">В</th>
+  1082→                      <th className="py-2.5 px-2 text-center">Н</th>
+  1083→                      <th className="py-2.5 px-2 text-center">П</th>
+  1084→                      <th className="py-2.5 px-2 text-center">МЗ</th>
+  1085→                      <th className="py-2.5 px-2 text-center">МП</th>
+  1086→                      <th className="py-2.5 px-2 text-center">РМ</th>
+  1087→                      <th className="py-2.5 px-2 text-center font-bold">О</th>
+  1088→                    </tr>
+  1089→                  </thead>
+  1090→                  <tbody>
+  1091→                    {result.table.map((team) => {
+  1092→                      const isMyTeam = team.name === 'Моя команда';
+  1093→                      const isRelegation = team.position >= 14;
+  1094→                      return (
+  1095→                        <tr
+  1096→                          key={team.position}
+  1097→                          className={`border-b border-[#0a0a0f]/50 transition-colors ${
+  1098→                            isMyTeam
+  1099→                              ? 'bg-[#22c55e]/10'
+  1100→                              : isRelegation
+  1101→                              ? 'bg-[#ef4444]/5'
+  1102→                              : 'hover:bg-[#0a0a0f]/30'
+  1103→                          }`}
+  1104→                        >
+  1105→                          <td className="py-2 px-2 text-[#94a3b8]">
+  1106→                            {team.position === 1 ? '🏆' : getMedalColor(team.position)}{' '}
+  1107→                            {team.position}
+  1108→                          </td>
+  1109→                          <td
+  1110→                            className={`py-2 px-2 font-bold ${
+  1111→                              isMyTeam
+  1112→                                ? 'text-[#22c55e]'
+  1113→                                : isRelegation
+  1114→                                ? 'text-[#ef4444]'
+  1115→                                : 'text-[#e2e8f0]'
+  1116→                            }`}
+  1117→                          >
+  1118→                            {isMyTeam && '⚽ '}
+  1119→                            {team.name}
+  1120→                          </td>
+  1121→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.played}</td>
+  1122→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.won}</td>
+  1123→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.drawn}</td>
+  1124→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.lost}</td>
+  1125→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsFor}</td>
+  1126→                          <td className="py-2 px-2 text-center text-[#94a3b8]">{team.goalsAgainst}</td>
+  1127→                          <td
+  1128→                            className={`py-2 px-2 text-center ${
+  1129→                              team.goalDifference > 0
+  1130→                                ? 'text-[#22c55e]'
+  1131→                                : team.goalDifference < 0
+  1132→                                ? 'text-[#ef4444]'
+  1133→                                : 'text-[#94a3b8]'
+  1134→                            }`}
+  1135→                          >
+  1136→                            {team.goalDifference > 0 ? '+' : ''}
+  1137→                            {team.goalDifference}
+  1138→                          </td>
+  1139→                          <td className="py-2 px-2 text-center font-black text-[#e2e8f0]">
+  1140→                            {team.points}
+  1141→                          </td>
+  1142→                        </tr>
+  1143→                      );
+  1144→                    })}
+  1145→                  </tbody>
+  1146→                </table>
+  1147→              </motion.div>
+  1148→            )}
+  1149→          </AnimatePresence>
+  1150→        </div>
+  1151→      )}
+  1152→
+  1153→      {/* Squad that played */}
+  1154→      {result.players && result.players.length > 0 && (
+  1155→        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+  1156→          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">
+  1157→            Ваш состав
+  1158→          </h4>
+  1159→          <div className="grid grid-cols-2 gap-1.5">
+  1160→            {result.players.map((p, i) => (
+  1161→              <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-[#0a0a0f]/30">
+  1162→                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">
+  1163→                  {p.position}
+  1164→                </span>
+  1165→                <span className="text-xs font-medium text-[#e2e8f0] flex-1 truncate">{p.name}</span>
+  1166→                <span
+  1167→                  className={`text-xs font-bold ${
+  1168→                    p.rating >= 80
+  1169→                      ? 'text-[#22c55e]'
+  1170→                      : p.rating >= 70
+  1171→                      ? 'text-[#3b82f6]'
+  1172→                      : 'text-[#94a3b8]'
+  1173→                  }`}
+  1174→                >
+  1175→                  {p.rating}
+  1176→                </span>
+  1177→              </div>
+  1178→            ))}
+  1179→          </div>
+  1180→        </div>
+  1181→      )}
+  1182→
+  1183→      {/* Achievements */}
+  1184→      {(isChampion ||
+  1185→        isPerfect ||
+  1186→        isUnbeaten ||
+  1187→        result.goalsFor >= 60 ||
+  1188→        result.goalsAgainst <= 15 ||
+  1189→        result.goalsFor - result.goalsAgainst >= 50 ||
+  1190→        winStreak >= 5 ||
+  1191→        result.goalsFor / 30 >= 2) && (
+  1192→        <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
+  1193→          <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">Достижения</h3>
+  1194→          <div className="flex flex-wrap gap-2">
+  1195→            {isChampion && (
+  1196→              <span className="text-xs px-4 py-2 rounded-full bg-[#22c55e]/20 text-[#22c55e] font-bold border border-[#22c55e]/30">
+  1197→                🏆 Чемпион
+  1198→              </span>
+  1199→            )}
+  1200→            {isPerfect && (
+  1201→              <span className="text-xs px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-400 font-bold border border-yellow-500/30">
+  1202→                ✨ Идеальный сезон 30-0
+  1203→              </span>
+  1204→            )}
+  1205→            {isUnbeaten && !isPerfect && (
+  1206→              <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
+  1207→                🛡️ Непобедимый (0 поражений)
+  1208→              </span>
+  1209→            )}
+  1210→            {result.goalsFor >= 60 && (
+  1211→              <span className="text-xs px-4 py-2 rounded-full bg-[#f97316]/20 text-[#f97316] font-bold border border-[#f97316]/30">
+  1212→                ⚡ Голевая машина (60+ голов)
+  1213→              </span>
+  1214→            )}
+  1215→            {result.goalsAgainst <= 15 && (
+  1216→              <span className="text-xs px-4 py-2 rounded-full bg-[#3b82f6]/20 text-[#3b82f6] font-bold border border-[#3b82f6]/30">
+  1217→                🧱 Железная оборона (≤15 пропущено)
+  1218→              </span>
+  1219→            )}
+  1220→            {result.goalsFor - result.goalsAgainst >= 50 && (
+  1221→              <span className="text-xs px-4 py-2 rounded-full bg-[#8b5cf6]/20 text-[#8b5cf6] font-bold border border-[#8b5cf6]/30">
+  1222→                💪 Доминирование (+50 разница)
+  1223→              </span>
+  1224→            )}
+  1225→            {winStreak >= 5 && (
+  1226→              <span className="text-xs px-4 py-2 rounded-full bg-red-500/20 text-red-400 font-bold border border-red-500/30">
+  1227→                🔥 Серия побед ({winStreak} подряд)
+  1228→              </span>
+  1229→            )}
+  1230→            {result.goalsFor / 30 >= 2 && (
+  1231→              <span className="text-xs px-4 py-2 rounded-full bg-cyan-500/20 text-cyan-400 font-bold border border-cyan-500/30">
+  1232→                🎯 Снайпер (2+ гола/матч)
+  1233→              </span>
+  1234→            )}
+  1235→          </div>
+  1236→        </div>
+  1237→      )}
+  1238→
+  1239→      {/* Action Buttons */}
+  1240→      <div className="space-y-3">
+  1241→        {/* Quick Replay with same settings */}
+  1242→        {lastConfig && (
+  1243→          <motion.div whileTap={{ scale: 0.97 }}>
+  1244→            <Button
+  1245→              onClick={handleQuickReplay}
+  1246→              className="w-full h-14 text-base font-black bg-gradient-to-r from-[#8b5cf6] to-[#6d28d9] hover:from-[#7c3aed] hover:to-[#5b21b6] text-white rounded-2xl shadow-lg shadow-[#8b5cf6]/25 transition-all hover:shadow-[#8b5cf6]/40 border border-[#8b5cf6]/30"
+  1247→            >
+  1248→              🔄 Повторить с этими настройками
+  1249→            </Button>
+  1250→          </motion.div>
+  1251→        )}
+  1252→
+  1253→        <motion.div whileTap={{ scale: 0.97 }}>
+  1254→          <Button
+  1255→            onClick={() => {
+  1256→              resetGame();
+  1257→            }}
+  1258→            className="w-full h-16 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40"
+  1259→          >
+  1260→            🔄 Играть снова
+  1261→          </Button>
+  1262→        </motion.div>
+  1263→        <div className="flex gap-3">
+  1264→          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+  1265→            <Button
+  1266→              onClick={handleShare}
+  1267→              variant="outline"
+  1268→              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+  1269→            >
+  1270→              📤 Поделиться
+  1271→            </Button>
+  1272→          </motion.div>
+  1273→          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
+  1274→            <Button
+  1275→              onClick={handleCopyResult}
+  1276→              variant="outline"
+  1277→              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+  1278→            >
+  1279→              📊 Копировать
+  1280→            </Button>
+  1281→          </motion.div>
+  1282→        </div>
+  1283→      </div>
+  1284→    </div>
+  1285→  );
+  1286→}
+  1287→

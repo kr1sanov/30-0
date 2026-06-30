@@ -12,11 +12,14 @@ import PlayerList from '@/components/game/PlayerList';
 import SquadStats from '@/components/game/SquadStats';
 import SimulationResult from '@/components/game/SimulationResult';
 import ManagerChoice from '@/components/game/ManagerChoice';
+import SeasonAwards from '@/components/game/SeasonAwards';
+import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
 import DraftProgressTracker from '@/components/game/DraftProgressTracker';
+import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 
 /* ─── Icon helpers (inline SVGs) ─── */
 function RotateIcon({ className }: { className?: string }) {
@@ -269,6 +272,9 @@ function RecentResults() {
                     {h.managerName && (
                       <span className="text-[9px] text-[#94a3b8]/50 truncate">👨‍💼 {h.managerName}</span>
                     )}
+                    {h.teamName && (
+                      <span className="text-[9px] text-[#94a3b8]/50 truncate">⚽ {h.teamName}</span>
+                    )}
                   </div>
                 </div>
 
@@ -291,15 +297,15 @@ function RecentResults() {
 /* ─── Floating particles data ─── */
 const PARTICLES = [
   { emoji: '⚽', size: 'text-lg', top: '8%', left: '6%', anim: 'animate-float-organic-1', delay: '0s' },
-  { emoji: '🏆', size: 'text-xl', top: '15%', right: '10%', anim: 'animate-float-organic-2', delay: '0.5s' },
-  { emoji: '⭐', size: 'text-sm', top: '35%', left: '3%', anim: 'animate-float-organic-3', delay: '1s' },
-  { emoji: '💚', size: 'text-base', bottom: '30%', right: '5%', anim: 'animate-float-organic-1', delay: '1.5s' },
-  { emoji: '⚽', size: 'text-sm', top: '60%', left: '12%', anim: 'animate-float-organic-2', delay: '2s' },
-  { emoji: '🏆', size: 'text-base', bottom: '15%', right: '18%', anim: 'animate-float-organic-3', delay: '2.5s' },
-  { emoji: '⭐', size: 'text-xs', top: '20%', left: '20%', anim: 'animate-float-organic-1', delay: '3s' },
-  { emoji: '💚', size: 'text-sm', bottom: '40%', left: '8%', anim: 'animate-float-organic-2', delay: '3.5s' },
-  { emoji: '⚽', size: 'text-lg', top: '45%', right: '8%', anim: 'animate-float-organic-3', delay: '4s' },
-  { emoji: '⭐', size: 'text-xs', bottom: '20%', right: '25%', anim: 'animate-float-organic-1', delay: '4.5s' },
+  { emoji: '🏆', size: 'text-2xl', top: '15%', right: '10%', anim: 'animate-float-organic-2', delay: '0.5s' },
+  { emoji: '⭐', size: 'text-lg', top: '35%', left: '3%', anim: 'animate-float-organic-3', delay: '1s' },
+  { emoji: '💚', size: 'text-xl', bottom: '30%', right: '5%', anim: 'animate-float-organic-1', delay: '1.5s' },
+  { emoji: '⚽', size: 'text-lg', top: '60%', left: '12%', anim: 'animate-float-organic-2', delay: '2s' },
+  { emoji: '🏆', size: 'text-xl', bottom: '15%', right: '18%', anim: 'animate-float-organic-3', delay: '2.5s' },
+  { emoji: '⭐', size: 'text-base', top: '20%', left: '20%', anim: 'animate-float-organic-1', delay: '3s' },
+  { emoji: '💚', size: 'text-lg', bottom: '40%', left: '8%', anim: 'animate-float-organic-2', delay: '3.5s' },
+  { emoji: '⚽', size: 'text-2xl', top: '45%', right: '8%', anim: 'animate-float-organic-3', delay: '4s' },
+  { emoji: '⭐', size: 'text-base', bottom: '20%', right: '25%', anim: 'animate-float-organic-1', delay: '4.5s' },
 ];
 
 /* ─── Home Page ─── */
@@ -316,8 +322,8 @@ function HomePage() {
         transition={{ duration: 0.6 }}
         className="flex flex-col items-center justify-center text-center space-y-6 pt-8"
       >
-        {/* Hero container with noise, scanlines, and animated gradient border */}
-        <div className="relative rounded-3xl p-8 sm:p-12 border-2 animate-border-gradient-shift overflow-hidden noise-overlay scanlines">
+        {/* Hero container with animated gradient border, noise, scanlines */}
+        <div className="relative rounded-3xl p-8 sm:p-12 border-2 animate-hero-border overflow-hidden noise-overlay scanlines">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -348,14 +354,15 @@ function HomePage() {
           <div className="relative z-10">
             {/* Animated Score Counter */}
             <div className="relative inline-block">
-              <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none">
+              <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
                 <AnimatedCounter target={30} duration={1000} delay={200} />
                 <span className="text-[#1a1a2e]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 1.3, duration: 0.5, type: 'spring', stiffness: 200 }}
-                  className="inline-block"
+                  className="inline-block animate-zero-pulse"
+                  style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}
                 >
                   0
                 </motion.span>
@@ -413,7 +420,7 @@ function HomePage() {
         {/* Play button with gradient glow */}
         <Button
           onClick={() => setScreen('setup')}
-          className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all hover:scale-105 active:scale-95 animate-button-glow"
+          className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all hover:scale-105 active:scale-95 animate-button-glow btn-shimmer"
         >
           Играть 30-0
         </Button>
@@ -456,12 +463,15 @@ function HomePage() {
         </div>
       </motion.div>
 
-      {/* Stats Section with animated counters */}
+      {/* Section divider */}
+      <div className="section-divider" />
+
+      {/* Stats Section with animated counters (glass-morphism) */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="flex items-center justify-center gap-4 sm:gap-8 flex-wrap"
+        className="glass-stats-card rounded-2xl p-6 flex items-center justify-center gap-4 sm:gap-8 flex-wrap"
       >
         <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
         <div className="w-px h-8 bg-[#1a1a2e]" />
@@ -469,6 +479,9 @@ function HomePage() {
         <div className="w-px h-8 bg-[#1a1a2e]" />
         <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
       </motion.div>
+
+      {/* Section divider */}
+      <div className="section-divider" />
 
       {/* Popular Challenges */}
       <motion.div
@@ -490,7 +503,8 @@ function HomePage() {
                 key={ch.title}
                 onClick={() => setScreen('setup')}
                 whileTap={{ scale: 0.97 }}
-                className={`relative rounded-2xl p-5 text-left border border-[#1a1a2e] card-glow transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
+                className={`relative rounded-2xl p-5 text-left border-l-4 border-r border-t border-b border-[#1a1a2e] card-glow card-shine transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
+                style={{ borderLeftColor: ch.emoji === '🔥' ? '#ef4444' : ch.emoji === '🛡️' ? '#3b82f6' : ch.emoji === '⚡' ? '#fbbf24' : '#22c55e' }}
               >
                 {/* Emoji with bounce on hover */}
                 <motion.div
@@ -522,6 +536,7 @@ function HomePage() {
       </motion.div>
 
       {/* Recent Results */}
+      <div className="section-divider" />
       <RecentResults />
 
       {/* FAQ Accordion */}
@@ -819,7 +834,7 @@ function LeaderboardScreen() {
 }
 
 /* ─── Screen transition variants ─── */
-const SCREEN_ORDER = ['home', 'setup', 'draft', 'position-assign', 'squad-complete', 'manager-choice', 'simulation', 'result'];
+const SCREEN_ORDER = ['home', 'setup', 'draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'];
 
 function getDirection(from: string, to: string): number {
   // Forward = 1, Backward = -1, Scale = 0
@@ -883,10 +898,14 @@ export default function Home() {
         return <PositionAssignScreen />;
       case 'squad-complete':
         return <SquadCompleteScreen />;
+      case 'pre-match':
+        return <PreMatchAnalysis />;
       case 'simulation':
         return <SimulationScreen />;
       case 'result':
         return <SimulationResult />;
+      case 'awards':
+        return <SeasonAwards />;
       case 'profile':
         return <ProfileScreen />;
       case 'leaderboard':
@@ -915,6 +934,7 @@ export default function Home() {
         </AnimatePresence>
       </main>
       <Footer />
+      <AchievementUnlocked />
     </div>
   );
 }

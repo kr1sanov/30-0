@@ -367,7 +367,7 @@ export default function FormationView() {
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#1a1a2e] to-[#16162a] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
+        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#0a0a0f]/80 to-[#1a1a2e] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
       >
         {/* Formation name + icon */}
         <div className="flex items-center gap-1.5 shrink-0">
@@ -453,6 +453,9 @@ export default function FormationView() {
         <div
           className="absolute inset-0 pitch-stripes"
         />
+
+        {/* V-shaped mowing pattern */}
+        <div className="absolute inset-0 pitch-mowing-pattern pointer-events-none" aria-hidden />
 
         {/* Pitch grass texture lines (vertical) */}
         <div className="absolute inset-0 pitch-grass-lines" />
@@ -555,6 +558,7 @@ export default function FormationView() {
               stroke="rgba(250, 204, 21, 0.7)"
               strokeWidth={0.4}
               strokeDasharray="1.5 1"
+              className="animate-swap-line-glow"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={{ pathLength: 1, opacity: 1 }}
               transition={{ duration: 0.3, delay: i * 0.03 }}
@@ -639,12 +643,12 @@ export default function FormationView() {
               <div
                 className={`relative flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 transition-all duration-200 ${
                   isFilled
-                    ? 'border-white/60 backdrop-blur-sm player-inner-glow animate-subtle-pulse'
+                    ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
                     : isIncompatible
-                    ? 'border-[#ef4444]/40 border-dashed'
+                    ? 'border-[#ef4444]/40 border-dashed animate-empty-slot-pulse'
                     : isCompatible && !isFilled
                     ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
-                    : 'border-white/25 border-dashed'
+                    : 'border-white/25 border-dashed animate-empty-slot-pulse'
                 } ${
                   isSelected
                     ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]'
@@ -704,11 +708,9 @@ export default function FormationView() {
                     </span>
                     {slot.playerRating ? (
                       <span
-                        className="text-[9px] sm:text-[10px] font-bold px-1.5 rounded-sm mt-0.5"
+                        className="text-[9px] sm:text-[10px] font-bold px-1.5 rounded-sm mt-0.5 position-label-pill"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
-                          backgroundColor: 'rgba(0,0,0,0.35)',
-                          // Dim rating for partial-compat players
                           opacity: compatKind === 'partial' ? 0.78 : 1,
                         }}
                       >
@@ -718,13 +720,13 @@ export default function FormationView() {
                   </>
                 ) : isIncompatible ? (
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60">
+                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60 position-label-pill">
                       {slot.positionLabel}
                     </span>
                     <span className="text-[8px] leading-none">❌</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] sm:text-xs font-bold text-white/60">
+                  <span className="text-[10px] sm:text-xs font-bold text-white/60 position-label-pill">
                     {slot.positionLabel}
                   </span>
                 )}

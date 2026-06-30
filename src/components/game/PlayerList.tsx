@@ -450,7 +450,7 @@ export default function PlayerList() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Поиск игрока..."
-          className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#1a1a2e] border border-[#1a1a2e] text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
+          className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#1a1a2e] border border-[#1a1a2e] text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors search-focus-glow"
         />
       </div>
 
@@ -508,7 +508,7 @@ export default function PlayerList() {
       <div ref={listRef} className="max-h-80 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
         {filteredPlayers.length === 0 ? (
           <div className="text-center py-6 text-sm text-[#94a3b8]">
-            <div className="text-2xl mb-2">🔍</div>
+            <div className="text-2xl mb-2 animate-bounce-search">🔍</div>
             Игроки не найдены
             {searchQuery && <div className="text-xs mt-1">Попробуйте другой запрос</div>}
           </div>
@@ -536,9 +536,9 @@ export default function PlayerList() {
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left relative group ${
                   isSelected
-                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/10'
+                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/10 animate-green-pulse-ring'
                     : player.canFillAny
-                    ? 'bg-[#1a1a2e] border-2 border-transparent hover:border-[#22c55e]/30'
+                    ? 'bg-gradient-to-r from-[#1a1a2e] to-[#151528] border-2 border-transparent hover:border-[#22c55e]/30'
                     : 'bg-[#1a1a2e]/30 border-2 border-transparent opacity-40'
                 }`}
               >
@@ -553,7 +553,7 @@ export default function PlayerList() {
                   {/* Rating badge overlapping bottom-right */}
                   {!isHard && (
                     <div
-                      className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-[#1a1a2e] shadow-md px-1"
+                      className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-[#1a1a2e] shadow-md px-1 rating-badge-shine"
                       style={{ backgroundColor: getRatingBadgeColor(player.rating) }}
                     >
                       {player.rating}
@@ -597,7 +597,7 @@ export default function PlayerList() {
                 <div className="shrink-0 flex flex-col items-center gap-1">
                   {player.canFillAny ? (
                     <>
-                      <div className="w-6 h-6 rounded-full bg-[#22c55e]/20 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-full bg-[#22c55e]/20 flex items-center justify-center animate-subtle-bounce">
                         <svg className="w-3.5 h-3.5 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 13l4 4L19 7" />
                         </svg>
@@ -607,7 +607,7 @@ export default function PlayerList() {
                       )}
                     </>
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-[#ef4444]/20 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-[#ef4444]/20 flex items-center justify-center animate-subtle-bounce">
                       <svg className="w-3.5 h-3.5 text-[#ef4444]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 6L6 18M6 6l12 12" />
                       </svg>

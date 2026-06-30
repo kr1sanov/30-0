@@ -59,6 +59,12 @@ const BURST_PARTICLES = [
   { emoji: '🟢', x: '-45px', y: '-35px' },
   { emoji: '⭐', x: '40px', y: '35px' },
   { emoji: '🎯', x: '-50px', y: '30px' },
+  { emoji: '💰', x: '55px', y: '-20px' },
+  { emoji: '🏆', x: '-30px', y: '45px' },
+  { emoji: '💚', x: '30px', y: '-50px' },
+  { emoji: '✨', x: '-55px', y: '-15px' },
+  { emoji: '🎰', x: '20px', y: '50px' },
+  { emoji: '🌟', x: '-40px', y: '-50px' },
 ];
 
 /* ── SVG geometry helpers ── */
@@ -296,6 +302,24 @@ export default function SpinWheel() {
                 </radialGradient>
               </defs>
 
+              {/* Outer decorative ring — alternating gold/dark segments */}
+              {Array.from({ length: SEGMENTS.length }, (_, i) => {
+                const a0 = i * SEG_ANGLE - Math.PI / 2;
+                const a1 = (i + 1) * SEG_ANGLE - Math.PI / 2;
+                const p0 = polarXY(a0, RADIUS + 16);
+                const p1 = polarXY(a1, RADIUS + 16);
+                const p2 = polarXY(a1, RADIUS + 8);
+                const p3 = polarXY(a0, RADIUS + 8);
+                return (
+                  <path
+                    key={`ring-${i}`}
+                    d={`M${p0.x.toFixed(2)} ${p0.y.toFixed(2)}A${RADIUS + 16} ${RADIUS + 16} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}L${p2.x.toFixed(2)} ${p2.y.toFixed(2)}A${RADIUS + 8} ${RADIUS + 8} 0 0 0 ${p3.x.toFixed(2)} ${p3.y.toFixed(2)}Z`}
+                    fill={i % 2 === 0 ? '#FFD700' : '#1a1a2e'}
+                    opacity={i % 2 === 0 ? 0.6 : 0.8}
+                  />
+                );
+              })}
+
               {/* Outer decorative ring */}
               <circle
                 cx={CX} cy={CY} r={RADIUS + 12}
@@ -323,6 +347,7 @@ export default function SpinWheel() {
                         fill="rgba(34,197,94,0.18)"
                         stroke="#22c55e"
                         strokeWidth="2.5"
+                        style={{ boxShadow: '0 0 40px rgba(34,197,94,0.5)' }}
                       >
                         <animate
                           attributeName="stroke-opacity"
@@ -519,7 +544,7 @@ export default function SpinWheel() {
               variant="outline"
               className="reroll-hover w-full h-12 text-sm font-bold border-[#22c55e]/40 text-[#22c55e] hover:bg-[#22c55e]/10 rounded-2xl transition-all"
             >
-              <span className="reroll-icon inline-block">🔄</span> Переброс ({rerollsLeft} осталось)
+              <span className={isSpinning ? 'animate-spin-reroll' : 'reroll-icon inline-block'}>🔄</span> Переброс ({rerollsLeft} осталось)
             </Button>
           </motion.div>
         ) : null
@@ -528,7 +553,7 @@ export default function SpinWheel() {
           <Button
             onClick={handleSpin}
             disabled={isSpinning}
-            className="w-full h-14 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all"
+            className="w-full h-14 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all btn-3d-push"
           >
             {isSpinning ? '🎰 Крутится...' : '🎰 Крутить колесо'}
           </Button>
