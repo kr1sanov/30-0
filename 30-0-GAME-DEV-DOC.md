@@ -1,17 +1,17 @@
 # 🏆 30-0 RPL — Полный документ для разработки игры
 
-> **Версия:** 2.0  
-> **Дата:** 2026-07-02  
-> **Статус:** MVP завершён, Round 7 (полировка UI)  
+> **Версия:** 2.1  
+> **Дата:** 2026-07-03  
+> **Статус:** MVP завершён, Round 7+ (полировка UI, деплой)  
 > **Платформа:** Telegram Mini App + Web  
 > **Ориентир:** https://38-0.app/ (полная копия механики и стиля)
 
-### Что реализовано (Round 7)
+### Что реализовано (Round 7+)
 
 - ✅ Полный игровой цикл: Главная → Настройка → Драфт → Симуляция → Результаты
 - ✅ 12 формаций с визуализацией на футбольном поле
 - ✅ 3 уровня сложности (Легко/Нормально/Сложно) с перебросами
-- ✅ Анимированное колесо фортуны (SVG, 14 сегментов, замедление, звук тиков)
+- ✅ Анимированное колесо фортуны (Canvas, 14 сегментов, замедление, звук тиков)
 - ✅ Выбор игроков с совместимостью позиций
 - ✅ 22 российских тренера (слот-машина анимация выбора)
 - ✅ Симуляция сезона (30 матчей, реальные результаты, турнирная таблица)
@@ -23,8 +23,15 @@
 - ✅ PWA манифест, звуковые эффекты, химия команды
 - ✅ Скрытый хедер на главной, полупрозрачные кнопки Домой/Профиль во время игры
 - ✅ Кнопка «Продолжить драфт» при возврате на главную во время игры
-- ✅ Полупрозрачный фон футбольного поля на главной
-- ✅ Ускоренные анимации загрузки страницы
+- ✅ Полупрозрачный фон футбольного поля на главной (SVG, opacity 0.03)
+- ✅ Ускоренные анимации загрузки страницы (уменьшенные delay/duration)
+- ✅ Жирный подзаголовок на главной: «Составь символическую сборную лучших русских команд всех времен»
+- ✅ Кнопка «Играть» с внутренним шиммер-эффектом (btn-inner-shimmer)
+- ✅ Уменьшенные отступы на главной для компактности (pt-2, space-y-3, p-5)
+- ✅ Плавающие частицы с пониженной прозрачностью (opacity-[0.15])
+- ✅ Действия goHome() и resumeGame() для корректного возврата/продолжения
+- ✅ Футер с корректной фиксацией (fixed) — исправлен конфликт CSS
+- ✅ Zustand persist: сохранение состояния драфта (runId, slots, rerolls, config, seasonResult)
 
 ---
 
@@ -1131,79 +1138,94 @@ Response: [{ "id": "...", "name": "30-0", "description": "...", "icon": "🏆" }
 | Состояние | **Zustand** | Лёгкое клиентское состояние |
 | Деплой | **Vercel** (или любой хостинг) | Бесплатный tier |
 
-### 9.2 Структура проекта
+### 9.2 Структура проекта (актуальная)
 
 ```
 src/
 ├── app/
-│   ├── page.tsx                  # Главная (единственный route)
-│   ├── api/
-│   │   ├── auth/
-│   │   │   └── telegram/route.ts
-│   │   ├── clubs/route.ts
-│   │   ├── seasons/route.ts
-│   │   ├── formations/route.ts
-│   │   ├── runs/
-│   │   │   ├── route.ts          # POST /api/runs
-│   │   │   └── [runId]/
-│   │   │       ├── spin/route.ts
-│   │   │       ├── reroll/route.ts
-│   │   │       ├── draft/route.ts
-│   │   │       ├── move-player/route.ts
-│   │   │       └── simulate/route.ts
-│   │   ├── users/
-│   │   │   └── me/route.ts
-│   │   ├── leaderboard/route.ts
-│   │   └── achievements/route.ts
-│   └── layout.tsx
+│   ├── page.tsx                  # Единственный route (SPA по экранам)
+│   ├── layout.tsx                # Root layout (fonts, providers, toast)
+│   ├── globals.css               # CSS анимации, утилиты, градиенты, btn-inner-shimmer
+│   └── api/
+│       ├── route.ts              # Health check (GET → "Hello, world!")
+│       ├── clubs/route.ts        # GET /api/clubs
+│       ├── seasons/route.ts      # GET /api/seasons
+│       ├── formations/route.ts   # GET /api/formations
+│       ├── leaderboard/route.ts  # GET /api/leaderboard
+│       └── runs/
+│           ├── route.ts          # POST /api/runs (создание драфта)
+│           └── [runId]/
+│               ├── route.ts      # GET /api/runs/:id
+│               ├── spin/route.ts     # POST спин колеса
+│               ├── draft/route.ts    # POST назначение игрока на слот
+│               ├── reroll/route.ts   # POST переброс
+│               ├── swap/route.ts     # POST обмен позиций
+│               ├── undo/route.ts     # POST отмена последнего пика
+│               └── simulate/route.ts # POST симуляция сезона
 ├── components/
 │   ├── game/
-│   │   ├── GameSetup.tsx         # Настройка драфта + Quick Pick + типы формаций
-│   │   ├── SpinWheel.tsx         # SVG колесо с 14 сегментами, анимация замедления
-│   │   ├── FormationView.tsx     # Поле с цветовыми кольцами, линиями связи, тултипами
-│   │   ├── PlayerList.tsx        # Поиск, фильтры, сортировка, детальный попап
-│   │   ├── SquadStats.tsx        # Химия команды, анимированные бары
-│   │   ├── SimulationResult.tsx  # Результат: турнирная таблица, форма, sparkline
-│   │   ├── ManagerChoice.tsx     # Слот-машина (3 барабана), JACKPOT эффект
-│   │   ├── ProfileScreen.tsx     # Профиль: винрейт, трофеи, история
-│   │   ├── SeasonAwards.tsx      # Награды сезона
-│   │   ├── PreMatchAnalysis.tsx  # Пре-матч анализ
-│   │   ├── HowToPlayModal.tsx    # Модалка «Как играть»
-│   │   ├── DraftProgressTracker.tsx # Трекер прогресса драфта (11 кружков)
-│   │   └── AchievementUnlocked.tsx # Попап разблокировки достижения
+│   │   ├── GameSetup.tsx         # Настройка драфта + Quick Pick + типы формаций (955 строк)
+│   │   ├── SpinWheel.tsx         # Canvas колесо с 14 сегментами, анимация замедления (570 строк)
+│   │   ├── FormationView.tsx     # Поле с цветовыми кольцами, линиями связи, drag-swap (819 строк)
+│   │   ├── PlayerList.tsx        # Поиск, фильтры, сортировка, совместимость (649 строк)
+│   │   ├── SquadStats.tsx        # Химия команды, анимированные бары (210 строк)
+│   │   ├── ManagerChoice.tsx     # Слот-машина (3 барабана), JACKPOT эффект (717 строк)
+│   │   ├── PreMatchAnalysis.tsx  # Пре-матч анализ (585 строк)
+│   │   ├── SimulationResult.tsx  # Результат: турнирная таблица, форма, sparkline (1304 строки)
+│   │   ├── SeasonAwards.tsx      # Награды сезона (387 строк)
+│   │   ├── ProfileScreen.tsx     # Профиль: винрейт, трофеи, история (523 строки)
+│   │   ├── HowToPlayModal.tsx    # Модалка «Как играть» (80 строк)
+│   │   ├── DraftProgressTracker.tsx # Трекер прогресса драфта с undo (214 строк)
+│   │   └── AchievementUnlocked.tsx # Попап разблокировки достижения (151 строка)
 │   ├── layout/
 │   │   ├── Header.tsx           # Скрыт на home, полупрозрачные кнопки в игре
-│   │   └── Footer.tsx           # Мобильный таб-бар + десктоп футер
-│   └── ui/                       # shadcn/ui компоненты
+│   │   └── Footer.tsx           # Мобильный таб-бар + десктоп футер, goHome/resumeGame
+│   └── ui/                       # 47 shadcn/ui компонентов (button, card, dialog, toast, и т.д.)
 ├── lib/
-│   ├── db.ts                    # Prisma client
-│   ├── utils.ts                 # Утилиты
+│   ├── db.ts                    # Prisma client (SQLite dev / PostgreSQL prod)
+│   ├── utils.ts                 # Утилиты (cn, и т.д.)
 │   ├── managers.ts              # 22 российских тренера
-│   ├── simulation.ts            # Алгоритм симуляции сезона
-│   ├── positions.ts             # 12 формаций + совместимость позиций
-│   ├── types.ts                 # TypeScript типы (GameConfig, DraftSlot, и т.д.)
-│   └── wheel.ts                 # Логика колеса
+│   ├── simulation.ts            # Алгоритм симуляции сезона (Poisson goals)
+│   ├── positions.ts             # 15 позиций + совместимость + 12 формаций + canFillSlot()
+│   ├── types.ts                 # TypeScript типы (GameConfig, DraftSlot, SpinResult, Achievements)
+│   └── wheel.ts                 # Логика колеса: фильтрация клубов, взвешенный random
 ├── store/
-│   └── gameStore.ts             # Zustand store (persist: профиль + состояние драфта)
-├── hooks/
-│   ├── use-sound.ts             # Звуковые эффекты (8 типов)
-│   ├── use-telegram.ts          # Telegram WebApp SDK
-│   ├── use-mobile.ts            # Определение мобильного устройства
-│   └── use-toast.ts             # Тосты
-└── app/
-    ├── page.tsx                  # Единственный route (SPA по экранам)
-    ├── globals.css               # CSS анимации, утилиты, градиенты
-    └── api/                      # API routes (runs, spin, draft, simulate, и т.д.)
+│   └── gameStore.ts             # Zustand store (733 строки, persist: профиль + состояние драфта + goHome/resumeGame)
+└── hooks/
+    ├── use-sound.ts             # Звуковые эффекты (8 типов, Web Audio API oscillator)
+    ├── use-telegram.ts          # Telegram WebApp SDK (haptics, main/back buttons, share)
+    ├── use-mobile.ts            # Определение мобильного устройства
+    └── use-toast.ts             # Тосты
 ```
 
 ### 9.3 Поток данных
 
 ```
 Telegram → Mini App (iframe)
-         → Next.js Frontend (page.tsx)
-         → API Routes (/api/*)
-         → Prisma ORM → SQLite
+         → Next.js Frontend (page.tsx — SPA, экраны через Zustand screen state)
+         → API Routes (/api/* — REST, JSON)
+         → Prisma ORM → SQLite (dev) / PostgreSQL (prod)
 ```
+
+### 9.4 Управление состоянием
+
+| Слой | Решение | Что хранит |
+|------|---------|------------|
+| Клиентское состояние | **Zustand** | Текущий экран, конфиг игры, состояние драфта, UI-флаги |
+| Персистентное состояние | **Zustand persist** (localStorage) | Профиль, трофеи, история, runId, slots, config, seasonResult |
+| Серверное состояние | **Prisma + SQLite** | Клубы, сезоны, игроки, GameRun, GameSlot, результаты |
+| API-вызовы | **fetch()** из компонентов | Спин, драфт, переброс, свап, отмена, симуляция |
+
+### 9.5 Экраны приложения (GameScreen enum)
+
+```
+home → setup → draft → position-assign → squad-complete →
+manager-choice → pre-match → simulation → result → awards
+
+(отдельно: profile, leaderboard — доступны из футера)
+```
+
+Навигация осуществляется через `store.setScreen()` и `store.goHome()` / `store.resumeGame()`.
 
 ---
 
@@ -1332,10 +1354,10 @@ finalRating = clamp(baseRating, 40, 99)
 
 ### 12.1 MVP Ready Checklist
 
-- [x] Тёмная тема с цветами как у 38-0
+- [x] Тёмная тема с цветами как у 38-0 (#0a0a0f фон, #22c55e акцент)
 - [x] 12 формаций на выбор
 - [x] 3 уровня сложности
-- [x] Анимация колеса работает плавно (SVG, 14 сегментов, замедление, звук)
+- [x] Анимация колеса работает плавно (Canvas, 14 сегментов, замедление, звук)
 - [x] Спин фильтрует только совместимые клубы
 - [x] Выбор игрока и назначение позиции
 - [x] Правило уникальности (один человек = один драфт)
@@ -1355,26 +1377,36 @@ finalRating = clamp(baseRating, 40, 99)
 - [x] Выбор тренера (22 тренера, слот-машина)
 - [x] Звуковые эффекты (8 типов)
 - [x] PWA манифест
-- [x] Продолжение драфта при возврате на главную
+- [x] Продолжение драфта при возврате на главную (goHome/resumeGame)
 - [x] Полупрозрачные кнопки навигации во время игры
+- [x] Внутренний шиммер-эффект на главной кнопке (btn-inner-shimmer)
+- [x] SVG фон футбольного поля на главной (opacity 0.03)
+- [x] Ускоренные анимации загрузки (уменьшенные delay/duration)
+- [x] Компактные отступы на главной странице
+- [x] Zustand persist состояния драфта (runId, slots, config, seasonResult)
+- [x] Undo последнего пика
+- [x] Swap позиций игроков
+- [x] Футер корректно фиксирован внизу (исправлен CSS конфликт)
 
 ### 12.2 UI/UX Checklist
 
 - [x] Все экраны на русском
-- [x] Кнопки с hover/active эффектами (внутренний блик на главной кнопке)
+- [x] Кнопки с hover/active эффектами (внутренний блик на главной кнопке — btn-inner-shimmer)
 - [x] Loading states (shimmer + спиннер при симуляции)
 - [x] Error states (тосты Sonner, shake анимация при ошибке)
-- [x] Footer прижат к низу (мобильный таб-бар + десктоп футер)
+- [x] Footer прижат к низу (мобильный таб-бар fixed + десктоп футер mt-auto)
 - [x] Адаптивная вёрстка (320px — 1920px)
 - [x] Тач-френдли (минимум 44px для интерактивных элементов)
 - [x] Framer Motion анимации на переходах (slide, scale, spring)
 - [x] Цветовая кодировка рейтингов (зелёный/голубой/оранжевый/красный)
 - [x] Цветовая кодировка позиций (красный/зелёный/синий/оранжевый)
-- [x] Хедер скрыт на главной, полупрозрачные кнопки в игре
-- [x] Полупрозрачный фон футбольного поля на главной
-- [x] Ускоренные анимации загрузки страницы
-- [x] Плавающие эмодзи-частицы с низкой прозрачностью
+- [x] Хедер скрыт на главной (returns null), полупрозрачные кнопки в игре (opacity-30 hover:opacity-80)
+- [x] Полупрозрачный фон футбольного поля на главной (SVG, opacity 0.03)
+- [x] Ускоренные анимации загрузки страницы (delay 0-0.4s вместо 0.8-1.3s)
+- [x] Плавающие эмодзи-частицы с низкой прозрачностью (opacity-[0.15])
 - [x] Кнопка «Продолжить драфт» при активной игре
+- [x] Жирный подзаголовок на главной (gradient text)
+- [x] Убран hover:scale-105 с главной кнопки (чище UX)
 
 ### 12.3 Telegram Mini App Checklist
 
@@ -1475,7 +1507,31 @@ finalRating = clamp(baseRating, 40, 99)
 | Нет регистрации без Telegram | Целевая платформа = Telegram Mini App | Email/Google auth |
 | Ручной ввод данных на старте | Быстрее запустить MVP | Полный парсинг сразу |
 | Framer Motion для анимаций | Красиво и просто | CSS animations |
-| Одностраничное приложение | Все экраны на `/` через state | Многостраничное с роутами |
+| Одностраничное приложение | Все экраны на `/` через Zustand state | Многостраничное с роутами |
+| Canvas для колеса вместо SVG | Лучшая производительность при анимации | SVG с CSS transforms |
+| Zustand persist для драфта | Продолжение после закрытия вкладки | Только серверное состояние |
+| goHome() vs resetGame() | goHome сохраняет состояние драфта для resumeGame | Один метод с флагом |
+| btn-inner-shimmer CSS анимация | Визуальная обратная связь на CTA | hover:scale-105 (убран) |
+
+---
+
+## Приложение Г: Changelog
+
+### Round 7+ (2026-07-03)
+- Обновлён подзаголовок на главной: жирный текст с градиентом «Составь символическую сборную лучших русских команд всех времен»
+- Убран hover:scale-105 с кнопки «Играть», добавлен btn-inner-shimmer эффект
+- Уменьшены отступы на главной (pt-8→pt-2, space-y-6→space-y-3, p-8→p-5, space-y-16→space-y-10)
+- Добавлен SVG фон футбольного поля на главную (opacity 0.03)
+- Ускорены анимации загрузки (counter delay 200→0, zero delay 1.3→0.4, subtitle delay 0.8→0.2, hero duration 0.6→0.3)
+- Понижена прозрачность частиц (opacity-[0.15])
+- Добавлена кнопка «Продолжить драфт» при активной игре на главной
+- Добавлены действия goHome() и resumeGame() в gameStore
+- Обновлён Zustand persist: сохранение runId, slots, rerollsLeft, rerollsUsed, currentSpin, currentManager, config, seasonResult
+- Хедер скрыт на главной (returns null), полупрозрачные кнопки Домой/Профиль во время игры
+- Футер: Home→goHome() при активном драфте, Play→resumeGame() при активном драфте
+- Исправлен CSS конфликт: footer-gradient-border position: relative → убран, не ломает fixed навигацию
+- Исправлен невалидный Tailwind класс w-4.5 → w-[18px] в Header.tsx
+- Деплой проекта на dev-сервер, верификация через agent-browser
 
 ---
 

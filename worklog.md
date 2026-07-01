@@ -1843,3 +1843,29 @@ Stage Summary:
 - All changes deployed and verified via browser
 - Documentation updated to v2.0 reflecting current project state
 - Server stable when warmed up before browser connection
+
+---
+Task ID: R8
+Agent: Main
+Task: Deploy project and update 30-0-GAME-DEV-DOC.md
+
+Work Log:
+- Verified dev server was not running
+- Restarted dev server on port 3000 (bun run dev)
+- Confirmed site returns HTTP 200
+- Ran agent-browser QA verification - found and fixed footer CSS bug
+- Bug: .footer-gradient-border had `position: relative` which overrode Tailwind's `fixed` on mobile nav
+- Fix: Removed `position: relative` from .footer-gradient-border in globals.css
+- Updated 30-0-GAME-DEV-DOC.md: version 2.0→2.1, date updated, status updated to "Round 7+ (полировка UI, деплой)"
+- Added new items to "Что реализовано" list (shimmer, compact spacing, SVG field bg, goHome/resumeGame, etc.)
+- Updated project structure in section 9.2 to match actual codebase (removed non-existent auth/users/achievements routes, added actual routes)
+- Added new sections 9.4 (State Management) and 9.5 (Game Screens) to architecture
+- Updated MVP and UI/UX checklists with new completed items
+- Added Appendix Г: Changelog with all Round 7+ changes
+- Updated key decisions table with new entries (Canvas, Zustand persist, goHome vs resetGame, btn-inner-shimmer)
+
+Stage Summary:
+- Dev server running on port 3000, HTTP 200
+- Agent-browser verified: homepage renders, no console errors, navigation works, header hidden on home, footer fixed correctly
+- Documentation fully updated to reflect current project state
+- Footer CSS bug fixed (position: relative conflict)

@@ -839,7 +839,10 @@ html {
 
 /* Footer gradient border at top */
 .footer-gradient-border {
-  position: relative;
+  /* Do NOT set position here — it overrides Tailwind's `fixed` utility on the mobile nav.
+     The ::before pseudo-element uses `position: absolute` and inherits its containing block
+     from the nearest positioned ancestor, which is already established by Tailwind's
+     `fixed` (or whatever position the element has). */
 }
 .footer-gradient-border::before {
   content: '';
