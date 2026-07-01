@@ -175,7 +175,7 @@ function PlayerDetailPopup({
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 60, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-2xl bg-[#1a1a2e] border border-[#2a2a4a] shadow-2xl overflow-hidden"
+        className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-2xl bg-[#0d2d0d] border border-[#2a2a4a] shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with gradient */}
@@ -263,7 +263,7 @@ function PlayerDetailPopup({
             <div>
               <p className="text-xs text-[#94a3b8] mb-1.5">Рейтинг</p>
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-3 rounded-full bg-[#0a0a0f] overflow-hidden">
+                <div className="flex-1 h-3 rounded-full bg-[#0a1a0a] overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(player.rating, 99)}%` }}
@@ -301,7 +301,7 @@ function PlayerDetailPopup({
               Выбрать
             </motion.button>
           ) : (
-            <div className="w-full py-3 rounded-xl text-sm font-bold text-[#94a3b8] text-center bg-[#0a0a0f] border border-[#2a2a4a]">
+            <div className="w-full py-3 rounded-xl text-sm font-bold text-[#94a3b8] text-center bg-[#0a1a0a] border border-[#2a2a4a]">
               Недоступен для текущих позиций
             </div>
           )}
@@ -450,7 +450,7 @@ export default function PlayerList() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Поиск игрока..."
-          className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#1a1a2e] border border-[#1a1a2e] text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors search-focus-glow"
+          className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#0d2d0d] border border-[#0d2d0d] text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors search-focus-glow"
         />
       </div>
 
@@ -465,7 +465,7 @@ export default function PlayerList() {
               className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
                 filterCategory === key
                   ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
-                  : 'bg-[#1a1a2e] text-[#94a3b8] hover:text-[#e2e8f0]'
+                  : 'bg-[#0d2d0d] text-[#94a3b8] hover:text-[#e2e8f0]'
               }`}
             >
               {label}
@@ -538,8 +538,8 @@ export default function PlayerList() {
                   isSelected
                     ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-lg shadow-[#22c55e]/10 animate-green-pulse-ring'
                     : player.canFillAny
-                    ? 'bg-gradient-to-r from-[#1a1a2e] to-[#151528] border-2 border-transparent hover:border-[#22c55e]/30'
-                    : 'bg-[#1a1a2e]/30 border-2 border-transparent opacity-40'
+                    ? 'bg-gradient-to-r from-[#0d2d0d] to-[#0b240b] border-2 border-transparent hover:border-[#22c55e]/30'
+                    : 'bg-[#0d2d0d]/30 border-2 border-transparent opacity-40'
                 }`}
               >
                 {/* Avatar Circle with Initials */}
@@ -553,14 +553,14 @@ export default function PlayerList() {
                   {/* Rating badge overlapping bottom-right */}
                   {!isHard && (
                     <div
-                      className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-[#1a1a2e] shadow-md px-1 rating-badge-shine"
+                      className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white border-2 border-[#0d2d0d] shadow-md px-1 rating-badge-shine"
                       style={{ backgroundColor: getRatingBadgeColor(player.rating) }}
                     >
                       {player.rating}
                     </div>
                   )}
                   {isHard && (
-                    <div className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white bg-[#4a4a5a] border-2 border-[#1a1a2e] shadow-md">
+                    <div className="absolute -bottom-1 -right-1 min-w-[22px] h-[22px] rounded-full flex items-center justify-center text-[10px] font-black text-white bg-[#4a4a5a] border-2 border-[#0d2d0d] shadow-md">
                       ??
                     </div>
                   )}

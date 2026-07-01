@@ -84,13 +84,13 @@ export default function Footer() {
       icon: (
         <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <rect x="2" y="6" width="20" height="12" rx="2" />
-          <path d="M10 9l5 3-5 3V9z" fill="#0a0a0f" />
+          <path d="M10 9l5 3-5 3V9z" fill="#0a1a0a" />
         </svg>
       ),
       activeIcon: (
         <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <rect x="2" y="6" width="20" height="12" rx="2" />
-          <path d="M10 9l5 3-5 3V9z" fill="#0a0a0f" />
+          <path d="M10 9l5 3-5 3V9z" fill="#0a1a0a" />
         </svg>
       ),
     },
@@ -161,7 +161,7 @@ export default function Footer() {
         className="fixed bottom-0 left-0 right-0 z-50 sm:hidden footer-gradient-border"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="bg-[#0a0a0f]/95 backdrop-blur-md">
+        <div className="bg-[#0a1a0a]/95 backdrop-blur-md">
           <div className="flex items-center justify-around h-16">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -182,7 +182,7 @@ export default function Footer() {
                       className={`flex items-center justify-center rounded-2xl transition-all ${
                         isActive
                           ? 'bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/40 w-14 h-14'
-                          : 'bg-[#1a1a2e] text-[#94a3b8] w-12 h-12'
+                          : 'bg-[#0d2d0d] text-[#94a3b8] w-12 h-12'
                       }`}
                       animate={isActive ? {
                         boxShadow: [
@@ -223,7 +223,7 @@ export default function Footer() {
       </nav>
 
       {/* Desktop Footer — normal flow */}
-      <footer className="hidden sm:block w-full bg-[#0a0a0f] mt-auto footer-gradient-border">
+      <footer className="hidden sm:block w-full bg-[#0a1a0a] mt-auto footer-gradient-border">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Desktop nav links */}

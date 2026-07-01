@@ -314,7 +314,7 @@ export default function SpinWheel() {
                   <path
                     key={`ring-${i}`}
                     d={`M${p0.x.toFixed(2)} ${p0.y.toFixed(2)}A${RADIUS + 16} ${RADIUS + 16} 0 0 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}L${p2.x.toFixed(2)} ${p2.y.toFixed(2)}A${RADIUS + 8} ${RADIUS + 8} 0 0 0 ${p3.x.toFixed(2)} ${p3.y.toFixed(2)}Z`}
-                    fill={i % 2 === 0 ? '#FFD700' : '#1a1a2e'}
+                    fill={i % 2 === 0 ? '#FFD700' : '#0d2d0d'}
                     opacity={i % 2 === 0 ? 0.6 : 0.8}
                   />
                 );
@@ -336,7 +336,7 @@ export default function SpinWheel() {
                     <path
                       d={segPath(i)}
                       fill={seg.color}
-                      stroke="#0a0a0f"
+                      stroke="#0a1a0a"
                       strokeWidth="1.5"
                       style={isWinner ? { filter: 'url(#segGlow)' } : undefined}
                     />

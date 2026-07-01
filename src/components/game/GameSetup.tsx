@@ -379,7 +379,7 @@ export default function GameSetup() {
               className="w-full max-w-sm rounded-3xl p-6 text-center border-2 border-yellow-400/40"
               style={{
                 background:
-                  'linear-gradient(160deg, #1a1a2e 0%, #151528 100%)',
+                  'linear-gradient(160deg, #0d2d0d 0%, #0b240b 100%)',
                 boxShadow: '0 0 40px rgba(250, 204, 21, 0.3)',
               }}
             >
@@ -450,7 +450,7 @@ export default function GameSetup() {
             value={config.teamName || ''}
             onChange={(e) => setConfig({ teamName: e.target.value || undefined })}
             placeholder="Моя команда"
-            className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
+            className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#0d2d0d] border border-[#22c55e]/20 text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
           />
         </div>
       </div>
@@ -480,12 +480,12 @@ export default function GameSetup() {
                 className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 overflow-hidden relative ${
                   isSelected
                     ? 'border-[#22c55e]'
-                    : 'border-[#1a1a2e] hover:border-[#22c55e]/30'
+                    : 'border-[#0d2d0d] hover:border-[#22c55e]/30'
                 }`}
                 style={{
                   background: isSelected
-                    ? 'linear-gradient(135deg, #1a1a2e 0%, rgba(34, 197, 94, 0.12) 100%)'
-                    : 'linear-gradient(135deg, #1a1a2e 0%, #151528 100%)',
+                    ? 'linear-gradient(135deg, #0d2d0d 0%, rgba(34, 197, 94, 0.12) 100%)'
+                    : 'linear-gradient(135deg, #0d2d0d 0%, #0b240b 100%)',
                   boxShadow: isSelected
                     ? '0 0 20px rgba(34,197,94,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
                     : 'inset 0 1px 0 rgba(255,255,255,0.05)',
@@ -613,7 +613,7 @@ export default function GameSetup() {
                     : key === 'normal'
                     ? 'rgba(59, 130, 246, 0.05)'
                     : 'rgba(239, 68, 68, 0.05)',
-                  borderColor: isSelected ? meta.color : '#1a1a2e',
+                  borderColor: isSelected ? meta.color : '#0d2d0d',
                   boxShadow: isSelected
                     ? `0 4px 18px ${meta.glow}, inset 0 0 14px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.05)`
                     : 'inset 0 1px 0 rgba(255,255,255,0.05)',
@@ -667,7 +667,7 @@ export default function GameSetup() {
       </div>
 
       {/* Show Ratings Toggle (Hard mode) */}
-      <div className="flex items-center justify-between rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+      <div className="flex items-center justify-between rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
         <div>
           <div className="text-sm font-bold text-[#e2e8f0]">
             Показывать рейтинги
@@ -707,7 +707,7 @@ export default function GameSetup() {
               className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
                 config.draftMode === key
                   ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                  : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+                  : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
               }`}
             >
               <div
@@ -743,7 +743,7 @@ export default function GameSetup() {
               className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
                 config.ratingMode === key
                   ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                  : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+                  : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
               }`}
             >
               <div
@@ -773,7 +773,7 @@ export default function GameSetup() {
                 className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 ${
                   config.eraFilter === key
                     ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                    : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+                    : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
                 }`}
               >
                 <div
@@ -794,7 +794,7 @@ export default function GameSetup() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-2xl border border-[#22c55e]/30 bg-gradient-to-r from-[#1a1a2e] via-[#1a1a2e]/80 to-[#1a1a2e] p-3 overflow-x-auto"
+        className="rounded-2xl border border-[#22c55e]/30 bg-gradient-to-r from-[#0d2d0d] via-[#0d2d0d]/80 to-[#0d2d0d] p-3 overflow-x-auto"
       >
         <div className="flex items-center gap-2 sm:gap-3 min-w-max">
           <SummaryItem
@@ -924,7 +924,7 @@ function SummaryItem({
 }) {
   return (
     <div className="flex items-center gap-2 px-1">
-      <div className="pill-badge bg-gradient-to-r from-[#1a1a2e] to-[#151528] border border-[#22c55e]/10">
+      <div className="pill-badge bg-gradient-to-r from-[#0d2d0d] to-[#0b240b] border border-[#22c55e]/10">
         {color ? (
           <span
             className="w-2 h-2 rounded-full"

@@ -97,7 +97,7 @@ export default function SquadStats() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
-          className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e] card-glow"
+          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
         >
           <div className="text-4xl font-black text-[#e2e8f0]">{overall}</div>
           <div className="text-sm text-[#94a3b8] mt-1">Общий рейтинг</div>
@@ -108,7 +108,7 @@ export default function SquadStats() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-          className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e] card-glow"
+          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
         >
           {/* Chemistry ring */}
           <div className="relative w-16 h-16 mx-auto">
@@ -116,7 +116,7 @@ export default function SquadStats() {
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#1a1a2e"
+                stroke="#0d2d0d"
                 strokeWidth="3"
               />
               <path
@@ -143,7 +143,7 @@ export default function SquadStats() {
       </div>
 
       {/* Category Ratings with animated bars */}
-      <div className="rounded-2xl bg-[#1a1a2e] p-4 space-y-3 border border-[#1a1a2e]">
+      <div className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]">
         <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Рейтинг по линиям</h4>
         {categories.map((cat, i) => (
           <motion.div
@@ -164,7 +164,7 @@ export default function SquadStats() {
                 {categoryRatings[cat].avg || '—'}
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-[#0a0a0f] overflow-hidden">
+            <div className="h-2.5 rounded-full bg-[#0a1a0a] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max((categoryRatings[cat].avg / 100) * 100, 0)}%` }}
@@ -178,7 +178,7 @@ export default function SquadStats() {
       </div>
 
       {/* Player list summary */}
-      <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+      <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
         <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Состав</h4>
         <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
           {slots.filter(s => s.playerId).map((slot, i) => (
@@ -187,7 +187,7 @@ export default function SquadStats() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[#0a0a0f]/30 transition-colors"
+              className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[#0a1a0a]/30 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">

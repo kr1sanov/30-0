@@ -77,7 +77,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-[#1a1a2e]/80 bg-[#0a0a0f]/90 backdrop-blur-md">
+      <header className="sticky top-0 z-50 w-full border-b border-[#1a3a1a]/80 bg-[#0a1a0a]/90 backdrop-blur-md">
         <div className="max-w-4xl mx-auto flex items-center justify-between h-14 px-4">
           {/* Logo */}
           <button
@@ -114,7 +114,7 @@ export default function Header() {
 
             <button
               onClick={() => useGameStore.getState().setScreen('profile')}
-              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#1a1a2e] transition-all"
+              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#0d2d0d] transition-all"
             >
               <span className="hidden sm:inline">Профиль</span>
               <span className="sm:hidden">👤</span>
@@ -122,7 +122,7 @@ export default function Header() {
 
             <button
               onClick={() => useGameStore.getState().loadLeaderboard()}
-              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#1a1a2e] transition-all"
+              className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#0d2d0d] transition-all"
             >
               <span className="hidden sm:inline">Лидерборд</span>
               <span className="sm:hidden">🏆</span>

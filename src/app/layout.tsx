@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0a0f",
+  themeColor: "#0a1a0a",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -41,7 +41,7 @@ export default function RootLayout({
         <script src="https://telegram.org/js/telegram-web-app.js" async />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a0a0f] text-[#e2e8f0]`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0a1a0a] text-[#e2e8f0]`}
       >
         {children}
         <Toaster />
@@ -53,7 +53,7 @@ export default function RootLayout({
           toastOptions={{
             duration: 2500,
             style: {
-              background: '#1a1a2e',
+              background: '#0d2d0d',
               border: '1px solid #2a2a4e',
               color: '#e2e8f0',
             },

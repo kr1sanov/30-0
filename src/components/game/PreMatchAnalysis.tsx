@@ -301,7 +301,7 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]"
+        className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]"
       >
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-[#e2e8f0]">Расстановка</h3>
@@ -347,7 +347,7 @@ export default function PreMatchAnalysis() {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold border-2"
                   style={{
-                    backgroundColor: hasPlayer ? `${color}30` : '#0a0a0f50',
+                    backgroundColor: hasPlayer ? `${color}30` : '#0a1a0a50',
                     borderColor: hasPlayer ? color : '#ffffff20',
                     color: hasPlayer ? '#fff' : '#ffffff40',
                   }}
@@ -374,7 +374,7 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-          className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
         >
           <div className="text-4xl font-black text-[#e2e8f0]">{animatedOverall}</div>
           <div className="text-sm text-[#94a3b8] mt-1">Общий рейтинг</div>
@@ -385,14 +385,14 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
-          className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
         >
           <div className="relative w-14 h-14 mx-auto">
             <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#1a1a2e"
+                stroke="#0d2d0d"
                 strokeWidth="3"
               />
               <path
@@ -420,7 +420,7 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-2xl bg-[#1a1a2e] p-4 space-y-3 border border-[#1a1a2e]"
+        className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]"
       >
         <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Рейтинг по линиям</h4>
         {(['gk', 'def', 'mid', 'att'] as PositionCategory[]).map((cat, i) => (
@@ -442,7 +442,7 @@ export default function PreMatchAnalysis() {
                 {animatedCategoryAvgs[cat] || '—'}
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-[#0a0a0f] overflow-hidden">
+            <div className="h-2.5 rounded-full bg-[#0a1a0a] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max((stats.categoryRatings[cat].avg / 100) * 100, 0)}%` }}
@@ -489,7 +489,7 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e]"
+        className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
       >
         <div className="text-xs text-[#94a3b8] uppercase tracking-wider mb-2">Прогноз на сезон</div>
         <div className="text-3xl mb-2">{prediction.emoji}</div>
@@ -510,7 +510,7 @@ export default function PreMatchAnalysis() {
           className="space-y-3"
         >
           {stats.strengths.length > 0 && (
-            <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#22c55e]/20">
+            <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#22c55e]/20">
               <h4 className="text-xs font-bold text-[#22c55e] uppercase tracking-wider mb-2">
                 ✅ Сильные стороны
               </h4>
@@ -531,7 +531,7 @@ export default function PreMatchAnalysis() {
           )}
 
           {stats.weaknesses.length > 0 && (
-            <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#ef4444]/20">
+            <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#ef4444]/20">
               <h4 className="text-xs font-bold text-[#ef4444] uppercase tracking-wider mb-2">
                 ⚠️ Зоны риска
               </h4>

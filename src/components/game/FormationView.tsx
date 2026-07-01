@@ -347,7 +347,7 @@ export default function FormationView() {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-3 px-3 py-2 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
+          className="mb-3 px-3 py-2 rounded-xl bg-[#0d2d0d] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
         >
           <span className="text-xs text-[#94a3b8] shrink-0">Совместимые позиции:</span>
           <div className="flex gap-1.5 flex-wrap">
@@ -367,7 +367,7 @@ export default function FormationView() {
       <motion.div
         initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#0a0a0f]/80 to-[#1a1a2e] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
+        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#0a1a0a]/80 to-[#0d2d0d] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
       >
         {/* Formation name + icon */}
         <div className="flex items-center gap-1.5 shrink-0">

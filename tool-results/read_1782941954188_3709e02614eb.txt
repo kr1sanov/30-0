@@ -1,0 +1,955 @@
+     1→'use client';
+     2→
+     3→import { useState, useCallback } from 'react';
+     4→import { useGameStore } from '@/store/gameStore';
+     5→import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
+     6→import {
+     7→  DIFFICULTY_CONFIG,
+     8→  ERA_CONFIG,
+     9→  DRAFT_MODE_CONFIG,
+    10→  RATING_MODE_CONFIG,
+    11→} from '@/lib/types';
+    12→import type { Difficulty, EraFilter, GameConfig } from '@/lib/types';
+    13→import type { Position, PositionCategory } from '@/lib/positions';
+    14→import { Button } from '@/components/ui/button';
+    15→import { Switch } from '@/components/ui/switch';
+    16→import {
+    17→  Tooltip,
+    18→  TooltipContent,
+    19→  TooltipTrigger,
+    20→} from '@/components/ui/tooltip';
+    21→import { motion, AnimatePresence } from 'framer-motion';
+    22→
+    23→/* ─── Mini pitch dot layout for formation preview ─── */
+    24→const MINI_LAYOUTS: Record<string, { row: number; col: number }[]> = {
+    25→  '4-3-3': [
+    26→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    27→    { row: 42, col: 25 }, { row: 42, col: 50 }, { row: 42, col: 75 },
+    28→    { row: 18, col: 18 }, { row: 18, col: 50 }, { row: 18, col: 82 },
+    29→  ],
+    30→  '4-4-2': [
+    31→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    32→    { row: 38, col: 18 }, { row: 38, col: 38 }, { row: 38, col: 62 }, { row: 38, col: 82 },
+    33→    { row: 16, col: 35 }, { row: 16, col: 65 },
+    34→  ],
+    35→  '4-2-3-1': [
+    36→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    37→    { row: 48, col: 35 }, { row: 48, col: 65 },
+    38→    { row: 30, col: 18 }, { row: 30, col: 50 }, { row: 30, col: 82 },
+    39→    { row: 14, col: 50 },
+    40→  ],
+    41→  '3-5-2': [
+    42→    { row: 85, col: 50 }, { row: 65, col: 25 }, { row: 65, col: 50 }, { row: 65, col: 75 },
+    43→    { row: 42, col: 10 }, { row: 42, col: 30 }, { row: 42, col: 50 }, { row: 42, col: 70 }, { row: 42, col: 90 },
+    44→    { row: 18, col: 35 }, { row: 18, col: 65 },
+    45→  ],
+    46→  '3-4-3': [
+    47→    { row: 85, col: 50 }, { row: 65, col: 25 }, { row: 65, col: 50 }, { row: 65, col: 75 },
+    48→    { row: 38, col: 18 }, { row: 38, col: 38 }, { row: 38, col: 62 }, { row: 38, col: 82 },
+    49→    { row: 16, col: 18 }, { row: 16, col: 50 }, { row: 16, col: 82 },
+    50→  ],
+    51→  '5-3-2': [
+    52→    { row: 85, col: 50 }, { row: 65, col: 10 }, { row: 65, col: 30 }, { row: 65, col: 50 }, { row: 65, col: 70 }, { row: 65, col: 90 },
+    53→    { row: 38, col: 25 }, { row: 38, col: 50 }, { row: 38, col: 75 },
+    54→    { row: 16, col: 35 }, { row: 16, col: 65 },
+    55→  ],
+    56→  '5-4-1': [
+    57→    { row: 85, col: 50 }, { row: 65, col: 10 }, { row: 65, col: 30 }, { row: 65, col: 50 }, { row: 65, col: 70 }, { row: 65, col: 90 },
+    58→    { row: 38, col: 15 }, { row: 38, col: 38 }, { row: 38, col: 62 }, { row: 38, col: 85 },
+    59→    { row: 14, col: 50 },
+    60→  ],
+    61→  '4-1-4-1': [
+    62→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    63→    { row: 48, col: 50 },
+    64→    { row: 30, col: 15 }, { row: 30, col: 38 }, { row: 30, col: 62 }, { row: 30, col: 85 },
+    65→    { row: 14, col: 50 },
+    66→  ],
+    67→  '4-5-1': [
+    68→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    69→    { row: 38, col: 10 }, { row: 38, col: 30 }, { row: 38, col: 50 }, { row: 38, col: 70 }, { row: 38, col: 90 },
+    70→    { row: 14, col: 50 },
+    71→  ],
+    72→  '4-4-1-1': [
+    73→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    74→    { row: 42, col: 18 }, { row: 42, col: 38 }, { row: 42, col: 62 }, { row: 42, col: 82 },
+    75→    { row: 24, col: 50 }, { row: 10, col: 50 },
+    76→  ],
+    77→  '3-4-1-2': [
+    78→    { row: 85, col: 50 }, { row: 65, col: 25 }, { row: 65, col: 50 }, { row: 65, col: 75 },
+    79→    { row: 42, col: 15 }, { row: 42, col: 38 }, { row: 42, col: 62 }, { row: 42, col: 85 },
+    80→    { row: 24, col: 50 }, { row: 10, col: 35 }, { row: 10, col: 65 },
+    81→  ],
+    82→  '4-2-2-2': [
+    83→    { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
+    84→    { row: 45, col: 30 }, { row: 45, col: 70 },
+    85→    { row: 28, col: 30 }, { row: 28, col: 70 },
+    86→    { row: 12, col: 35 }, { row: 12, col: 65 },
+    87→  ],
+    88→};
+    89→
+    90→function getCategoryColor(pos: string): string {
+    91→  const cat = POSITION_CATEGORY[pos as Position] ?? ('mid' as PositionCategory);
+    92→  switch (cat) {
+    93→    case 'gk': return '#f97316';
+    94→    case 'def': return '#3b82f6';
+    95→    case 'mid': return '#22c55e';
+    96→    case 'att': return '#ef4444';
+    97→  }
+    98→}
+    99→
+   100→/* ─── Formation type classification ─── */
+   101→type FormationType = 'attack' | 'defensive' | 'balanced' | 'midfield';
+   102→
+   103→const FORMATION_TYPE: Record<string, FormationType> = {
+   104→  '4-3-3': 'attack',
+   105→  '3-4-3': 'attack',
+   106→  '4-2-3-1': 'attack',
+   107→  '5-3-2': 'defensive',
+   108→  '5-4-1': 'defensive',
+   109→  '4-4-2': 'balanced',
+   110→  '4-2-2-2': 'balanced',
+   111→  '3-5-2': 'balanced',
+   112→  '4-4-1-1': 'balanced',
+   113→  '4-5-1': 'midfield',
+   114→  '4-1-4-1': 'midfield',
+   115→  '3-4-1-2': 'midfield',
+   116→};
+   117→
+   118→const FORMATION_TYPE_BADGE: Record<
+   119→  FormationType,
+   120→  { icon: string; label: string; color: string }
+   121→> = {
+   122→  attack: { icon: '⚔️', label: 'Атака', color: '#ef4444' },
+   123→  defensive: { icon: '🛡️', label: 'Оборона', color: '#3b82f6' },
+   124→  balanced: { icon: '⚖️', label: 'Баланс', color: '#22c55e' },
+   125→  midfield: { icon: '🎯', label: 'Полузащита', color: '#a855f7' },
+   126→};
+   127→
+   128→/* ─── Difficulty metadata for the enhanced cards ─── */
+   129→const DIFFICULTY_META: Record<
+   130→  Difficulty,
+   131→  { icon: string; flavor: string; color: string; glow: string }
+   132→> = {
+   133→  easy: {
+   134→    icon: '🌱',
+   135→    flavor: 'Идеально для новичков',
+   136→    color: '#22c55e',
+   137→    glow: 'rgba(34, 197, 94, 0.45)',
+   138→  },
+   139→  normal: {
+   140→    icon: '⚖️',
+   141→    flavor: 'Баланс риска и награды',
+   142→    color: '#f59e0b',
+   143→    glow: 'rgba(245, 158, 11, 0.45)',
+   144→  },
+   145→  hard: {
+   146→    icon: '🔥',
+   147→    flavor: 'Только для экспертов',
+   148→    color: '#ef4444',
+   149→    glow: 'rgba(239, 68, 68, 0.45)',
+   150→  },
+   151→};
+   152→
+   153→/* ─── Enhanced mini pitch with gradient + formation name overlay ─── */
+   154→function MiniPitch({ formationId }: { formationId: string }) {
+   155→  const layout = MINI_LAYOUTS[formationId] ?? MINI_LAYOUTS['4-3-3'];
+   156→  const formation = FORMATIONS.find((f) => f.id === formationId);
+   157→
+   158→  return (
+   159→    <div
+   160→      className="relative w-full rounded-lg overflow-hidden"
+   161→      style={{ paddingBottom: '70%' }}
+   162→    >
+   163→      {/* Field gradient base */}
+   164→      <div
+   165→        className="absolute inset-0"
+   166→        style={{
+   167→          background:
+   168→            'linear-gradient(180deg, #1f6e3a 0%, #1a5c30 50%, #175228 100%)',
+   169→        }}
+   170→      />
+   171→      {/* Pitch stripes */}
+   172→      <div
+   173→        className="absolute inset-0 opacity-70"
+   174→        style={{
+   175→          background:
+   176→            'repeating-linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 7px, rgba(0,0,0,0.12) 7px, rgba(0,0,0,0.12) 14px)',
+   177→        }}
+   178→      />
+   179→      {/* Subtle vignette */}
+   180→      <div
+   181→        className="absolute inset-0"
+   182→        style={{
+   183→          background:
+   184→            'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.25) 100%)',
+   185→        }}
+   186→      />
+   187→      {/* Center line */}
+   188→      <div className="absolute inset-x-0 top-1/2 h-px bg-white/20" />
+   189→      {/* Center circle */}
+   190→      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/25" />
+   191→      {/* Penalty box hint */}
+   192→      <div className="absolute inset-x-[30%] top-0 h-3 border-x border-b border-white/15" />
+   193→
+   194→      {/* Player dots with category colors */}
+   195→      {layout.map((pos, i) => {
+   196→        const slotPosition = formation?.slots[i]?.position;
+   197→        const color = slotPosition ? getCategoryColor(slotPosition) : '#94a3b8';
+   198→        return (
+   199→          <div
+   200→            key={i}
+   201→            className="absolute w-2.5 h-2.5 rounded-full"
+   202→            style={{
+   203→              top: `${pos.row}%`,
+   204→              left: `${pos.col}%`,
+   205→              transform: 'translate(-50%, -50%)',
+   206→              backgroundColor: color,
+   207→              boxShadow: `0 0 5px ${color}, 0 0 2px rgba(0,0,0,0.4)`,
+   208→              border: '1px solid rgba(255,255,255,0.5)',
+   209→            }}
+   210→          />
+   211→        );
+   212→      })}
+   213→
+   214→      {/* Formation name overlaid at bottom */}
+   215→      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1">
+   216→        <div className="text-center text-[10px] font-black text-white tracking-wide drop-shadow">
+   217→          {formationId}
+   218→        </div>
+   219→      </div>
+   220→    </div>
+   221→  );
+   222→}
+   223→
+   224→/* ─── Position legend dot ─── */
+   225→function LegendDot({ color, label }: { color: string; label: string }) {
+   226→  return (
+   227→    <div className="flex items-center gap-1">
+   228→      <div
+   229→        className="w-1.5 h-1.5 rounded-full"
+   230→        style={{ backgroundColor: color, boxShadow: `0 0 4px ${color}` }}
+   231→      />
+   232→      <span className="text-[9px] text-[#94a3b8]">{label}</span>
+   233→    </div>
+   234→  );
+   235→}
+   236→
+   237→export default function GameSetup() {
+   238→  const { config, setConfig, startRun } = useGameStore();
+   239→
+   240→  const [justSelectedFormation, setJustSelectedFormation] = useState<string | null>(null);
+   241→  const [quickPickPreview, setQuickPickPreview] = useState<GameConfig | null>(null);
+   242→  const [isQuickPicking, setIsQuickPicking] = useState(false);
+   243→
+   244→  const handleStart = async () => {
+   245→    await startRun();
+   246→  };
+   247→
+   248→  const handleFormationSelect = (formationId: string) => {
+   249→    setConfig({ formation: formationId });
+   250→    setJustSelectedFormation(formationId);
+   251→    window.setTimeout(() => {
+   252→      setJustSelectedFormation((cur) => (cur === formationId ? null : cur));
+   253→    }, 1400);
+   254→  };
+   255→
+   256→  /* ─── Quick Pick: random formation + weighted difficulty + random era ─── */
+   257→  const handleQuickPick = useCallback(async () => {
+   258→    if (isQuickPicking) return;
+   259→    setIsQuickPicking(true);
+   260→
+   261→    const randomFormation =
+   262→      FORMATIONS[Math.floor(Math.random() * FORMATIONS.length)].id;
+   263→
+   264→    // Weighted difficulty: 50% normal, 30% easy, 20% hard
+   265→    const rand = Math.random();
+   266→    let difficulty: Difficulty;
+   267→    if (rand < 0.5) difficulty = 'normal';
+   268→    else if (rand < 0.8) difficulty = 'easy';
+   269→    else difficulty = 'hard';
+   270→
+   271→    const eraKeys = Object.keys(ERA_CONFIG) as EraFilter[];
+   272→    const randomEra = eraKeys[Math.floor(Math.random() * eraKeys.length)];
+   273→
+   274→    const newConfig: GameConfig = {
+   275→      ...config,
+   276→      formation: randomFormation,
+   277→      difficulty,
+   278→      eraFilter: randomEra,
+   279→    };
+   280→
+   281→    setConfig({
+   282→      formation: randomFormation,
+   283→      difficulty,
+   284→      eraFilter: randomEra,
+   285→    });
+   286→
+   287→    // Show preview animation
+   288→    setQuickPickPreview(newConfig);
+   289→
+   290→    // Brief confirmation delay so user can see the random picks
+   291→    await new Promise((resolve) => setTimeout(resolve, 1600));
+   292→    setQuickPickPreview(null);
+   293→
+   294→    await startRun();
+   295→    setIsQuickPicking(false);
+   296→  }, [config, isQuickPicking, setConfig, startRun]);
+   297→
+   298→  const selectedFormation = FORMATIONS.find((f) => f.id === config.formation);
+   299→  const selectedDifficultyMeta = DIFFICULTY_META[config.difficulty];
+   300→
+   301→  return (
+   302→    <div className="space-y-8 animate-fade-in-up relative">
+   303→      {/* ─── Quick Start (Быстрый старт) ─── */}
+   304→      <Tooltip>
+   305→        <TooltipTrigger asChild>
+   306→          <motion.button
+   307→            type="button"
+   308→            onClick={handleQuickPick}
+   309→            disabled={isQuickPicking}
+   310→            whileTap={{ scale: 0.97 }}
+   311→            whileHover={{ scale: 1.01 }}
+   312→            className="w-full h-14 rounded-2xl font-black text-white text-lg flex items-center justify-center gap-2 relative overflow-hidden shadow-lg disabled:opacity-80 disabled:cursor-wait"
+   313→            style={{
+   314→              background:
+   315→                'linear-gradient(135deg, #facc15 0%, #f59e0b 50%, #f97316 100%)',
+   316→              boxShadow:
+   317→                '0 4px 20px rgba(245, 158, 11, 0.4), 0 0 0 1px rgba(255,255,255,0.1) inset',
+   318→            }}
+   319→          >
+   320→            {/* Animated shimmer sweep */}
+   321→            <motion.div
+   322→              className="absolute inset-0 pointer-events-none"
+   323→              style={{
+   324→                background:
+   325→                  'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.35) 50%, transparent 70%)',
+   326→                backgroundSize: '200% 100%',
+   327→              }}
+   328→              animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+   329→              transition={{
+   330→                duration: 2.2,
+   331→                repeat: Infinity,
+   332→                ease: 'linear',
+   333→              }}
+   334→            />
+   335→            {/* Pulsing attention ring */}
+   336→            <motion.div
+   337→              className="absolute inset-0 rounded-2xl pointer-events-none"
+   338→              animate={{
+   339→                boxShadow: [
+   340→                  '0 0 0 0 rgba(250, 204, 21, 0.55)',
+   341→                  '0 0 0 8px rgba(250, 204, 21, 0)',
+   342→                ],
+   343→              }}
+   344→              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+   345→            />
+   346→            <motion.span
+   347→              className="relative z-10 text-2xl"
+   348→              animate={{ rotate: [0, -12, 12, -12, 0], scale: [1, 1.15, 1] }}
+   349→              transition={{ duration: 1.4, repeat: Infinity, repeatDelay: 0.4 }}
+   350→            >
+   351→              ⚡
+   352→            </motion.span>
+   353→            <span className="relative z-10 drop-shadow">
+   354→              {isQuickPicking ? 'Запуск...' : 'Быстрый старт'}
+   355→            </span>
+   356→          </motion.button>
+   357→        </TooltipTrigger>
+   358→        <TooltipContent side="bottom">
+   359→          Случайные настройки для быстрой игры
+   360→        </TooltipContent>
+   361→      </Tooltip>
+   362→
+   363→      {/* ─── Quick Pick confirmation overlay ─── */}
+   364→      <AnimatePresence>
+   365→        {quickPickPreview && (
+   366→          <motion.div
+   367→            key="quickpick-overlay"
+   368→            initial={{ opacity: 0 }}
+   369→            animate={{ opacity: 1 }}
+   370→            exit={{ opacity: 0 }}
+   371→            transition={{ duration: 0.2 }}
+   372→            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+   373→          >
+   374→            <motion.div
+   375→              initial={{ scale: 0.85, y: 20 }}
+   376→              animate={{ scale: 1, y: 0 }}
+   377→              exit={{ scale: 0.9, opacity: 0 }}
+   378→              transition={{ type: 'spring', damping: 18, stiffness: 280 }}
+   379→              className="w-full max-w-sm rounded-3xl p-6 text-center border-2 border-yellow-400/40"
+   380→              style={{
+   381→                background:
+   382→                  'linear-gradient(160deg, #1a1a2e 0%, #151528 100%)',
+   383→                boxShadow: '0 0 40px rgba(250, 204, 21, 0.3)',
+   384→              }}
+   385→            >
+   386→              <motion.div
+   387→                className="text-4xl mb-2"
+   388→                initial={{ rotate: 0 }}
+   389→                animate={{ rotate: 360 }}
+   390→                transition={{ duration: 0.6 }}
+   391→              >
+   392→                ⚡
+   393→              </motion.div>
+   394→              <div className="text-lg font-black text-yellow-300 mb-4">
+   395→                Случайный выбор!
+   396→              </div>
+   397→
+   398→              <div className="space-y-2 text-left">
+   399→                <PreviewRow
+   400→                  icon="⚽"
+   401→                  label="Формация"
+   402→                  value={quickPickPreview.formation}
+   403→                />
+   404→                <PreviewRow
+   405→                  icon={DIFFICULTY_META[quickPickPreview.difficulty].icon}
+   406→                  label="Сложность"
+   407→                  value={DIFFICULTY_CONFIG[quickPickPreview.difficulty].label}
+   408→                  accent={DIFFICULTY_META[quickPickPreview.difficulty].color}
+   409→                />
+   410→                <PreviewRow
+   411→                  icon="📅"
+   412→                  label="Эпоха"
+   413→                  value={ERA_CONFIG[quickPickPreview.eraFilter].label}
+   414→                />
+   415→              </div>
+   416→
+   417→              <motion.div
+   418→                className="mt-4 text-xs text-[#94a3b8]"
+   419→                initial={{ opacity: 0 }}
+   420→                animate={{ opacity: 1 }}
+   421→                transition={{ delay: 0.4 }}
+   422→              >
+   423→                Запуск драфта...
+   424→              </motion.div>
+   425→            </motion.div>
+   426→          </motion.div>
+   427→        )}
+   428→      </AnimatePresence>
+   429→
+   430→      {/* Header */}
+   431→      <div className="text-center">
+   432→        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0] section-accent-line inline-block">
+   433→          Настройка игры
+   434→        </h2>
+   435→        <p className="text-sm text-[#94a3b8] mt-1">
+   436→          Выберите формацию и параметры драфта
+   437→        </p>
+   438→      </div>
+   439→
+   440→      {/* ─── Team Name ─── */}
+   441→      <div>
+   442→        <label className="text-sm font-bold text-[#e2e8f0] mb-2 block">
+   443→          Название команды
+   444→        </label>
+   445→        <div className="relative">
+   446→          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base">⚽</span>
+   447→          <input
+   448→            type="text"
+   449→            maxLength={24}
+   450→            value={config.teamName || ''}
+   451→            onChange={(e) => setConfig({ teamName: e.target.value || undefined })}
+   452→            placeholder="Моя команда"
+   453→            className="w-full h-12 pl-10 pr-4 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
+   454→          />
+   455→        </div>
+   456→      </div>
+   457→
+   458→      {/* ─── Formation Selector ─── */}
+   459→      <div>
+   460→        <div className="flex items-center justify-between mb-3">
+   461→          <h3 className="text-lg font-bold text-[#e2e8f0] section-accent-line">Формация</h3>
+   462→          {/* Legend */}
+   463→          <div className="hidden sm:flex items-center gap-3">
+   464→            <LegendDot color="#f97316" label="ВР" />
+   465→            <LegendDot color="#3b82f6" label="ЗЩ" />
+   466→            <LegendDot color="#22c55e" label="ПЗ" />
+   467→            <LegendDot color="#ef4444" label="НП" />
+   468→          </div>
+   469→        </div>
+   470→        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+   471→          {FORMATIONS.map((f) => {
+   472→            const isSelected = config.formation === f.id;
+   473→            const fType = FORMATION_TYPE[f.id] ?? 'balanced';
+   474→            const badge = FORMATION_TYPE_BADGE[fType];
+   475→            const showSelectedLabel = justSelectedFormation === f.id;
+   476→            return (
+   477→              <motion.button
+   478→                key={f.id}
+   479→                onClick={() => handleFormationSelect(f.id)}
+   480→                className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 overflow-hidden relative ${
+   481→                  isSelected
+   482→                    ? 'border-[#22c55e]'
+   483→                    : 'border-[#1a1a2e] hover:border-[#22c55e]/30'
+   484→                }`}
+   485→                style={{
+   486→                  background: isSelected
+   487→                    ? 'linear-gradient(135deg, #1a1a2e 0%, rgba(34, 197, 94, 0.12) 100%)'
+   488→                    : 'linear-gradient(135deg, #1a1a2e 0%, #151528 100%)',
+   489→                  boxShadow: isSelected
+   490→                    ? '0 0 20px rgba(34,197,94,0.3), inset 0 1px 0 rgba(255,255,255,0.05)'
+   491→                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+   492→                }}
+   493→                whileTap={{ scale: 0.97 }}
+   494→              >
+   495→                {/* Pulsing glow on selected */}
+   496→                {isSelected && (
+   497→                  <motion.div
+   498→                    className="absolute inset-0 pointer-events-none rounded-2xl"
+   499→                    animate={{
+   500→                      boxShadow: [
+   501→                        'inset 0 0 14px rgba(34,197,94,0.15), 0 0 12px rgba(34,197,94,0.25)',
+   502→                        'inset 0 0 22px rgba(34,197,94,0.3), 0 0 22px rgba(34,197,94,0.5)',
+   503→                        'inset 0 0 14px rgba(34,197,94,0.15), 0 0 12px rgba(34,197,94,0.25)',
+   504→                      ],
+   505→                    }}
+   506→                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+   507→                  />
+   508→                )}
+   509→
+   510→                {/* Green checkmark in top-right when selected */}
+   511→                <AnimatePresence>
+   512→                  {isSelected && (
+   513→                    <motion.div
+   514→                      key="check"
+   515→                      initial={{ scale: 0, rotate: -90, opacity: 0 }}
+   516→                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
+   517→                      exit={{ scale: 0, opacity: 0 }}
+   518→                      transition={{ type: 'spring', damping: 14, stiffness: 320 }}
+   519→                      className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center shadow-md shadow-[#22c55e]/40"
+   520→                    >
+   521→                      <svg
+   522→                        viewBox="0 0 24 24"
+   523→                        fill="none"
+   524→                        className="w-3 h-3 text-white"
+   525→                        stroke="currentColor"
+   526→                        strokeWidth={4}
+   527→                        strokeLinecap="round"
+   528→                        strokeLinejoin="round"
+   529→                      >
+   530→                        <polyline points="20 6 9 17 4 12" />
+   531→                      </svg>
+   532→                    </motion.div>
+   533→                  )}
+   534→                </AnimatePresence>
+   535→
+   536→                {/* Formation type badge in top-left */}
+   537→                <div
+   538→                  className="absolute top-1.5 left-1.5 z-10 px-1.5 py-0.5 rounded-md text-[9px] font-bold flex items-center gap-0.5"
+   539→                  style={{
+   540→                    backgroundColor: `${badge.color}22`,
+   541→                    color: badge.color,
+   542→                    border: `1px solid ${badge.color}55`,
+   543→                  }}
+   544→                >
+   545→                  <span className="text-[10px] leading-none">{badge.icon}</span>
+   546→                </div>
+   547→
+   548→                <MiniPitch formationId={f.id} />
+   549→                <div
+   550→                  className={`text-sm font-bold mt-2 ${
+   551→                    isSelected ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+   552→                  }`}
+   553→                >
+   554→                  {f.name}
+   555→                </div>
+   556→                <div className="text-[10px] text-[#94a3b8] mt-0.5 leading-tight">
+   557→                  {f.description}
+   558→                </div>
+   559→
+   560→                {/* "Выбрано" label briefly appears */}
+   561→                <AnimatePresence>
+   562→                  {showSelectedLabel && (
+   563→                    <motion.div
+   564→                      key="selected-label"
+   565→                      initial={{ opacity: 0, y: 6, scale: 0.9 }}
+   566→                      animate={{ opacity: 1, y: 0, scale: 1 }}
+   567→                      exit={{ opacity: 0, scale: 0.95 }}
+   568→                      transition={{ duration: 0.25 }}
+   569→                      className="absolute inset-x-0 bottom-0 z-20 bg-[#22c55e] text-white text-[10px] font-black py-1 rounded-b-2xl shadow-lg"
+   570→                    >
+   571→                      ✓ Выбрано
+   572→                    </motion.div>
+   573→                  )}
+   574→                </AnimatePresence>
+   575→              </motion.button>
+   576→            );
+   577→          })}
+   578→        </div>
+   579→
+   580→        {/* Mobile legend */}
+   581→        <div className="sm:hidden flex items-center justify-center gap-3 mt-3">
+   582→          <LegendDot color="#f97316" label="ВР" />
+   583→          <LegendDot color="#3b82f6" label="ЗЩ" />
+   584→          <LegendDot color="#22c55e" label="ПЗ" />
+   585→          <LegendDot color="#ef4444" label="НП" />
+   586→        </div>
+   587→      </div>
+   588→
+   589→      {/* ─── Difficulty Selector ─── */}
+   590→      <div>
+   591→        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Сложность</h3>
+   592→        <div className="grid grid-cols-3 gap-3">
+   593→          {(
+   594→            Object.entries(DIFFICULTY_CONFIG) as [
+   595→              Difficulty,
+   596→              (typeof DIFFICULTY_CONFIG)[Difficulty],
+   597→            ][]
+   598→          ).map(([key, val]) => {
+   599→            const isSelected = config.difficulty === key;
+   600→            const meta = DIFFICULTY_META[key];
+   601→            return (
+   602→              <motion.button
+   603→                key={key}
+   604→                onClick={() => setConfig({ difficulty: key })}
+   605→                whileTap={{ scale: 0.97 }}
+   606→                whileHover={{ scale: isSelected ? 1.0 : 1.02 }}
+   607→                className="rounded-2xl p-4 text-center transition-all duration-200 border-2 relative overflow-hidden"
+   608→                style={{
+   609→                  background: isSelected
+   610→                    ? `linear-gradient(160deg, ${meta.color}22 0%, ${meta.color}08 100%)`
+   611→                    : key === 'easy'
+   612→                    ? 'rgba(34, 197, 94, 0.05)'
+   613→                    : key === 'normal'
+   614→                    ? 'rgba(59, 130, 246, 0.05)'
+   615→                    : 'rgba(239, 68, 68, 0.05)',
+   616→                  borderColor: isSelected ? meta.color : '#1a1a2e',
+   617→                  boxShadow: isSelected
+   618→                    ? `0 4px 18px ${meta.glow}, inset 0 0 14px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.05)`
+   619→                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+   620→                }}
+   621→              >
+   622→                {/* Big icon */}
+   623→                <motion.div
+   624→                  className="text-2xl mb-1"
+   625→                  animate={
+   626→                    isSelected
+   627→                      ? { scale: [1, 1.15, 1] }
+   628→                      : { scale: 1 }
+   629→                  }
+   630→                  transition={{ duration: 1.6, repeat: isSelected ? Infinity : 0 }}
+   631→                >
+   632→                  {meta.icon}
+   633→                </motion.div>
+   634→                <div
+   635→                  className="text-sm font-black"
+   636→                  style={{ color: isSelected ? meta.color : '#e2e8f0' }}
+   637→                >
+   638→                  {val.label}
+   639→                </div>
+   640→                <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">
+   641→                  {meta.flavor}
+   642→                </div>
+   643→                <div
+   644→                  className="text-[10px] mt-1.5 font-semibold"
+   645→                  style={{ color: isSelected ? meta.color : '#94a3b8' }}
+   646→                >
+   647→                  ♻️ {val.rerolls} переброс(ов)
+   648→                </div>
+   649→                <div className="text-[9px] text-[#94a3b8]/70 mt-0.5">
+   650→                  {val.showRatings ? '👁 Рейтинги видны' : '🚫 Рейтинги скрыты'}
+   651→                </div>
+   652→
+   653→                {/* Selected indicator strip */}
+   654→                {isSelected && (
+   655→                  <motion.div
+   656→                    layoutId="difficulty-strip"
+   657→                    className="absolute inset-x-0 bottom-0 h-1"
+   658→                    style={{
+   659→                      background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
+   660→                    }}
+   661→                  />
+   662→                )}
+   663→              </motion.button>
+   664→            );
+   665→          })}
+   666→        </div>
+   667→      </div>
+   668→
+   669→      {/* Show Ratings Toggle (Hard mode) */}
+   670→      <div className="flex items-center justify-between rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+   671→        <div>
+   672→          <div className="text-sm font-bold text-[#e2e8f0]">
+   673→            Показывать рейтинги
+   674→          </div>
+   675→          <div className="text-xs text-[#94a3b8] mt-0.5">
+   676→            Скрывает рейтинги игроков для усложнения
+   677→          </div>
+   678→        </div>
+   679→        <Switch
+   680→          checked={config.difficulty !== 'hard'}
+   681→          onCheckedChange={(checked) => {
+   682→            if (!checked) {
+   683→              setConfig({ difficulty: 'hard' });
+   684→            } else if (config.difficulty === 'hard') {
+   685→              setConfig({ difficulty: 'normal' });
+   686→            }
+   687→          }}
+   688→          className="data-[state=checked]:bg-[#22c55e]"
+   689→        />
+   690→      </div>
+   691→
+   692→      {/* ─── Draft Mode ─── */}
+   693→      <div>
+   694→        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Режим драфта</h3>
+   695→        <div className="grid grid-cols-2 gap-3">
+   696→          {(
+   697→            Object.entries(DRAFT_MODE_CONFIG) as [
+   698→              string,
+   699→              { label: string; description: string },
+   700→            ][]
+   701→          ).map(([key, val]) => (
+   702→            <button
+   703→              key={key}
+   704→              onClick={() =>
+   705→                setConfig({ draftMode: key as 'squad_first' | 'position_first' })
+   706→              }
+   707→              className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
+   708→                config.draftMode === key
+   709→                  ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
+   710→                  : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+   711→              }`}
+   712→            >
+   713→              <div
+   714→                className={`font-bold ${
+   715→                  config.draftMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+   716→                }`}
+   717→              >
+   718→                {val.label}
+   719→              </div>
+   720→              <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
+   721→                {val.description}
+   722→              </div>
+   723→            </button>
+   724→          ))}
+   725→        </div>
+   726→      </div>
+   727→
+   728→      {/* ─── Rating Mode ─── */}
+   729→      <div>
+   730→        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">
+   731→          Режим рейтинга
+   732→        </h3>
+   733→        <div className="grid grid-cols-2 gap-3">
+   734→          {(
+   735→            Object.entries(RATING_MODE_CONFIG) as [
+   736→              string,
+   737→              { label: string; description: string },
+   738→            ][]
+   739→          ).map(([key, val]) => (
+   740→            <button
+   741→              key={key}
+   742→              onClick={() => setConfig({ ratingMode: key as 'season' | 'prime' })}
+   743→              className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
+   744→                config.ratingMode === key
+   745→                  ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
+   746→                  : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+   747→              }`}
+   748→            >
+   749→              <div
+   750→                className={`font-bold ${
+   751→                  config.ratingMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+   752→                }`}
+   753→              >
+   754→                {val.label}
+   755→              </div>
+   756→              <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
+   757→                {val.description}
+   758→              </div>
+   759→            </button>
+   760→          ))}
+   761→        </div>
+   762→      </div>
+   763→
+   764→      {/* ─── Era Filter ─── */}
+   765→      <div>
+   766→        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Эпоха</h3>
+   767→        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   768→          {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+   769→            ([key, val]) => (
+   770→              <button
+   771→                key={key}
+   772→                onClick={() => setConfig({ eraFilter: key })}
+   773→                className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 ${
+   774→                  config.eraFilter === key
+   775→                    ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
+   776→                    : 'border-[#1a1a2e] bg-[#1a1a2e] hover:border-[#22c55e]/30'
+   777→                }`}
+   778→              >
+   779→                <div
+   780→                  className={`font-bold text-sm ${
+   781→                    config.eraFilter === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+   782→                  }`}
+   783→                >
+   784→                  {val.label}
+   785→                </div>
+   786→              </button>
+   787→            ),
+   788→          )}
+   789→        </div>
+   790→      </div>
+   791→
+   792→      {/* ─── Settings Summary Bar ─── */}
+   793→      <motion.div
+   794→        initial={{ opacity: 0, y: 10 }}
+   795→        animate={{ opacity: 1, y: 0 }}
+   796→        transition={{ delay: 0.1 }}
+   797→        className="rounded-2xl border border-[#22c55e]/30 bg-gradient-to-r from-[#1a1a2e] via-[#1a1a2e]/80 to-[#1a1a2e] p-3 overflow-x-auto"
+   798→      >
+   799→        <div className="flex items-center gap-2 sm:gap-3 min-w-max">
+   800→          <SummaryItem
+   801→            icon="⚽"
+   802→            label="Команда"
+   803→            value={config.teamName || 'Моя команда'}
+   804→          />
+   805→          <Divider />
+   806→          <SummaryItem
+   807→            icon="📐"
+   808→            label="Формация"
+   809→            value={config.formation}
+   810→          />
+   811→          <Divider />
+   812→          <SummaryItem
+   813→            icon={selectedDifficultyMeta.icon}
+   814→            label="Сложность"
+   815→            value={DIFFICULTY_CONFIG[config.difficulty].label}
+   816→            color={selectedDifficultyMeta.color}
+   817→          />
+   818→          <Divider />
+   819→          <SummaryItem
+   820→            icon="🎯"
+   821→            label="Драфт"
+   822→            value={DRAFT_MODE_CONFIG[config.draftMode].label}
+   823→          />
+   824→          <Divider />
+   825→          <SummaryItem
+   826→            icon="⭐"
+   827→            label="Рейтинг"
+   828→            value={RATING_MODE_CONFIG[config.ratingMode].label}
+   829→          />
+   830→          <Divider />
+   831→          <SummaryItem
+   832→            icon="📅"
+   833→            label="Эпоха"
+   834→            value={ERA_CONFIG[config.eraFilter].label}
+   835→          />
+   836→        </div>
+   837→      </motion.div>
+   838→
+   839→      {/* ─── Start Button ─── */}
+   840→      <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.015 }} className="relative">
+   841→        {/* Pulsing ring animation */}
+   842→        <div className="absolute inset-0 rounded-2xl border-2 border-[#22c55e]/40 animate-pulse-ring pointer-events-none" />
+   843→        <Button
+   844→          onClick={handleStart}
+   845→          className="w-full h-16 text-xl font-black text-white rounded-2xl transition-all relative overflow-hidden animate-button-glow btn-shimmer"
+   846→          style={{
+   847→            background:
+   848→              'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+   849→            boxShadow:
+   850→              '0 6px 24px rgba(34, 197, 94, 0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
+   851→          }}
+   852→        >
+   853→          {/* Shimmer sweep */}
+   854→          <motion.span
+   855→            className="absolute inset-0 pointer-events-none"
+   856→            style={{
+   857→              background:
+   858→                'linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.25) 50%, transparent 65%)',
+   859→              backgroundSize: '200% 100%',
+   860→            }}
+   861→            animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
+   862→            transition={{ duration: 2.8, repeat: Infinity, ease: 'linear' }}
+   863→          />
+   864→          <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow">
+   865→            <motion.span
+   866→              className="text-2xl"
+   867→              animate={{ rotate: [0, -10, 10, 0] }}
+   868→              transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 1 }}
+   869→            >
+   870→              ⚽
+   871→            </motion.span>
+   872→            Начать драфт
+   873→          </span>
+   874→        </Button>
+   875→      </motion.div>
+   876→    </div>
+   877→  );
+   878→}
+   879→
+   880→/* ─── Helper sub-components ─── */
+   881→
+   882→function PreviewRow({
+   883→  icon,
+   884→  label,
+   885→  value,
+   886→  accent,
+   887→}: {
+   888→  icon: string;
+   889→  label: string;
+   890→  value: string;
+   891→  accent?: string;
+   892→}) {
+   893→  return (
+   894→    <motion.div
+   895→      initial={{ opacity: 0, x: -10 }}
+   896→      animate={{ opacity: 1, x: 0 }}
+   897→      transition={{ delay: 0.15 }}
+   898→      className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2"
+   899→    >
+   900→      <div className="flex items-center gap-2">
+   901→        <span className="text-lg">{icon}</span>
+   902→        <span className="text-xs text-[#94a3b8]">{label}</span>
+   903→      </div>
+   904→      <span
+   905→        className="text-sm font-bold"
+   906→        style={{ color: accent ?? '#e2e8f0' }}
+   907→      >
+   908→        {value}
+   909→      </span>
+   910→    </motion.div>
+   911→  );
+   912→}
+   913→
+   914→function SummaryItem({
+   915→  icon,
+   916→  label,
+   917→  value,
+   918→  color,
+   919→}: {
+   920→  icon: string;
+   921→  label: string;
+   922→  value: string;
+   923→  color?: string;
+   924→}) {
+   925→  return (
+   926→    <div className="flex items-center gap-2 px-1">
+   927→      <div className="pill-badge bg-gradient-to-r from-[#1a1a2e] to-[#151528] border border-[#22c55e]/10">
+   928→        {color ? (
+   929→          <span
+   930→            className="w-2 h-2 rounded-full"
+   931→            style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
+   932→          />
+   933→        ) : (
+   934→          <span className="text-sm">{icon}</span>
+   935→        )}
+   936→        <div className="flex flex-col leading-tight">
+   937→          <span className="text-[9px] uppercase tracking-wide text-[#94a3b8]">
+   938→            {label}
+   939→          </span>
+   940→          <span
+   941→            className="text-xs font-bold whitespace-nowrap"
+   942→            style={{ color: color ?? '#e2e8f0' }}
+   943→          >
+   944→            {value}
+   945→          </span>
+   946→        </div>
+   947→      </div>
+   948→    </div>
+   949→  );
+   950→}
+   951→
+   952→function Divider() {
+   953→  return <div className="w-px h-8 bg-[#22c55e]/20 flex-shrink-0" />;
+   954→}
+   955→

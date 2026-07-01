@@ -96,7 +96,7 @@ export default function DraftProgressTracker() {
       </div>
 
       {/* Linear progress bar */}
-      <div className="h-1.5 rounded-full bg-[#1a1a2e] overflow-hidden mb-3">
+      <div className="h-1.5 rounded-full bg-[#0d2d0d] overflow-hidden mb-3">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${(filledCount / 11) * 100}%` }}
@@ -161,7 +161,7 @@ export default function DraftProgressTracker() {
                 {/* Rating tooltip for filled slots */}
                 {isFilled && slot.playerRating && (
                   <div
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black text-white border border-[#0a0a0f] shadow-sm px-0.5"
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black text-white border border-[#0a1a0a] shadow-sm px-0.5"
                     style={{
                       backgroundColor:
                         slot.playerRating >= 78 ? '#22c55e' :

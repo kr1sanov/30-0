@@ -38,7 +38,7 @@ const STEPS = [
 export default function HowToPlayModal({ open, onClose }: HowToPlayModalProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="bg-[#1a1a2e] border-[#1a1a2e] text-[#e2e8f0] max-w-md rounded-2xl">
+      <DialogContent className="bg-[#0d2d0d] border-[#0d2d0d] text-[#e2e8f0] max-w-md rounded-2xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-black text-[#22c55e] text-center">
             ⚽ Как играть
@@ -52,7 +52,7 @@ export default function HowToPlayModal({ open, onClose }: HowToPlayModalProps) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="flex gap-4 items-start p-3 rounded-xl bg-[#0a0a0f]/50 border border-[#0a0a0f]"
+              className="flex gap-4 items-start p-3 rounded-xl bg-[#0a1a0a]/50 border border-[#0a1a0a]"
             >
               <div className="flex flex-col items-center shrink-0">
                 <div className="w-10 h-10 rounded-xl bg-[#22c55e]/15 flex items-center justify-center text-lg">

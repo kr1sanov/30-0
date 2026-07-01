@@ -170,12 +170,12 @@ export default function ProfileScreen() {
             <div className="text-3xl font-black text-[#22c55e]">{profileStats.totalSeasons}</div>
             <div className="text-xs text-[#94a3b8]">Сезонов</div>
           </div>
-          <div className="w-px h-10 bg-[#1a1a2e]" />
+          <div className="w-px h-10 bg-[#0d2d0d]" />
           <div className="text-center flex-1">
             <div className="text-3xl font-black text-[#e2e8f0]">{profileStats.bestPoints}</div>
             <div className="text-xs text-[#94a3b8]">Лучший результат</div>
           </div>
-          <div className="w-px h-10 bg-[#1a1a2e]" />
+          <div className="w-px h-10 bg-[#0d2d0d]" />
           <div className="text-center flex-1">
             <div className="text-3xl font-black text-[#f97316]">{profileStats.titles}</div>
             <div className="text-xs text-[#94a3b8]">Титулов</div>
@@ -196,7 +196,7 @@ export default function ProfileScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="rounded-2xl bg-[#1a1a2e] p-3 text-center border border-[#1a1a2e] card-glow stat-card-hover"
+            className="rounded-2xl bg-[#0d2d0d] p-3 text-center border border-[#0d2d0d] card-glow stat-card-hover"
           >
             <div className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</div>
             <div className="text-[10px] text-[#94a3b8]">{stat.label}</div>
@@ -207,10 +207,10 @@ export default function ProfileScreen() {
       {/* Win Rate Ring + Stats */}
       <div className="grid grid-cols-2 gap-3">
         {/* Win rate ring */}
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 flex flex-col items-center justify-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 flex flex-col items-center justify-center border border-[#0d2d0d]">
           <div className="relative w-20 h-20">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#1a1a2e" strokeWidth="3" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0d2d0d" strokeWidth="3" />
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
@@ -229,7 +229,7 @@ export default function ProfileScreen() {
         </div>
 
         {/* Extra stats */}
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 space-y-3 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]">
           <div className="flex items-center justify-between">
             <span className="text-xs text-[#94a3b8]">Всего побед</span>
             <span className="text-sm font-bold text-[#3b82f6]">{profileStats.totalWins}</span>
@@ -251,7 +251,7 @@ export default function ProfileScreen() {
 
       {/* Points per Season Chart (last 10) */}
       {recentHistory.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
           <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-3">Очки за сезон</h4>
           <div className="flex items-end gap-1.5 h-24">
             {recentHistory.map((h, i) => {
@@ -285,7 +285,7 @@ export default function ProfileScreen() {
 
       {/* Season Form Indicator (last season) */}
       {profileStats.history.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
           <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Форма (последний сезон)</h4>
           {(() => {
             const lastSeason = profileStats.history[profileStats.history.length - 1];
@@ -390,10 +390,10 @@ export default function ProfileScreen() {
 
       {/* History */}
       {profileStats.history.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+        <div className="rounded-2xl bg-[#0d2d0d] border border-[#0d2d0d] overflow-hidden">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a1a0a]/30 transition-colors"
           >
             <span className="text-sm font-bold text-[#e2e8f0]">📜 История ({profileStats.history.length})</span>
             <motion.span animate={{ rotate: showHistory ? 180 : 0 }} className="text-[#94a3b8]">
@@ -413,14 +413,14 @@ export default function ProfileScreen() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`rounded-xl bg-[#0a0a0f]/30 p-3 border ${
+                    className={`rounded-xl bg-[#0a1a0a]/30 p-3 border ${
                       h.position === 1
-                        ? 'history-border-gold border-[#1a1a2e]'
+                        ? 'history-border-gold border-[#0d2d0d]'
                         : h.position === 2
-                        ? 'history-border-silver border-[#1a1a2e]'
+                        ? 'history-border-silver border-[#0d2d0d]'
                         : h.position === 3
-                        ? 'history-border-bronze border-[#1a1a2e]'
-                        : 'history-border-gray border-[#1a1a2e]'
+                        ? 'history-border-bronze border-[#0d2d0d]'
+                        : 'history-border-gray border-[#0d2d0d]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
@@ -488,7 +488,7 @@ export default function ProfileScreen() {
               🗑️ Сбросить статистику
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="bg-[#1a1a2e] border-[#1a1a2e]">
+          <AlertDialogContent className="bg-[#0d2d0d] border-[#0d2d0d]">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-[#e2e8f0]">Сбросить статистику?</AlertDialogTitle>
               <AlertDialogDescription className="text-[#94a3b8]">
@@ -496,7 +496,7 @@ export default function ProfileScreen() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#0a0a0f] text-[#94a3b8] border-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-[#e2e8f0]">
+              <AlertDialogCancel className="bg-[#0a1a0a] text-[#94a3b8] border-[#0d2d0d] hover:bg-[#0d2d0d] hover:text-[#e2e8f0]">
                 Отмена
               </AlertDialogCancel>
               <AlertDialogAction

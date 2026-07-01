@@ -45,19 +45,19 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.145 0.02 150);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.18 0.03 150);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.18 0.03 150);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.18 0.03 150);
+  --secondary: oklch(0.269 0.02 150);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.269 0.02 150);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.269 0.02 150);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -68,30 +68,30 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.18 0.03 150);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.269 0.02 150);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.145 0.02 150);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.18 0.03 150);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.18 0.03 150);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.18 0.03 150);
+  --secondary: oklch(0.269 0.02 150);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.269 0.02 150);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.269 0.02 150);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -102,11 +102,11 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.18 0.03 150);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.269 0.02 150);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
@@ -118,7 +118,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-color: #0a0a0f;
+    background-color: #0a1a0a;
     color: #e2e8f0;
   }
 }
@@ -130,11 +130,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0f;
+  background: #0a1a0a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1a1a2e;
+  background: #0d2d0d;
   border-radius: 3px;
 }
 
@@ -145,7 +145,7 @@
 /* Firefox scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #1a1a2e #0a0a0f;
+  scrollbar-color: #0d2d0d #0a1a0a;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -155,7 +155,7 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #1a1a2e;
+  background: #0d2d0d;
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -341,7 +341,7 @@ html {
 
 /* Glassmorphism card style */
 .glass-card {
-  background: rgba(26, 26, 46, 0.7);
+  background: rgba(13, 45, 13, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(34, 197, 94, 0.1);
 }
@@ -573,7 +573,7 @@ html {
 /* Premium card with gradient border */
 .premium-card {
   position: relative;
-  background: #1a1a2e;
+  background: #0d2d0d;
   border-radius: 1rem;
 }
 .premium-card::before {
@@ -590,19 +590,19 @@ html {
 }
 
 /* Avatar ring based on position category */
-.avatar-ring-gk { box-shadow: 0 0 0 2px #0a0a0f, 0 0 0 4px #f97316; }
-.avatar-ring-def { box-shadow: 0 0 0 2px #0a0a0f, 0 0 0 4px #3b82f6; }
-.avatar-ring-mid { box-shadow: 0 0 0 2px #0a0a0f, 0 0 0 4px #22c55e; }
-.avatar-ring-att { box-shadow: 0 0 0 2px #0a0a0f, 0 0 0 4px #ef4444; }
+.avatar-ring-gk { box-shadow: 0 0 0 2px #0a1a0a, 0 0 0 4px #f97316; }
+.avatar-ring-def { box-shadow: 0 0 0 2px #0a1a0a, 0 0 0 4px #3b82f6; }
+.avatar-ring-mid { box-shadow: 0 0 0 2px #0a1a0a, 0 0 0 4px #22c55e; }
+.avatar-ring-att { box-shadow: 0 0 0 2px #0a1a0a, 0 0 0 4px #ef4444; }
 
 /* Rating tier indicators */
 .rating-tier-gold {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #0a0a0f;
+  color: #0a1a0a;
 }
 .rating-tier-silver {
   background: linear-gradient(135deg, #94a3b8, #64748b);
-  color: #0a0a0f;
+  color: #0a1a0a;
 }
 .rating-tier-bronze {
   background: linear-gradient(135deg, #f97316, #ea580c);
@@ -655,7 +655,7 @@ html {
 }
 .draft-step-empty {
   border: 2px solid #334155;
-  background: #1a1a2e;
+  background: #0d2d0d;
 }
 
 /* Match result row styles */
@@ -783,16 +783,16 @@ html {
   100% { background-position: 200% 0; }
 }
 .shimmer-loading {
-  background: linear-gradient(90deg, #1a1a2e 25%, #2a2a4e 50%, #1a1a2e 75%);
+  background: linear-gradient(90deg, #0d2d0d 25%, #1a4a1a 50%, #0d2d0d 75%);
   background-size: 200% 100%;
   animation: shimmerLoad 1.5s ease-in-out infinite;
 }
 
 /* Challenge card gradient overlays */
-.challenge-gradient-fire { background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(249, 115, 22, 0.04) 100%); }
-.challenge-gradient-shield { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%); }
-.challenge-gradient-bolt { background: linear-gradient(135deg, rgba(250, 204, 21, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%); }
-.challenge-gradient-target { background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%); }
+.challenge-gradient-fire { background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(249, 115, 22, 0.06) 100%); }
+.challenge-gradient-shield { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.06) 100%); }
+.challenge-gradient-bolt { background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(245, 158, 11, 0.06) 100%); }
+.challenge-gradient-target { background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.06) 100%); }
 
 /* Challenge completed overlay */
 .challenge-completed {
@@ -826,7 +826,7 @@ html {
 .challenge-progress-bar {
   height: 3px;
   border-radius: 2px;
-  background: #1a1a2e;
+  background: #0d2d0d;
   overflow: hidden;
   margin-top: 8px;
 }
@@ -1136,14 +1136,14 @@ html {
 
 /* Frosted glass for locked trophies */
 .frosted-glass {
-  background: rgba(10, 10, 15, 0.4);
+  background: rgba(10, 26, 10, 0.4);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255,255,255,0.05);
 }
 
 /* Glass showcase effect */
 .glass-showcase {
-  background: rgba(26, 26, 46, 0.5);
+  background: rgba(13, 45, 13, 0.5);
   backdrop-filter: blur(4px);
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 4px 24px rgba(0,0,0,0.2);
@@ -1175,7 +1175,7 @@ html {
 
 /* Glassmorphism stats counter card */
 .glass-stats-card {
-  background: rgba(26, 26, 46, 0.6);
+  background: rgba(13, 45, 13, 0.6);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(34,197,94,0.1);
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);

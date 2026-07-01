@@ -250,10 +250,10 @@ function ManagerPoolPreview() {
               initial={{ scale: 0, x: -10 }}
               animate={{ scale: 1, x: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#1a1a2e]"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#0d2d0d]"
               style={{
                 background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-                color: tier === 'silver' ? '#0a0a0f' : '#0a0a0f',
+                color: tier === 'silver' ? '#0a1a0a' : '#0a1a0a',
                 boxShadow: `0 0 8px ${color}50`,
               }}
               title={`${m.name} · ${m.rating}`}
@@ -262,7 +262,7 @@ function ManagerPoolPreview() {
             </motion.div>
           );
         })}
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[#1a1a2e] bg-[#14142b] text-[#94a3b8]">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[#0d2d0d] bg-[#0a200a] text-[#94a3b8]">
           +{remaining}
         </div>
       </div>
@@ -312,7 +312,7 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
       className="relative rounded-2xl p-4"
       style={{
         background:
-          'linear-gradient(180deg, #0a0a14 0%, #14142b 50%, #0a0a14 100%)',
+          'linear-gradient(180deg, #0a0a14 0%, #0a200a 50%, #0a0a14 100%)',
         border: '1px solid rgba(34, 197, 94, 0.35)',
         boxShadow:
           '0 0 30px rgba(34, 197, 94, 0.15), inset 0 0 20px rgba(0,0,0,0.5)',
@@ -406,7 +406,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
       transition={{ type: 'spring', damping: 16, stiffness: 220 }}
       className="relative rounded-2xl p-5 text-center overflow-hidden"
       style={{
-        background: `radial-gradient(ellipse at top, ${color}15 0%, transparent 65%), #14142b`,
+        background: `radial-gradient(ellipse at top, ${color}15 0%, transparent 65%), #0a200a`,
         border: `1.5px solid ${color}55`,
         boxShadow: isJackpot
           ? `0 0 40px ${color}55, 0 0 90px ${color}25, inset 0 0 30px ${color}10`
@@ -440,7 +440,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
               className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-0.5 rounded-full"
               style={{
                 background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-                color: '#0a0a0f',
+                color: '#0a1a0a',
               }}
             >
               <Sparkles className="w-3 h-3" />
@@ -467,7 +467,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
         <div
           className="relative w-20 h-20 rounded-full flex items-center justify-center text-4xl"
           style={{
-            background: `radial-gradient(circle at 30% 30%, ${color}30, #0a0a0f 75%)`,
+            background: `radial-gradient(circle at 30% 30%, ${color}30, #0a1a0a 75%)`,
             border: `2px solid ${color}40`,
           }}
         >
@@ -617,7 +617,7 @@ export default function ManagerChoice() {
   const activeTarget = reelTarget || currentManager;
 
   return (
-    <div className="rounded-2xl bg-[#1a1a2e] p-5 space-y-4 border border-[#1a1a2e]">
+    <div className="rounded-2xl bg-[#0d2d0d] p-5 space-y-4 border border-[#0d2d0d]">
       <div className="text-center">
         <h3 className="text-lg font-black text-[#e2e8f0]">
           Играть с тренером?

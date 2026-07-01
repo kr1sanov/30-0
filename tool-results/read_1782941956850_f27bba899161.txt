@@ -1,0 +1,819 @@
+     1→'use client';
+     2→
+     3→import { useState, useCallback, useMemo } from 'react';
+     4→import { useGameStore } from '@/store/gameStore';
+     5→import {
+     6→  POSITION_CATEGORY,
+     7→  POSITION_COLOR,
+     8→  canFillSlot,
+     9→  getCompatiblePositions,
+    10→  getFormationById,
+    11→} from '@/lib/positions';
+    12→import type { PositionCategory, Position } from '@/lib/positions';
+    13→import { motion, AnimatePresence } from 'framer-motion';
+    14→import { toast } from 'sonner';
+    15→
+    16→// Formation position layout coordinates (percentage-based)
+    17→const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
+    18→  '4-3-3': [
+    19→    { row: 90, col: 50 },  // ВР
+    20→    { row: 70, col: 20 },  // ПЗ
+    21→    { row: 70, col: 40 },  // ЦЗ
+    22→    { row: 70, col: 60 },  // ЦЗ
+    23→    { row: 70, col: 80 },  // ЛЗ
+    24→    { row: 50, col: 25 },  // ЦП
+    25→    { row: 50, col: 50 },  // ЦП
+    26→    { row: 50, col: 75 },  // ЦП
+    27→    { row: 25, col: 20 },  // ПВ
+    28→    { row: 25, col: 50 },  // НП
+    29→    { row: 25, col: 80 },  // ЛВ
+    30→  ],
+    31→  '4-4-2': [
+    32→    { row: 90, col: 50 },
+    33→    { row: 70, col: 20 },
+    34→    { row: 70, col: 40 },
+    35→    { row: 70, col: 60 },
+    36→    { row: 70, col: 80 },
+    37→    { row: 45, col: 20 },
+    38→    { row: 45, col: 40 },
+    39→    { row: 45, col: 60 },
+    40→    { row: 45, col: 80 },
+    41→    { row: 22, col: 35 },
+    42→    { row: 22, col: 65 },
+    43→  ],
+    44→  '4-2-3-1': [
+    45→    { row: 90, col: 50 },
+    46→    { row: 70, col: 20 },
+    47→    { row: 70, col: 40 },
+    48→    { row: 70, col: 60 },
+    49→    { row: 70, col: 80 },
+    50→    { row: 53, col: 35 },
+    51→    { row: 53, col: 65 },
+    52→    { row: 35, col: 20 },
+    53→    { row: 35, col: 50 },
+    54→    { row: 35, col: 80 },
+    55→    { row: 18, col: 50 },
+    56→  ],
+    57→  '3-5-2': [
+    58→    { row: 90, col: 50 },
+    59→    { row: 70, col: 25 },
+    60→    { row: 70, col: 50 },
+    61→    { row: 70, col: 75 },
+    62→    { row: 48, col: 10 },
+    63→    { row: 48, col: 35 },
+    64→    { row: 48, col: 50 },
+    65→    { row: 48, col: 65 },
+    66→    { row: 48, col: 90 },
+    67→    { row: 22, col: 35 },
+    68→    { row: 22, col: 65 },
+    69→  ],
+    70→  '3-4-3': [
+    71→    { row: 90, col: 50 },
+    72→    { row: 70, col: 25 },
+    73→    { row: 70, col: 50 },
+    74→    { row: 70, col: 75 },
+    75→    { row: 45, col: 20 },
+    76→    { row: 45, col: 40 },
+    77→    { row: 45, col: 60 },
+    78→    { row: 45, col: 80 },
+    79→    { row: 22, col: 20 },
+    80→    { row: 22, col: 50 },
+    81→    { row: 22, col: 80 },
+    82→  ],
+    83→  '5-3-2': [
+    84→    { row: 90, col: 50 },
+    85→    { row: 70, col: 10 },
+    86→    { row: 70, col: 30 },
+    87→    { row: 70, col: 50 },
+    88→    { row: 70, col: 70 },
+    89→    { row: 70, col: 90 },
+    90→    { row: 45, col: 25 },
+    91→    { row: 45, col: 50 },
+    92→    { row: 45, col: 75 },
+    93→    { row: 22, col: 35 },
+    94→    { row: 22, col: 65 },
+    95→  ],
+    96→  '5-4-1': [
+    97→    { row: 90, col: 50 },
+    98→    { row: 70, col: 10 },
+    99→    { row: 70, col: 30 },
+   100→    { row: 70, col: 50 },
+   101→    { row: 70, col: 70 },
+   102→    { row: 70, col: 90 },
+   103→    { row: 45, col: 15 },
+   104→    { row: 45, col: 38 },
+   105→    { row: 45, col: 62 },
+   106→    { row: 45, col: 85 },
+   107→    { row: 20, col: 50 },
+   108→  ],
+   109→  '4-1-4-1': [
+   110→    { row: 90, col: 50 },
+   111→    { row: 70, col: 20 },
+   112→    { row: 70, col: 40 },
+   113→    { row: 70, col: 60 },
+   114→    { row: 70, col: 80 },
+   115→    { row: 53, col: 50 },
+   116→    { row: 38, col: 15 },
+   117→    { row: 38, col: 38 },
+   118→    { row: 38, col: 62 },
+   119→    { row: 38, col: 85 },
+   120→    { row: 18, col: 50 },
+   121→  ],
+   122→  '4-5-1': [
+   123→    { row: 90, col: 50 },
+   124→    { row: 70, col: 20 },
+   125→    { row: 70, col: 40 },
+   126→    { row: 70, col: 60 },
+   127→    { row: 70, col: 80 },
+   128→    { row: 45, col: 15 },
+   129→    { row: 45, col: 35 },
+   130→    { row: 45, col: 50 },
+   131→    { row: 45, col: 65 },
+   132→    { row: 45, col: 85 },
+   133→    { row: 20, col: 50 },
+   134→  ],
+   135→  '4-4-1-1': [
+   136→    { row: 90, col: 50 },
+   137→    { row: 70, col: 20 },
+   138→    { row: 70, col: 40 },
+   139→    { row: 70, col: 60 },
+   140→    { row: 70, col: 80 },
+   141→    { row: 48, col: 15 },
+   142→    { row: 48, col: 38 },
+   143→    { row: 48, col: 62 },
+   144→    { row: 48, col: 85 },
+   145→    { row: 30, col: 50 },
+   146→    { row: 16, col: 50 },
+   147→  ],
+   148→  '3-4-1-2': [
+   149→    { row: 90, col: 50 },
+   150→    { row: 70, col: 25 },
+   151→    { row: 70, col: 50 },
+   152→    { row: 70, col: 75 },
+   153→    { row: 48, col: 15 },
+   154→    { row: 48, col: 38 },
+   155→    { row: 48, col: 62 },
+   156→    { row: 48, col: 85 },
+   157→    { row: 32, col: 50 },
+   158→    { row: 18, col: 35 },
+   159→    { row: 18, col: 65 },
+   160→  ],
+   161→  '4-2-2-2': [
+   162→    { row: 90, col: 50 },
+   163→    { row: 70, col: 20 },
+   164→    { row: 70, col: 40 },
+   165→    { row: 70, col: 60 },
+   166→    { row: 70, col: 80 },
+   167→    { row: 50, col: 30 },
+   168→    { row: 50, col: 70 },
+   169→    { row: 33, col: 30 },
+   170→    { row: 33, col: 70 },
+   171→    { row: 18, col: 35 },
+   172→    { row: 18, col: 65 },
+   173→  ],
+   174→};
+   175→
+   176→// Updated rating color tiers (Task 1c):
+   177→//   78+: Gold, 73-77: Green, 68-72: Orange, <68: Red
+   178→function getRatingColor(rating: number): string {
+   179→  if (rating >= 78) return '#fbbf24';
+   180→  if (rating >= 73) return '#22c55e';
+   181→  if (rating >= 68) return '#f97316';
+   182→  return '#ef4444';
+   183→}
+   184→
+   185→// Position category ring colors (Task 1a)
+   186→const CATEGORY_RING_COLOR: Record<PositionCategory, string> = {
+   187→  gk: '#f97316', // orange
+   188→  def: '#3b82f6', // blue
+   189→  mid: '#22c55e', // green
+   190→  att: '#ef4444', // red
+   191→};
+   192→
+   193→// Chemistry color mapping (Task 3d)
+   194→function getChemistryColor(chem: number): string {
+   195→  if (chem >= 100) return '#22c55e';
+   196→  if (chem >= 80) return '#a3e635';
+   197→  if (chem >= 60) return '#facc15';
+   198→  if (chem >= 40) return '#f97316';
+   199→  return '#ef4444';
+   200→}
+   201→
+   202→function getInitials(name: string | undefined): string {
+   203→  if (!name) return '??';
+   204→  const parts = name.trim().split(/\s+/);
+   205→  if (parts.length >= 2) {
+   206→    // Last name initial + first name initial
+   207→    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+   208→  }
+   209→  return name.slice(0, 2).toUpperCase();
+   210→}
+   211→
+   212→export default function FormationView() {
+   213→  const {
+   214→    config,
+   215→    slots,
+   216→    selectedPlayer,
+   217→    movingPlayerSlotIndex,
+   218→    assignToSlot,
+   219→    movePlayer,
+   220→    screen,
+   221→    rerollsLeft,
+   222→  } = useGameStore();
+   223→
+   224→  const [shakingSlot, setShakingSlot] = useState<number | null>(null);
+   225→  const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
+   226→
+   227→  const layout = FORMATION_LAYOUTS[config.formation] ?? FORMATION_LAYOUTS['4-3-3'];
+   228→
+   229→  const filledCount = slots.filter((s) => s.playerId).length;
+   230→  const openCount = 11 - filledCount;
+   231→
+   232→  const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+   233→
+   234→  // Get compatible positions for the selected player
+   235→  const compatiblePositions = selectedPlayer
+   236→    ? getCompatiblePositions(selectedPlayer.mainPosition as Position)
+   237→    : [];
+   238→
+   239→  // ----- Task 3: Formation info header computations -----
+   240→  const formationMeta = useMemo(() => {
+   241→    const formation = getFormationById(config.formation);
+   242→    const counts: Record<PositionCategory, number> = { gk: 0, def: 0, mid: 0, att: 0 };
+   243→    for (const slot of slots) {
+   244→      const cat = POSITION_CATEGORY[slot.position as Position] ?? 'mid';
+   245→      counts[cat]++;
+   246→    }
+   247→    return {
+   248→      formation,
+   249→      counts,
+   250→      description: formation?.description ?? '',
+   251→    };
+   252→  }, [config.formation, slots]);
+   253→
+   254→  // Average rating of filled players (with penalty applied — Task 3c)
+   255→  const avgRating = useMemo(() => {
+   256→    const filled = slots.filter((s) => s.playerId && s.playerRating);
+   257→    if (filled.length === 0) return null;
+   258→    const sum = filled.reduce((acc, s) => {
+   259→      let r = s.playerRating!;
+   260→      if (s.playerPosition) {
+   261→        const { penalty } = canFillSlot(
+   262→          s.playerPosition as Position,
+   263→          (s.playerOtherPositions ?? []) as Position[],
+   264→          s.position as Position,
+   265→        );
+   266→        r = Math.round(r * penalty);
+   267→      }
+   268→      return acc + r;
+   269→    }, 0);
+   270→    return Math.round(sum / filled.length);
+   271→  }, [slots]);
+   272→
+   273→  // Chemistry: percentage of filled players fully compatible with their slot
+   274→  const chemistry = useMemo(() => {
+   275→    const filled = slots.filter((s) => s.playerId);
+   276→    if (filled.length === 0) return null;
+   277→    const fullCount = filled.filter((s) => {
+   278→      if (!s.playerPosition) return true;
+   279→      const { penalty } = canFillSlot(
+   280→        s.playerPosition as Position,
+   281→        (s.playerOtherPositions ?? []) as Position[],
+   282→        s.position as Position,
+   283→      );
+   284→      return penalty === 1;
+   285→    }).length;
+   286→    return Math.round((fullCount / filled.length) * 100);
+   287→  }, [slots]);
+   288→
+   289→  const triggerShake = useCallback((index: number) => {
+   290→    setShakingSlot(index);
+   291→    setTimeout(() => setShakingSlot(null), 400);
+   292→  }, []);
+   293→
+   294→  const handleSlotClick = (index: number) => {
+   295→    const slot = slots[index];
+   296→    if (!slot) return;
+   297→
+   298→    // If we have a selected player and the slot is empty, try to assign
+   299→    if (selectedPlayer && !slot.playerId) {
+   300→      const { canFill } = canFillSlot(
+   301→        selectedPlayer.mainPosition as Position,
+   302→        selectedPlayer.otherPositions as Position[],
+   303→        slot.position as Position,
+   304→      );
+   305→      if (canFill) {
+   306→        toast.success(`✅ ${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
+   307→        assignToSlot(index);
+   308→      } else {
+   309→        // Trigger shake animation on incompatible slot
+   310→        triggerShake(index);
+   311→        toast.error(`❌ ${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
+   312→      }
+   313→      return;
+   314→    }
+   315→
+   316→    // If the slot is filled and we're in squad-complete or position-assign, start moving
+   317→    if (slot.playerId && (screen === 'squad-complete' || screen === 'position-assign')) {
+   318→      if (movingPlayerSlotIndex === null) {
+   319→        useGameStore.setState({ movingPlayerSlotIndex: index });
+   320→      } else if (movingPlayerSlotIndex !== index) {
+   321→        movePlayer(movingPlayerSlotIndex, index);
+   322→      }
+   323→    }
+   324→  };
+   325→
+   326→  // ----- Task 2c: Connection lines from moving source to valid swap targets -----
+   327→  // Valid swap targets = every other filled slot (since any two filled slots can swap).
+   328→  const swapTargets = useMemo(() => {
+   329→    if (movingPlayerSlotIndex === null) return [];
+   330→    const source = layout[movingPlayerSlotIndex];
+   331→    if (!source) return [];
+   332→    const targets: { from: { row: number; col: number }; to: { row: number; col: number } }[] = [];
+   333→    slots.forEach((s, i) => {
+   334→      if (i === movingPlayerSlotIndex) return;
+   335→      if (!s.playerId) return;
+   336→      const to = layout[i];
+   337→      if (!to) return;
+   338→      targets.push({ from: source, to });
+   339→    });
+   340→    return targets;
+   341→  }, [movingPlayerSlotIndex, slots, layout]);
+   342→
+   343→  return (
+   344→    <div className="relative w-full">
+   345→      {/* Compatible positions info bar — only shown when a player is selected */}
+   346→      {selectedPlayer && compatiblePositions.length > 0 && (
+   347→        <motion.div
+   348→          initial={{ opacity: 0, y: -8 }}
+   349→          animate={{ opacity: 1, y: 0 }}
+   350→          className="mb-3 px-3 py-2 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
+   351→        >
+   352→          <span className="text-xs text-[#94a3b8] shrink-0">Совместимые позиции:</span>
+   353→          <div className="flex gap-1.5 flex-wrap">
+   354→            {compatiblePositions.map((pos) => (
+   355→              <span
+   356→                key={pos}
+   357→                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]"
+   358→              >
+   359→                {pos}
+   360→              </span>
+   361→            ))}
+   362→          </div>
+   363→        </motion.div>
+   364→      )}
+   365→
+   366→      {/* ===== Task 3: Formation Info Header ===== */}
+   367→      <motion.div
+   368→        initial={{ opacity: 0, y: -6 }}
+   369→        animate={{ opacity: 1, y: 0 }}
+   370→        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#0a0a0f]/80 to-[#1a1a2e] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
+   371→      >
+   372→        {/* Formation name + icon */}
+   373→        <div className="flex items-center gap-1.5 shrink-0">
+   374→          <span className="text-base sm:text-lg" aria-hidden>📐</span>
+   375→          <span className="text-sm sm:text-base font-black text-[#e2e8f0] tracking-wide">
+   376→            {config.formation}
+   377→          </span>
+   378→        </div>
+   379→
+   380→        <div className="h-4 w-px bg-white/15" aria-hidden />
+   381→
+   382→        {/* Player count by category */}
+   383→        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold">
+   384→          <span className="text-[#f97316]">{formationMeta.counts.gk} ВР</span>
+   385→          <span className="text-white/30">·</span>
+   386→          <span className="text-[#3b82f6]">{formationMeta.counts.def} ЗАЩ</span>
+   387→          <span className="text-white/30">·</span>
+   388→          <span className="text-[#22c55e]">{formationMeta.counts.mid} ПОЛ</span>
+   389→          <span className="text-white/30">·</span>
+   390→          <span className="text-[#ef4444]">{formationMeta.counts.att} НАП</span>
+   391→        </div>
+   392→
+   393→        <div className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
+   394→
+   395→        {/* Average rating of filled players */}
+   396→        <div className="flex items-center gap-1.5 shrink-0">
+   397→          <span className="text-[10px] sm:text-xs text-[#94a3b8]">Ср. рейтинг:</span>
+   398→          {avgRating !== null ? (
+   399→            <span
+   400→              className="text-xs sm:text-sm font-black"
+   401→              style={{ color: getRatingColor(avgRating) }}
+   402→            >
+   403→              {avgRating}
+   404→            </span>
+   405→          ) : (
+   406→            <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
+   407→          )}
+   408→        </div>
+   409→
+   410→        <div className="ml-auto flex items-center gap-2 shrink-0">
+   411→          {/* Chemistry indicator */}
+   412→          {chemistry !== null && (
+   413→            <div className="flex items-center gap-1.5">
+   414→              <span className="text-[10px] sm:text-xs text-[#94a3b8]">Химия:</span>
+   415→              <motion.span
+   416→                key={chemistry}
+   417→                initial={{ scale: 0.6, opacity: 0 }}
+   418→                animate={{ scale: 1, opacity: 1 }}
+   419→                transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+   420→                className="flex items-center gap-1"
+   421→              >
+   422→                <span
+   423→                  className="w-2.5 h-2.5 rounded-full"
+   424→                  style={{
+   425→                    backgroundColor: getChemistryColor(chemistry),
+   426→                    boxShadow: `0 0 6px ${getChemistryColor(chemistry)}`,
+   427→                  }}
+   428→                  aria-hidden
+   429→                />
+   430→                <span
+   431→                  className="text-xs sm:text-sm font-black"
+   432→                  style={{ color: getChemistryColor(chemistry) }}
+   433→                >
+   434→                  {chemistry}%
+   435→                </span>
+   436→              </motion.span>
+   437→            </div>
+   438→          )}
+   439→
+   440→          {/* Rerolls badge */}
+   441→          <span className="text-[10px] sm:text-xs font-bold text-[#94a3b8] bg-[#0f0f1e] px-2 py-1 rounded-full border border-white/5">
+   442→            Перебросы: <span className="text-[#22c55e]">{rerollsLeft}</span>/{maxRerolls}
+   443→          </span>
+   444→        </div>
+   445→      </motion.div>
+   446→
+   447→      {/* Pitch */}
+   448→      <div
+   449→        className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
+   450→        style={{ paddingBottom: '130%' }}
+   451→      >
+   452→        {/* Pitch stripe pattern */}
+   453→        <div
+   454→          className="absolute inset-0 pitch-stripes"
+   455→        />
+   456→
+   457→        {/* V-shaped mowing pattern */}
+   458→        <div className="absolute inset-0 pitch-mowing-pattern pointer-events-none" aria-hidden />
+   459→
+   460→        {/* Pitch grass texture lines (vertical) */}
+   461→        <div className="absolute inset-0 pitch-grass-lines" />
+   462→
+   463→        {/* ===== Task 4a: Diagonal mowing pattern overlay ===== */}
+   464→        <div
+   465→          className="absolute inset-0 pointer-events-none"
+   466→          style={{
+   467→            backgroundImage:
+   468→              'repeating-linear-gradient(60deg, transparent 0px, transparent 36px, rgba(255,255,255,0.025) 36px, rgba(255,255,255,0.025) 72px)',
+   469→          }}
+   470→          aria-hidden
+   471→        />
+   472→
+   473→        {/* Pitch gradient overlay for depth */}
+   474→        <div
+   475→          className="absolute inset-0"
+   476→          style={{
+   477→            background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%)',
+   478→          }}
+   479→        />
+   480→
+   481→        {/* Pitch vignette overlay — darker at edges */}
+   482→        <div className="absolute inset-0 pitch-vignette pointer-events-none" />
+   483→
+   484→        {/* Pitch border outline */}
+   485→        <div className="absolute inset-3 sm:inset-4 rounded-sm border-2 border-white/20" />
+   486→
+   487→        {/* Center line */}
+   488→        <div className="absolute inset-x-3 sm:inset-x-4 top-1/2 h-px bg-white/20" />
+   489→
+   490→        {/* Center circle */}
+   491→        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-white/20 flex items-center justify-center">
+   492→          {/* ===== Task 4c: Center circle logo (⚽ icon) ===== */}
+   493→          <motion.span
+   494→            className="text-base sm:text-xl opacity-60 select-none"
+   495→            animate={{ scale: [1, 1.08, 1], opacity: [0.55, 0.75, 0.55] }}
+   496→            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+   497→            aria-hidden
+   498→          >
+   499→            ⚽
+   500→          </motion.span>
+   501→        </div>
+   502→
+   503→        {/* Center dot */}
+   504→        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/30" />
+   505→
+   506→        {/* Top penalty box */}
+   507→        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-36 sm:w-44 h-16 sm:h-20 border-b border-x border-white/20" />
+   508→        {/* Top goal box */}
+   509→        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-20 sm:w-24 h-8 border-b border-x border-white/20" />
+   510→        {/* Top penalty arc */}
+   511→        <div
+   512→          className="absolute left-1/2 -translate-x-1/2 border-b border-white/15 rounded-b-full"
+   513→          style={{ top: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
+   514→        />
+   515→        {/* ===== Task 4d: Top penalty spot ===== */}
+   516→        <div
+   517→          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
+   518→          style={{ top: 'calc(12px + 42px)' }}
+   519→          aria-hidden
+   520→        />
+   521→
+   522→        {/* Bottom penalty box */}
+   523→        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-36 sm:w-44 h-16 sm:h-20 border-t border-x border-white/20" />
+   524→        {/* Bottom goal box */}
+   525→        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-20 sm:w-24 h-8 border-t border-x border-white/20" />
+   526→        {/* Bottom penalty arc */}
+   527→        <div
+   528→          className="absolute left-1/2 -translate-x-1/2 border-t border-white/15 rounded-t-full"
+   529→          style={{ bottom: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
+   530→        />
+   531→        {/* ===== Task 4d: Bottom penalty spot ===== */}
+   532→        <div
+   533→          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
+   534→          style={{ bottom: 'calc(12px + 42px)' }}
+   535→          aria-hidden
+   536→        />
+   537→
+   538→        {/* Corner arcs */}
+   539→        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 w-4 h-4 border-b border-r border-white/15 rounded-br-full" />
+   540→        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-4 h-4 border-b border-l border-white/15 rounded-bl-full" />
+   541→        <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 w-4 h-4 border-t border-r border-white/15 rounded-tr-full" />
+   542→        <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 border-t border-l border-white/15 rounded-tl-full" />
+   543→
+   544→        {/* ===== Task 2c: SVG connection lines from source slot to valid swap targets ===== */}
+   545→        <svg
+   546→          className="absolute inset-0 w-full h-full pointer-events-none"
+   547→          viewBox="0 0 100 130"
+   548→          preserveAspectRatio="none"
+   549→          aria-hidden
+   550→        >
+   551→          {swapTargets.map((t, i) => (
+   552→            <motion.line
+   553→              key={i}
+   554→              x1={t.from.col}
+   555→              y1={t.from.row * 1.3}
+   556→              x2={t.to.col}
+   557→              y2={t.to.row * 1.3}
+   558→              stroke="rgba(250, 204, 21, 0.7)"
+   559→              strokeWidth={0.4}
+   560→              strokeDasharray="1.5 1"
+   561→              className="animate-swap-line-glow"
+   562→              initial={{ pathLength: 0, opacity: 0 }}
+   563→              animate={{ pathLength: 1, opacity: 1 }}
+   564→              transition={{ duration: 0.3, delay: i * 0.03 }}
+   565→            />
+   566→          ))}
+   567→        </svg>
+   568→
+   569→        {/* Position Slots */}
+   570→        {slots.map((slot, index) => {
+   571→          const pos = layout[index];
+   572→          if (!pos) return null;
+   573→
+   574→          const category = POSITION_CATEGORY[slot.position as Position] ?? ('mid' as PositionCategory);
+   575→          const color = POSITION_COLOR[category];
+   576→          const ringColor = CATEGORY_RING_COLOR[category];
+   577→          const isFilled = !!slot.playerId;
+   578→          const isSelected = movingPlayerSlotIndex === index;
+   579→          const isCompatible = selectedPlayer
+   580→            ? canFillSlot(
+   581→                selectedPlayer.mainPosition as Position,
+   582→                selectedPlayer.otherPositions as Position[],
+   583→                slot.position as Position,
+   584→              ).canFill
+   585→            : false;
+   586→          const isIncompatible = selectedPlayer && !isFilled && !isCompatible;
+   587→          const isShaking = shakingSlot === index;
+   588→
+   589→          // Valid swap target = another filled slot while a move is in progress
+   590→          const isSwapTarget =
+   591→            movingPlayerSlotIndex !== null &&
+   592→            movingPlayerSlotIndex !== index &&
+   593→            isFilled;
+   594→
+   595→          // ===== Task 1b: Compatibility info for filled slot =====
+   596→          let compatKind: 'full' | 'partial' | null = null;
+   597→          let effectiveRating = slot.playerRating;
+   598→          let baseRating = slot.playerRating;
+   599→          if (isFilled && slot.playerPosition) {
+   600→            const { penalty } = canFillSlot(
+   601→              slot.playerPosition as Position,
+   602→              (slot.playerOtherPositions ?? []) as Position[],
+   603→              slot.position as Position,
+   604→            );
+   605→            if (penalty === 1) compatKind = 'full';
+   606→            else if (penalty === 0.8) {
+   607→              compatKind = 'partial';
+   608→              if (slot.playerRating) effectiveRating = Math.round(slot.playerRating * 0.8);
+   609→            }
+   610→          }
+   611→
+   612→          // Tooltip direction: above if slot is in bottom half, below if in top half
+   613→          const tooltipBelow = pos.row < 50;
+   614→
+   615→          // All positions the assigned player can play (for tooltip)
+   616→          const playerAllPositions: string[] = isFilled && slot.playerPosition
+   617→            ? [slot.playerPosition, ...(slot.playerOtherPositions ?? [])]
+   618→            : [];
+   619→
+   620→          return (
+   621→            <motion.button
+   622→              key={index}
+   623→              onClick={() => handleSlotClick(index)}
+   624→              onMouseEnter={() => isFilled && setHoveredSlot(index)}
+   625→              onMouseLeave={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
+   626→              onFocus={() => isFilled && setHoveredSlot(index)}
+   627→              onBlur={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
+   628→              className={`absolute -translate-x-1/2 -translate-y-1/2 ${
+   629→                isSelected ? 'z-20' : isSwapTarget ? 'z-10' : ''
+   630→              } ${isShaking ? 'animate-shake' : ''}`}
+   631→              style={{
+   632→                top: `${pos.row}%`,
+   633→                left: `${pos.col}%`,
+   634→              }}
+   635→              whileTap={isFilled || isCompatible ? { scale: 0.92 } : undefined}
+   636→              aria-label={
+   637→                isFilled
+   638→                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
+   639→                  : `Пустая позиция ${slot.positionLabel}`
+   640→              }
+   641→              layout
+   642→            >
+   643→              <div
+   644→                className={`relative flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 transition-all duration-200 ${
+   645→                  isFilled
+   646→                    ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
+   647→                    : isIncompatible
+   648→                    ? 'border-[#ef4444]/40 border-dashed animate-empty-slot-pulse'
+   649→                    : isCompatible && !isFilled
+   650→                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
+   651→                    : 'border-white/25 border-dashed animate-empty-slot-pulse'
+   652→                } ${
+   653→                  isSelected
+   654→                    ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]'
+   655→                    : isSwapTarget
+   656→                    ? 'ring-2 ring-yellow-400/70 ring-offset-1 ring-offset-[#1a5c30]'
+   657→                    : ''
+   658→                }`}
+   659→                style={{
+   660→                  backgroundColor: isFilled
+   661→                    ? `${color}dd`
+   662→                    : isIncompatible
+   663→                    ? `${color}15`
+   664→                    : `${color}22`,
+   665→                  // ===== Task 1a: Position color ring (3px outside) on filled slots =====
+   666→                  boxShadow: isFilled
+   667→                    ? `0 0 0 3px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
+   668→                    : undefined,
+   669→                }}
+   670→              >
+   671→                {/* ===== Task 2b: Slot number badge (draft order 1-11) ===== */}
+   672→                <div
+   673→                  className={`absolute -top-1.5 -left-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[9px] font-black border ${
+   674→                    isFilled
+   675→                      ? 'bg-[#0f0f1e] text-white/80 border-white/30'
+   676→                      : 'bg-[#0f0f1e]/90 text-white/50 border-white/15'
+   677→                  }`}
+   678→                  aria-hidden
+   679→                >
+   680→                  {index + 1}
+   681→                </div>
+   682→
+   683→                {/* ===== Task 1b: Compatibility badge (top-right) ===== */}
+   684→                {isFilled && compatKind && (
+   685→                  <div
+   686→                    className={`absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 border-[#0f0f1e] ${
+   687→                      compatKind === 'full'
+   688→                        ? 'bg-[#22c55e] text-white'
+   689→                        : 'bg-[#facc15] text-black'
+   690→                    }`}
+   691→                    aria-label={
+   692→                      compatKind === 'full'
+   693→                        ? 'Полная совместимость'
+   694→                        : 'Частичная совместимость (-20% к рейтингу)'
+   695→                    }
+   696→                  >
+   697→                    {compatKind === 'full' ? '✓' : '⚠'}
+   698→                  </div>
+   699→                )}
+   700→
+   701→                {isFilled ? (
+   702→                  <>
+   703→                    <span
+   704→                      className="text-[10px] sm:text-xs font-black text-white leading-tight text-center"
+   705→                      style={{ maxWidth: '52px' }}
+   706→                    >
+   707→                      {getInitials(slot.playerName)}
+   708→                    </span>
+   709→                    {slot.playerRating ? (
+   710→                      <span
+   711→                        className="text-[9px] sm:text-[10px] font-bold px-1.5 rounded-sm mt-0.5 position-label-pill"
+   712→                        style={{
+   713→                          color: getRatingColor(effectiveRating ?? slot.playerRating),
+   714→                          opacity: compatKind === 'partial' ? 0.78 : 1,
+   715→                        }}
+   716→                      >
+   717→                        {effectiveRating ?? slot.playerRating}
+   718→                      </span>
+   719→                    ) : null}
+   720→                  </>
+   721→                ) : isIncompatible ? (
+   722→                  <div className="flex flex-col items-center">
+   723→                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60 position-label-pill">
+   724→                      {slot.positionLabel}
+   725→                    </span>
+   726→                    <span className="text-[8px] leading-none">❌</span>
+   727→                  </div>
+   728→                ) : (
+   729→                  <span className="text-[10px] sm:text-xs font-bold text-white/60 position-label-pill">
+   730→                    {slot.positionLabel}
+   731→                  </span>
+   732→                )}
+   733→              </div>
+   734→
+   735→              {/* ===== Task 1d: Hover Info Tooltip ===== */}
+   736→              <AnimatePresence>
+   737→                {hoveredSlot === index && isFilled && (
+   738→                  <motion.div
+   739→                    initial={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
+   740→                    animate={{ opacity: 1, y: 0 }}
+   741→                    exit={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
+   742→                    transition={{ duration: 0.15 }}
+   743→                    className={`absolute left-1/2 -translate-x-1/2 z-30 w-max max-w-[200px] pointer-events-none ${
+   744→                      tooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
+   745→                    }`}
+   746→                  >
+   747→                    <div className="px-2.5 py-2 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
+   748→                      {/* Full name */}
+   749→                      <div className="text-[11px] font-bold text-white leading-tight mb-1 truncate">
+   750→                        {slot.playerName ?? 'Игрок'}
+   751→                      </div>
+   752→
+   753→                      {/* All positions they can play */}
+   754→                      {playerAllPositions.length > 0 && (
+   755→                        <div className="flex items-center gap-1 mb-1 flex-wrap">
+   756→                          <span className="text-[9px] text-[#94a3b8]">Позиции:</span>
+   757→                          {playerAllPositions.map((p) => (
+   758→                            <span
+   759→                              key={p}
+   760→                              className={`text-[8px] font-bold px-1 py-0.5 rounded ${
+   761→                                p === slot.position
+   762→                                  ? 'bg-[#22c55e]/25 text-[#4ade80]'
+   763→                                  : 'bg-white/5 text-white/60'
+   764→                              }`}
+   765→                            >
+   766→                              {p}
+   767→                            </span>
+   768→                          ))}
+   769→                        </div>
+   770→                      )}
+   771→
+   772→                      {/* Rating line — current vs base if penalty applies */}
+   773→                      {slot.playerRating && (
+   774→                        <div className="text-[9px] text-[#94a3b8]">
+   775→                          Рейтинг:{' '}
+   776→                          {compatKind === 'partial' && baseRating ? (
+   777→                            <>
+   778→                              <span className="line-through text-white/40">{baseRating}</span>
+   779→                              <span className="ml-1" style={{ color: getRatingColor(effectiveRating ?? slot.playerRating) }}>
+   780→                                → {effectiveRating}
+   781→                              </span>
+   782→                              <span className="ml-1 text-[#facc15]">(-20%)</span>
+   783→                            </>
+   784→                          ) : (
+   785→                            <span className="font-bold" style={{ color: getRatingColor(slot.playerRating) }}>
+   786→                              {slot.playerRating}
+   787→                            </span>
+   788→                          )}
+   789→                        </div>
+   790→                      )}
+   791→                    </div>
+   792→                    {/* Arrow */}
+   793→                    <div
+   794→                      className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0f0f1e] border-white/15 ${
+   795→                        tooltipBelow
+   796→                          ? 'top-0 -translate-y-1/2 -rotate-45 border-t border-l'
+   797→                          : 'bottom-0 translate-y-1/2 -rotate-45 border-b border-r'
+   798→                      }`}
+   799→                      aria-hidden
+   800→                    />
+   801→                  </motion.div>
+   802→                )}
+   803→              </AnimatePresence>
+   804→            </motion.button>
+   805→          );
+   806→        })}
+   807→      </div>
+   808→
+   809→      {/* Open positions counter */}
+   810→      <div className="flex items-center justify-center mt-3">
+   811→        <span className="text-xs text-[#94a3b8]">
+   812→          Заполнено: <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
+   813→          {openCount > 0 && <span className="ml-1">· Осталось: {openCount} поз.</span>}
+   814→        </span>
+   815→      </div>
+   816→    </div>
+   817→  );
+   818→}
+   819→

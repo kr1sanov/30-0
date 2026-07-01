@@ -283,7 +283,7 @@ export default function SeasonAwards() {
 
             <div className="relative z-10 flex items-center gap-4">
               {/* Emoji */}
-              <div className="w-14 h-14 rounded-xl bg-[#0a0a0f]/50 flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#0a1a0a]/50 flex items-center justify-center shrink-0">
                 <span className="text-3xl">{award.emoji}</span>
               </div>
 
@@ -295,7 +295,7 @@ export default function SeasonAwards() {
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#0a0a0f]/50 ${CATEGORY_TEXT[award.category]}`}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#0a1a0a]/50 ${CATEGORY_TEXT[award.category]}`}
                   >
                     {POSITION_LABELS[award.position] ?? award.position}
                   </span>
@@ -336,7 +336,7 @@ export default function SeasonAwards() {
             />
 
             <div className="relative z-10 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-[#0a0a0f]/50 flex items-center justify-center shrink-0">
+              <div className="w-14 h-14 rounded-xl bg-[#0a1a0a]/50 flex items-center justify-center shrink-0">
                 <span className="text-3xl">{managerAward.emoji}</span>
               </div>
               <div className="flex-1 min-w-0">
@@ -345,7 +345,7 @@ export default function SeasonAwards() {
                   {managerAward.playerName}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#0a0a0f]/50 text-[#8b5cf6]">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#0a1a0a]/50 text-[#8b5cf6]">
                     Тренер
                   </span>
                   {managerAward.specialAbility && (

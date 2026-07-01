@@ -159,9 +159,9 @@ function getPositionBadgeClasses(pos: number): {
     };
   }
   return {
-    bg: 'bg-[#1a1a2e]',
+    bg: 'bg-[#0d2d0d]',
     text: 'text-[#e2e8f0]',
-    border: 'border-[#1a1a2e]',
+    border: 'border-[#0d2d0d]',
     glow: '',
     emoji: '⚽',
   };
@@ -589,7 +589,7 @@ export default function SimulationResult() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl bg-[#1a1a2e] p-3 flex items-center gap-3 border border-[#22c55e]/20"
+          className="rounded-xl bg-[#0d2d0d] p-3 flex items-center gap-3 border border-[#22c55e]/20"
         >
           <div className="text-2xl">👨‍💼</div>
           <div className="flex-1">
@@ -609,7 +609,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
+          className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d] match-card-hover"
         >
           <div className="text-2xl font-black text-[#22c55e]">{animatedPoints}</div>
           <div className="text-xs text-[#94a3b8]">Очки</div>
@@ -618,7 +618,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
+          className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d] match-card-hover"
         >
           <div className="text-2xl font-black text-[#22c55e]">{animatedWins}</div>
           <div className="text-xs text-[#94a3b8]">Победы</div>
@@ -627,7 +627,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.35 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
+          className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d] match-card-hover"
         >
           <div className="text-2xl font-black text-[#f97316]">{animatedDraws}</div>
           <div className="text-xs text-[#94a3b8]">Ничьи</div>
@@ -636,7 +636,7 @@ export default function SimulationResult() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e] match-card-hover"
+          className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d] match-card-hover"
         >
           <div className="text-2xl font-black text-[#ef4444]">{animatedLosses}</div>
           <div className="text-xs text-[#94a3b8]">Поражения</div>
@@ -645,15 +645,15 @@ export default function SimulationResult() {
 
       {/* Goals */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d]">
           <div className="text-3xl font-black text-[#22c55e]">{result.goalsFor}</div>
           <div className="text-xs text-[#94a3b8]">Забито</div>
         </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d]">
           <div className="text-3xl font-black text-[#ef4444]">{result.goalsAgainst}</div>
           <div className="text-xs text-[#94a3b8]">Пропущено</div>
         </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d]">
           <div className={`text-3xl font-black ${result.goalsFor - result.goalsAgainst > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
             {result.goalsFor - result.goalsAgainst > 0 ? '+' : ''}{result.goalsFor - result.goalsAgainst}
           </div>
@@ -663,11 +663,11 @@ export default function SimulationResult() {
 
       {/* Extra stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d]">
           <div className="text-2xl font-black text-[#8b5cf6]">{winStreak}</div>
           <div className="text-xs text-[#94a3b8]">Лучшая серия побед</div>
         </div>
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 text-center border border-[#0d2d0d]">
           <div className="text-2xl font-black text-[#3b82f6]">{result.squadRating || '-'}</div>
           <div className="text-xs text-[#94a3b8]">Рейтинг состава</div>
         </div>
@@ -675,7 +675,7 @@ export default function SimulationResult() {
 
       {/* Enhanced Season Form Bar */}
       {matchesList.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Форма сезона</h4>
             {isReplaying && (
@@ -705,7 +705,7 @@ export default function SimulationResult() {
                   </div>
                   {/* Hover tooltip */}
                   {hoveredDot === idx && (
-                    <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 bg-[#0a0a0f] border border-[#334155] rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
+                    <div className="absolute bottom-7 left-1/2 -translate-x-1/2 z-10 bg-[#0a1a0a] border border-[#334155] rounded-lg px-2 py-1 text-[10px] whitespace-nowrap shadow-lg">
                       <div className="text-[#94a3b8]">Тур {m.matchday}</div>
                       <div className="text-[#e2e8f0] font-bold">
                         {m.isHome ? '🏠' : '✈️'} {m.homeGoals}-{m.awayGoals} vs {m.opponent}
@@ -732,7 +732,7 @@ export default function SimulationResult() {
                 {matchesList.slice(displayMatchCount).map((m) => (
                   <div
                     key={m.matchday}
-                    className="w-5 h-5 rounded-sm bg-[#0a0a0f] border border-[#334155]/30 flex items-center justify-center text-[8px] text-[#334155]"
+                    className="w-5 h-5 rounded-sm bg-[#0a1a0a] border border-[#334155]/30 flex items-center justify-center text-[8px] text-[#334155]"
                   >
                     {m.matchday}
                   </div>
@@ -745,7 +745,7 @@ export default function SimulationResult() {
 
       {/* Points accumulation sparkline */}
       {pointsAccumulation.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Набранные очки</h4>
             <span className="text-xs font-bold text-[#22c55e]">
@@ -767,7 +767,7 @@ export default function SimulationResult() {
                     y1={y}
                     x2={pointsAccumulation.length - 1}
                     y2={y}
-                    stroke="#1a1a2e"
+                    stroke="#0d2d0d"
                     strokeWidth="2"
                   />
                 );
@@ -853,7 +853,7 @@ export default function SimulationResult() {
             <Button
               onClick={() => setShowMatches(!showMatches)}
               variant="outline"
-              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0]"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#0d2d0d] rounded-xl hover:text-[#e2e8f0]"
             >
               📋 Все матчи
             </Button>
@@ -886,9 +886,9 @@ export default function SimulationResult() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden"
+            className="rounded-2xl bg-[#0d2d0d] border border-[#0d2d0d] overflow-hidden"
           >
-            <div className="px-4 py-3 border-b border-[#0a0a0f]/50">
+            <div className="px-4 py-3 border-b border-[#0a1a0a]/50">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold text-[#e2e8f0]">🎬 Повтор сезона</span>
                 <span className="text-xs text-[#94a3b8]">{displayMatchCount}/30 туров</span>
@@ -936,10 +936,10 @@ export default function SimulationResult() {
 
       {/* Enhanced Match-by-Match view (grouped by period) */}
       {matchesList.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+        <div className="rounded-2xl bg-[#0d2d0d] border border-[#0d2d0d] overflow-hidden">
           <button
             onClick={() => setShowMatches(!showMatches)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a1a0a]/30 transition-colors"
           >
             <span className="text-sm font-bold text-[#e2e8f0]">📋 Матчи по турам</span>
             <motion.span animate={{ rotate: showMatches ? 180 : 0 }} className="text-[#94a3b8]">
@@ -956,11 +956,11 @@ export default function SimulationResult() {
               >
                 <div className="px-3 pb-3 max-h-[28rem] overflow-y-auto custom-scrollbar space-y-3">
                   {periods.map((period, pIdx) => (
-                    <div key={pIdx} className="rounded-xl bg-[#0a0a0f]/20 overflow-hidden">
+                    <div key={pIdx} className="rounded-xl bg-[#0a1a0a]/20 overflow-hidden">
                       {/* Period header */}
                       <button
                         onClick={() => togglePeriod(pIdx)}
-                        className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+                        className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-[#0a1a0a]/30 transition-colors"
                       >
                         <div className="flex items-center gap-2">
                           <motion.span
@@ -999,7 +999,7 @@ export default function SimulationResult() {
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: m.matchday * 0.02 }}
-                                    className={`flex items-center gap-2 p-2 rounded-lg ${resultClass} transition-colors hover:bg-[#0a0a0f]/30`}
+                                    className={`flex items-center gap-2 p-2 rounded-lg ${resultClass} transition-colors hover:bg-[#0a1a0a]/30`}
                                   >
                                     {/* Tour number */}
                                     <span className="text-[10px] text-[#94a3b8] w-5 text-center font-medium">
@@ -1061,10 +1061,10 @@ export default function SimulationResult() {
 
       {/* Tournament Table — expandable */}
       {result.table && result.table.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden">
+        <div className="rounded-2xl bg-[#0d2d0d] border border-[#0d2d0d] overflow-hidden">
           <button
             onClick={() => setShowTable(!showTable)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a0a0f]/30 transition-colors"
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a1a0a]/30 transition-colors"
           >
             <span className="text-sm font-bold text-[#e2e8f0]">📊 Таблица РПЛ</span>
             <motion.span animate={{ rotate: showTable ? 180 : 0 }} className="text-[#94a3b8]">
@@ -1081,7 +1081,7 @@ export default function SimulationResult() {
               >
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-[#94a3b8] border-b border-[#0a0a0f] bg-[#0a0a0f]/50">
+                    <tr className="text-[#94a3b8] border-b border-[#0a1a0a] bg-[#0a1a0a]/50">
                       <th className="py-2.5 px-2 text-left">#</th>
                       <th className="py-2.5 px-2 text-left">Команда</th>
                       <th className="py-2.5 px-2 text-center">И</th>
@@ -1101,12 +1101,12 @@ export default function SimulationResult() {
                       return (
                         <tr
                           key={team.position}
-                          className={`border-b border-[#0a0a0f]/50 transition-colors ${
+                          className={`border-b border-[#0a1a0a]/50 transition-colors ${
                             isMyTeam
                               ? 'bg-[#22c55e]/10'
                               : isRelegation
                               ? 'bg-[#ef4444]/5'
-                              : 'hover:bg-[#0a0a0f]/30'
+                              : 'hover:bg-[#0a1a0a]/30'
                           }`}
                         >
                           <td className="py-2 px-2 text-[#94a3b8]">
@@ -1159,13 +1159,13 @@ export default function SimulationResult() {
 
       {/* Squad that played */}
       {result.players && result.players.length > 0 && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-4 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
           <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">
             Ваш состав
           </h4>
           <div className="grid grid-cols-2 gap-1.5">
             {result.players.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-[#0a0a0f]/30">
+              <div key={i} className="flex items-center gap-2 p-2 rounded-lg bg-[#0a1a0a]/30">
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">
                   {p.position}
                 </span>
@@ -1196,7 +1196,7 @@ export default function SimulationResult() {
         result.goalsFor - result.goalsAgainst >= 50 ||
         winStreak >= 5 ||
         result.goalsFor / 30 >= 2) && (
-        <div className="rounded-2xl bg-[#1a1a2e] p-5 border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-5 border border-[#0d2d0d]">
           <h3 className="text-sm font-bold text-[#e2e8f0] mb-3">Достижения</h3>
           <div className="flex flex-wrap gap-2">
             {isChampion && (
@@ -1282,7 +1282,7 @@ export default function SimulationResult() {
             <Button
               onClick={handleShare}
               variant="outline"
-              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40 btn-rainbow-hover"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#0d2d0d] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40 btn-rainbow-hover"
             >
               📤 Поделиться
             </Button>
@@ -1291,7 +1291,7 @@ export default function SimulationResult() {
             <Button
               onClick={handleCopyResult}
               variant="outline"
-              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#1a1a2e] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
+              className="w-full h-12 text-sm font-bold border-[#94a3b8]/20 text-[#94a3b8] hover:bg-[#0d2d0d] rounded-xl hover:text-[#e2e8f0] hover:border-[#94a3b8]/40"
             >
               📊 Копировать
             </Button>

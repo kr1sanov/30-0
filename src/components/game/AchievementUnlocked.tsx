@@ -43,7 +43,7 @@ export default function AchievementUnlocked() {
             exit={{ scale: 0.8, opacity: 0, rotateY: 180 }}
             transition={{ type: 'spring', damping: 15, stiffness: 200 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-80 rounded-3xl bg-gradient-to-b from-yellow-500/20 to-[#1a1a2e] border-2 border-yellow-500/50 p-8 text-center shadow-[0_0_60px_rgba(234,179,8,0.3)]"
+            className="relative w-80 rounded-3xl bg-gradient-to-b from-yellow-500/20 to-[#0d2d0d] border-2 border-yellow-500/50 p-8 text-center shadow-[0_0_60px_rgba(234,179,8,0.3)]"
           >
             {/* Sparkle particles */}
             {[...Array(6)].map((_, i) => (

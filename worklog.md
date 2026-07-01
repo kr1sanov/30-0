@@ -1869,3 +1869,35 @@ Stage Summary:
 - Agent-browser verified: homepage renders, no console errors, navigation works, header hidden on home, footer fixed correctly
 - Documentation fully updated to reflect current project state
 - Footer CSS bug fixed (position: relative conflict)
+
+---
+Task ID: R9
+Agent: Main
+Task: Redesign 30-0 homepage to match 38-0.app style based on screenshot analysis
+
+Work Log:
+- Analyzed screenshot of 38-0.app using VLM (Vision Language Model)
+- Identified key design differences: dark green theme (#0a1a0a), game mode cards, numbered steps, cleaner hero
+- Delegated homepage redesign to subagent (full-stack-developer)
+- Subagent redesigned HomePage component in page.tsx:
+  - Simplified hero section (removed particles, noise overlay, animated border)
+  - Added "Как это работает?" secondary outline button
+  - Added new "Игровые режимы" section with 4 game mode cards (Классика active, 3 locked with 🔒 and "СКОРО" badge)
+  - Redesigned "Как играть" section with vertical numbered green circles instead of icon grid cards
+  - Enhanced Stats section with 4 items in 2x2 grid
+  - Added uppercase section labels ("ИГРОВЫЕ РЕЖИМЫ", "ЧЕЛЛЕНДЖИ", "ЧАСТЫЕ ВОПРОСЫ")
+  - Updated all colors from near-black (#0a0a0f, #1a1a2e) to dark green (#0a1a0a, #0d2d0d)
+- Delegated game components color update to second subagent
+- Updated 15 component files with new dark green color scheme
+- All old colors (#0a0a0f, #1a1a2e, #14142b, #151528) replaced with green equivalents
+- Verified with agent-browser: homepage renders correctly, all sections visible, Play button works, no console errors
+- Lint passes cleanly, no compilation errors
+
+Stage Summary:
+- Homepage fully redesigned to match 38-0.app style
+- Dark green theme applied consistently across ALL components
+- New sections: Game Modes (4 cards), numbered How to Play steps, enhanced Stats
+- Hero is cleaner and simpler (no particles/noise)
+- Secondary CTA button "Как это работает?" added
+- Locked game modes show toast "Скоро!" with gold "СКОРО" badge
+- All 15 game component files updated with new color scheme

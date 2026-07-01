@@ -20,43 +20,22 @@ import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
 import DraftProgressTracker from '@/components/game/DraftProgressTracker';
 import AchievementUnlocked from '@/components/game/AchievementUnlocked';
-
-/* ─── Icon helpers (inline SVGs) ─── */
-function RotateIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" /><path d="M21 3v9h-9" />
-    </svg>
-  );
-}
-function UserPlusIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" x2="19" y1="8" y2="14" /><line x1="22" x2="16" y1="11" y2="11" />
-    </svg>
-  );
-}
-function UsersIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-function TrophyIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" /><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" /><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
-  );
-}
+import { toast } from 'sonner';
 
 /* ─── Step data ─── */
 const STEPS = [
-  { icon: RotateIcon, title: 'Крути колесо', desc: 'Колесо фортуны выбирает реальный клуб и сезон РПЛ' },
-  { icon: UserPlusIcon, title: 'Выбери игрока', desc: 'Бери игрока из состава этого клуба в свою команду' },
-  { icon: UsersIcon, title: 'Собери XI', desc: 'Повторяй, пока все 11 позиций не будут заполнены' },
-  { icon: TrophyIcon, title: 'Сыграй сезон', desc: 'Симулируй 30 матчей — сможешь ли добиться 30-0?' },
+  { title: 'Крути колесо', desc: 'Колесо фортуны выбирает реальный клуб и сезон РПЛ' },
+  { title: 'Выбери игрока', desc: 'Бери игрока из состава этого клуба в свою команду' },
+  { title: 'Собери XI', desc: 'Повторяй, пока все 11 позиций не будут заполнены' },
+  { title: 'Сыграй сезон', desc: 'Симулируй 30 матчей — сможешь ли добиться 30-0?' },
+];
+
+/* ─── Game Modes data ─── */
+const GAME_MODES = [
+  { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6' },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#3b82f6' },
+  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#22c55e' },
+  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', badge: 'СКОРО' },
 ];
 
 interface ChallengeDef {
@@ -168,13 +147,10 @@ function AnimatedCounter({ target, duration = 1000, delay = 0 }: { target: numbe
 }
 
 /* ─── Stats Counter with useInView ─── */
-/* Parses "5000+" -> target=5000, suffix="+"
- * Falls back to static display for multi-number values like "1992-2026" */
 function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: string; label: string; color?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
-  // Match exactly one integer in the string (first occurrence). For ranges like "1992-2026", returns null.
   const match = value.match(/^[^\d]*(\d+)([^\d]*)$/);
   const prefix = match ? value.slice(0, value.indexOf(match[1])) : '';
   const targetNum = match ? parseInt(match[1], 10) : 0;
@@ -201,7 +177,7 @@ function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: strin
       <div className={`text-2xl sm:text-3xl font-black ${color}`}>
         {canAnimate && isInView ? `${prefix}${displayNum}${suffix}` : value}
       </div>
-      <div className="text-xs text-[#94a3b8]">{label}</div>
+      <div className="text-xs text-[#94a3b8] mt-1">{label}</div>
     </div>
   );
 }
@@ -229,7 +205,7 @@ function RecentResults() {
       </h2>
 
       {recentSeasons.length === 0 ? (
-        <div className="rounded-2xl bg-[#1a1a2e] p-8 text-center border border-[#1a1a2e]">
+        <div className="rounded-2xl bg-[#0d2d0d] p-8 text-center border border-[#1a3a1a]">
           <div className="text-3xl mb-2">⚽</div>
           <div className="text-sm text-[#94a3b8]">Сыграйте первый сезон!</div>
           <Button
@@ -251,7 +227,7 @@ function RecentResults() {
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-xl bg-[#1a1a2e] p-3 border border-[#1a1a2e] flex items-center gap-3"
+                className="rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a] flex items-center gap-3"
               >
                 {/* Formation badge */}
                 <div className="w-12 h-12 rounded-lg bg-[#3b82f6]/15 flex flex-col items-center justify-center shrink-0">
@@ -294,20 +270,6 @@ function RecentResults() {
   );
 }
 
-/* ─── Floating particles data ─── */
-const PARTICLES = [
-  { emoji: '⚽', size: 'text-lg', top: '8%', left: '6%', anim: 'animate-float-organic-1', delay: '0s' },
-  { emoji: '🏆', size: 'text-2xl', top: '15%', right: '10%', anim: 'animate-float-organic-2', delay: '0.5s' },
-  { emoji: '⭐', size: 'text-lg', top: '35%', left: '3%', anim: 'animate-float-organic-3', delay: '1s' },
-  { emoji: '💚', size: 'text-xl', bottom: '30%', right: '5%', anim: 'animate-float-organic-1', delay: '1.5s' },
-  { emoji: '⚽', size: 'text-lg', top: '60%', left: '12%', anim: 'animate-float-organic-2', delay: '2s' },
-  { emoji: '🏆', size: 'text-xl', bottom: '15%', right: '18%', anim: 'animate-float-organic-3', delay: '2.5s' },
-  { emoji: '⭐', size: 'text-base', top: '20%', left: '20%', anim: 'animate-float-organic-1', delay: '3s' },
-  { emoji: '💚', size: 'text-lg', bottom: '40%', left: '8%', anim: 'animate-float-organic-2', delay: '3.5s' },
-  { emoji: '⚽', size: 'text-2xl', top: '45%', right: '8%', anim: 'animate-float-organic-3', delay: '4s' },
-  { emoji: '⭐', size: 'text-base', bottom: '20%', right: '25%', anim: 'animate-float-organic-1', delay: '4.5s' },
-];
-
 /* ─── Home Page ─── */
 function HomePage() {
   const { setScreen, profileStats, runId, resumeGame } = useGameStore();
@@ -315,48 +277,29 @@ function HomePage() {
 
   return (
     <div className="space-y-10 pb-8">
-      {/* Hero Section */}
+      {/* ── Hero Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center text-center space-y-3 pt-2"
+        className="flex flex-col items-center justify-center text-center space-y-5 pt-4"
       >
-        {/* Hero container with animated gradient border, noise, scanlines */}
-        <div className="relative rounded-3xl p-5 sm:p-8 border-2 animate-hero-border overflow-hidden noise-overlay scanlines">
+        {/* Hero container — simple, clean */}
+        <div className="relative rounded-3xl p-6 sm:p-10 overflow-hidden">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.15) 0%, transparent 60%)',
+              background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.12) 0%, transparent 60%)',
             }}
           />
-
-          {/* Enhanced floating particles */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.15]">
-            {PARTICLES.map((p, i) => (
-              <span
-                key={i}
-                className={`absolute ${p.size} ${p.anim}`}
-                style={{
-                  top: p.top,
-                  left: p.left,
-                  right: p.right,
-                  bottom: p.bottom,
-                  animationDelay: p.delay,
-                }}
-              >
-                {p.emoji}
-              </span>
-            ))}
-          </div>
 
           <div className="relative z-10">
             {/* Animated Score Counter */}
             <div className="relative inline-block">
               <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
                 <AnimatedCounter target={30} duration={1000} delay={0} />
-                <span className="text-[#1a1a2e]">-</span>
+                <span className="text-[#0d2d0d]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -395,21 +338,12 @@ function HomePage() {
               Составь символическую сборную лучших русских команд всех времен
             </motion.p>
 
-            {/* Pulsing underline */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.3, duration: 0.4 }}
-              className="mx-auto mt-2 h-0.5 w-24 rounded-full bg-gradient-to-r from-transparent via-[#22c55e] to-transparent animate-pulse-underline"
-              style={{ transformOrigin: 'center' }}
-            />
-
             {/* Description with delayed fade-in */}
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.4 }}
-              className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3"
+              className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3 mx-auto"
             >
               Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
               Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
@@ -417,33 +351,93 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Play button with gradient glow */}
-        <div className="flex flex-col items-center gap-3">
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <Button
             onClick={() => setScreen('setup')}
-            className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all active:scale-95 animate-button-glow btn-inner-shimmer"
+            className="h-14 px-12 text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-xl transition-all active:scale-95 animate-button-glow btn-inner-shimmer hover:scale-[1.02]"
           >
-            Играть 30-0
+            Играть 30-0 →
           </Button>
-          {runId && (
-            <button
-              onClick={resumeGame}
-              className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-3 text-sm font-medium transition-all active:scale-95"
-            >
-              Продолжить драфт
-            </button>
-          )}
+          <button
+            onClick={() => setShowHowToPlay(true)}
+            className="h-14 px-8 text-base font-semibold text-white border-2 border-white/30 rounded-xl transition-all hover:border-[#22c55e]/60 hover:text-[#22c55e] hover:scale-[1.02] active:scale-95"
+          >
+            Как это работает?
+          </button>
         </div>
 
-        <button
-          onClick={() => setShowHowToPlay(true)}
-          className="text-sm text-[#94a3b8] hover:text-[#22c55e] transition-colors underline underline-offset-4 decoration-[#94a3b8]/30 hover:decoration-[#22c55e]/50"
-        >
-          Как играть?
-        </button>
+        {/* Resume draft button */}
+        {runId && (
+          <button
+            onClick={resumeGame}
+            className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-3 text-sm font-medium transition-all active:scale-95"
+          >
+            Продолжить драфт
+          </button>
+        )}
       </motion.div>
 
-      {/* How to Play Steps */}
+      {/* ── Game Modes Section ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.15 }}
+        className="space-y-5"
+      >
+        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e]">
+          Игровые режимы
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {GAME_MODES.map((mode, i) => (
+            <motion.button
+              key={mode.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.08 }}
+              onClick={() => {
+                if (mode.active) {
+                  setScreen('setup');
+                } else {
+                  toast('Скоро!');
+                }
+              }}
+              className={`relative rounded-xl p-4 text-left border transition-all overflow-hidden group ${
+                mode.active
+                  ? 'bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_15px_rgba(34,197,94,0.08)]'
+                  : 'bg-[#0d2d0d]/60 border-[#1a3a1a]/50 opacity-70'
+              }`}
+            >
+              {/* Badge for coming soon */}
+              {mode.badge && (
+                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
+                  {mode.badge}
+                </span>
+              )}
+
+              {/* Lock icon for inactive modes */}
+              {!mode.active && (
+                <span className="absolute top-2 right-2 text-xs opacity-50">🔒</span>
+              )}
+
+              <div className="text-2xl mb-2" style={{ filter: mode.active ? 'none' : 'grayscale(0.3)' }}>
+                {mode.emoji}
+              </div>
+              <div className="text-sm font-semibold text-[#e2e8f0] mb-1">{mode.title}</div>
+              <div className="text-xs text-[#9ca3af] leading-relaxed">{mode.desc}</div>
+
+              {/* Right arrow for active card */}
+              {mode.active && (
+                <div className="absolute bottom-3 right-3 text-[#22c55e]/50 group-hover:text-[#22c55e] transition-colors">
+                  →
+                </div>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ── How to Play Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -453,21 +447,23 @@ function HomePage() {
         <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
           Как играть
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="space-y-3">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + i * 0.1 }}
-              className="rounded-2xl bg-[#1a1a2e] p-5 text-center border border-[#1a1a2e] card-glow"
+              className="flex items-center gap-4 rounded-xl bg-[#0d2d0d] p-4 border border-[#1a3a1a]"
             >
-              <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-[#22c55e]/15 flex items-center justify-center">
-                <step.icon className="w-6 h-6 text-[#22c55e]" />
+              {/* Green numbered circle */}
+              <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
+                <span className="text-sm font-bold text-white">{i + 1}</span>
               </div>
-              <div className="text-xs text-[#22c55e] font-bold mb-1">Шаг {i + 1}</div>
-              <div className="text-sm font-bold text-[#e2e8f0] mb-1">{step.title}</div>
-              <div className="text-xs text-[#94a3b8] leading-relaxed">{step.desc}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-[#e2e8f0]">{step.title}</div>
+                <div className="text-xs text-[#9ca3af] leading-relaxed">{step.desc}</div>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -476,34 +472,35 @@ function HomePage() {
       {/* Section divider */}
       <div className="section-divider" />
 
-      {/* Stats Section with animated counters (glass-morphism) */}
+      {/* ── Stats Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="glass-stats-card rounded-2xl p-6 flex items-center justify-center gap-4 sm:gap-8 flex-wrap"
+        className="glass-stats-card rounded-2xl p-6"
       >
-        <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
-        <div className="w-px h-8 bg-[#1a1a2e]" />
-        <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
-        <div className="w-px h-8 bg-[#1a1a2e]" />
-        <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
+          <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
+          <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
+          <StatsCounter value="30" label="матчей" color="text-[#22c55e]" />
+        </div>
       </motion.div>
 
       {/* Section divider */}
       <div className="section-divider" />
 
-      {/* Popular Challenges */}
+      {/* ── Popular Challenges ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.5 }}
         className="space-y-6"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
           Челленджи
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           {CHALLENGES.map((ch) => {
             const isCompleted = ch.checkFn(profileStats);
             const progress = ch.progressFn(profileStats);
@@ -513,19 +510,19 @@ function HomePage() {
                 key={ch.title}
                 onClick={() => setScreen('setup')}
                 whileTap={{ scale: 0.97 }}
-                className={`relative rounded-2xl p-5 text-left border-l-4 border-r border-t border-b border-[#1a1a2e] card-glow card-shine transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
+                className={`relative rounded-xl p-4 text-left border-l-4 border-r border-t border-b border-[#1a3a1a] card-glow transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
                 style={{ borderLeftColor: ch.emoji === '🔥' ? '#ef4444' : ch.emoji === '🛡️' ? '#3b82f6' : ch.emoji === '⚡' ? '#fbbf24' : '#22c55e' }}
               >
                 {/* Emoji with bounce on hover */}
                 <motion.div
-                  className="text-2xl mb-2 inline-block"
+                  className="text-xl mb-2 inline-block"
                   whileHover={{ scale: 1.3, rotate: 10 }}
                   transition={{ type: 'spring', stiffness: 300 }}
                 >
                   {ch.emoji}
                 </motion.div>
                 <div className="text-sm font-bold text-[#e2e8f0] mb-1">{ch.title}</div>
-                <div className="text-xs text-[#94a3b8]">{ch.desc}</div>
+                <div className="text-xs text-[#9ca3af]">{ch.desc}</div>
 
                 {/* Progress bar */}
                 <div className="challenge-progress-bar">
@@ -545,26 +542,26 @@ function HomePage() {
         </div>
       </motion.div>
 
-      {/* Recent Results */}
+      {/* ── Recent Results ── */}
       <div className="section-divider" />
       <RecentResults />
 
-      {/* FAQ Accordion */}
+      {/* ── FAQ Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.6 }}
         className="space-y-4"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
           Частые вопросы
-        </h2>
+        </p>
         <Accordion type="single" collapsible className="space-y-3">
           {FAQ_ITEMS.map((item, i) => (
             <AccordionItem
               key={i}
               value={`faq-${i}`}
-              className="rounded-2xl bg-[#1a1a2e] border border-[#1a1a2e] overflow-hidden px-5 card-glow"
+              className="rounded-xl bg-[#0d2d0d] border border-[#1a3a1a] overflow-hidden px-5 card-glow"
             >
               <AccordionTrigger className="text-sm font-bold text-[#e2e8f0] hover:text-[#22c55e] hover:no-underline py-4">
                 {item.q}
@@ -607,7 +604,7 @@ function PositionAssignScreen() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-xl bg-[#1a1a2e] p-4 border border-[#22c55e]/20">
+      <div className="rounded-xl bg-[#0d2d0d] p-4 border border-[#22c55e]/20">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-[#22c55e]/20 flex items-center justify-center shrink-0">
             <svg className="w-5 h-5 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -637,7 +634,7 @@ function PositionAssignScreen() {
             useGameStore.setState({ selectedPlayer: null });
             setScreen('draft');
           }}
-          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0a0a0f]/50 text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#0a0a0f] transition-colors text-sm font-medium"
+          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0a1a0a]/50 text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#0a1a0a] transition-colors text-sm font-medium"
         >
           🔙 Назад
         </button>
@@ -760,7 +757,7 @@ function LeaderboardScreen() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-[#1a1a2e] p-10 text-center border border-[#1a1a2e]"
+          className="rounded-2xl bg-[#0d2d0d] p-10 text-center border border-[#1a3a1a]"
         >
           <div className="text-6xl mb-4">🏆</div>
           <div className="text-lg font-bold text-[#e2e8f0] mb-2">Пока нет результатов</div>
@@ -793,12 +790,12 @@ function LeaderboardScreen() {
                     ? 'bg-gradient-to-r from-gray-400/10 to-gray-400/5 border-gray-400/20'
                     : idx === 2
                     ? 'bg-gradient-to-r from-amber-700/10 to-amber-700/5 border-amber-700/20'
-                    : 'bg-[#1a1a2e] border-[#1a1a2e]'
+                    : 'bg-[#0d2d0d] border-[#1a3a1a]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   {/* Rank */}
-                  <div className="w-10 h-10 rounded-xl bg-[#0a0a0f]/50 flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#0a1a0a]/50 flex items-center justify-center shrink-0">
                     <span className="text-lg">{rankEmoji || <span className="text-sm font-bold text-[#94a3b8]">{idx + 1}</span>}</span>
                   </div>
 
@@ -926,7 +923,7 @@ export default function Home() {
   }, [screen]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
+    <div className="min-h-screen flex flex-col bg-[#0a1a0a]">
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />
