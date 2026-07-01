@@ -105,6 +105,8 @@ interface GameState {
   spinManager: (manager?: Manager) => Promise<void>;
   simulate: (manager?: Manager | null) => Promise<void>;
   resetGame: () => void;
+  goHome: () => void;
+  resumeGame: () => void;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -623,6 +625,32 @@ export const useGameStore = create<GameState>()(
         }));
       },
 
+      goHome: () => {
+        set({ screen: 'home' });
+      },
+
+      resumeGame: () => {
+        const { runId, slots, currentSpin, selectedPlayer } = get();
+        if (!runId) return;
+
+        // Check if there are any players drafted
+        const hasPlayers = slots.some((s) => s.playerId);
+        if (!hasPlayers) return;
+
+        // Determine the appropriate screen to return to
+        const allFilled = slots.every((s) => s.playerId);
+
+        if (allFilled) {
+          set({ screen: 'squad-complete' });
+        } else if (currentSpin) {
+          set({ screen: 'draft' });
+        } else if (selectedPlayer) {
+          set({ screen: 'position-assign' });
+        } else {
+          set({ screen: 'draft' });
+        }
+      },
+
       resetGame: () => {
         set({
           screen: 'home',
@@ -640,6 +668,25 @@ export const useGameStore = create<GameState>()(
           lastDraftState: null,
           newAchievements: [],
         });
+      },
+
+      goHome: () => {
+        set({ screen: 'home' });
+      },
+
+      resumeGame: () => {
+        const { slots, seasonResult, selectedPlayer, currentSpin } = get();
+        const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
+
+        if (seasonResult) {
+          set({ screen: 'result' });
+        } else if (allFilled) {
+          set({ screen: 'squad-complete' });
+        } else if (selectedPlayer) {
+          set({ screen: 'position-assign' });
+        } else {
+          set({ screen: 'draft' });
+        }
       },
 
       loadLeaderboard: async () => {
@@ -666,8 +713,20 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      // Persist profileStats and lastConfig for quick replay
-      partialize: (state) => ({ profileStats: state.profileStats, lastConfig: state.lastConfig }),
+      // Persist profileStats, lastConfig, and game state for resuming drafts
+      partialize: (state) => ({
+        profileStats: state.profileStats,
+        lastConfig: state.lastConfig,
+        runId: state.runId,
+        slots: state.slots,
+        rerollsLeft: state.rerollsLeft,
+        rerollsUsed: state.rerollsUsed,
+        currentSpin: state.currentSpin,
+        currentManager: state.currentManager,
+        config: state.config,
+        seasonResult: state.seasonResult,
+        selectedPlayer: state.selectedPlayer,
+      }),
     },
   ),
 );

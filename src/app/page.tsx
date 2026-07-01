@@ -310,20 +310,20 @@ const PARTICLES = [
 
 /* ─── Home Page ─── */
 function HomePage() {
-  const { setScreen, profileStats } = useGameStore();
+  const { setScreen, profileStats, runId, resumeGame } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
-    <div className="space-y-16 pb-8">
+    <div className="space-y-10 pb-8">
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="flex flex-col items-center justify-center text-center space-y-6 pt-8"
+        transition={{ duration: 0.3 }}
+        className="flex flex-col items-center justify-center text-center space-y-3 pt-2"
       >
         {/* Hero container with animated gradient border, noise, scanlines */}
-        <div className="relative rounded-3xl p-8 sm:p-12 border-2 animate-hero-border overflow-hidden noise-overlay scanlines">
+        <div className="relative rounded-3xl p-5 sm:p-8 border-2 animate-hero-border overflow-hidden noise-overlay scanlines">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -333,7 +333,7 @@ function HomePage() {
           />
 
           {/* Enhanced floating particles */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.15]">
             {PARTICLES.map((p, i) => (
               <span
                 key={i}
@@ -355,12 +355,12 @@ function HomePage() {
             {/* Animated Score Counter */}
             <div className="relative inline-block">
               <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
-                <AnimatedCounter target={30} duration={1000} delay={200} />
+                <AnimatedCounter target={30} duration={1000} delay={0} />
                 <span className="text-[#1a1a2e]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1.3, duration: 0.5, type: 'spring', stiffness: 200 }}
+                  transition={{ delay: 0.4, duration: 0.5, type: 'spring', stiffness: 200 }}
                   className="inline-block animate-zero-pulse"
                   style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}
                 >
@@ -389,17 +389,17 @@ function HomePage() {
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5 }}
-              className="text-2xl sm:text-3xl font-bold text-gradient-subtitle mt-4"
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="text-2xl sm:text-3xl font-black text-gradient-subtitle mt-4"
             >
-              Футбольный драфт РПЛ
+              Составь символическую сборную лучших русских команд всех времен
             </motion.p>
 
             {/* Pulsing underline */}
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ delay: 1.2, duration: 0.6 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
               className="mx-auto mt-2 h-0.5 w-24 rounded-full bg-gradient-to-r from-transparent via-[#22c55e] to-transparent animate-pulse-underline"
               style={{ transformOrigin: 'center' }}
             />
@@ -408,7 +408,7 @@ function HomePage() {
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.4, duration: 0.5 }}
+              transition={{ delay: 0.5, duration: 0.4 }}
               className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3"
             >
               Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
@@ -418,12 +418,22 @@ function HomePage() {
         </div>
 
         {/* Play button with gradient glow */}
-        <Button
-          onClick={() => setScreen('setup')}
-          className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all hover:scale-105 active:scale-95 animate-button-glow btn-shimmer"
-        >
-          Играть 30-0
-        </Button>
+        <div className="flex flex-col items-center gap-3">
+          <Button
+            onClick={() => setScreen('setup')}
+            className="h-16 px-14 text-xl font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl transition-all active:scale-95 animate-button-glow btn-inner-shimmer"
+          >
+            Играть 30-0
+          </Button>
+          {runId && (
+            <button
+              onClick={resumeGame}
+              className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-3 text-sm font-medium transition-all active:scale-95"
+            >
+              Продолжить драфт
+            </button>
+          )}
+        </div>
 
         <button
           onClick={() => setShowHowToPlay(true)}
@@ -917,8 +927,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0a0a0f]">
+      {/* Semi-transparent football field background */}
+      <div className="football-field-bg" />
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6 relative z-10">
         <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={screen}

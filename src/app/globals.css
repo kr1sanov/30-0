@@ -1243,3 +1243,52 @@ html {
 .stat-card-hover:hover {
   transform: scale(1.05);
 }
+
+/* Inner shimmer for CTA buttons — light sweep inside the button without size change */
+@keyframes btnInnerShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.btn-inner-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-inner-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -200%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent 100%);
+  animation: btnInnerShimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Semi-transparent football field background */
+.football-field-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image:
+    /* Center circle */
+    radial-gradient(ellipse 80px 80px at 50% 50%, transparent 48%, rgba(34,197,94,0.8) 49%, rgba(34,197,94,0.8) 51%, transparent 52%),
+    /* Center line */
+    linear-gradient(0deg, transparent 49.5%, rgba(34,197,94,0.6) 49.5%, rgba(34,197,94,0.6) 50.5%, transparent 50.5%),
+    /* Center dot */
+    radial-gradient(circle 4px at 50% 50%, rgba(34,197,94,0.8) 100%, transparent 100%),
+    /* Top penalty area */
+    linear-gradient(0deg, transparent 4%, rgba(34,197,94,0.6) 4%, rgba(34,197,94,0.6) 4.5%, transparent 4.5%),
+    linear-gradient(0deg, transparent 16%, rgba(34,197,94,0.6) 16%, rgba(34,197,94,0.6) 16.5%, transparent 16.5%),
+    /* Bottom penalty area */
+    linear-gradient(0deg, transparent 83.5%, rgba(34,197,94,0.6) 83.5%, rgba(34,197,94,0.6) 84%, transparent 84%),
+    linear-gradient(0deg, transparent 95.5%, rgba(34,197,94,0.6) 95.5%, rgba(34,197,94,0.6) 96%, transparent 96%),
+    /* Side lines */
+    linear-gradient(90deg, rgba(34,197,94,0.6) 0%, rgba(34,197,94,0.6) 0.3%, transparent 0.3%),
+    linear-gradient(90deg, transparent 99.7%, rgba(34,197,94,0.6) 99.7%, rgba(34,197,94,0.6) 100%),
+    /* Top and bottom lines */
+    linear-gradient(0deg, rgba(34,197,94,0.6) 0%, rgba(34,197,94,0.6) 0.3%, transparent 0.3%),
+    linear-gradient(0deg, transparent 99.7%, rgba(34,197,94,0.6) 99.7%, rgba(34,197,94,0.6) 100%);
+}

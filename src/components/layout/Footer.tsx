@@ -29,12 +29,26 @@ export default function Footer() {
 
   const handleTabClick = (tabId: TabId) => {
     switch (tabId) {
-      case 'home':
-        useGameStore.getState().resetGame();
+      case 'home': {
+        const state = useGameStore.getState();
+        // If there's an active draft, go home without clearing game state
+        if (state.runId) {
+          state.goHome();
+        } else {
+          state.resetGame();
+        }
         break;
-      case 'play':
-        useGameStore.getState().setScreen('setup');
+      }
+      case 'play': {
+        const state = useGameStore.getState();
+        // If there's an active draft, resume it
+        if (state.runId) {
+          state.resumeGame();
+        } else {
+          state.setScreen('setup');
+        }
         break;
+      }
       case 'profile':
         useGameStore.getState().setScreen('profile');
         break;

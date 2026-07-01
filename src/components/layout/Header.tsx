@@ -4,9 +4,21 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { useSound } from '@/hooks/use-sound';
+import { Home, User } from 'lucide-react';
+
+const GAME_SCREENS = new Set([
+  'draft',
+  'position-assign',
+  'squad-complete',
+  'pre-match',
+  'manager-choice',
+  'simulation',
+  'result',
+  'awards',
+]);
 
 export default function Header() {
-  const { screen, resetGame } = useGameStore();
+  const { screen, goHome, resetGame, runId } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const { toggle, isEnabled } = useSound();
   const [soundOn, setSoundOn] = useState(true);
@@ -20,11 +32,47 @@ export default function Header() {
     setSoundOn(newState);
   };
 
-  const isPlaying = screen !== 'home' && screen !== 'setup' && screen !== 'profile' && screen !== 'leaderboard';
+  // Mode 1: Home screen — hide everything
+  if (screen === 'home') {
+    return null;
+  }
 
+  // Mode 2: Game screens — subtle overlay buttons
+  if (GAME_SCREENS.has(screen)) {
+    return (
+      <>
+        {/* Subtle home button — top left */}
+        <button
+          onClick={goHome}
+          className="fixed top-3 left-3 z-50 w-9 h-9 flex items-center justify-center rounded-full opacity-30 hover:opacity-80 transition-opacity duration-200 text-white/80 hover:text-white"
+          aria-label="Домой"
+          title="Домой"
+        >
+          <Home className="w-[18px] h-[18px]" />
+        </button>
+
+        {/* Subtle profile button — top right */}
+        <button
+          onClick={() => useGameStore.getState().setScreen('profile')}
+          className="fixed top-3 right-3 z-50 w-9 h-9 flex items-center justify-center rounded-full opacity-30 hover:opacity-80 transition-opacity duration-200 text-white/80 hover:text-white"
+          aria-label="Профиль"
+          title="Профиль"
+        >
+          <User className="w-[18px] h-[18px]" />
+        </button>
+      </>
+    );
+  }
+
+  // Mode 3: Setup, profile, leaderboard — normal header
   const handleHome = () => {
     if (screen === 'home') return;
-    resetGame();
+    // If there's an active draft, go home without clearing game state
+    if (runId) {
+      goHome();
+    } else {
+      resetGame();
+    }
   };
 
   return (
@@ -47,18 +95,6 @@ export default function Header() {
 
           {/* Navigation */}
           <div className="flex items-center gap-1.5">
-            {isPlaying && (
-              <button
-                onClick={resetGame}
-                className="px-3 py-1.5 text-xs font-bold text-[#ef4444] hover:text-[#fca5a5] rounded-lg hover:bg-[#ef4444]/10 transition-all flex items-center gap-1"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
-                </svg>
-                Рестарт
-              </button>
-            )}
-
             <button
               onClick={handleToggleSound}
               className="px-3 py-1.5 text-sm font-medium text-[#94a3b8] hover:text-[#22c55e] rounded-lg hover:bg-[#22c55e]/10 transition-all"

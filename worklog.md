@@ -1698,3 +1698,118 @@ docker compose up -d
 docker compose exec app npx prisma migrate deploy
 docker compose exec app bun run db:seed
 ```
+
+---
+
+## Task 2 — Header & Game UI Agent (Task 4: Hide toolbar, add subtle game navigation buttons)
+
+**Date**: Current session
+
+### Changes Made:
+
+#### 1. `/home/z/my-project/src/store/gameStore.ts` — Added `goHome()` and `resumeGame()` actions
+
+- **`goHome()`**: Sets `screen: 'home'` without clearing any game state (runId, slots, etc. are preserved). This allows users to return to the home screen and later resume their draft.
+- **`resumeGame()`**: Intelligently determines the appropriate screen to return to based on current game state:
+  - If all slots filled → `'squad-complete'`
+  - If `currentSpin` exists → `'draft'` (was mid-spin)
+  - If `selectedPlayer` exists → `'position-assign'`
+  - Otherwise → `'draft'`
+  - Only works if `runId` exists and at least one slot has a player
+
+#### 2. `/home/z/my-project/src/components/layout/Header.tsx` — Complete rewrite with 3 display modes
+
+- **Mode 1 — Home screen (`screen === 'home'`)**: Returns `null`, completely hiding the header. Clean immersive home page.
+- **Mode 2 — Game screens** (draft, position-assign, squad-complete, pre-match, manager-choice, simulation, result, awards): Shows two subtle, semi-transparent overlay buttons:
+  - **Top-left**: Home icon button (`Home` from lucide-react) — calls `goHome()` to return home without losing game state
+  - **Top-right**: Profile icon button (`User` from lucide-react) — navigates to profile screen
+  - Styling: `fixed top-3 left-3/right-3 z-50`, `w-9 h-9`, `rounded-full`, `opacity-30 hover:opacity-80 transition-opacity`, `text-white/80` — barely visible on dark background but discoverable on hover/tap
+- **Mode 3 — Other screens** (setup, profile, leaderboard): Shows the normal full header with logo, sound toggle, how-to-play, profile, and leaderboard buttons
+
+### Design Decisions:
+- Used Lucide React icons (`Home`, `User`) instead of emoji for cleaner, more consistent look at small sizes
+- No background on overlay buttons — they blend into the dark `#0a0a0f` background
+- `opacity-30` default makes them nearly invisible during gameplay, `hover:opacity-80` makes them clearly visible when needed
+- Used `position: fixed` instead of `sticky` for game buttons so they stay at the top even during scroll
+- Separated `goHome()` from `resetGame()` — goHome preserves game state, resetGame clears everything
+
+---
+
+## Round 7 — Page Hero & UI Polish (Agent: Page Hero & UI Agent)
+
+### Changes Made:
+
+#### Task 1: Subtitle text change
+- Changed subtitle from "Футбольный драфт РПЛ" to "Составь символическую сборную лучших русских команд всех времен"
+- Made it `font-black` (was `font-bold`)
+
+#### Task 2: Fix "Играть 30-0" button hover jumping
+- Removed `hover:scale-105` from the play button
+- Kept `active:scale-95` for press feedback
+- Added `btn-inner-shimmer` CSS class with `btnInnerShimmer` keyframe animation
+- The shimmer is a light gradient sweep that moves from left to right inside the button continuously
+- Replaced old `btn-shimmer` class with `btn-inner-shimmer` on the play button
+
+#### Task 3: Move hero block higher, better mobile adaptation
+- Reduced top padding: `pt-8` → `pt-2`
+- Reduced space between hero elements: `space-y-6` → `space-y-3`
+- Reduced hero container padding: `p-8 sm:p-12` → `p-5 sm:p-8`
+- Reduced overall section spacing: `space-y-16` → `space-y-10`
+
+#### Task 5: Semi-transparent football field background
+- Added `.football-field-bg` CSS class with football field markings (center circle, center line, penalty areas, side lines)
+- Applied at very low opacity (0.03) as a fixed background element
+- Positioned behind all content with z-index layering
+
+#### Task 6: Speed up page opening animations
+- "30" counter delay: 200ms → 0ms
+- "0" spring animation delay: 1.3s → 0.4s
+- Subtitle delay: 0.8s → 0.2s
+- Underline delay: 1.2s → 0.3s, duration: 0.6s → 0.4s
+- Description delay: 1.4s → 0.5s, duration: 0.5s → 0.4s
+- Hero section overall animation duration: 0.6s → 0.3s
+
+#### Task 7: Make background emoji elements more transparent
+- Added `opacity-[0.15]` class to the floating particles container div
+- Particles are now barely visible but still add atmosphere
+
+#### Task 8: Add "Continue draft" button + game state persistence
+- Added `goHome()` action to gameStore — sets screen to 'home' WITHOUT clearing game state
+- Added `resumeGame()` action to gameStore — intelligently navigates back to the appropriate game screen (draft, position-assign, squad-complete, or result) based on current state
+- Updated `partialize` function to persist: `runId`, `slots`, `rerollsLeft`, `rerollsUsed`, `currentSpin`, `currentManager`, `config`, `seasonResult`, `selectedPlayer`
+- Added "Продолжить драфт" button in HomePage that only appears when `runId` is not null
+- Styled with `bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20` and inner shimmer animation
+- Updated Header to use `goHome()` instead of `resetGame()` when there's an active game (runId exists)
+
+### Files Modified:
+1. `/home/z/my-project/src/app/page.tsx` — Tasks 1, 2, 3, 5, 6, 7, 8
+2. `/home/z/my-project/src/app/globals.css` — Task 2 (shimmer animation), Task 5 (field background)
+3. `/home/z/my-project/src/store/gameStore.ts` — Task 8 (goHome, resumeGame, partialize)
+4. `/home/z/my-project/src/components/layout/Header.tsx` — Task 8 (use goHome when active game)
+
+---
+Task ID: R7
+Agent: Main Coordinator
+Task: Implement 8 UI changes from user request "Изменения 01.07.2026 - 3.md"
+
+Work Log:
+- Read user requirements file with 8 specific UI changes
+- Delegated tasks to 2 subagents (page hero/UI agent + header agent)
+- Task 1: Changed subtitle to bold "Составь символическую сборную лучших русских команд всех времен" ✅
+- Task 2: Fixed "Играть 30-0" button - removed hover:scale-105, added btn-inner-shimmer CSS animation ✅
+- Task 3: Moved hero block higher - reduced pt-8→pt-2, space-y-6→space-y-3, p-8→p-5, overall space-y-16→space-y-10 ✅
+- Task 4: Hidden toolbar on home screen, added subtle game overlay buttons (Home/Profile) during gameplay ✅
+- Task 5: Added semi-transparent football field background at opacity 0.03 ✅
+- Task 6: Sped up page animations - counter delay 200→0, zero delay 1.3→0.4, subtitle 0.8→0.2, hero duration 0.6→0.3 ✅
+- Task 7: Made floating emoji particles more transparent (opacity-[0.15]) ✅
+- Task 8: Added "Продолжить драфт" button + goHome()/resumeGame() store actions + game state persistence ✅
+- Fixed Footer home/play tabs to use goHome/resumeGame when draft is active
+- Fixed invalid Tailwind classes w-4.5→w-[18px] in Header.tsx
+
+Stage Summary:
+- All 8 user-requested changes implemented and verified
+- No lint errors, no runtime errors
+- Game state now persists via localStorage so drafts can be resumed
+- Header hidden on home, subtle overlay buttons during gameplay
+- Faster, smoother animations on homepage load
+- Continue draft button appears when user returns home during an active game
