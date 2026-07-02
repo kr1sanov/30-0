@@ -2,6 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "buildCommand": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate && next build",
-  "installCommand": "npm install",
-  "regions": ["hel1"]
+  "installCommand": "npm install"
 }

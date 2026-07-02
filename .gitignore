@@ -74,3 +74,4 @@ tool-results/
 upload/
 *.db
 *.db-journal
+.env*
