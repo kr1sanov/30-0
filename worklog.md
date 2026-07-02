@@ -1901,3 +1901,29 @@ Stage Summary:
 - Secondary CTA button "Как это работает?" added
 - Locked game modes show toast "Скоро!" with gold "СКОРО" badge
 - All 15 game component files updated with new color scheme
+
+---
+Task ID: R10
+Agent: Main
+Task: Implement all 8 UI requirements from "Изменения 01.07.2026 - 3.md"
+
+Work Log:
+- Read requirements file - 8 changes requested for homepage
+- Verified each requirement status against current code:
+  1. ✅ Subtitle already bold "Составь символическую сборную лучших русских команд всех времен" (font-black, text-gradient-subtitle)
+  2. ✅ Play button fixed - removed hover:scale-[1.02], animate-button-glow; only btn-inner-shimmer remains
+  3. ✅ Mobile spacing minimized - space-y-6→space-y-6 (already tight), hero pt-2, p-4 sm:p-6
+  4. ✅ Header hidden on home (return null), subtle Home/Profile buttons during game (opacity-30 hover:opacity-80)
+  5. ✅ Football field background active (football-field-bg class with opacity 0.03)
+  6. ✅ Animations sped up - counter duration 1000→600ms, hero y:30→y:15, delay 0.4→0.15, subtitle delay 0.2→0.1
+  7. ✅ Emoji particles removed entirely in redesign (no overlap possible)
+  8. ✅ "Продолжить драфт" button appears when runId exists, calls resumeGame()
+- Made additional speed improvements: hero animation duration 0.3→0.25, description text size reduced for mobile
+- Further reduced how-to-play step padding gap-4→gap-3, p-4→p-3
+- All changes committed to git
+- Tested with agent-browser: homepage renders, Play button works, no errors, footer fixed
+
+Stage Summary:
+- All 8 requirements verified and implemented
+- No remote git configured - user needs to add GitHub remote to push
+- Dev server running on port 3000, HTTP 200
