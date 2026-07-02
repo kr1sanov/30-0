@@ -1,5 +1,33 @@
 # 30-0 RPL — Work Log
 
+## Round 7 — GameSetup Redesign (02.07.2026)
+
+**Source**: Изменения 02.07.2026 - 2.md (7 пунктов)
+
+### Changes Applied:
+1. **Header упрощён**: Убраны кнопки Звук, Помощь, Профиль, Лидерборд. Хедер теперь показывает только "30-0" по центру без мяча. Навигация через нижний тулбар (Footer). На игровых экранах — только кнопка Домой.
+2. **Скрыта кнопка "Быстрый старт"**: Полностью убрана из GameSetup вместе с оверлеем Quick Pick.
+3. **Подзаголовок изменён**: "Выберите формацию и параметры драфта" → "Выберите схему и параметры драфта"
+4. **Убран блок "Название команды"**: Полностью удалён из GameSetup, поле teamName больше не отображается.
+5. **"Формация" → "Схема игры"**: Все заголовки переименованы.
+6. **Карточки схем заменены на кнопки**: Вместо карточек с мини-питчем и дублированием названия — компактные кнопки (4-3-3, 4-4-2 и т.д.) в сетке. При нажатии на кнопку ниже появляется графический предпросмотр схемы с позициями и подписями (ВР, ЦЗ, ЦП, НП и т.д.).
+7. **Убран бегунок параметров внизу**: Summary Bar (Команда/Формация/Сложность/Драфт/Рейтинг/Эпоха) удалён.
+
+### Also done earlier this session:
+- Убраны замочки 🔒 с карточек "Ежедневный челлендж" и "Кубок наций", оставлен только бейдж "СКОРО"
+
+### Files Modified:
+- `src/components/layout/Header.tsx` — полностью переписан, убраны Sound/HowToPlay/Profile/Leaderboard, оставлен только центрированный "30-0"
+- `src/components/game/GameSetup.tsx` — полностью переписан: убраны QuickStart, TeamName, SummaryBar; переделан Formation selector на кнопки + preview
+- `src/app/page.tsx` — убраны замочки с карточек режимов
+
+### Verification:
+- All 9 agent-browser checks PASS
+- Lint: no errors
+- Pushed to GitHub: commit ab3930a
+
+---
+
 ## Current Project Status (Round 6 Complete)
 
 **Status**: Bug fixes and major feature additions. Round 6 fixes critical StatsCounter regex bug (was breaking "1992-2026" display) and GameSetup invalid CSS gradient bug. Adds Quick Pick feature for instant random team generation, completely redesigns ManagerChoice with slot-machine animation, enhances FormationView with position color rings and connection lines, and polishes GameSetup with formation type badges and difficulty icons.
