@@ -227,7 +227,7 @@ export default function GameSetup() {
     <div className="space-y-6 animate-fade-in-up relative">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0] section-accent-line inline-block">
+        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0] inline-block">
           Настройка игры
         </h2>
         <p className="text-sm text-[#94a3b8] mt-1">
