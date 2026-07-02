@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
-import DraftProgressTracker from '@/components/game/DraftProgressTracker';
 import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
 
@@ -564,12 +563,91 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
+  const { config, rerollsLeft, currentSpin, resetGame, startRun, lastConfig } = useGameStore();
+  const [showRestartModal, setShowRestartModal] = useState(false);
+
+  const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+
+  const handleRestart = async () => {
+    setShowRestartModal(false);
+    resetGame();
+    if (lastConfig) {
+      useGameStore.setState({ config: lastConfig });
+    }
+    // Small delay then start new run
+    setTimeout(() => {
+      startRun();
+    }, 100);
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <DraftProgressTracker />
+    <div className="space-y-4 animate-fade-in">
+      {/* Info bar under header */}
+      <div className="flex items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-black text-[#e2e8f0]">{config.formation}</span>
+          <span className="text-[10px] text-[#94a3b8]">
+            Перебросы: <span className="font-bold text-[#22c55e]">{rerollsLeft}</span>/{maxRerolls}
+          </span>
+        </div>
+        <button
+          onClick={() => setShowRestartModal(true)}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+          title="Начать заново"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
+
       <FormationView />
       <SpinWheel />
-      <PlayerList />
+      {currentSpin && <PlayerList />}
+
+      {/* Restart Modal */}
+      <AnimatePresence>
+        {showRestartModal && (
+          <motion.div
+            key="restart-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowRestartModal(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-sm rounded-2xl bg-[#0d2d0d] border border-[#1a3a1a] p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-black text-[#e2e8f0] mb-2">Начать новый драфт?</h3>
+              <p className="text-sm text-[#94a3b8] mb-6">
+                Перезапуск происходит немедленно с теми же настройками. Ваш текущий черновик будет потерян.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowRestartModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-[#94a3b8] bg-[#0a1a0a] border border-[#1a3a1a] hover:bg-[#0d2d0d] transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-[#22c55e] hover:bg-[#16a34a] transition-colors shadow-lg shadow-[#22c55e]/20"
+                >
+                  Перезапуск
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

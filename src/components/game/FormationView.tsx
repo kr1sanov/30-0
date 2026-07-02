@@ -717,6 +717,15 @@ export default function FormationView() {
                         {effectiveRating ?? slot.playerRating}
                       </span>
                     ) : null}
+                    {/* Player last name below the circle */}
+                    {slot.playerName && (
+                      <span
+                        className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[60px] truncate"
+                        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                      >
+                        {slot.playerName.trim().split(/\s+/).pop()}
+                      </span>
+                    )}
                   </>
                 ) : isIncompatible ? (
                   <div className="flex flex-col items-center">
@@ -813,6 +822,75 @@ export default function FormationView() {
           {openCount > 0 && <span className="ml-1">· Осталось: {openCount} поз.</span>}
         </span>
       </div>
+
+      {/* Move Player button */}
+      {filledCount > 0 && (
+        <div className="flex justify-center mt-2">
+          <button
+            onClick={() => {
+              if (movingPlayerSlotIndex !== null) {
+                useGameStore.setState({ movingPlayerSlotIndex: null });
+              }
+            }}
+            className="text-xs font-bold px-4 py-2 rounded-xl border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 transition-colors"
+          >
+            {movingPlayerSlotIndex !== null ? '↩ Отменить перемещение' : '🔄 Переместить игрока'}
+          </button>
+        </div>
+      )}
+
+      {/* Squad Info Panel */}
+      {filledCount > 0 && (
+        <div className="mt-3 rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a]/50">
+          <div className="grid grid-cols-5 gap-2 text-center">
+            {/* Overall */}
+            <div>
+              <div className="text-[10px] text-[#94a3b8] mb-0.5">Рейтинг</div>
+              <div className="text-sm font-black text-[#e2e8f0]">{avgRating ?? '—'}</div>
+            </div>
+            {/* Attack */}
+            <div>
+              <div className="text-[10px] text-[#94a3b8] mb-0.5">Атака</div>
+              <div className="text-sm font-black text-[#ef4444]">
+                {(() => {
+                  const attSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'att');
+                  return attSlots.length > 0 ? Math.round(attSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / attSlots.length) : '—';
+                })()}
+              </div>
+            </div>
+            {/* Midfield */}
+            <div>
+              <div className="text-[10px] text-[#94a3b8] mb-0.5">Полузащита</div>
+              <div className="text-sm font-black text-[#22c55e]">
+                {(() => {
+                  const midSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'mid');
+                  return midSlots.length > 0 ? Math.round(midSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / midSlots.length) : '—';
+                })()}
+              </div>
+            </div>
+            {/* Defense */}
+            <div>
+              <div className="text-[10px] text-[#94a3b8] mb-0.5">Защита</div>
+              <div className="text-sm font-black text-[#3b82f6]">
+                {(() => {
+                  const defSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'def');
+                  return defSlots.length > 0 ? Math.round(defSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / defSlots.length) : '—';
+                })()}
+              </div>
+            </div>
+            {/* GK */}
+            <div>
+              <div className="text-[10px] text-[#94a3b8] mb-0.5">Вратарь</div>
+              <div className="text-sm font-black text-[#f97316]">
+                {(() => {
+                  const gkSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'gk');
+                  return gkSlots.length > 0 ? gkSlots[0].playerRating ?? '—' : '—';
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
