@@ -33,8 +33,8 @@ const STEPS = [
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6' },
-  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#3b82f6' },
-  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#22c55e' },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#3b82f6' },
+  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#22c55e', badge: 'СКОРО' },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', badge: 'СКОРО' },
 ];
 
@@ -335,18 +335,7 @@ function HomePage() {
               transition={{ delay: 0.05, duration: 0.2 }}
               className="text-xl sm:text-3xl font-black text-gradient-subtitle mt-2"
             >
-              Составь символическую сборную лучших русских команд всех времен
-            </motion.p>
-
-            {/* Description with delayed fade-in */}
-            <motion.p
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.2 }}
-              className="text-[#94a3b8] max-w-lg leading-relaxed text-xs sm:text-sm mt-1 mx-auto"
-            >
-              Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
-              Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
+              Составь символическую сборную лучших российских команд всех времен
             </motion.p>
           </div>
         </div>
@@ -385,9 +374,9 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.05 }}
         className="space-y-2"
       >
-        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e]">
+        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
           Игровые режимы
-        </p>
+        </h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {GAME_MODES.map((mode, i) => (
             <motion.button
@@ -479,11 +468,10 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.1 }}
         className="glass-stats-card rounded-2xl p-4"
       >
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
+        <div className="grid grid-cols-3 gap-4">
+          <StatsCounter value="16" label="клубов" color="text-[#22c55e]" />
           <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
-          <StatsCounter value="1992-2026" label="сезонов" color="text-[#f97316]" />
-          <StatsCounter value="30" label="матчей" color="text-[#22c55e]" />
+          <StatsCounter value="1992-2026" label="сезонов" color="text-[#22c55e]" />
         </div>
       </motion.div>
 
@@ -497,9 +485,9 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.12 }}
         className="space-y-2"
       >
-        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
+        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0] mb-2">
           Челленджи
-        </p>
+        </h2>
         <div className="grid grid-cols-2 gap-3">
           {CHALLENGES.map((ch) => {
             const isCompleted = ch.checkFn(profileStats);
@@ -542,9 +530,9 @@ function HomePage() {
         </div>
       </motion.div>
 
-      {/* ── Recent Results ── */}
-      <div className="section-divider" />
-      <RecentResults />
+      {/* ── Recent Results (hidden) ── */}
+      {/* <div className="section-divider" />
+      <RecentResults /> */}
 
       {/* ── FAQ Section ── */}
       <motion.div
@@ -553,9 +541,9 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="space-y-3"
       >
-        <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
+        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0] mb-2">
           Частые вопросы
-        </p>
+        </h2>
         <Accordion type="single" collapsible className="space-y-3">
           {FAQ_ITEMS.map((item, i) => (
             <AccordionItem
