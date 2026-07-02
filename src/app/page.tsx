@@ -276,16 +276,16 @@ function HomePage() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-4 pb-8">
       {/* ── Hero Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 15 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="flex flex-col items-center justify-center text-center space-y-3 pt-2"
+        transition={{ duration: 0.15 }}
+        className="flex flex-col items-center justify-center text-center space-y-2 pt-1"
       >
         {/* Hero container — simple, clean */}
-        <div className="relative rounded-3xl p-4 sm:p-6 overflow-hidden">
+        <div className="relative rounded-3xl p-3 sm:p-5 overflow-hidden">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -298,27 +298,27 @@ function HomePage() {
             {/* Animated Score Counter */}
             <div className="relative inline-block">
               <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
-                <AnimatedCounter target={30} duration={600} delay={0} />
+                <AnimatedCounter target={30} duration={350} delay={0} />
                 <span className="text-[#0d2d0d]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15, duration: 0.4, type: 'spring', stiffness: 200 }}
+                  transition={{ delay: 0.05, duration: 0.25, type: 'spring', stiffness: 300 }}
                   className="inline-block animate-zero-pulse"
                   style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}
                 >
                   0
                 </motion.span>
               </h1>
-              {/* Framer Motion bouncing football */}
+              {/* Framer Motion bouncing football — very subtle */}
               <motion.div
-                className="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 text-3xl sm:text-4xl"
+                className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 text-2xl sm:text-3xl opacity-[0.12]"
                 animate={{
-                  y: [0, -12, 0],
-                  rotate: [0, 15, -15, 0],
+                  y: [0, -8, 0],
+                  rotate: [0, 10, -10, 0],
                 }}
                 transition={{
-                  duration: 1.8,
+                  duration: 2.2,
                   repeat: Infinity,
                   ease: 'easeInOut',
                   times: [0, 0.4, 0.7, 1],
@@ -330,20 +330,20 @@ function HomePage() {
 
             {/* Subtitle with gradient text */}
             <motion.p
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.4 }}
-              className="text-2xl sm:text-3xl font-black text-gradient-subtitle mt-4"
+              transition={{ delay: 0.05, duration: 0.2 }}
+              className="text-xl sm:text-3xl font-black text-gradient-subtitle mt-2"
             >
               Составь символическую сборную лучших русских команд всех времен
             </motion.p>
 
             {/* Description with delayed fade-in */}
             <motion.p
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.3 }}
-              className="text-[#94a3b8] max-w-lg leading-relaxed text-sm sm:text-base mt-2 mx-auto"
+              transition={{ delay: 0.1, duration: 0.2 }}
+              className="text-[#94a3b8] max-w-lg leading-relaxed text-xs sm:text-sm mt-1 mx-auto"
             >
               Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
               Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
@@ -352,16 +352,16 @@ function HomePage() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
           <Button
             onClick={() => setScreen('setup')}
-            className="h-14 px-12 text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-95 btn-inner-shimmer"
+            className="h-12 sm:h-14 px-8 sm:px-12 text-base sm:text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-[0.97] btn-inner-shimmer"
           >
             Играть 30-0 →
           </Button>
           <button
             onClick={() => setShowHowToPlay(true)}
-            className="h-12 px-8 text-base font-semibold text-white/80 border-2 border-white/20 rounded-xl transition-colors hover:border-[#22c55e]/50 hover:text-[#22c55e] active:scale-95"
+            className="h-10 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-semibold text-white/80 border-2 border-white/20 rounded-xl transition-colors hover:border-[#22c55e]/50 hover:text-[#22c55e] active:scale-[0.97]"
           >
             Как это работает?
           </button>
@@ -371,19 +371,19 @@ function HomePage() {
         {runId && (
           <button
             onClick={resumeGame}
-            className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-3 text-sm font-medium transition-all active:scale-95"
+            className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
           >
-            Продолжить драфт
+            ▶ Продолжить драфт
           </button>
         )}
       </motion.div>
 
       {/* ── Game Modes Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="space-y-3"
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="space-y-2"
       >
         <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e]">
           Игровые режимы
@@ -439,10 +439,10 @@ function HomePage() {
 
       {/* ── How to Play Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.15 }}
-        className="space-y-4"
+        transition={{ duration: 0.3, delay: 0.08 }}
+        className="space-y-3"
       >
         <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
           Как играть
@@ -474,9 +474,9 @@ function HomePage() {
 
       {/* ── Stats Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
         className="glass-stats-card rounded-2xl p-4"
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -492,10 +492,10 @@ function HomePage() {
 
       {/* ── Popular Challenges ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.25 }}
-        className="space-y-3"
+        transition={{ duration: 0.3, delay: 0.12 }}
+        className="space-y-2"
       >
         <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
           Челленджи
@@ -548,10 +548,10 @@ function HomePage() {
 
       {/* ── FAQ Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.6 }}
-        className="space-y-4"
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="space-y-3"
       >
         <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
           Частые вопросы
@@ -927,7 +927,7 @@ export default function Home() {
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 pb-20 sm:pb-6 relative z-10">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-20 sm:pb-6 relative z-10">
         <AnimatePresence mode="popLayout" custom={direction}>
           <motion.div
             key={screen}

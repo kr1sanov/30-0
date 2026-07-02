@@ -1153,7 +1153,7 @@ html {
 .section-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(34,197,94,0.3), transparent);
-  margin: 2rem 0;
+  margin: 1rem 0;
 }
 
 /* Green accent line before section headers */
@@ -1255,6 +1255,9 @@ html {
 .btn-inner-shimmer {
   position: relative;
   overflow: hidden;
+  /* Prevent any layout shift on hover */
+  transform: translateZ(0);
+  will-change: auto;
 }
 .btn-inner-shimmer::after {
   content: '';
@@ -1266,6 +1269,10 @@ html {
   background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 60%, transparent 100%);
   animation: btnInnerShimmer 3s ease-in-out infinite;
   pointer-events: none;
+}
+/* Ensure button never changes size on hover */
+.btn-inner-shimmer:hover {
+  transform: translateZ(0);
 }
 
 /* Semi-transparent football field background */
