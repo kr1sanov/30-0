@@ -276,16 +276,16 @@ function HomePage() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
-    <div className="space-y-10 pb-8">
+    <div className="space-y-6 pb-8">
       {/* ── Hero Section ── */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex flex-col items-center justify-center text-center space-y-5 pt-4"
+        transition={{ duration: 0.25 }}
+        className="flex flex-col items-center justify-center text-center space-y-3 pt-2"
       >
         {/* Hero container — simple, clean */}
-        <div className="relative rounded-3xl p-6 sm:p-10 overflow-hidden">
+        <div className="relative rounded-3xl p-4 sm:p-6 overflow-hidden">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -298,12 +298,12 @@ function HomePage() {
             {/* Animated Score Counter */}
             <div className="relative inline-block">
               <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
-                <AnimatedCounter target={30} duration={1000} delay={0} />
+                <AnimatedCounter target={30} duration={600} delay={0} />
                 <span className="text-[#0d2d0d]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4, duration: 0.5, type: 'spring', stiffness: 200 }}
+                  transition={{ delay: 0.15, duration: 0.4, type: 'spring', stiffness: 200 }}
                   className="inline-block animate-zero-pulse"
                   style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}
                 >
@@ -332,7 +332,7 @@ function HomePage() {
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
               className="text-2xl sm:text-3xl font-black text-gradient-subtitle mt-4"
             >
               Составь символическую сборную лучших русских команд всех времен
@@ -342,8 +342,8 @@ function HomePage() {
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.4 }}
-              className="text-[#94a3b8] max-w-lg leading-relaxed text-base sm:text-lg mt-3 mx-auto"
+              transition={{ delay: 0.2, duration: 0.3 }}
+              className="text-[#94a3b8] max-w-lg leading-relaxed text-sm sm:text-base mt-2 mx-auto"
             >
               Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны.
               Заполни все 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?
@@ -355,13 +355,13 @@ function HomePage() {
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <Button
             onClick={() => setScreen('setup')}
-            className="h-14 px-12 text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-xl transition-all active:scale-95 animate-button-glow btn-inner-shimmer hover:scale-[1.02]"
+            className="h-14 px-12 text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-95 btn-inner-shimmer"
           >
             Играть 30-0 →
           </Button>
           <button
             onClick={() => setShowHowToPlay(true)}
-            className="h-14 px-8 text-base font-semibold text-white border-2 border-white/30 rounded-xl transition-all hover:border-[#22c55e]/60 hover:text-[#22c55e] hover:scale-[1.02] active:scale-95"
+            className="h-12 px-8 text-base font-semibold text-white/80 border-2 border-white/20 rounded-xl transition-colors hover:border-[#22c55e]/50 hover:text-[#22c55e] active:scale-95"
           >
             Как это работает?
           </button>
@@ -382,8 +382,8 @@ function HomePage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.15 }}
-        className="space-y-5"
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="space-y-3"
       >
         <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e]">
           Игровые режимы
@@ -441,8 +441,8 @@ function HomePage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="space-y-6"
+        transition={{ duration: 0.5, delay: 0.15 }}
+        className="space-y-4"
       >
         <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
           Как играть
@@ -453,8 +453,8 @@ function HomePage() {
               key={step.title}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.1 }}
-              className="flex items-center gap-4 rounded-xl bg-[#0d2d0d] p-4 border border-[#1a3a1a]"
+              transition={{ delay: 0.2 + i * 0.08 }}
+              className="flex items-center gap-3 rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a]"
             >
               {/* Green numbered circle */}
               <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
@@ -476,8 +476,8 @@ function HomePage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="glass-stats-card rounded-2xl p-6"
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="glass-stats-card rounded-2xl p-4"
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <StatsCounter value="~15" label="клубов" color="text-[#22c55e]" />
@@ -494,8 +494,8 @@ function HomePage() {
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.5 }}
-        className="space-y-6"
+        transition={{ duration: 0.5, delay: 0.25 }}
+        className="space-y-3"
       >
         <p className="text-center text-xs font-bold uppercase tracking-[0.1em] text-[#22c55e] mb-2">
           Челленджи
