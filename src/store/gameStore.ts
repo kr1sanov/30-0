@@ -182,6 +182,8 @@ export const useGameStore = create<GameState>()(
       // Actions
       startRun: async () => {
         const { config } = get();
+        // Immediately switch to draft screen so the UI feels instant
+        set({ screen: 'draft' });
         try {
           const res = await fetch('/api/runs', {
             method: 'POST',

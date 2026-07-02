@@ -7,7 +7,6 @@ import {
   POSITION_COLOR,
   canFillSlot,
   getCompatiblePositions,
-  getFormationById,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -199,16 +198,6 @@ function getChemistryColor(chem: number): string {
   return '#ef4444';
 }
 
-function getInitials(name: string | undefined): string {
-  if (!name) return '??';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    // Last name initial + first name initial
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return name.slice(0, 2).toUpperCase();
-}
-
 export default function FormationView() {
   const {
     config,
@@ -218,7 +207,6 @@ export default function FormationView() {
     assignToSlot,
     movePlayer,
     screen,
-    rerollsLeft,
   } = useGameStore();
 
   const [shakingSlot, setShakingSlot] = useState<number | null>(null);
@@ -229,29 +217,12 @@ export default function FormationView() {
   const filledCount = slots.filter((s) => s.playerId).length;
   const openCount = 11 - filledCount;
 
-  const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
-
   // Get compatible positions for the selected player
   const compatiblePositions = selectedPlayer
     ? getCompatiblePositions(selectedPlayer.mainPosition as Position)
     : [];
 
-  // ----- Task 3: Formation info header computations -----
-  const formationMeta = useMemo(() => {
-    const formation = getFormationById(config.formation);
-    const counts: Record<PositionCategory, number> = { gk: 0, def: 0, mid: 0, att: 0 };
-    for (const slot of slots) {
-      const cat = POSITION_CATEGORY[slot.position as Position] ?? 'mid';
-      counts[cat]++;
-    }
-    return {
-      formation,
-      counts,
-      description: formation?.description ?? '',
-    };
-  }, [config.formation, slots]);
-
-  // Average rating of filled players (with penalty applied — Task 3c)
+  // Average rating of filled players (with penalty applied)
   const avgRating = useMemo(() => {
     const filled = slots.filter((s) => s.playerId && s.playerRating);
     if (filled.length === 0) return null;
@@ -268,22 +239,6 @@ export default function FormationView() {
       return acc + r;
     }, 0);
     return Math.round(sum / filled.length);
-  }, [slots]);
-
-  // Chemistry: percentage of filled players fully compatible with their slot
-  const chemistry = useMemo(() => {
-    const filled = slots.filter((s) => s.playerId);
-    if (filled.length === 0) return null;
-    const fullCount = filled.filter((s) => {
-      if (!s.playerPosition) return true;
-      const { penalty } = canFillSlot(
-        s.playerPosition as Position,
-        (s.playerOtherPositions ?? []) as Position[],
-        s.position as Position,
-      );
-      return penalty === 1;
-    }).length;
-    return Math.round((fullCount / filled.length) * 100);
   }, [slots]);
 
   const triggerShake = useCallback((index: number) => {
@@ -303,12 +258,52 @@ export default function FormationView() {
         slot.position as Position,
       );
       if (canFill) {
-        toast.success(`✅ ${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
+        toast.success(`${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
         assignToSlot(index);
       } else {
         // Trigger shake animation on incompatible slot
         triggerShake(index);
-        toast.error(`❌ ${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
+        toast.error(`${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
+      }
+      return;
+    }
+
+    // Move mode logic
+    if (movingPlayerSlotIndex !== null) {
+      if (movingPlayerSlotIndex === -1) {
+        // Move mode active but no player selected yet — select this filled player
+        if (slot.playerId) {
+          useGameStore.setState({ movingPlayerSlotIndex: index });
+        }
+        return;
+      }
+
+      if (movingPlayerSlotIndex === index) {
+        // Deselect — cancel move for this player
+        useGameStore.setState({ movingPlayerSlotIndex: -1 });
+        return;
+      }
+
+      // A player is selected and we clicked another slot
+      if (slot.playerId) {
+        // Swap the two players
+        movePlayer(movingPlayerSlotIndex, index);
+      } else {
+        // Empty slot — check if the moving player can fill it
+        const sourceSlot = slots[movingPlayerSlotIndex];
+        if (sourceSlot?.playerPosition) {
+          const { canFill } = canFillSlot(
+            sourceSlot.playerPosition as Position,
+            (sourceSlot.playerOtherPositions ?? []) as Position[],
+            slot.position as Position,
+          );
+          if (canFill) {
+            movePlayer(movingPlayerSlotIndex, index);
+          } else {
+            triggerShake(index);
+            toast.error(`${sourceSlot.playerName} не может играть на позиции ${slot.positionLabel}`);
+          }
+        }
       }
       return;
     }
@@ -323,19 +318,31 @@ export default function FormationView() {
     }
   };
 
-  // ----- Task 2c: Connection lines from moving source to valid swap targets -----
-  // Valid swap targets = every other filled slot (since any two filled slots can swap).
+  // ----- Task 2c: Connection lines from moving source to valid swap/move targets -----
   const swapTargets = useMemo(() => {
-    if (movingPlayerSlotIndex === null) return [];
+    if (movingPlayerSlotIndex === null || movingPlayerSlotIndex < 0) return [];
     const source = layout[movingPlayerSlotIndex];
     if (!source) return [];
-    const targets: { from: { row: number; col: number }; to: { row: number; col: number } }[] = [];
+    const sourceSlot = slots[movingPlayerSlotIndex];
+    const targets: { from: { row: number; col: number }; to: { row: number; col: number }; isEmpty?: boolean }[] = [];
     slots.forEach((s, i) => {
       if (i === movingPlayerSlotIndex) return;
-      if (!s.playerId) return;
       const to = layout[i];
       if (!to) return;
-      targets.push({ from: source, to });
+      if (s.playerId) {
+        // Filled slot — swap
+        targets.push({ from: source, to });
+      } else if (sourceSlot?.playerPosition) {
+        // Empty slot — can move if compatible
+        const { canFill } = canFillSlot(
+          sourceSlot.playerPosition as Position,
+          (sourceSlot.playerOtherPositions ?? []) as Position[],
+          s.position as Position,
+        );
+        if (canFill) {
+          targets.push({ from: source, to, isEmpty: true });
+        }
+      }
     });
     return targets;
   }, [movingPlayerSlotIndex, slots, layout]);
@@ -362,87 +369,6 @@ export default function FormationView() {
           </div>
         </motion.div>
       )}
-
-      {/* ===== Task 3: Formation Info Header ===== */}
-      <motion.div
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-3 px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#0a1a0a]/80 to-[#0d2d0d] border border-white/10 flex items-center gap-2 sm:gap-3 flex-wrap"
-      >
-        {/* Formation name + icon */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-base sm:text-lg" aria-hidden>📐</span>
-          <span className="text-sm sm:text-base font-black text-[#e2e8f0] tracking-wide">
-            {config.formation}
-          </span>
-        </div>
-
-        <div className="h-4 w-px bg-white/15" aria-hidden />
-
-        {/* Player count by category */}
-        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold">
-          <span className="text-[#f97316]">{formationMeta.counts.gk} ВР</span>
-          <span className="text-white/30">·</span>
-          <span className="text-[#3b82f6]">{formationMeta.counts.def} ЗАЩ</span>
-          <span className="text-white/30">·</span>
-          <span className="text-[#22c55e]">{formationMeta.counts.mid} ПОЛ</span>
-          <span className="text-white/30">·</span>
-          <span className="text-[#ef4444]">{formationMeta.counts.att} НАП</span>
-        </div>
-
-        <div className="h-4 w-px bg-white/15 hidden sm:block" aria-hidden />
-
-        {/* Average rating of filled players */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] sm:text-xs text-[#94a3b8]">Ср. рейтинг:</span>
-          {avgRating !== null ? (
-            <span
-              className="text-xs sm:text-sm font-black"
-              style={{ color: getRatingColor(avgRating) }}
-            >
-              {avgRating}
-            </span>
-          ) : (
-            <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
-          )}
-        </div>
-
-        <div className="ml-auto flex items-center gap-2 shrink-0">
-          {/* Chemistry indicator */}
-          {chemistry !== null && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] sm:text-xs text-[#94a3b8]">Химия:</span>
-              <motion.span
-                key={chemistry}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: 'spring', stiffness: 350, damping: 18 }}
-                className="flex items-center gap-1"
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{
-                    backgroundColor: getChemistryColor(chemistry),
-                    boxShadow: `0 0 6px ${getChemistryColor(chemistry)}`,
-                  }}
-                  aria-hidden
-                />
-                <span
-                  className="text-xs sm:text-sm font-black"
-                  style={{ color: getChemistryColor(chemistry) }}
-                >
-                  {chemistry}%
-                </span>
-              </motion.span>
-            </div>
-          )}
-
-          {/* Rerolls badge */}
-          <span className="text-[10px] sm:text-xs font-bold text-[#94a3b8] bg-[#0f0f1e] px-2 py-1 rounded-full border border-white/5">
-            Перебросы: <span className="text-[#22c55e]">{rerollsLeft}</span>/{maxRerolls}
-          </span>
-        </div>
-      </motion.div>
 
       {/* Pitch */}
       <div
@@ -587,10 +513,28 @@ export default function FormationView() {
           const isShaking = shakingSlot === index;
 
           // Valid swap target = another filled slot while a move is in progress
+          // Also highlight empty slots where the moving player can be placed
           const isSwapTarget =
             movingPlayerSlotIndex !== null &&
+            movingPlayerSlotIndex >= 0 &&
             movingPlayerSlotIndex !== index &&
             isFilled;
+
+          // Empty slot that the moving player can fill
+          const isMoveTarget =
+            movingPlayerSlotIndex !== null &&
+            movingPlayerSlotIndex >= 0 &&
+            movingPlayerSlotIndex !== index &&
+            !isFilled &&
+            (() => {
+              const sourceSlot = slots[movingPlayerSlotIndex];
+              if (!sourceSlot?.playerPosition) return false;
+              return canFillSlot(
+                sourceSlot.playerPosition as Position,
+                (sourceSlot.playerOtherPositions ?? []) as Position[],
+                slot.position as Position,
+              ).canFill;
+            })();
 
           // ===== Task 1b: Compatibility info for filled slot =====
           let compatKind: 'full' | 'partial' | null = null;
@@ -646,6 +590,8 @@ export default function FormationView() {
                     ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
                     : isIncompatible
                     ? 'border-[#ef4444]/40 border-dashed animate-empty-slot-pulse'
+                    : isMoveTarget
+                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
                     : isCompatible && !isFilled
                     ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
                     : 'border-white/25 border-dashed animate-empty-slot-pulse'
@@ -654,6 +600,8 @@ export default function FormationView() {
                     ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]'
                     : isSwapTarget
                     ? 'ring-2 ring-yellow-400/70 ring-offset-1 ring-offset-[#1a5c30]'
+                    : isMoveTarget
+                    ? 'ring-2 ring-[#22c55e]/70 ring-offset-1 ring-offset-[#1a5c30]'
                     : ''
                 }`}
                 style={{
@@ -661,6 +609,8 @@ export default function FormationView() {
                     ? `${color}dd`
                     : isIncompatible
                     ? `${color}15`
+                    : isMoveTarget
+                    ? `${color}33`
                     : `${color}22`,
                   // ===== Task 1a: Position color ring (3px outside) on filled slots =====
                   boxShadow: isFilled
@@ -668,19 +618,7 @@ export default function FormationView() {
                     : undefined,
                 }}
               >
-                {/* ===== Task 2b: Slot number badge (draft order 1-11) ===== */}
-                <div
-                  className={`absolute -top-1.5 -left-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[8px] sm:text-[9px] font-black border ${
-                    isFilled
-                      ? 'bg-[#0f0f1e] text-white/80 border-white/30'
-                      : 'bg-[#0f0f1e]/90 text-white/50 border-white/15'
-                  }`}
-                  aria-hidden
-                >
-                  {index + 1}
-                </div>
-
-                {/* ===== Task 1b: Compatibility badge (top-right) ===== */}
+                {/* ===== Compatibility badge (top-right) ===== */}
                 {isFilled && compatKind && (
                   <div
                     className={`absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 border-[#0f0f1e] ${
@@ -700,15 +638,16 @@ export default function FormationView() {
 
                 {isFilled ? (
                   <>
+                    {/* Position label inside circle */}
                     <span
-                      className="text-[10px] sm:text-xs font-black text-white leading-tight text-center"
-                      style={{ maxWidth: '52px' }}
+                      className="text-[9px] sm:text-[10px] font-bold text-white/80 leading-none"
                     >
-                      {getInitials(slot.playerName)}
+                      {slot.positionLabel}
                     </span>
+                    {/* Rating inside circle */}
                     {slot.playerRating ? (
                       <span
-                        className="text-[9px] sm:text-[10px] font-bold px-1.5 rounded-sm mt-0.5 position-label-pill"
+                        className="text-[10px] sm:text-xs font-black leading-none mt-0.5"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
                           opacity: compatKind === 'partial' ? 0.78 : 1,
@@ -720,10 +659,19 @@ export default function FormationView() {
                     {/* Player last name below the circle */}
                     {slot.playerName && (
                       <span
-                        className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[60px] truncate"
+                        className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
-                        {slot.playerName.trim().split(/\s+/).pop()}
+                        {(() => {
+                          const parts = slot.playerName.trim().split(/\s+/);
+                          // For names like "Иванов Иван" return "Иванов" (last word)
+                          // For names like "Дзюба" return "Дзюба"
+                          // Avoid duplicating: if first and last parts are the same, return just one
+                          if (parts.length >= 2 && parts[0] === parts[parts.length - 1]) {
+                            return parts[0];
+                          }
+                          return parts[parts.length - 1];
+                        })()}
                       </span>
                     )}
                   </>
@@ -829,12 +777,16 @@ export default function FormationView() {
           <button
             onClick={() => {
               if (movingPlayerSlotIndex !== null) {
+                // Cancel move mode
                 useGameStore.setState({ movingPlayerSlotIndex: null });
+              } else {
+                // Enter move mode — next click on a filled slot will select that player
+                useGameStore.setState({ movingPlayerSlotIndex: -1 });
               }
             }}
             className="text-xs font-bold px-4 py-2 rounded-xl border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 transition-colors"
           >
-            {movingPlayerSlotIndex !== null ? '↩ Отменить перемещение' : '🔄 Переместить игрока'}
+            {movingPlayerSlotIndex !== null ? '↩ Отменить перемещение' : 'Переместить игрока'}
           </button>
         </div>
       )}

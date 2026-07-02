@@ -51,7 +51,7 @@ export default function SpinWheel() {
       if (!initializedRef.current) {
         initializedRef.current = true;
       }
-      const timer = setTimeout(() => setShowResult(true), 200);
+      const timer = setTimeout(() => setShowResult(true), 150);
       return () => clearTimeout(timer);
     }
     const timer = setTimeout(() => setShowResult(false), 0);
@@ -76,12 +76,12 @@ export default function SpinWheel() {
   const hasResult = !!(currentSpin && !isSpinning && showResult);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Spin / Result area */}
       <div
-        className={`relative rounded-2xl bg-[#0d2d0d] p-5 flex flex-col items-center overflow-hidden transition-all duration-500 border ${
+        className={`relative rounded-2xl bg-[#0d2d0d] p-4 flex flex-col items-center overflow-hidden transition-all duration-300 border ${
           isSpinning
-            ? 'border-[#22c55e]/40 shadow-[0_0_30px_rgba(34,197,94,0.15)]'
+            ? 'border-[#22c55e]/40 shadow-[0_0_20px_rgba(34,197,94,0.12)]'
             : hasResult
             ? 'border-[#22c55e]/20'
             : 'border-[#1a3a1a]/50'
@@ -95,37 +95,78 @@ export default function SpinWheel() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="text-center py-6"
+              className="text-center py-4"
             >
-              <div className="text-3xl mb-3 opacity-60">🎰</div>
               <p className="text-sm text-[#94a3b8] mb-1">
                 Осталось заполнить: <span className="text-[#22c55e] font-bold">{openCount}</span> позиций
               </p>
               <p className="text-xs text-[#94a3b8]/60">
-                Нажмите кнопку, чтобы крутить
+                Нажмите кнопку ниже, чтобы крутить
               </p>
             </motion.div>
           )}
 
-          {/* Spinning state */}
+          {/* Spinning state — club × season card with spinner */}
           {isSpinning && (
             <motion.div
               key="spinning"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center py-8"
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="text-center py-5 w-full"
             >
-              <motion.div
-                className="text-4xl mb-3"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              {/* Spinning cards: CLUB × SEASON */}
+              <div className="flex items-center justify-center gap-3">
+                {/* Club card */}
+                <motion.div
+                  animate={{ y: [0, -3, 0, 3, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="rounded-xl bg-[#1a1a2e] px-5 py-3 min-w-[120px] text-center border border-white/10"
+                >
+                  <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Клуб</div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <motion.span
+                      className="text-lg"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                    >
+                      ⚽
+                    </motion.span>
+                    <span className="text-sm font-bold text-white/60">. . .</span>
+                  </div>
+                </motion.div>
+
+                {/* × separator */}
+                <span className="text-lg text-[#94a3b8]/40 font-bold">×</span>
+
+                {/* Season card */}
+                <motion.div
+                  animate={{ y: [0, 3, 0, -3, 0] }}
+                  transition={{ duration: 0.6, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
+                  className="rounded-xl bg-[#1a1a2e] px-5 py-3 min-w-[100px] text-center border border-white/10"
+                >
+                  <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Сезон</div>
+                  <div className="flex items-center justify-center gap-1.5">
+                    <motion.span
+                      className="text-lg"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', delay: 0.2 }}
+                    >
+                      📅
+                    </motion.span>
+                    <span className="text-sm font-bold text-white/60">. . .</span>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Spinning text */}
+              <motion.p
+                className="text-sm text-[#22c55e] font-bold mt-4"
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
               >
-                ⚽
-              </motion.div>
-              <p className="text-sm text-[#22c55e] font-bold animate-pulse">
                 Крутим...
-              </p>
+              </motion.p>
             </motion.div>
           )}
 
@@ -133,26 +174,40 @@ export default function SpinWheel() {
           {hasResult && (
             <motion.div
               key="result"
-              initial={{ opacity: 0, scale: 0.8, y: 15 }}
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="text-center py-4 w-full"
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              className="text-center py-3 w-full"
             >
-              <motion.div
-                className="text-3xl mb-2"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              >
-                {getClubEmoji(currentSpin.clubName)}
-              </motion.div>
-              <div className="text-xl font-black text-[#e2e8f0]">
-                {currentSpin.clubName}
+              {/* Result cards: CLUB × SEASON */}
+              <div className="flex items-center justify-center gap-3 mb-3">
+                {/* Club card */}
+                <motion.div
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                  className="rounded-xl bg-[#1a1a2e] px-5 py-3 min-w-[120px] text-center border border-[#22c55e]/20"
+                >
+                  <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Клуб</div>
+                  <div className="text-base font-black text-white">{currentSpin.clubName}</div>
+                </motion.div>
+
+                {/* × separator */}
+                <span className="text-lg text-[#94a3b8]/40 font-bold">×</span>
+
+                {/* Season card */}
+                <motion.div
+                  initial={{ x: 20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
+                  className="rounded-xl bg-[#1a1a2e] px-5 py-3 min-w-[100px] text-center border border-[#22c55e]/20"
+                >
+                  <div className="text-[10px] text-[#94a3b8] font-bold uppercase tracking-wider mb-1">Сезон</div>
+                  <div className="text-base font-black text-[#fbbf24]">{currentSpin.seasonLabel}</div>
+                </motion.div>
               </div>
-              <div className="text-base text-[#22c55e] font-bold mt-1">
-                {currentSpin.seasonLabel}
-              </div>
-              <p className="text-xs text-[#94a3b8] mt-2">
+
+              <p className="text-xs text-[#94a3b8]">
                 Выберите игрока из состава
               </p>
 
@@ -162,9 +217,9 @@ export default function SpinWheel() {
                   whileTap={{ scale: 0.97 }}
                   onClick={handleReroll}
                   disabled={isSpinning}
-                  className="mt-3 px-4 py-2 text-xs font-bold border border-[#22c55e]/40 text-[#22c55e] rounded-xl hover:bg-[#22c55e]/10 transition-all"
+                  className="mt-2 px-4 py-1.5 text-xs font-bold border border-[#22c55e]/40 text-[#22c55e] rounded-xl hover:bg-[#22c55e]/10 transition-all"
                 >
-                  🔄 Переброс ({rerollsLeft})
+                  Переброс ({rerollsLeft})
                 </motion.button>
               )}
             </motion.div>
@@ -178,9 +233,9 @@ export default function SpinWheel() {
           <Button
             onClick={handleSpin}
             disabled={isSpinning}
-            className="w-full h-14 text-lg font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all"
+            className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all"
           >
-            {isSpinning ? '⚽ Крутим...' : '🎰 Крутить'}
+            {isSpinning ? 'Крутим...' : 'Крутить'}
           </Button>
         </motion.div>
       )}

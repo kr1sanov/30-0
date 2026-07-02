@@ -20,6 +20,8 @@ import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
 import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
+import { canFillSlot } from '@/lib/positions';
+import type { Position } from '@/lib/positions';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -296,9 +298,9 @@ function HomePage() {
           <div className="relative z-10">
             {/* Animated Score Counter */}
             <div className="relative inline-block">
-              <h1 className="text-7xl sm:text-9xl font-black text-gradient-green leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
+              <h1 className="text-7xl sm:text-9xl font-black leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
                 <AnimatedCounter target={30} duration={350} delay={0} />
-                <span className="text-[#0d2d0d]">-</span>
+                <span className="text-[#22c55e]">-</span>
                 <motion.span
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -327,14 +329,14 @@ function HomePage() {
               </motion.div>
             </div>
 
-            {/* Subtitle with gradient text */}
+            {/* Subtitle */}
             <motion.p
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05, duration: 0.2 }}
-              className="text-xl sm:text-3xl font-black text-gradient-subtitle mt-2"
+              className="text-xl sm:text-3xl font-black text-white mt-2"
             >
-              Составь символическую сборную лучших российских команд всех времен
+              Составьте символическую сборную лучших российских команд всех времен
             </motion.p>
           </div>
         </div>
@@ -345,7 +347,7 @@ function HomePage() {
             onClick={() => setScreen('setup')}
             className="h-12 sm:h-14 px-8 sm:px-12 text-base sm:text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-[0.97] btn-inner-shimmer"
           >
-            Играть 30-0 →
+            Играть →
           </Button>
           <button
             onClick={() => setShowHowToPlay(true)}
@@ -563,10 +565,32 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, resetGame, startRun, lastConfig } = useGameStore();
+  const { config, rerollsLeft, currentSpin, resetGame, startRun, lastConfig, slots } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+
+  // Compute average rating
+  const filledSlots = slots.filter((s) => s.playerId && s.playerRating);
+  const avgRating = filledSlots.length > 0
+    ? Math.round(filledSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / filledSlots.length)
+    : null;
+
+  // Compute chemistry
+  const filledPlayerSlots = slots.filter((s) => s.playerId);
+  const chemistry = filledPlayerSlots.length > 0
+    ? Math.round(
+        filledPlayerSlots.filter((s) => {
+          if (!s.playerPosition) return true;
+          const { penalty } = canFillSlot(
+            s.playerPosition as Position,
+            (s.playerOtherPositions ?? []) as Position[],
+            s.position as Position,
+          );
+          return penalty === 1;
+        }).length / filledPlayerSlots.length * 100
+      )
+    : null;
 
   const handleRestart = async () => {
     setShowRestartModal(false);
@@ -574,25 +598,65 @@ function DraftScreen() {
     if (lastConfig) {
       useGameStore.setState({ config: lastConfig });
     }
-    // Small delay then start new run
     setTimeout(() => {
       startRun();
     }, 100);
   };
 
+  function getRatingColor(rating: number): string {
+    if (rating >= 78) return '#fbbf24';
+    if (rating >= 73) return '#22c55e';
+    if (rating >= 68) return '#f97316';
+    return '#ef4444';
+  }
+
+  function getChemistryColor(chem: number): string {
+    if (chem >= 100) return '#22c55e';
+    if (chem >= 80) return '#a3e635';
+    if (chem >= 60) return '#facc15';
+    if (chem >= 40) return '#f97316';
+    return '#ef4444';
+  }
+
   return (
-    <div className="space-y-4 animate-fade-in">
-      {/* Info bar under header */}
-      <div className="flex items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-black text-[#e2e8f0]">{config.formation}</span>
-          <span className="text-[10px] text-[#94a3b8]">
-            Перебросы: <span className="font-bold text-[#22c55e]">{rerollsLeft}</span>/{maxRerolls}
-          </span>
+    <div className="space-y-4 animate-fade-in pb-20 sm:pb-4">
+      {/* Unified info bar — formation, rating, chemistry, rerolls, restart */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {/* Formation */}
+          <span className="text-sm font-black text-[#e2e8f0] tracking-wide">{config.formation}</span>
+          <div className="h-4 w-px bg-white/15" aria-hidden />
+          {/* Rating */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Рейтинг</span>
+            {avgRating !== null ? (
+              <span className="text-xs sm:text-sm font-black" style={{ color: getRatingColor(avgRating) }}>{avgRating}</span>
+            ) : (
+              <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
+            )}
+          </div>
+          <div className="h-4 w-px bg-white/15" aria-hidden />
+          {/* Chemistry */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Химия</span>
+            {chemistry !== null ? (
+              <span className="text-xs sm:text-sm font-black" style={{ color: getChemistryColor(chemistry) }}>{chemistry}%</span>
+            ) : (
+              <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
+            )}
+          </div>
+          <div className="h-4 w-px bg-white/15" aria-hidden />
+          {/* Rerolls */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Перебросы</span>
+            <span className="text-xs sm:text-sm font-bold text-[#22c55e]">{rerollsLeft}</span>
+            <span className="text-[10px] text-[#94a3b8]">/{maxRerolls}</span>
+          </div>
         </div>
+        {/* Restart button */}
         <button
           onClick={() => setShowRestartModal(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
           title="Начать заново"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
