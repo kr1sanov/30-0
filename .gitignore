@@ -68,3 +68,9 @@ prompt
 
 # Prisma migrations are tracked in git
 !prisma/migrations/
+
+# Sandbox temp files
+tool-results/
+upload/
+*.db
+*.db-journal
