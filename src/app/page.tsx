@@ -398,15 +398,10 @@ function HomePage() {
               }`}
             >
               {/* Badge for coming soon */}
-              {mode.badge && (
+              {!mode.active && mode.badge && (
                 <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
                   {mode.badge}
                 </span>
-              )}
-
-              {/* Lock icon for inactive modes */}
-              {!mode.active && (
-                <span className="absolute top-2 right-2 text-xs opacity-50">🔒</span>
               )}
 
               <div className="text-2xl mb-2" style={{ filter: mode.active ? 'none' : 'grayscale(0.3)' }}>
