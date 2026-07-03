@@ -353,6 +353,7 @@ export const useGameStore = create<GameState>()(
           playerRating: selectedPlayer.rating,
           playerPosition: selectedPlayer.mainPosition,
           playerOtherPositions: selectedPlayer.otherPositions,
+          playerNationality: selectedPlayer.nationality,
           isCompatible: true,
         };
 
@@ -422,18 +423,22 @@ export const useGameStore = create<GameState>()(
           ...from,
           playerId: to.playerId,
           playerName: to.playerName,
+          playerLastName: to.playerLastName,
           playerRating: to.playerRating,
           playerPosition: to.playerPosition,
           playerOtherPositions: to.playerOtherPositions,
+          playerNationality: to.playerNationality,
           isCompatible: toCanFillFrom.canFill,
         };
         newSlots[toSlotIndex] = {
           ...to,
           playerId: from.playerId,
           playerName: from.playerName,
+          playerLastName: from.playerLastName,
           playerRating: from.playerRating,
           playerPosition: from.playerPosition,
           playerOtherPositions: from.playerOtherPositions,
+          playerNationality: from.playerNationality,
           isCompatible: fromCanFillTo.canFill,
         };
 

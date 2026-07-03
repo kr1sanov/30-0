@@ -2167,3 +2167,65 @@ Stage Summary:
 - ✅ Inactive cards more visible (opacity 0.5)
 - ✅ Pitch more transparent (stripe opacity 0.7)
 
+
+---
+
+## Round 10 — Draft Bug Fixes: Position Assignment, Player Display, Nationality Flags (04.07.2026)
+
+**Source**: User request — "Исправь баг, после прокрута при выборе игрока и назначения на позицию вверху пишет совместимые позиции, изменить позицию не могу, фамилию на поле его не пишет и так далее. Так же из процесса прокрутки убери слово крутим которое появляется."
+
+### Issues Fixed:
+
+1. **Убрано слово "Крутим..." из процесса прокрутки**
+   - SpinWheel.tsx: убраны заголовки "Крутим..." из фаз loading и animating (оставлены только барабаны без текста)
+   - Кнопка всегда показывает "Крутить" (раньше показывала "Крутим..." во время спина)
+
+2. **Исправлено назначение на позицию**
+   - PlayerList.tsx: при клике на игрока с несколькими совместимыми позициями, теперь устанавливается `selectedPlayer` в store
+   - Это подсвечивает совместимые позиции на поле (зелёная рамка)
+   - Добавлена информационная панель "Нажмите на зелёную позицию для [имя]" вместо "Совместимые позиции"
+   - FormationView.tsx: заменён бар "Совместимые позиции" на понятную подсказку
+   - Добавлена кнопка ✕ для отмены выбора игрока
+   - Игрок может быть назначен кликом на поле ИЛИ через inline кнопки позиций
+
+3. **Исправлено отображение фамилии на поле**
+   - FormationView.tsx: для российских игроков показывается фамилия, для иностранных — полное имя
+   - Фамилия берётся из `playerLastName`, с fallback на парсинг `playerName`
+
+4. **Добавлены флаги национальности**
+   - Создан `/src/lib/nationality.ts` — маппинг 60+ стран на эмодзи флагов
+   - Функции: `getNationalityFlag(nationality)` и `isForeignPlayer(nationality)`
+   - PlayerList: флаг показан после имени для иностранных игроков
+   - SquadStats: в списке состава — фамилия для русских / полное имя для иностранцев + флаг
+   - FormationView: флаг показан в tooltip при наведении
+
+5. **Добавлено поле `playerNationality` в DraftSlot**
+   - types.ts: добавлено поле `playerNationality?: string` в DraftSlot
+   - gameStore.ts: `assignToSlot` сохраняет `playerNationality` из `selectedPlayer`
+   - gameStore.ts: `movePlayer` сохраняет `playerNationality` при обмене позиций
+
+6. **Исправлен React duplicate key warning**
+   - PlayerList.tsx: позиционные бейджи теперь используют `key={pos-posIdx}` вместо `key={pos}`
+
+### Files Modified:
+- `/src/components/game/SpinWheel.tsx` — убран "Крутим..."
+- `/src/components/game/PlayerList.tsx` — исправлен flow выбора + флаги
+- `/src/components/game/FormationView.tsx` — подсказка вместо "Совместимые позиции" + имя/фамилия + флаг в tooltip
+- `/src/components/game/SquadStats.tsx` — флаги в списке состава
+- `/src/store/gameStore.ts` — playerNationality в assign/move
+- `/src/lib/types.ts` — playerNationality в DraftSlot
+- `/src/lib/nationality.ts` — новый файл: маппинг стран → эмодзи
+
+### Verification (Agent Browser):
+- ✅ "Крутим..." убран — нигде не появляется
+- ✅ Spin показывает клуб + сезон + список игроков
+- ✅ Флаги национальности отображаются (🇺🇿, 🇳🇴, 🇨🇿, 🇦🇲, 🇮🇸 и т.д.)
+- ✅ Иностранные игроки показывают полное имя + флаг
+- ✅ Российские игроки показывают фамилию + имя
+- ✅ Автоназначение на единственную совместимую позицию работает
+- ✅ Мульти-позиционный выбор работает (inline кнопки + клик на поле)
+- ✅ На поле отображаются: позиция, рейтинг, фамилия/имя
+- ✅ Prompt "Нажмите на зелёную позицию для..." появляется при выборе
+
+### Pending Issues:
+- ⚠️ Кратковременное перекрытие Setup панели при переходе на драфт (AnimatePresence transition)

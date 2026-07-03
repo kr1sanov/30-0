@@ -447,34 +447,6 @@ export default function SpinWheel() {
               transition={{ duration: 0.2 }}
               className="w-full py-2"
             >
-              {/* Header */}
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    ease: 'linear',
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4 text-[#22c55e]"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 12a9 9 0 1 1-9-9c1.7 0 3.3.5 4.6 1.3" />
-                    <path d="M21 3v6h-6" />
-                  </svg>
-                </motion.div>
-                <span className="text-xs font-bold uppercase tracking-widest text-[#22c55e]">
-                  Крутим...
-                </span>
-              </div>
-
               {/* Two fast cycling reels side by side */}
               <div className="flex items-start gap-3 px-2">
                 <FastCyclingReel
@@ -510,34 +482,6 @@ export default function SpinWheel() {
               transition={{ duration: 0.15 }}
               className="w-full py-2"
             >
-              {/* Header */}
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    ease: 'linear',
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4 text-[#22c55e]"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 12a9 9 0 1 1-9-9c1.7 0 3.3.5 4.6 1.3" />
-                    <path d="M21 3v6h-6" />
-                  </svg>
-                </motion.div>
-                <span className="text-xs font-bold uppercase tracking-widest text-[#22c55e]">
-                  Крутим...
-                </span>
-              </div>
-
               {/* Two target reels side by side */}
               <div className="flex items-start gap-3 px-2">
                 <Reel
@@ -646,7 +590,7 @@ export default function SpinWheel() {
             disabled={isBusy}
             className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 disabled:opacity-50 transition-all"
           >
-            {isBusy ? 'Крутим...' : 'Крутить'}
+            {'Крутить'}
           </Button>
         </motion.div>
       )}

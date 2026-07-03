@@ -9,6 +9,7 @@ import {
   getCompatiblePositions,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
+import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -349,24 +350,20 @@ export default function FormationView() {
 
   return (
     <div className="relative w-full">
-      {/* Compatible positions info bar — only shown when a player is selected */}
+      {/* Selected player prompt — click on pitch to assign */}
       {selectedPlayer && compatiblePositions.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-3 px-3 py-2 rounded-xl bg-[#0d2d0d] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
         >
-          <span className="text-xs text-[#94a3b8] shrink-0">Совместимые позиции:</span>
-          <div className="flex gap-1.5 flex-wrap">
-            {compatiblePositions.map((pos) => (
-              <span
-                key={pos}
-                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]"
-              >
-                {pos}
-              </span>
-            ))}
-          </div>
+          <span className="text-xs text-[#94a3b8] shrink-0">
+            Нажмите на зелёную позицию для
+          </span>
+          <span className="text-xs font-bold text-[#22c55e]">
+            {selectedPlayer.fullName}
+          </span>
+          <span className="text-xs text-[#94a3b8]">({selectedPlayer.rating})</span>
         </motion.div>
       )}
 
@@ -647,19 +644,21 @@ export default function FormationView() {
                         {effectiveRating ?? slot.playerRating}
                       </span>
                     ) : null}
-                    {/* Player last name below the circle */}
+                    {/* Player name below the circle */}
                     {slot.playerName && (
                       <span
                         className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
-                        {slot.playerLastName || (() => {
-                          const parts = slot.playerName!.trim().split(/\s+/);
-                          if (parts.length >= 2 && parts[0] === parts[parts.length - 1]) {
-                            return parts[0];
-                          }
-                          return parts[parts.length - 1];
-                        })()}
+                        {isForeignPlayer(slot.playerNationality)
+                          ? slot.playerName
+                          : (slot.playerLastName || (() => {
+                              const parts = slot.playerName!.trim().split(/\s+/);
+                              if (parts.length >= 2 && parts[0] === parts[parts.length - 1]) {
+                                return parts[0];
+                              }
+                              return parts[parts.length - 1];
+                            })())}
                       </span>
                     )}
                   </>
@@ -690,9 +689,12 @@ export default function FormationView() {
                     }`}
                   >
                     <div className="px-2.5 py-2 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
-                      {/* Full name */}
+                      {/* Full name with flag */}
                       <div className="text-[11px] font-bold text-white leading-tight mb-1 truncate">
                         {slot.playerName ?? 'Игрок'}
+                        {getNationalityFlag(slot.playerNationality) && (
+                          <span className="ml-1">{getNationalityFlag(slot.playerNationality)}</span>
+                        )}
                       </div>
 
                       {/* All positions they can play */}

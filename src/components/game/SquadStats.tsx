@@ -3,6 +3,7 @@
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
+import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
 import { motion } from 'framer-motion';
 
 const CATEGORY_LABELS: Record<PositionCategory, string> = {
@@ -194,7 +195,12 @@ export default function SquadStats() {
                   {slot.positionLabel}
                 </span>
                 <span className="text-xs font-medium text-[#e2e8f0]">
-                  {slot.playerName}
+                  {isForeignPlayer(slot.playerNationality)
+                    ? slot.playerName
+                    : (slot.playerLastName || slot.playerName)}
+                  {getNationalityFlag(slot.playerNationality) && (
+                    <span className="ml-1">{getNationalityFlag(slot.playerNationality)}</span>
+                  )}
                 </span>
               </div>
               <span className="text-xs font-bold text-[#94a3b8]">

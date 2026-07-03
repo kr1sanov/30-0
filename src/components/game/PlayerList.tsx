@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY, POSITION_COLOR, canFillSlot } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
+import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PlayerOption } from '@/lib/types';
 
@@ -28,7 +29,6 @@ function getCategory(pos: string): PositionCategory {
 function getLastName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length >= 2) {
-    // In Russian names, format is usually "FirstName LastName" or "FirstName MiddleName LastName"
     return parts[parts.length - 1];
   }
   return fullName;
@@ -48,7 +48,7 @@ interface ProcessedPlayer extends PlayerOption {
 }
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, assignToSlot } = useGameStore();
+  const { currentSpin, slots, config, assignToSlot, selectedPlayer } = useGameStore();
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
@@ -93,28 +93,36 @@ export default function PlayerList() {
   const handlePlayerClick = (player: ProcessedPlayer) => {
     if (!player.canFillAny) return;
 
-    if (expandedPlayerId === player.playerSeasonId) {
-      setExpandedPlayerId(null);
-      return;
-    }
-
     // If player can fill exactly one slot, assign directly
     if (player.availableSlots.length === 1) {
-      // Set selectedPlayer directly without navigating to position-assign
       useGameStore.setState({ selectedPlayer: player as PlayerOption });
       assignToSlot(player.availableSlots[0]);
       setExpandedPlayerId(null);
       return;
     }
 
-    // Multiple positions available — expand to show position choices
+    // Multiple positions — toggle expanded state
+    if (expandedPlayerId === player.playerSeasonId) {
+      // Collapse — deselect player
+      setExpandedPlayerId(null);
+      useGameStore.setState({ selectedPlayer: null });
+      return;
+    }
+
+    // Set selectedPlayer so the pitch highlights compatible slots
+    useGameStore.setState({ selectedPlayer: player as PlayerOption });
     setExpandedPlayerId(player.playerSeasonId);
   };
 
   const handlePositionSelect = (player: ProcessedPlayer, slotIndex: number) => {
-    // Set selectedPlayer directly without navigating to position-assign
     useGameStore.setState({ selectedPlayer: player as PlayerOption });
     assignToSlot(slotIndex);
+    setExpandedPlayerId(null);
+  };
+
+  // Clear selected player when component unmounts or spin changes
+  const handleClearSelection = () => {
+    useGameStore.setState({ selectedPlayer: null });
     setExpandedPlayerId(null);
   };
 
@@ -122,12 +130,41 @@ export default function PlayerList() {
 
   return (
     <div className="space-y-2">
+      {/* Selected player info — prompt to click on pitch */}
+      {selectedPlayer && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          className="flex items-center gap-2 p-2.5 rounded-xl bg-[#0d2d0d] border border-[#22c55e]/20"
+        >
+          <span className="text-xs text-[#22c55e] font-bold shrink-0">
+            {selectedPlayer.rating}
+          </span>
+          <span className="text-xs text-[#e2e8f0] font-medium truncate flex-1">
+            {selectedPlayer.fullName}
+          </span>
+          <span className="text-[10px] text-[#94a3b8] shrink-0">
+            Нажмите на позицию ↓
+          </span>
+          <button
+            onClick={handleClearSelection}
+            className="text-[#94a3b8] hover:text-[#e2e8f0] transition-colors shrink-0 ml-1"
+          >
+            ✕
+          </button>
+        </motion.div>
+      )}
+
       {/* Player list */}
       <div className="space-y-1.5">
         {processedPlayers.map((player, idx) => {
           const isExpanded = expandedPlayerId === player.playerSeasonId;
+          const isSelected = selectedPlayer?.playerSeasonId === player.playerSeasonId;
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
+          const flagEmoji = getNationalityFlag(player.nationality);
+          const foreign = isForeignPlayer(player.nationality);
 
           return (
             <div key={player.playerSeasonId}>
@@ -139,8 +176,8 @@ export default function PlayerList() {
                 className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 text-left ${
                   !player.canFillAny
                     ? 'opacity-50'
-                    : isExpanded
-                    ? 'bg-[#0d2d0d] border border-[#22c55e]/30'
+                    : isSelected
+                    ? 'bg-[#0d2d0d] border border-[#22c55e]/40 ring-1 ring-[#22c55e]/20'
                     : 'bg-[#0d2d0d]/60 border border-transparent hover:border-[#22c55e]/20'
                 }`}
               >
@@ -155,13 +192,14 @@ export default function PlayerList() {
                 {/* Name and positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-[#e2e8f0] truncate">
-                    {getLastName(player.fullName)}{' '}
-                    <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>
+                    {foreign ? player.fullName : getLastName(player.fullName)}{' '}
+                    {!foreign && <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>}
+                    {flagEmoji && <span className="ml-1.5">{flagEmoji}</span>}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-                    {[player.mainPosition, ...player.otherPositions].map((pos) => (
+                    {[player.mainPosition, ...player.otherPositions].map((pos, posIdx) => (
                       <span
-                        key={pos}
+                        key={`${pos}-${posIdx}`}
                         className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white/90"
                         style={{ backgroundColor: `${getCategoryColor(pos)}88` }}
                       >

@@ -28,6 +28,7 @@ export interface DraftSlot {
   playerRating?: number;
   playerPosition?: string;
   playerOtherPositions?: string[];
+  playerNationality?: string;
   isCompatible?: boolean;
   category: 'gk' | 'def' | 'mid' | 'att';
 }
