@@ -11,7 +11,7 @@ import { Loader2, RotateCcw, Zap } from 'lucide-react';
  * 
  * Flow:
  * 1. Idle: Shows "КРУТИТЬ СОСТАВ" + "X позиций осталось" + Spin button
- * 2. Spinning: Shows "Крутим..." with loading spinner on button
+ * 2. Spinning: Shows loading spinner on button
  * 3. Result: Shows "СОСТАВ ВЫПАЛ" + Club × Season banner + Re-roll button
  */
 export default function SpinWheel() {
@@ -166,10 +166,7 @@ export default function SpinWheel() {
                 className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {isSpinning ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Крутим...
-                  </>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />

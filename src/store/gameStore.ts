@@ -672,8 +672,8 @@ export const useGameStore = create<GameState>()(
         } else if (allFilled) {
           set({ screen: 'squad-complete' });
         } else {
-          // Always go to draft screen — clear stale selectedPlayer
-          set({ screen: 'draft', selectedPlayer: null });
+          // Always go to draft screen — clear stale transient UI state
+          set({ screen: 'draft', selectedPlayer: null, currentSpin: null });
         }
       },
 
@@ -702,6 +702,9 @@ export const useGameStore = create<GameState>()(
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
       // Persist profileStats, lastConfig, and game state for resuming drafts
+      // NOTE: selectedPlayer and currentSpin are transient UI states that must NOT be persisted.
+      // Persisting them causes a stuck state on page refresh where the prompt to assign a player
+      // shows but there is no player list to choose from.
       partialize: (state) => ({
         profileStats: state.profileStats,
         lastConfig: state.lastConfig,
@@ -709,11 +712,9 @@ export const useGameStore = create<GameState>()(
         slots: state.slots,
         rerollsLeft: state.rerollsLeft,
         rerollsUsed: state.rerollsUsed,
-        currentSpin: state.currentSpin,
         currentManager: state.currentManager,
         config: state.config,
         seasonResult: state.seasonResult,
-        selectedPlayer: state.selectedPlayer,
       }),
     },
   ),

@@ -605,20 +605,25 @@ function DraftScreen() {
   useEffect(() => {
     if (currentSpin && !prevCurrentSpin.current) {
       const timer = setTimeout(() => {
-        playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 300);
+        // Use requestAnimationFrame to ensure the DOM has updated before scrolling
+        requestAnimationFrame(() => {
+          playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }, 500);
       prevCurrentSpin.current = currentSpin;
       return () => clearTimeout(timer);
     }
     prevCurrentSpin.current = currentSpin;
   }, [currentSpin]);
 
-  // Auto-scroll: when player is assigned, scroll up to spin button
+  // Auto-scroll: when player is assigned (selectedPlayer goes from non-null to null AND currentSpin goes to null), scroll to spin button
   useEffect(() => {
     if (!selectedPlayer && prevSelectedPlayer.current && !currentSpin) {
       const timer = setTimeout(() => {
-        spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 200);
+        requestAnimationFrame(() => {
+          spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }, 400);
       prevSelectedPlayer.current = selectedPlayer;
       return () => clearTimeout(timer);
     }

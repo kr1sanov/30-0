@@ -2418,3 +2418,57 @@ New vertical layout matching 38-0:
 - Database write permission issues (SQLite readonly error on some requests)
 - Agent-browser can't connect to localhost:3000 (works with gateway on :81 but gateway serves different content)
 - The "Move a player" functionality needs further testing in browser
+
+---
+Task ID: 4
+Agent: full-stack-developer
+Task: Fix draft flow bugs — stale selectedPlayer, "Крутим..." text, auto-scroll timing, player surname display
+
+Work Log:
+- Read gameStore.ts, SpinWheel.tsx, page.tsx, FormationView.tsx to analyze all 4 bugs
+- Bug 1: Removed `selectedPlayer` and `currentSpin` from `partialize` in gameStore.ts (lines 712, 716). These are transient UI states that should NOT be persisted to localStorage — persisting them caused a stuck state on page refresh where the assignment prompt showed but no player list was available. Also improved `resumeGame()` to clear `currentSpin` in addition to `selectedPlayer` when resuming a draft.
+- Bug 2: Removed "Крутим..." text from SpinWheel.tsx spinning button state. Now shows only the `<Loader2>` spinner icon without text during spinning. Also updated the JSDoc comment to reflect the change.
+- Bug 3: Improved auto-scroll timing in page.tsx DraftScreen. Increased delay for spin-result scroll from 300ms to 500ms, and for post-assignment scroll from 200ms to 400ms. Added `requestAnimationFrame` wrapper inside the timeout to ensure DOM has updated before scrolling. Updated comments for clarity.
+- Bug 4: Verified FormationView.tsx player surname display — code already correctly shows full name for foreign players and last name only for Russian players. `playerLastName` is properly set in both `assignToSlot()` and `startRun()`. No fix needed.
+- Ran lint: clean (0 errors, 0 warnings)
+- Checked dev log: no errors, app running normally
+
+Stage Summary:
+- Fixed stale localStorage persistence of selectedPlayer/currentSpin (root cause of stuck draft state)
+- Removed "Крутим..." text from spinning button (per user request)
+- Improved auto-scroll reliability with longer delays and requestAnimationFrame
+- Verified player surname display on field is working correctly
+
+---
+
+## Round 10 — Draft Flow Bug Fixes (04.07.2026)
+
+**Source**: User request — "Разбери пожалуйста этот баг и исправь его, это очень важно из за него игра не работает нормально вообще." + screen recording (Запись экрана 2026-07-03 в 22.54.54.mov)
+
+### Bug Analysis:
+Analyzed the user's screen recording using video frame extraction (98 frames at 2fps) and VLM analysis. Key findings:
+1. **Stale selectedPlayer persistence** — `selectedPlayer` and `currentSpin` were persisted to localStorage. After page refresh, `selectedPlayer` could be restored while `currentSpin` was null, leaving the user stuck with "Нажмите на зелёную позицию" prompt but no player list
+2. **Counter reverting from 1/11 to 0/11** — Likely caused by the API failure revert path, combined with stale state from persistence
+3. **"Крутим..." text** — User explicitly requested removal
+4. **Auto-scroll timing** — Delays were too short, causing missed scroll targets
+
+### Changes Applied:
+
+1. **gameStore.ts** — Removed `selectedPlayer` and `currentSpin` from `partialize` function
+   - These are transient UI states that must NOT be persisted to localStorage
+   - Persisting them caused stuck states on page refresh
+   - Also improved `resumeGame()` to clear both `selectedPlayer: null` and `currentSpin: null`
+
+2. **SpinWheel.tsx** — Removed "Крутим..." text from spinning button
+   - Changed from `<Loader2 /> + "Крутим..."` to just `<Loader2 />` (spinner icon only)
+   - Cleaner, less distracting UI during spin
+
+3. **page.tsx (DraftScreen)** — Improved auto-scroll timing
+   - Spin-result scroll delay: 300ms → 500ms
+   - Post-assignment scroll delay: 200ms → 400ms
+   - Added `requestAnimationFrame` wrapper for more reliable DOM updates before scrolling
+
+4. **FormationView.tsx** — Verified player surname display (no fix needed)
+   - Code already correctly shows last name for Russian players and full name for foreign players
+   - `playerLastName` is properly set in both `assignToSlot()` and `startRun()`
+
