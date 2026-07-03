@@ -565,7 +565,7 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, movePlayer, finishMoving } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const playerListRef = useRef<HTMLDivElement>(null);
@@ -573,6 +573,8 @@ function DraftScreen() {
   const prevSelectedPlayer = useRef(selectedPlayer);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+  const openCount = slots.filter((s) => !s.playerId).length;
+  const isMoving = movingPlayerSlotIndex !== null;
 
   // Compute average rating
   const filledSlots = slots.filter((s) => s.playerId && s.playerRating);
@@ -580,26 +582,28 @@ function DraftScreen() {
     ? Math.round(filledSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / filledSlots.length)
     : null;
 
-  // Compute chemistry
-  const filledPlayerSlots = slots.filter((s) => s.playerId);
-  const chemistry = filledPlayerSlots.length > 0
-    ? Math.round(
-        filledPlayerSlots.filter((s) => {
-          if (!s.playerPosition) return true;
-          const { penalty } = canFillSlot(
-            s.playerPosition as Position,
-            (s.playerOtherPositions ?? []) as Position[],
-            s.position as Position,
-          );
-          return penalty === 1;
-        }).length / filledPlayerSlots.length * 100
-      )
-    : null;
+  // Compute category ratings (like 38-0)
+  const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
+    'ВР': 'gk', 'ЦЗ': 'def', 'ПЗ': 'def', 'ЛЗ': 'def', 'ПФЗ': 'def', 'ЛФЗ': 'def',
+    'ОП': 'mid', 'ЦП': 'mid', 'АП': 'mid', 'ЛП': 'mid', 'ПП': 'mid',
+    'ЛВ': 'att', 'ПВ': 'att', 'НП': 'att', 'ЦН': 'att',
+  };
+  const CATEGORY_LABELS_LOCAL: Record<string, string> = { gk: 'ВР', def: 'Защита', mid: 'Полузащита', att: 'Атака' };
+  const CATEGORY_COLORS_LOCAL: Record<string, string> = { gk: '#f97316', def: '#3b82f6', mid: '#22c55e', att: '#ef4444' };
+
+  const categoryRatings: Record<string, { total: number; count: number }> = { gk: { total: 0, count: 0 }, def: { total: 0, count: 0 }, mid: { total: 0, count: 0 }, att: { total: 0, count: 0 } };
+  slots.forEach((slot) => {
+    const cat = POSITION_CATEGORY_LOCAL[slot.position] ?? 'mid';
+    if (slot.playerRating) {
+      const r = slot.isCompatible !== false ? slot.playerRating : Math.round(slot.playerRating * 0.8);
+      categoryRatings[cat].total += r;
+      categoryRatings[cat].count++;
+    }
+  });
 
   // Auto-scroll: when spin result appears, scroll to player list
   useEffect(() => {
     if (currentSpin && !prevCurrentSpin.current) {
-      // Spin result just appeared — scroll down to player list after a short delay
       const timer = setTimeout(() => {
         playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 300);
@@ -609,10 +613,9 @@ function DraftScreen() {
     prevCurrentSpin.current = currentSpin;
   }, [currentSpin]);
 
-  // Auto-scroll: when player is assigned (selectedPlayer goes from non-null to null, currentSpin goes from non-null to null)
+  // Auto-scroll: when player is assigned, scroll up to spin button
   useEffect(() => {
     if (!selectedPlayer && prevSelectedPlayer.current && !currentSpin) {
-      // Player was just assigned — scroll up to spin button
       const timer = setTimeout(() => {
         spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 200);
@@ -640,71 +643,121 @@ function DraftScreen() {
     return '#ef4444';
   }
 
-  function getChemistryColor(chem: number): string {
-    if (chem >= 100) return '#22c55e';
-    if (chem >= 80) return '#a3e635';
-    if (chem >= 60) return '#facc15';
-    if (chem >= 40) return '#f97316';
-    return '#ef4444';
-  }
-
   return (
     <div className="space-y-4 animate-fade-in pb-20 sm:pb-4">
-      {/* Unified info bar — formation, rating, chemistry, rerolls, restart */}
-      <div className="flex items-center justify-between gap-2 px-1">
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {/* Formation */}
+      {/* ── Header: Formation + Restart ── */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
           <span className="text-sm font-black text-[#e2e8f0] tracking-wide">{config.formation}</span>
-          <div className="h-4 w-px bg-white/15" aria-hidden />
-          {/* Rating */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Рейтинг</span>
-            {avgRating !== null ? (
-              <span className="text-xs sm:text-sm font-black" style={{ color: getRatingColor(avgRating) }}>{avgRating}</span>
-            ) : (
-              <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
-            )}
-          </div>
-          <div className="h-4 w-px bg-white/15" aria-hidden />
-          {/* Chemistry */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Химия</span>
-            {chemistry !== null ? (
-              <span className="text-xs sm:text-sm font-black" style={{ color: getChemistryColor(chemistry) }}>{chemistry}%</span>
-            ) : (
-              <span className="text-xs sm:text-sm font-bold text-white/40">—</span>
-            )}
-          </div>
-          <div className="h-4 w-px bg-white/15" aria-hidden />
-          {/* Rerolls */}
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] sm:text-xs text-[#94a3b8]">Перебросы</span>
-            <span className="text-xs sm:text-sm font-bold text-[#22c55e]">{rerollsLeft}</span>
-            <span className="text-[10px] text-[#94a3b8]">/{maxRerolls}</span>
-          </div>
+          <span className="text-[10px] text-[#64748b]">· Заблокировано — перезапуск для смены</span>
         </div>
-        {/* Restart button */}
-        <button
-          onClick={() => setShowRestartModal(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
-          title="Начать заново"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-[#fbbf24] font-bold flex items-center gap-1">
+            🔄 {rerollsLeft}/{maxRerolls}
+          </span>
+          <button
+            onClick={() => setShowRestartModal(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
+            title="Начать заново"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
+      {/* ── Pitch / Formation View ── */}
       <FormationView />
+
+      {/* ── Move a Player Button ── */}
+      {filledSlots.length >= 2 && (
+        <div className="flex items-center gap-2">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              if (isMoving) {
+                finishMoving();
+              }
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+              isMoving
+                ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
+                : 'bg-[#0d2d0d] border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10'
+            }`}
+          >
+            {isMoving ? '✓ Завершить перемещение' : '↔ Переместить игрока'}
+          </motion.button>
+        </div>
+      )}
+      {isMoving && (
+        <p className="text-[10px] text-[#94a3b8] text-center">
+          Нажмите на занятую позицию, затем на другую для обмена
+        </p>
+      )}
+
+      {/* ── Position Legend ── */}
+      <div className="flex items-center justify-center gap-3 flex-wrap">
+        {[
+          { color: '#f97316', label: 'Вратарь' },
+          { color: '#3b82f6', label: 'Защита' },
+          { color: '#22c55e', label: 'Полузащита' },
+          { color: '#ef4444', label: 'Атака' },
+          { color: '#64748b', label: 'Не подходит' },
+        ].map(({ color, label }) => (
+          <div key={label} className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+            <span className="text-[10px] text-[#94a3b8]">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Squad Stats Panel (38-0 style) ── */}
+      <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold">Общий</span>
+          <span className="text-2xl font-black" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
+            {avgRating ?? '—'}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {['att', 'mid', 'def', 'gk'].map((cat) => {
+            const r = categoryRatings[cat];
+            const avg = r.count > 0 ? Math.round(r.total / r.count) : 0;
+            const maxRating = 99;
+            return (
+              <div key={cat} className="flex items-center gap-3">
+                <span className="text-xs text-[#94a3b8] w-20 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
+                <div className="flex-1 h-2 rounded-full bg-[#1a2a1a] overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: r.count > 0 ? `${(avg / maxRating) * 100}%` : '0%' }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: CATEGORY_COLORS_LOCAL[cat] }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-[#e2e8f0] w-6 text-right">
+                  {r.count > 0 ? avg : '—'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Spin Section ── */}
       <div ref={spinWheelRef}>
         <SpinWheel />
       </div>
+
+      {/* ── Player List ── */}
       <div ref={playerListRef}>
         {currentSpin && <PlayerList />}
       </div>
 
-      {/* Restart Modal */}
+      {/* ── Restart Modal ── */}
       <AnimatePresence>
         {showRestartModal && (
           <motion.div
@@ -752,6 +805,33 @@ function DraftScreen() {
 
 /* ─── Squad Complete Screen ─── */
 function SquadCompleteScreen() {
+  const { slots, config, simulate, currentManager, resetGame } = useGameStore();
+
+  // Calculate squad stats for pre-season odds
+  const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
+    'ВР': 'gk', 'ЦЗ': 'def', 'ПЗ': 'def', 'ЛЗ': 'def', 'ПФЗ': 'def', 'ЛФЗ': 'def',
+    'ОП': 'mid', 'ЦП': 'mid', 'АП': 'mid', 'ЛП': 'mid', 'ПП': 'mid',
+    'ЛВ': 'att', 'ПВ': 'att', 'НП': 'att', 'ЦН': 'att',
+  };
+
+  const filledSlots = slots.filter((s) => s.playerId && s.playerRating);
+  const overallRating = filledSlots.length > 0
+    ? Math.round(filledSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / filledSlots.length)
+    : 0;
+
+  // Manager bonus
+  const managerBonus = currentManager?.rating ? 2 : 0;
+  const effectiveRating = overallRating + managerBonus;
+
+  // Pre-season odds calculation (simplified based on rating)
+  const projectedPosition = effectiveRating >= 80 ? 1 : effectiveRating >= 76 ? 2 : effectiveRating >= 72 ? 3 : effectiveRating >= 68 ? 5 : effectiveRating >= 64 ? 8 : 12;
+  const expectedPoints = Math.round(effectiveRating * 1.8 + Math.random() * 10);
+  const winLeaguePct = Math.min(99, Math.max(1, Math.round((effectiveRating - 55) * 3)));
+  const top4Pct = Math.min(99, Math.max(winLeaguePct + 20, 30));
+  const top6Pct = Math.min(99, Math.max(top4Pct + 15, 50));
+  const top10Pct = Math.min(99, Math.max(top6Pct + 10, 70));
+  const relegationPct = Math.max(0, Math.round(100 - top10Pct - 20));
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="text-center">
@@ -761,13 +841,60 @@ function SquadCompleteScreen() {
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
           className="text-5xl mb-3"
         >
-          ✅
+          🏆
         </motion.div>
         <h2 className="text-2xl font-black text-[#e2e8f0]">Состав готов!</h2>
         <p className="text-sm text-[#94a3b8] mt-1">Все 11 позиций заполнены</p>
       </div>
 
       <FormationView />
+
+      {/* Pre-season odds — 38-0 style */}
+      <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-4 space-y-4">
+        <h3 className="text-sm font-bold text-[#e2e8f0]">📊 Предсезонные шансы</h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
+            <div className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold mb-1">Прогноз места</div>
+            <div className="text-2xl font-black text-[#fbbf24]">{projectedPosition}</div>
+          </div>
+          <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
+            <div className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold mb-1">Ожидаемые очки</div>
+            <div className="text-2xl font-black text-[#22c55e]">{expectedPoints}</div>
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {[
+            { label: 'Выиграть чемпионат', pct: winLeaguePct, color: '#fbbf24' },
+            { label: 'Топ-4', pct: top4Pct, color: '#22c55e' },
+            { label: 'Топ-6', pct: top6Pct, color: '#3b82f6' },
+            { label: 'Топ-10', pct: top10Pct, color: '#94a3b8' },
+            { label: 'Вылет', pct: relegationPct, color: '#ef4444' },
+          ].map(({ label, pct, color }) => (
+            <div key={label}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-[#94a3b8]">{label}</span>
+                <span className="text-xs font-bold" style={{ color }}>{pct}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[10px] text-[#64748b] text-center">
+          На основе общего рейтинга {overallRating} {managerBonus > 0 ? `+ ${managerBonus} бонус тренера` : ''}
+        </p>
+      </div>
+
       <SquadStats />
       <ManagerChoice />
     </div>

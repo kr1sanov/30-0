@@ -57,6 +57,7 @@ export interface MatchDetail {
   homeGoals: number;
   awayGoals: number;
   result: 'W' | 'D' | 'L';
+  scorers?: string[]; // e.g., ["Иванов 23'", "Петров 67'"]
 }
 
 export interface SquadStrength {
@@ -271,6 +272,34 @@ export function simulateSeason(
     goalsFor += playerGoals;
     goalsAgainst += oppGoals;
 
+    // Generate goal scorers for player's team
+    const scorers: string[] = [];
+    if (playerGoals > 0) {
+      const attackerNames = slots
+        .filter(s => {
+          const cat = getCategoryForPosition(s.position as Parameters<typeof getCategoryForPosition>[0]);
+          return cat === 'att' || cat === 'mid';
+        })
+        .map(s => s.playerName.split(' ')[0]); // Last name only
+
+      const allNames = slots.map(s => s.playerName.split(' ')[0]);
+
+      for (let g = 0; g < playerGoals; g++) {
+        const minute = Math.floor(Math.random() * 90) + 1;
+        // Prefer attackers/midfielders for goals
+        const name = attackerNames.length > 0 && Math.random() > 0.2
+          ? attackerNames[Math.floor(Math.random() * attackerNames.length)]
+          : allNames[Math.floor(Math.random() * allNames.length)];
+        scorers.push(`${name} ${minute}'`);
+      }
+      // Sort by minute
+      scorers.sort((a, b) => {
+        const minA = parseInt(a.match(/(\d+)'/)?.[1] || '0');
+        const minB = parseInt(b.match(/(\d+)'/)?.[1] || '0');
+        return minA - minB;
+      });
+    }
+
     matches.push({
       matchday: i + 1,
       opponent: opponent.name,
@@ -278,6 +307,7 @@ export function simulateSeason(
       homeGoals: result.homeGoals,
       awayGoals: result.awayGoals,
       result: outcome,
+      scorers,
     });
   }
 

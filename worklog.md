@@ -2285,3 +2285,136 @@ Stage Summary:
 - ✅ Lint проходит без ошибок
 - ✅ Сервер компилирует без ошибок
 - ✅ VLM-анализ скриншота подтверждает корректный рендеринг
+
+---
+
+## Round 10 — 38-0 Mechanics Recreation (04.07.2026)
+
+**Source**: User request — "Изучи пожалуйста полностью запис игры из 38-0 и сделай мне идентичную механику, визуал и так далее. Адаптируй под мой текущий UX UI."
+
+**Reference**: Video recording (Запись экрана 2026-07-03 в 20.14.06.mov) — complete 38-0.app gameplay recording
+
+### Video Analysis Summary (38-0 Mechanics):
+The 38-0 game is a football draft simulator for the English Premier League with these key mechanics:
+1. **Home Screen**: Dark theme, "38-0" title, "Play 38-0" button, game modes (Leagues, One-Club XI, Daily Challenge, Nations Trophy)
+2. **Draft Screen (Vertical Layout)**:
+   - Formation/pitch at top with colored position circles (Orange=GK, Blue=DEF, Green=MID, Red=ATT)
+   - "Move a player" button below pitch
+   - Position legend (colored dots)
+   - Squad stats panel (Overall, Attack, Midfield, Defence, GK with progress bars)
+   - "SPIN FOR A SQUAD" section: positions left counter, Club×Season selectors, Spin button
+   - After spin: "SQUAD SPUN" banner, Re-roll button, player cards with position buttons
+3. **Player Cards (38-0 style)**:
+   - Rating square (color-coded by position category)
+   - Full name + nationality text
+   - Position badges as small colored tags
+   - "PLACE IN (N)" text with position buttons when multiple slots match
+   - Sort options: Rating / Surname A-Z
+4. **Squad Complete Screen**: 
+   - Trophy icon + "Squad Complete"
+   - Pre-season odds: Projected Finish, Expected Points, probability bars (Win league %, Top 4 %, Top 6 %, Top 10 %, Relegation %)
+   - Simulate Season button
+5. **Season Simulation**:
+   - Match-by-match progression with "MATCHWEEK X / 38" counter
+   - "Skip all →" button
+   - Recent match results (3 visible): W/L badge, opponent (H/A), score, goal scorers
+   - Season stats: WON, DRAWN, LOST, PTS, GF, GA, GD
+6. **Season Results**:
+   - Achievement cards (Clean Sheets, Longest Win Streak, Biggest Win, Highest-Scoring)
+   - "FINAL LEAGUE TABLE" expandable section
+   - Leaderboard submission
+   - Share + New Run buttons
+
+### Changes Applied:
+
+#### 1. SpinWheel.tsx — Complete Rewrite (38-0 style)
+- Removed slot-machine animation (Reel, FastCyclingReel components)
+- Simplified to 3 states: idle → spinning → result
+- Idle: "КРУТИТЬ СОСТАВ" header + "X позиций осталось" + green "Крутить" button
+- Spinning: Club × Season boxes with loading spinners, "Крутим..." button text
+- Result: "СОСТАВ ВЫПАЛ" header + Club × Season result cards + "Переброс" button
+- Club/Season boxes use dark blue (#1a2332) background like 38-0
+- Uses Lucide icons (Loader2, RotateCcw, Zap) instead of custom components
+
+#### 2. PlayerList.tsx — Complete Rewrite (38-0 style)
+- Added sort controls (Рейтинг / Фамилия А-Я) like 38-0's "SORT" section
+- Player cards now show:
+  - Rating square (color-coded by position category)
+  - Player name + nationality text (separate line)
+  - Position badges as colored tags
+  - Flag emoji after name for nationality
+  - "Поставить на (N)" text with position buttons (like 38-0's "PLACE IN (N)")
+  - Position buttons styled with category colors
+- Foreign players: full name displayed
+- Domestic players: last name + first name (lighter)
+- Auto-assign when only 1 compatible slot
+
+#### 3. DraftScreen (page.tsx) — Complete Restructure (38-0 layout)
+New vertical layout matching 38-0:
+- **Header**: Formation name + "Заблокировано — перезапуск для смены" + rerolls counter + restart button
+- **Formation/Pitch**: FormationView component
+- **"Move a player" button**: New feature for swapping players on the pitch
+- **Position Legend**: Color-coded dots (Вратарь, Защита, Полузащита, Атака, Не подходит)
+- **Squad Stats Panel**: Overall rating + category breakdown (Атака, Полузащита, Защита, ВР) with animated progress bars
+- **Spin Section**: SpinWheel component
+- **Player List**: PlayerList component
+- Auto-scroll to player list when spin result appears
+- Auto-scroll back to spin button when player is assigned
+
+#### 4. SquadCompleteScreen (page.tsx) — Pre-season Odds (38-0 style)
+- Changed trophy from ✅ to 🏆
+- Added pre-season odds section:
+  - "Предсезонные шансы" header
+  - Projected Finish position + Expected Points in 2-column grid
+  - Probability bars: Выиграть чемпионат %, Топ-4 %, Топ-6 %, Топ-10 %, Вылет %
+  - Based on overall squad rating + manager bonus
+  - Animated progress bars for each probability
+
+#### 5. SimulationResult.tsx — Complete Rewrite (38-0 match-by-match style)
+- Match-by-match auto-progression (150ms per matchweek)
+- "ТУР X / 30" counter with "Пропустить все →" button
+- Recent match results (3 visible, reversed):
+  - Color-coded cards: green for W, red for L, blue for D
+  - W/L/D badge + opponent (д/в) + score
+  - Goal scorers with minutes (e.g., "Иванов 23' · Петров 67'")
+- Season statistics: WON / DRAWN / LOST / PTS in 4-column grid + GF/GA/GD
+- Achievement cards (2-column grid):
+  - Сухих матчей (clean sheets)
+  - Лучшая серия (longest win streak)
+  - Крупная победа (biggest win)
+  - Самый результативный (highest scoring match)
+- Expandable "Итоговая таблица" (Final League Table)
+- Action buttons: "На главную" + "Новая игра"
+
+#### 6. simulation.ts — Goal Scorer Generation
+- Added `scorers` field to MatchDetail interface
+- Generates random goal scorers from the squad:
+  - Prefers attackers and midfielders (80% chance)
+  - Random minute (1-90)
+  - Sorted by minute ascending
+  - Format: "Фамилия минута'" (e.g., "Иванов 23'")
+
+### Files Modified:
+- `src/components/game/SpinWheel.tsx` — completely rewritten (38-0 style spin)
+- `src/components/game/PlayerList.tsx` — completely rewritten (38-0 style cards with position buttons)
+- `src/app/page.tsx` — DraftScreen restructured, SquadCompleteScreen updated with pre-season odds
+- `src/components/game/SimulationResult.tsx` — completely rewritten (38-0 match-by-match)
+- `src/lib/simulation.ts` — added goal scorer generation
+
+### Key Design Decisions:
+1. **Kept slot-machine club names** in the spinning animation but simplified the UI (loading spinners instead of cycling reels)
+2. **"Move a player" button** added for player swapping on the pitch (like 38-0's "Move a player" feature)
+3. **Position assignment via buttons** — players are assigned through explicit position buttons under each card, not by clicking on the pitch
+4. **Auto-scroll behavior** maintained from previous implementation
+5. **Goal scorers** generated randomly from squad players, preferring attackers/midfielders
+
+### Verification:
+- Lint: ✅ Clean (0 errors, 0 warnings)
+- Dev server: ✅ Running, home page loads correctly
+- Agent browser: ⚠️ Could not reach localhost:3000 directly (environment issue), verified via curl (200 OK)
+- Home page renders correctly with all sections
+
+### Known Issues:
+- Database write permission issues (SQLite readonly error on some requests)
+- Agent-browser can't connect to localhost:3000 (works with gateway on :81 but gateway serves different content)
+- The "Move a player" functionality needs further testing in browser
