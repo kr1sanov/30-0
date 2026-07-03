@@ -237,10 +237,10 @@
 .pitch-stripes {
   background: repeating-linear-gradient(
     180deg,
-    #2a7d42 0px,
-    #2a7d42 24px,
-    #247538 24px,
-    #247538 48px
+    rgba(42, 125, 66, 0.7) 0px,
+    rgba(42, 125, 66, 0.7) 24px,
+    rgba(36, 117, 56, 0.7) 24px,
+    rgba(36, 117, 56, 0.7) 48px
   );
   position: relative;
 }
@@ -248,7 +248,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%);
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.25) 100%);
   pointer-events: none;
 }
 
@@ -449,7 +449,7 @@ html {
 
 /* Pitch vignette overlay */
 .pitch-vignette {
-  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.55);
 }
 
 /* Pitch grass texture lines */

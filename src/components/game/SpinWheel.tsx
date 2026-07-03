@@ -288,7 +288,7 @@ function FastCyclingReel({
           initial={{ y: 0 }}
           animate={{ y: targetY }}
           transition={{
-            duration: 0.8,
+            duration: 0.5,
             ease: 'linear',
             repeat: Infinity,
             repeatType: 'loop',
@@ -363,10 +363,10 @@ export default function SpinWheel() {
   /* ── Transition from animating → result after reels stop ── */
   useEffect(() => {
     if (phase === 'animating') {
-      // Wait for the slowest reel (1.8s) + buffer
+      // Wait for the slowest reel (1.1s) + buffer
       const timer = setTimeout(() => {
         setPhase('result');
-      }, 2200);
+      }, 1300);
       return () => clearTimeout(timer);
     }
   }, [phase]);
@@ -544,7 +544,7 @@ export default function SpinWheel() {
                   key={`target-club-${spinKey}`}
                   items={clubReelItems!}
                   targetIndex={clubTargetIndex}
-                  duration={1.2}
+                  duration={0.7}
                   spinKey={spinKey}
                   label="Клуб"
                   accentColor="#22c55e"
@@ -559,7 +559,7 @@ export default function SpinWheel() {
                   key={`target-season-${spinKey}`}
                   items={seasonReelItems!}
                   targetIndex={seasonTargetIndex}
-                  duration={1.8}
+                  duration={1.1}
                   spinKey={spinKey}
                   label="Сезон"
                   accentColor="#fbbf24"

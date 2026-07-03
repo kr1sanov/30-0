@@ -213,6 +213,7 @@ export const useGameStore = create<GameState>()(
                 positionLabel: slot.label,
                 playerId: dbSlot.playerSeasonId,
                 playerName: dbSlot.playerName ?? undefined,
+                playerLastName: dbSlot.playerLastName ?? undefined,
                 playerRating: dbSlot.playerRating ?? undefined,
                 playerPosition: dbSlot.playerPosition ?? undefined,
                 category,
@@ -341,50 +342,55 @@ export const useGameStore = create<GameState>()(
 
         const slotPosition = `${slot.position}_${slotIndex}`;
 
-        try {
-          const res = await fetch(`/api/runs/${runId}/draft`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              playerSeasonId: selectedPlayer.playerSeasonId,
-              slotPosition,
-            }),
-          });
+        // Optimistically update UI immediately
+        const prevSlots = [...slots];
+        const newSlots = [...slots];
+        newSlots[slotIndex] = {
+          ...slot,
+          playerId: selectedPlayer.playerSeasonId,
+          playerName: selectedPlayer.fullName,
+          playerLastName: selectedPlayer.lastName,
+          playerRating: selectedPlayer.rating,
+          playerPosition: selectedPlayer.mainPosition,
+          playerOtherPositions: selectedPlayer.otherPositions,
+          isCompatible: true,
+        };
 
-          if (!res.ok) {
-            console.error('Failed to draft player:', await res.json());
-            return;
-          }
+        const allFilled = newSlots.every((s) => s.playerId);
 
-          const newSlots = [...slots];
-          newSlots[slotIndex] = {
-            ...slot,
-            playerId: selectedPlayer.playerSeasonId,
-            playerName: selectedPlayer.fullName,
-            playerRating: selectedPlayer.rating,
-            playerPosition: selectedPlayer.mainPosition,
-            playerOtherPositions: selectedPlayer.otherPositions,
-            isCompatible: true,
-          };
-
-          const allFilled = newSlots.every((s) => s.playerId);
-
-          // Clear lastDraftState after successful assignment — undo only works for the most recent pick
-          set({
-            slots: newSlots,
-            selectedPlayer: null,
+        set({
+          slots: newSlots,
+          selectedPlayer: null,
+          currentSpin: null,
+          screen: allFilled ? 'squad-complete' : 'draft',
+          lastDraftState: allFilled ? null : {
+            slots: prevSlots,
             currentSpin: null,
-            screen: allFilled ? 'squad-complete' : 'draft',
-            lastDraftState: allFilled ? null : {
-              slots: [...slots],
-              currentSpin: null,
-              selectedPlayer: null,
-              screen: 'draft',
-            },
-          });
-        } catch (error) {
+            selectedPlayer: null,
+            screen: 'draft',
+          },
+        });
+
+        // Fire API in background
+        fetch(`/api/runs/${runId}/draft`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playerSeasonId: selectedPlayer.playerSeasonId,
+            slotPosition,
+          }),
+        }).then(async (res) => {
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            console.error('Failed to draft player:', errData);
+            // Revert on failure
+            set({ slots: prevSlots, selectedPlayer, currentSpin: null, screen: 'draft' });
+          }
+        }).catch((error) => {
           console.error('Failed to draft player:', error);
-        }
+          // Revert on failure
+          set({ slots: prevSlots, selectedPlayer, currentSpin: null, screen: 'draft' });
+        });
       },
 
       movePlayer: (fromSlotIndex, toSlotIndex) => {

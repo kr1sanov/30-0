@@ -115,6 +115,7 @@ model GameSlot {
   slotPosition      String
   playerSeasonId    String?
   playerName        String?
+  playerLastName    String?
   playerRating      Int?
   playerPosition    String?
   isCompatible      Boolean  @default(true)

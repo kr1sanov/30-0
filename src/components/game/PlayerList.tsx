@@ -138,7 +138,7 @@ export default function PlayerList() {
                 transition={{ delay: Math.min(idx * 0.02, 0.4) }}
                 className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 text-left ${
                   !player.canFillAny
-                    ? 'opacity-30'
+                    ? 'opacity-50'
                     : isExpanded
                     ? 'bg-[#0d2d0d] border border-[#22c55e]/30'
                     : 'bg-[#0d2d0d]/60 border border-transparent hover:border-[#22c55e]/20'

@@ -2070,3 +2070,100 @@ Stage Summary:
 - Dev server: ✅ running on port 3000
 - Browser check: ✅ homepage renders correctly (white 30-0 title, white subtitle, "Играть →" button)
 - Browser check: ✅ setup screen loads without header
+
+## Round 10 — Speed & UX Improvements (Изменения 03.07.2026 - 1)
+
+**Source**: User request — "Изменения 03.07.2026 - 1.md" — 4 changes requested
+
+### Changes Applied:
+
+1. **Speed up spin animation** — SpinWheel.tsx
+   - Club reel duration: 1.2s → 0.7s
+   - Season reel duration: 1.8s → 1.1s
+   - Animating→result timeout: 2200ms → 1300ms
+   - FastCyclingReel duration: 0.8s → 0.5s per cycle
+   - Overall spin feels much snappier
+
+2. **Optimistic UI update for player placement** — gameStore.ts
+   - `assignToSlot` now updates UI state immediately before the API call
+   - API is fired in the background; on failure, the state is reverted
+   - Eliminates the perceived delay when placing a player on a position
+
+3. **Show only surname on field, full name on hover** — Multiple files
+   - Added `playerLastName?: string` to `DraftSlot` interface in types.ts
+   - Added `playerLastName` field to GameSlot Prisma model (schema.prisma + db:push)
+   - Updated draft API route to save `playerLastName` from `playerSeason.player.lastName`
+   - Updated `startRun` in gameStore.ts to read `playerLastName` from API response
+   - Updated `assignToSlot` in gameStore.ts to store `selectedPlayer.lastName`
+   - Updated FormationView.tsx to use `slot.playerLastName` first, falling back to the old split logic
+   - Removed ⚽ emoji from center circle in FormationView.tsx
+
+4. **Make pitch more transparent / cards more saturated** — globals.css + PlayerList.tsx
+   - Pitch stripes: changed from solid hex colors to 70% opacity rgba values
+   - Pitch vignette: increased box-shadow from 0.4 to 0.55 opacity
+   - Pitch radial gradient: increased from 0.15 to 0.25 edge opacity
+   - Inactive player cards: opacity changed from 0.30 to 0.50
+
+### Files Modified:
+- `src/components/game/SpinWheel.tsx` — 4 timing changes
+- `src/store/gameStore.ts` — optimistic assignToSlot + playerLastName in startRun
+- `src/lib/types.ts` — playerLastName field in DraftSlot
+- `src/components/game/FormationView.tsx` — playerLastName usage + removed ⚽ emoji
+- `src/app/globals.css` — pitch stripe transparency + vignette
+- `src/components/game/PlayerList.tsx` — inactive card opacity
+- `prisma/schema.prisma` — playerLastName in GameSlot model
+- `src/app/api/runs/[runId]/draft/route.ts` — save playerLastName
+
+### Verification:
+- Lint: ✅ clean (0 errors)
+- DB push: ✅ schema synced
+- Dev server: ✅ compiled successfully
+
+## Round 10 — Gameplay Fixes (Изменения 03.07.2026 - 1) (03.07.2026)
+
+**Source**: User file `Изменения 03.07.2026 - 1.md`:
+1. Очень долго крутится спин после нажатия
+2. Очень долго ставится игрок на позицию
+3. Исправь отображение фамилии игрока на поле, должно быть там не имя а фамилия только, при наведении на игрока показывает имя и фамилию. Убери с поля эмодзи футбольного мяча
+4. Сделай поле немного прозрачнее, либо карточки с игроками сделай более насыщенными (неактивные/неназначенные)
+
+### Changes Applied:
+
+**Fix 1: Speed up spin animation** — `src/components/game/SpinWheel.tsx`
+- Club reel duration: 1.2s → 0.7s
+- Season reel duration: 1.8s → 1.1s
+- Animating→result timeout: 2200ms → 1300ms
+- FastCyclingReel duration: 0.8s → 0.5s per cycle
+- Overall spin time reduced by ~40%
+
+**Fix 2: Speed up player placement** — `src/store/gameStore.ts`
+- `assignToSlot` now uses **optimistic UI update**: state is updated immediately before the API call
+- API fires in background; if it fails, state is reverted
+- Fixed catch handler: `res.json()` now properly awaited with `.catch()` fallback
+- User perceives instant player assignment
+
+**Fix 3: Show only surname on field, full name on hover, remove ⚽** — Multiple files
+- Added `playerLastName?: string` to `DraftSlot` type (`src/lib/types.ts`)
+- Added `playerLastName` column to `GameSlot` Prisma model, ran `db:push`
+- `draft/route.ts`: saves `playerSeason.player.lastName` to database
+- `gameStore.ts`: `startRun` and `assignToSlot` now store `playerLastName`
+- `FormationView.tsx`: Field circle shows `slot.playerLastName` with fallback to split logic
+- Hover tooltip still shows `slot.playerName` (full name) — no change needed
+- Removed ⚽ emoji from center circle on the pitch
+
+**Fix 4: Pitch transparency + card saturation** — Multiple files
+- `globals.css`: Pitch stripes opacity reduced from 1.0 to 0.7 (rgba 0.7)
+- `globals.css`: Pitch vignette shadow increased from 0.4 to 0.55
+- `PlayerList.tsx`: Inactive (can't fill) player card opacity: 0.30 → 0.50
+
+### Verification:
+- ✅ Lint passes clean
+- ✅ Dev server compiles without errors
+- ✅ Spin animation completes faster (verified via agent-browser)
+- ✅ Player assignment is instant (optimistic update)
+- ✅ Field shows only surname "Меджидов" (not full name)
+- ✅ Hover shows full name "Меджидов Сослан"
+- ✅ ⚽ emoji removed from pitch center circle
+- ✅ Inactive cards more visible (opacity 0.5)
+- ✅ Pitch more transparent (stripe opacity 0.7)
+

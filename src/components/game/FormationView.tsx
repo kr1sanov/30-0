@@ -415,15 +415,6 @@ export default function FormationView() {
 
         {/* Center circle */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-white/20 flex items-center justify-center">
-          {/* ===== Task 4c: Center circle logo (⚽ icon) ===== */}
-          <motion.span
-            className="text-base sm:text-xl opacity-60 select-none"
-            animate={{ scale: [1, 1.08, 1], opacity: [0.55, 0.75, 0.55] }}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            aria-hidden
-          >
-            ⚽
-          </motion.span>
         </div>
 
         {/* Center dot */}
@@ -662,11 +653,8 @@ export default function FormationView() {
                         className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
-                        {(() => {
-                          const parts = slot.playerName.trim().split(/\s+/);
-                          // For names like "Иванов Иван" return "Иванов" (last word)
-                          // For names like "Дзюба" return "Дзюба"
-                          // Avoid duplicating: if first and last parts are the same, return just one
+                        {slot.playerLastName || (() => {
+                          const parts = slot.playerName!.trim().split(/\s+/);
                           if (parts.length >= 2 && parts[0] === parts[parts.length - 1]) {
                             return parts[0];
                           }

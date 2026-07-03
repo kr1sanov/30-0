@@ -112,6 +112,7 @@ export async function POST(
       data: {
         playerSeasonId,
         playerName: playerSeason.player.fullName,
+        playerLastName: playerSeason.player.lastName,
         playerRating: playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
         isCompatible,

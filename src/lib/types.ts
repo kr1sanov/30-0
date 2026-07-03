@@ -24,6 +24,7 @@ export interface DraftSlot {
   positionLabel: string;
   playerId?: string;
   playerName?: string;
+  playerLastName?: string;
   playerRating?: number;
   playerPosition?: string;
   playerOtherPositions?: string[];
