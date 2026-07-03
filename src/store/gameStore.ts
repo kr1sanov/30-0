@@ -100,6 +100,7 @@ interface GameState {
   reroll: () => Promise<void>;
   selectPlayer: (player: PlayerOption) => void;
   assignToSlot: (slotIndex: number) => Promise<void>;
+  directAssign: (player: PlayerOption, slotIndex: number) => Promise<void>;
   movePlayer: (fromSlotIndex: number, toSlotIndex: number) => void;
   finishMoving: () => void;
   spinManager: (manager?: Manager) => Promise<void>;
@@ -325,7 +326,7 @@ export const useGameStore = create<GameState>()(
       },
 
       assignToSlot: async (slotIndex) => {
-        const { runId, slots, selectedPlayer } = get();
+        const { runId, slots, selectedPlayer, currentSpin } = get();
         if (!runId || !selectedPlayer) return;
 
         const slot = slots[slotIndex];
@@ -339,6 +340,9 @@ export const useGameStore = create<GameState>()(
         if (!canFill) return;
 
         const slotPosition = `${slot.position}_${slotIndex}`;
+
+        // Save current spin for potential revert
+        const savedSpin = currentSpin;
 
         // Optimistically update UI immediately
         const prevSlots = [...slots];
@@ -364,7 +368,7 @@ export const useGameStore = create<GameState>()(
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : {
             slots: prevSlots,
-            currentSpin: null,
+            currentSpin: savedSpin,
             selectedPlayer: null,
             screen: 'draft',
           },
@@ -382,13 +386,85 @@ export const useGameStore = create<GameState>()(
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             console.error('Failed to draft player:', errData);
-            // Revert on failure
-            set({ slots: prevSlots, selectedPlayer, currentSpin: null, screen: 'draft' });
+            // Revert on failure — restore spin so user can try again
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
-          // Revert on failure
-          set({ slots: prevSlots, selectedPlayer, currentSpin: null, screen: 'draft' });
+          // Revert on failure — restore spin so user can try again
+          set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+        });
+      },
+
+      directAssign: async (player, slotIndex) => {
+        const { runId, slots, currentSpin } = get();
+        if (!runId) return;
+
+        const slot = slots[slotIndex];
+        if (!slot) return;
+
+        const { canFill } = canFillSlot(
+          player.mainPosition as Position,
+          player.otherPositions as Position[],
+          slot.position as Position,
+        );
+        if (!canFill) return;
+
+        const slotPosition = `${slot.position}_${slotIndex}`;
+
+        // Save current spin for potential revert
+        const savedSpin = currentSpin;
+
+        // Save undo state
+        const prevSlots = [...slots];
+
+        // Optimistically update UI immediately — single atomic update, no intermediate selectedPlayer state
+        const newSlots = [...slots];
+        newSlots[slotIndex] = {
+          ...slot,
+          playerId: player.playerSeasonId,
+          playerName: player.fullName,
+          playerLastName: player.lastName,
+          playerRating: player.rating,
+          playerPosition: player.mainPosition,
+          playerOtherPositions: player.otherPositions,
+          playerNationality: player.nationality,
+          isCompatible: true,
+        };
+
+        const allFilled = newSlots.every((s) => s.playerId);
+
+        set({
+          slots: newSlots,
+          selectedPlayer: null,
+          currentSpin: null,
+          screen: allFilled ? 'squad-complete' : 'draft',
+          lastDraftState: allFilled ? null : {
+            slots: prevSlots,
+            currentSpin: savedSpin,
+            selectedPlayer: null,
+            screen: 'draft',
+          },
+        });
+
+        // Fire API in background
+        fetch(`/api/runs/${runId}/draft`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playerSeasonId: player.playerSeasonId,
+            slotPosition,
+          }),
+        }).then(async (res) => {
+          if (!res.ok) {
+            console.error('Failed to draft player:', await res.json().catch(() => ({})));
+            // Revert on failure — restore spin so user can try again
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+          }
+        }).catch((error) => {
+          console.error('Failed to draft player:', error);
+          // Revert on failure — restore spin so user can try again
+          set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
         });
       },
 

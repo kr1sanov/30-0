@@ -370,7 +370,7 @@ export default function FormationView() {
       {/* Pitch */}
       <div
         className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
-        style={{ paddingBottom: '130%' }}
+        style={{ paddingBottom: '90%' }}
       >
         {/* Pitch stripe pattern */}
         <div
@@ -411,7 +411,7 @@ export default function FormationView() {
         <div className="absolute inset-x-3 sm:inset-x-4 top-1/2 h-px bg-white/20" />
 
         {/* Center circle */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-white/20 flex items-center justify-center">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/20 flex items-center justify-center">
         </div>
 
         {/* Center dot */}
@@ -421,44 +421,16 @@ export default function FormationView() {
         <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-36 sm:w-44 h-16 sm:h-20 border-b border-x border-white/20" />
         {/* Top goal box */}
         <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-20 sm:w-24 h-8 border-b border-x border-white/20" />
-        {/* Top penalty arc */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 border-b border-white/15 rounded-b-full"
-          style={{ top: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
-        />
-        {/* ===== Task 4d: Top penalty spot ===== */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
-          style={{ top: 'calc(12px + 42px)' }}
-          aria-hidden
-        />
 
         {/* Bottom penalty box */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-36 sm:w-44 h-16 sm:h-20 border-t border-x border-white/20" />
         {/* Bottom goal box */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-20 sm:w-24 h-8 border-t border-x border-white/20" />
-        {/* Bottom penalty arc */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 border-t border-white/15 rounded-t-full"
-          style={{ bottom: 'calc(12px + 64px - 10px)', width: '60px', height: '20px' }}
-        />
-        {/* ===== Task 4d: Bottom penalty spot ===== */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-white/40"
-          style={{ bottom: 'calc(12px + 42px)' }}
-          aria-hidden
-        />
-
-        {/* Corner arcs */}
-        <div className="absolute top-3 sm:top-4 left-3 sm:left-4 w-4 h-4 border-b border-r border-white/15 rounded-br-full" />
-        <div className="absolute top-3 sm:top-4 right-3 sm:right-4 w-4 h-4 border-b border-l border-white/15 rounded-bl-full" />
-        <div className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 w-4 h-4 border-t border-r border-white/15 rounded-tr-full" />
-        <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-4 h-4 border-t border-l border-white/15 rounded-tl-full" />
 
         {/* ===== Task 2c: SVG connection lines from source slot to valid swap targets ===== */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 100 130"
+          viewBox="0 0 100 90"
           preserveAspectRatio="none"
           aria-hidden
         >
@@ -466,9 +438,9 @@ export default function FormationView() {
             <motion.line
               key={i}
               x1={t.from.col}
-              y1={t.from.row * 1.3}
+              y1={t.from.row * 0.9}
               x2={t.to.col}
-              y2={t.to.row * 1.3}
+              y2={t.to.row * 0.9}
               stroke="rgba(250, 204, 21, 0.7)"
               strokeWidth={0.4}
               strokeDasharray="1.5 1"
@@ -573,7 +545,7 @@ export default function FormationView() {
               layout
             >
               <div
-                className={`relative flex flex-col items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 transition-all duration-200 ${
+                className={`relative flex flex-col items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-200 ${
                   isFilled
                     ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
                     : isIncompatible
@@ -609,7 +581,7 @@ export default function FormationView() {
                 {/* ===== Compatibility badge (top-right) ===== */}
                 {isFilled && compatKind && (
                   <div
-                    className={`absolute -top-1.5 -right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 border-[#0f0f1e] ${
+                    className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] font-black border border-[#0f0f1e] ${
                       compatKind === 'full'
                         ? 'bg-[#22c55e] text-white'
                         : 'bg-[#facc15] text-black'
@@ -628,14 +600,14 @@ export default function FormationView() {
                   <>
                     {/* Position label inside circle */}
                     <span
-                      className="text-[9px] sm:text-[10px] font-bold text-white/80 leading-none"
+                      className="text-[8px] sm:text-[9px] font-bold text-white/80 leading-none"
                     >
                       {slot.positionLabel}
                     </span>
                     {/* Rating inside circle */}
                     {slot.playerRating ? (
                       <span
-                        className="text-[10px] sm:text-xs font-black leading-none mt-0.5"
+                        className="text-[9px] sm:text-[10px] font-black leading-none mt-0.5"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
                           opacity: compatKind === 'partial' ? 0.78 : 1,
@@ -647,7 +619,7 @@ export default function FormationView() {
                     {/* Player name below the circle */}
                     {slot.playerName && (
                       <span
-                        className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] sm:text-[9px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
+                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[60px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
                         {isForeignPlayer(slot.playerNationality)
@@ -682,9 +654,9 @@ export default function FormationView() {
                       tooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
                     }`}
                   >
-                    <div className="px-2.5 py-2 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
+                    <div className="px-2 py-1.5 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
                       {/* Full name with flag */}
-                      <div className="text-[11px] font-bold text-white leading-tight mb-1 truncate">
+                      <div className="text-[10px] font-bold text-white leading-tight mb-0.5 truncate">
                         {slot.playerName ?? 'Игрок'}
                         {getNationalityFlag(slot.playerNationality) && (
                           <span className="ml-1">{getNationalityFlag(slot.playerNationality)}</span>
@@ -694,11 +666,11 @@ export default function FormationView() {
                       {/* All positions they can play */}
                       {playerAllPositions.length > 0 && (
                         <div className="flex items-center gap-1 mb-1 flex-wrap">
-                          <span className="text-[9px] text-[#94a3b8]">Позиции:</span>
+                          <span className="text-[8px] text-[#94a3b8]">Позиции:</span>
                           {playerAllPositions.map((p) => (
                             <span
                               key={p}
-                              className={`text-[8px] font-bold px-1 py-0.5 rounded ${
+                              className={`text-[7px] font-bold px-0.5 py-0.5 rounded ${
                                 p === slot.position
                                   ? 'bg-[#22c55e]/25 text-[#4ade80]'
                                   : 'bg-white/5 text-white/60'
@@ -712,7 +684,7 @@ export default function FormationView() {
 
                       {/* Rating line — current vs base if penalty applies */}
                       {slot.playerRating && (
-                        <div className="text-[9px] text-[#94a3b8]">
+                        <div className="text-[8px] text-[#94a3b8]">
                           Рейтинг:{' '}
                           {compatKind === 'partial' && baseRating ? (
                             <>
@@ -748,85 +720,12 @@ export default function FormationView() {
       </div>
 
       {/* Open positions counter */}
-      <div className="flex items-center justify-center mt-3">
-        <span className="text-xs text-[#94a3b8]">
+      <div className="flex items-center justify-center mt-1.5">
+        <span className="text-[10px] text-[#94a3b8]">
           Заполнено: <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
           {openCount > 0 && <span className="ml-1">· Осталось: {openCount} поз.</span>}
         </span>
       </div>
-
-      {/* Move Player button */}
-      {filledCount > 0 && (
-        <div className="flex justify-center mt-2">
-          <button
-            onClick={() => {
-              if (movingPlayerSlotIndex !== null) {
-                // Cancel move mode
-                useGameStore.setState({ movingPlayerSlotIndex: null });
-              } else {
-                // Enter move mode — next click on a filled slot will select that player
-                useGameStore.setState({ movingPlayerSlotIndex: -1 });
-              }
-            }}
-            className="text-xs font-bold px-4 py-2 rounded-xl border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 transition-colors"
-          >
-            {movingPlayerSlotIndex !== null ? '↩ Отменить перемещение' : 'Переместить игрока'}
-          </button>
-        </div>
-      )}
-
-      {/* Squad Info Panel */}
-      {filledCount > 0 && (
-        <div className="mt-3 rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a]/50">
-          <div className="grid grid-cols-5 gap-2 text-center">
-            {/* Overall */}
-            <div>
-              <div className="text-[10px] text-[#94a3b8] mb-0.5">Рейтинг</div>
-              <div className="text-sm font-black text-[#e2e8f0]">{avgRating ?? '—'}</div>
-            </div>
-            {/* Attack */}
-            <div>
-              <div className="text-[10px] text-[#94a3b8] mb-0.5">Атака</div>
-              <div className="text-sm font-black text-[#ef4444]">
-                {(() => {
-                  const attSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'att');
-                  return attSlots.length > 0 ? Math.round(attSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / attSlots.length) : '—';
-                })()}
-              </div>
-            </div>
-            {/* Midfield */}
-            <div>
-              <div className="text-[10px] text-[#94a3b8] mb-0.5">Полузащита</div>
-              <div className="text-sm font-black text-[#22c55e]">
-                {(() => {
-                  const midSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'mid');
-                  return midSlots.length > 0 ? Math.round(midSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / midSlots.length) : '—';
-                })()}
-              </div>
-            </div>
-            {/* Defense */}
-            <div>
-              <div className="text-[10px] text-[#94a3b8] mb-0.5">Защита</div>
-              <div className="text-sm font-black text-[#3b82f6]">
-                {(() => {
-                  const defSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'def');
-                  return defSlots.length > 0 ? Math.round(defSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / defSlots.length) : '—';
-                })()}
-              </div>
-            </div>
-            {/* GK */}
-            <div>
-              <div className="text-[10px] text-[#94a3b8] mb-0.5">Вратарь</div>
-              <div className="text-sm font-black text-[#f97316]">
-                {(() => {
-                  const gkSlots = slots.filter(s => s.playerId && POSITION_CATEGORY[s.position as Position] === 'gk');
-                  return gkSlots.length > 0 ? gkSlots[0].playerRating ?? '—' : '—';
-                })()}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

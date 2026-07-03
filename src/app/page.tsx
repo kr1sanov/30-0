@@ -602,14 +602,14 @@ function DraftScreen() {
   });
 
   // Auto-scroll: when spin result appears, scroll to player list
+  // Delay accounts for slot-machine animation (deceleration phase ~1s)
   useEffect(() => {
     if (currentSpin && !prevCurrentSpin.current) {
       const timer = setTimeout(() => {
-        // Use requestAnimationFrame to ensure the DOM has updated before scrolling
         requestAnimationFrame(() => {
           playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-      }, 500);
+      }, 1500);
       prevCurrentSpin.current = currentSpin;
       return () => clearTimeout(timer);
     }
@@ -1166,20 +1166,7 @@ export default function Home() {
       <div className="football-field-bg" />
       <Header />
       <main className="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-20 sm:pb-6 relative z-10">
-        <AnimatePresence mode="popLayout" custom={direction}>
-          <motion.div
-            key={screen}
-            custom={direction}
-            variants={pageVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            layout
-          >
-            {renderScreen()}
-          </motion.div>
-        </AnimatePresence>
+        {renderScreen()}
       </main>
       <Footer />
       <AchievementUnlocked />

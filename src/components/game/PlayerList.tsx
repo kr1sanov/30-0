@@ -42,7 +42,7 @@ interface ProcessedPlayer extends PlayerOption {
 type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, assignToSlot, selectPlayer, selectedPlayer } = useGameStore();
+  const { currentSpin, slots, config, directAssign } = useGameStore();
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
@@ -91,10 +91,9 @@ export default function PlayerList() {
   const handlePlayerClick = (player: ProcessedPlayer) => {
     if (!player.canFillAny) return;
 
-    // If player can fill exactly one slot, assign directly
+    // If player can fill exactly one slot, assign directly without intermediate state
     if (player.availableSlots.length === 1) {
-      selectPlayer(player as PlayerOption);
-      assignToSlot(player.availableSlots[0]);
+      directAssign(player as PlayerOption, player.availableSlots[0]);
       setExpandedPlayerId(null);
       return;
     }
@@ -109,8 +108,7 @@ export default function PlayerList() {
   };
 
   const handlePositionSelect = (player: ProcessedPlayer, slotIndex: number) => {
-    selectPlayer(player as PlayerOption);
-    assignToSlot(slotIndex);
+    directAssign(player as PlayerOption, slotIndex);
     setExpandedPlayerId(null);
   };
 

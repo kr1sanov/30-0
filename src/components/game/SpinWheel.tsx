@@ -1,26 +1,193 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, RotateCcw, Zap } from 'lucide-react';
+import { RotateCcw, Zap } from 'lucide-react';
+
+/* ─── RPL data for slot reels ─── */
+const RPL_CLUBS = [
+  'Зенит', 'Спартак', 'ЦСКА', 'Локомотив', 'Краснодар', 'Рубин',
+  'Динамо', 'Ахмат', 'Крылья Советов', 'Ростов', 'Урал', 'Оренбург',
+  'Уфа', 'Тамбов', 'Сочи', 'Факел', 'Химки', 'Нижний Новгород',
+  'Арсенал', 'Торпедо', 'Кубань', 'Волга', 'Сатурн', 'Алания',
+];
+
+const RPL_SEASONS = [
+  '2024/25', '2023/24', '2022/23', '2021/22', '2020/21', '2019/20',
+  '2018/19', '2017/18', '2016/17', '2015/16', '2014/15', '2013/14',
+  '2012/13', '2011/12', '2010/11', '2009/10', '2008/09', '2007/08',
+  '2006/07', '2005/06', '2004/05', '2003/04', '2002/03', '2001/02',
+  '2000/01', '1999/00', '1998/99', '1997/98', '1996/97', '1995/96',
+  '1994/95', '1993/94', '1992/93',
+];
+
+/* ─── SlotReel: shows one reel (club or season) with slot-machine animation ─── */
+interface SlotReelProps {
+  items: string[];
+  targetItem: string | null;
+  isSpinning: boolean;
+  hasResult: boolean;
+  accentColor: string;
+  label: string;
+  resultColor?: string;
+}
+
+function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
+  const [displayItem, setDisplayItem] = useState<string>(items[0]);
+  const [phase, setPhase] = useState<'idle' | 'cycling' | 'decelerating' | 'stopped'>('idle');
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Fast cycling phase: rapidly show random items
+  useEffect(() => {
+    if (isSpinning && !hasResult) {
+      setPhase('cycling');
+      let interval = 80;
+
+      const cycle = () => {
+        const randomIdx = Math.floor(Math.random() * items.length);
+        setDisplayItem(items[randomIdx]);
+        timerRef.current = setTimeout(cycle, interval);
+      };
+      cycle();
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isSpinning, hasResult, items]);
+
+  // Deceleration phase: slow down and land on target
+  useEffect(() => {
+    if (hasResult && targetItem && (phase === 'cycling' || phase === 'idle')) {
+      // Clear cycling timer
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+
+      setPhase('decelerating');
+      let interval = 100;
+      let steps = 0;
+      const maxSteps = 8;
+
+      const decelerate = () => {
+        if (steps >= maxSteps) {
+          setDisplayItem(targetItem);
+          setPhase('stopped');
+          return;
+        }
+        // Show random items as we decelerate, gradually showing items closer to target
+        if (steps >= maxSteps - 2) {
+          // Last 2 steps: show items near the target for drama
+          const targetIdx = items.indexOf(targetItem);
+          const offset = maxSteps - steps;
+          const idx = (targetIdx + offset) % items.length;
+          setDisplayItem(items[idx >= 0 ? idx : 0]);
+        } else {
+          const randomIdx = Math.floor(Math.random() * items.length);
+          setDisplayItem(items[randomIdx]);
+        }
+        steps++;
+        interval += 50; // Slow down progressively
+        timerRef.current = setTimeout(decelerate, interval);
+      };
+      decelerate();
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [hasResult, targetItem, items, phase]);
+
+  // Reset when idle
+  useEffect(() => {
+    if (!isSpinning && !hasResult) {
+      setPhase('idle');
+    }
+  }, [isSpinning, hasResult]);
+
+  const isActive = phase === 'cycling' || phase === 'decelerating';
+  const isStopped = phase === 'stopped' || (hasResult && !isSpinning);
+
+  return (
+    <div className="flex-1 relative rounded-xl bg-[#0a1628] border border-white/10 overflow-hidden">
+      {/* Gradient overlays at top and bottom for depth effect */}
+      <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a1628] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#0a1628] to-transparent z-10 pointer-events-none" />
+
+      {/* Accent line in the middle (selection indicator) */}
+      <div
+        className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-8 z-10 pointer-events-none"
+        style={{
+          borderTop: `1px solid ${accentColor}40`,
+          borderBottom: `1px solid ${accentColor}40`,
+          background: `linear-gradient(180deg, transparent, ${accentColor}08, transparent)`,
+        }}
+      />
+
+      {/* Label */}
+      <div className="relative z-20 text-[8px] uppercase tracking-widest text-[#64748b] font-bold text-center pt-2.5 pb-1">
+        {label}
+      </div>
+
+      {/* Reel content area */}
+      <div className="relative h-10 flex items-center justify-center overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayItem + (isActive ? '-active' : isStopped ? '-stopped' : '-idle')}
+            initial={isActive ? { y: -20, opacity: 0 } : { opacity: 0 }}
+            animate={isActive
+              ? { y: 0, opacity: 1 }
+              : isStopped
+              ? { opacity: 1, scale: [1, 1.08, 1] }
+              : { opacity: 1 }
+            }
+            exit={isActive ? { y: 20, opacity: 0 } : { opacity: 0 }}
+            transition={isActive
+              ? { duration: 0.06, ease: 'linear' }
+              : isStopped
+              ? { duration: 0.3, ease: 'easeOut' }
+              : { duration: 0.15 }
+            }
+            className="text-sm font-black text-center truncate px-2"
+            style={{
+              color: isStopped ? resultColor : '#94a3b8',
+              textShadow: isStopped ? `0 0 12px ${accentColor}60` : 'none',
+            }}
+          >
+            {displayItem}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bottom spacer */}
+      <div className="h-2" />
+    </div>
+  );
+}
 
 /**
- * SpinWheel — 38-0 style simplified spin component.
- * 
+ * SpinWheel — 38-0 style slot-machine spin component.
+ *
  * Flow:
  * 1. Idle: Shows "КРУТИТЬ СОСТАВ" + "X позиций осталось" + Spin button
- * 2. Spinning: Shows loading spinner on button
- * 3. Result: Shows "СОСТАВ ВЫПАЛ" + Club × Season banner + Re-roll button
+ * 2. Spinning: Two slot reels rapidly cycling clubs & seasons
+ * 3. Result: Reels decelerate and stop on target + Re-roll button
  */
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config } =
     useGameStore();
 
   const openCount = slots.filter((s) => !s.playerId).length;
-  const totalSlots = slots.length;
-  const rerollsUsed = config.difficulty === 'easy' ? 3 - rerollsLeft : config.difficulty === 'normal' ? 1 - rerollsLeft : 0;
+  const hasResult = !!currentSpin;
 
   /* ── User actions ── */
   const handleSpin = useCallback(async () => {
@@ -32,8 +199,6 @@ export default function SpinWheel() {
     if (isSpinning || rerollsLeft <= 0) return;
     await reroll();
   }, [isSpinning, rerollsLeft, reroll]);
-
-  const hasResult = !!currentSpin;
 
   return (
     <div className="space-y-3">
@@ -61,40 +226,41 @@ export default function SpinWheel() {
             </motion.div>
           )}
 
-          {/* ── Spinning ── */}
+          {/* ── Spinning: Slot machine reels ── */}
           {isSpinning && (
             <motion.div
               key="spinning"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="p-4 text-center"
+              className="p-4"
             >
-              <div className="flex items-center justify-center gap-3 mb-3">
-                {/* Club box */}
-                <div className="flex-1 rounded-xl bg-[#1a2332] border border-[#3b82f6]/20 px-4 py-3">
-                  <div className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold mb-1">
-                    Клуб
-                  </div>
-                  <div className="flex items-center justify-center gap-1.5 text-sm text-[#94a3b8]">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span className="animate-pulse">...</span>
-                  </div>
-                </div>
+              <div className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold mb-2 text-center">
+                Крутим состав
+              </div>
+              <div className="flex items-center gap-2">
+                <SlotReel
+                  items={RPL_CLUBS}
+                  targetItem={currentSpin?.clubName ?? null}
+                  isSpinning={isSpinning}
+                  hasResult={!!currentSpin}
+                  accentColor="#3b82f6"
+                  label="Клуб"
+                  resultColor="#ffffff"
+                />
 
                 {/* × separator */}
-                <span className="text-[#64748b]/40 font-bold text-lg">×</span>
+                <span className="text-[#64748b]/40 font-bold text-lg shrink-0">×</span>
 
-                {/* Season box */}
-                <div className="flex-1 rounded-xl bg-[#1a2332] border border-[#fbbf24]/20 px-4 py-3">
-                  <div className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold mb-1">
-                    Сезон
-                  </div>
-                  <div className="flex items-center justify-center gap-1.5 text-sm text-[#94a3b8]">
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                    <span className="animate-pulse">...</span>
-                  </div>
-                </div>
+                <SlotReel
+                  items={RPL_SEASONS}
+                  targetItem={currentSpin?.seasonLabel ?? null}
+                  isSpinning={isSpinning}
+                  hasResult={!!currentSpin}
+                  accentColor="#fbbf24"
+                  label="Сезон"
+                  resultColor="#fbbf24"
+                />
               </div>
             </motion.div>
           )}
@@ -114,9 +280,9 @@ export default function SpinWheel() {
               </div>
 
               {/* Club × Season banner */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 rounded-xl bg-[#1a2332] border border-[#3b82f6]/20 px-4 py-3 text-center">
-                  <div className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold mb-1">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 rounded-xl bg-[#0a1628] border border-[#3b82f6]/20 px-3 py-2.5 text-center">
+                  <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
                     Клуб
                   </div>
                   <div className="text-base font-black text-white">
@@ -126,8 +292,8 @@ export default function SpinWheel() {
 
                 <span className="text-[#64748b]/40 font-bold text-lg">×</span>
 
-                <div className="flex-1 rounded-xl bg-[#1a2332] border border-[#fbbf24]/20 px-4 py-3 text-center">
-                  <div className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold mb-1">
+                <div className="flex-1 rounded-xl bg-[#0a1628] border border-[#fbbf24]/20 px-3 py-2.5 text-center">
+                  <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
                     Сезон
                   </div>
                   <div className="text-base font-black text-[#fbbf24]">
@@ -166,7 +332,7 @@ export default function SpinWheel() {
                 className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {isSpinning ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="animate-pulse">Крутится...</span>
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />

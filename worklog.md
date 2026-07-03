@@ -2472,3 +2472,79 @@ Analyzed the user's screen recording using video frame extraction (98 frames at 
    - Code already correctly shows last name for Russian players and full name for foreign players
    - `playerLastName` is properly set in both `assignToSlot()` and `startRun()`
 
+---
+
+## Task 4 — Fix Draft Assignment Broken State Bug (03.07.2026)
+
+**Source**: Bug report — "I selected a player, placed them in a position, and it shows they're not active until I spin again."
+
+**Root Cause**: Two related issues:
+1. `assignToSlot` in gameStore.ts did not save `currentSpin` before clearing it. On API failure, the revert set `currentSpin: null` and restored `selectedPlayer` to the player — but with no `currentSpin`, the player list was gone, leaving the user stuck on the "click on green position" prompt with no way to interact.
+2. `PlayerList.tsx` called `selectPlayer()` then `assignToSlot()` synchronously for single-slot players, creating a brief intermediate render with `selectedPlayer` set but before assignment completes.
+
+### Changes Applied:
+
+1. **gameStore.ts — Fixed `assignToSlot` error handling**
+   - Now saves `currentSpin` as `savedSpin` before the optimistic update
+   - On API failure, reverts with `currentSpin: savedSpin` (not `null`) and `selectedPlayer: null` (not restoring the player, since the spin result is restored — the user can pick again from the player list)
+   - `lastDraftState` now stores `currentSpin: savedSpin` instead of `currentSpin: null`, so undo properly restores the spin result
+
+2. **gameStore.ts — Added `directAssign` action**
+   - New atomic action that accepts both `player` and `slotIndex` directly
+   - Skips the intermediate `selectedPlayer` state entirely — single `set()` call
+   - Same error handling pattern as `assignToSlot`: saves spin, reverts with spin on failure
+   - Added to `GameState` interface with proper typing
+
+3. **PlayerList.tsx — Uses `directAssign` instead of `selectPlayer` + `assignToSlot`**
+   - `handlePlayerClick` for single-slot players: calls `directAssign(player, slotIndex)` instead of `selectPlayer()` then `assignToSlot()`
+   - `handlePositionSelect` for multi-slot position selection: calls `directAssign(player, slotIndex)` instead of `selectPlayer()` then `assignToSlot()`
+   - Removed unused `selectPlayer` and `selectedPlayer` from the store destructure
+
+4. **Kept existing `selectPlayer` + `assignToSlot` flow for FormationView**
+   - FormationView pitch-click interaction still uses the two-step flow: user selects player from list → clicks position on pitch
+   - This is correct behavior — the player list sets `selectedPlayer`, then the pitch click calls `assignToSlot`
+
+## Round 10 — Compact Pitch + Slot Machine Animation (Task 5)
+
+**Source**: Task 5 — Make football pitch smaller, add smooth slot machine animation, verify auto-scroll.
+
+### Task A: Compact FormationView
+
+1. **Reduced pitch height** — `paddingBottom: '130%'` → `'90%'` — makes the pitch compact like 38-0 reference
+2. **Reduced player circle size** — `w-14 h-14 sm:w-16 sm:h-16` → `w-10 h-10 sm:w-12 sm:h-12`
+3. **Reduced font sizes proportionally**:
+   - Position label: `text-[9px] sm:text-[10px]` → `text-[8px] sm:text-[9px]`
+   - Rating: `text-[10px] sm:text-xs` → `text-[9px] sm:text-[10px]`
+   - Player name: `text-[8px] sm:text-[9px]` → `text-[7px] sm:text-[8px]`
+4. **Reduced compatibility badge** — `w-4 h-4 sm:w-5 sm:h-5` → `w-3.5 h-3.5 sm:w-4 sm:h-4`
+5. **Reduced center circle** — `w-24 h-24 sm:w-28 sm:h-28` → `w-16 h-16 sm:w-20 sm:h-20`
+6. **Removed overly detailed pitch decorations** — penalty arcs, corner arcs, penalty spots removed for a cleaner look
+7. **Reduced open positions counter spacing** — `mt-3` → `mt-1.5`, `text-xs` → `text-[10px]`
+8. **Removed duplicate "Move Player button"** from FormationView (already in DraftScreen)
+9. **Removed duplicate "Squad Info Panel"** from FormationView (already in DraftScreen as SquadStatsPanel)
+10. **Updated SVG viewBox** — `0 0 100 130` → `0 0 100 90` and line Y multiplier `1.3` → `0.9`
+11. **Reduced tooltip sizes** — padding, font sizes all reduced proportionally
+
+### Task B: Slot Machine Animation
+
+1. **Completely rewrote SpinWheel.tsx** with slot-machine style animation
+2. **Created `SlotReel` component** that handles the three-phase animation:
+   - Phase 1 (cycling): Fast random item display (~80ms intervals) while API loads
+   - Phase 2 (deceleration): Items slow down progressively (100ms → 550ms), last 2 steps show items near target
+   - Phase 3 (stopped): Lands on target with subtle scale bounce + glow effect
+3. **Two reels side by side**: Club reel (blue accent) and Season reel (gold accent)
+4. **Visual design**: Dark background `#0a1628`, gradient overlays top/bottom, accent selection line in middle
+5. **Smooth transitions via framer-motion**: `AnimatePresence` with directional y-animation for cycling items
+6. **RPL data arrays**: 24 clubs + 33 seasons for the reel items
+7. **Result display**: Once stopped, shows result cards with the same accent colors
+
+### Task C: Auto-scroll Adjustment
+
+1. **Increased auto-scroll delay** from 500ms to 1500ms to account for slot-machine deceleration animation
+2. **Verified layout** — compact pitch is always visible, spin/result section below, player list below that
+
+### Files Modified:
+- `src/components/game/FormationView.tsx` — Compact pitch, removed duplicates
+- `src/components/game/SpinWheel.tsx` — Complete rewrite with slot-machine animation
+- `src/app/page.tsx` — Auto-scroll delay adjustment
+
