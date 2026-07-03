@@ -308,7 +308,7 @@ export const useGameStore = create<GameState>()(
       },
 
       selectPlayer: (player) => {
-        const { config, slots, currentSpin } = get();
+        const { slots, currentSpin } = get();
 
         // Save state before selection for undo
         set({
@@ -320,10 +320,8 @@ export const useGameStore = create<GameState>()(
           },
         });
 
+        // Stay on draft screen — position assignment happens inline
         set({ selectedPlayer: player });
-        if (config.draftMode === 'squad_first') {
-          set({ screen: 'position-assign' });
-        }
       },
 
       assignToSlot: async (slotIndex) => {
@@ -642,28 +640,6 @@ export const useGameStore = create<GameState>()(
         set({ screen: 'home' });
       },
 
-      resumeGame: () => {
-        const { runId, slots, currentSpin, selectedPlayer } = get();
-        if (!runId) return;
-
-        // Check if there are any players drafted
-        const hasPlayers = slots.some((s) => s.playerId);
-        if (!hasPlayers) return;
-
-        // Determine the appropriate screen to return to
-        const allFilled = slots.every((s) => s.playerId);
-
-        if (allFilled) {
-          set({ screen: 'squad-complete' });
-        } else if (currentSpin) {
-          set({ screen: 'draft' });
-        } else if (selectedPlayer) {
-          set({ screen: 'position-assign' });
-        } else {
-          set({ screen: 'draft' });
-        }
-      },
-
       resetGame: () => {
         set({
           screen: 'home',
@@ -688,17 +664,16 @@ export const useGameStore = create<GameState>()(
       },
 
       resumeGame: () => {
-        const { slots, seasonResult, selectedPlayer, currentSpin } = get();
+        const { slots, seasonResult } = get();
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
 
         if (seasonResult) {
           set({ screen: 'result' });
         } else if (allFilled) {
           set({ screen: 'squad-complete' });
-        } else if (selectedPlayer) {
-          set({ screen: 'position-assign' });
         } else {
-          set({ screen: 'draft' });
+          // Always go to draft screen — clear stale selectedPlayer
+          set({ screen: 'draft', selectedPlayer: null });
         }
       },
 

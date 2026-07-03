@@ -565,8 +565,12 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, resetGame, startRun, lastConfig, slots } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
+  const spinWheelRef = useRef<HTMLDivElement>(null);
+  const playerListRef = useRef<HTMLDivElement>(null);
+  const prevCurrentSpin = useRef(currentSpin);
+  const prevSelectedPlayer = useRef(selectedPlayer);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
 
@@ -591,6 +595,32 @@ function DraftScreen() {
         }).length / filledPlayerSlots.length * 100
       )
     : null;
+
+  // Auto-scroll: when spin result appears, scroll to player list
+  useEffect(() => {
+    if (currentSpin && !prevCurrentSpin.current) {
+      // Spin result just appeared — scroll down to player list after a short delay
+      const timer = setTimeout(() => {
+        playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300);
+      prevCurrentSpin.current = currentSpin;
+      return () => clearTimeout(timer);
+    }
+    prevCurrentSpin.current = currentSpin;
+  }, [currentSpin]);
+
+  // Auto-scroll: when player is assigned (selectedPlayer goes from non-null to null, currentSpin goes from non-null to null)
+  useEffect(() => {
+    if (!selectedPlayer && prevSelectedPlayer.current && !currentSpin) {
+      // Player was just assigned — scroll up to spin button
+      const timer = setTimeout(() => {
+        spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 200);
+      prevSelectedPlayer.current = selectedPlayer;
+      return () => clearTimeout(timer);
+    }
+    prevSelectedPlayer.current = selectedPlayer;
+  }, [selectedPlayer, currentSpin]);
 
   const handleRestart = async () => {
     setShowRestartModal(false);
@@ -667,8 +697,12 @@ function DraftScreen() {
       </div>
 
       <FormationView />
-      <SpinWheel />
-      {currentSpin && <PlayerList />}
+      <div ref={spinWheelRef}>
+        <SpinWheel />
+      </div>
+      <div ref={playerListRef}>
+        {currentSpin && <PlayerList />}
+      </div>
 
       {/* Restart Modal */}
       <AnimatePresence>
@@ -712,59 +746,6 @@ function DraftScreen() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-/* ─── Position Assign Screen ─── */
-function PositionAssignScreen() {
-  const { selectedPlayer, setScreen, slots } = useGameStore();
-
-  const openCount = slots.filter((s) => !s.playerId).length;
-
-  // Get compatible positions for the info banner
-  const mainPos = selectedPlayer?.mainPosition || '';
-  const otherPos = selectedPlayer?.otherPositions || [];
-  const allPosLabels = [mainPos, ...otherPos].filter(Boolean);
-
-  return (
-    <div className="space-y-4 animate-fade-in">
-      <div className="rounded-xl bg-[#0d2d0d] p-4 border border-[#22c55e]/20">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#22c55e]/20 flex items-center justify-center shrink-0">
-            <svg className="w-5 h-5 text-[#22c55e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[#e2e8f0]">
-              Выберите позицию для <span className="text-[#22c55e] font-bold">{selectedPlayer?.fullName}</span>
-            </p>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#22c55e]">
-                {selectedPlayer?.rating}
-              </span>
-              <span className="text-xs text-[#94a3b8]">Позиции:</span>
-              {allPosLabels.map((pos) => (
-                <span key={pos} className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#3b82f6]/15 text-[#3b82f6]">
-                  {pos}
-                </span>
-              ))}
-            </div>
-            <p className="text-xs text-[#94a3b8] mt-1">Нажмите на свободную позицию на поле ({openCount} осталось)</p>
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            useGameStore.setState({ selectedPlayer: null });
-            setScreen('draft');
-          }}
-          className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#0a1a0a]/50 text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#0a1a0a] transition-colors text-sm font-medium"
-        >
-          🔙 Назад
-        </button>
-      </div>
-      <FormationView />
     </div>
   );
 }
@@ -1027,7 +1008,7 @@ export default function Home() {
       case 'draft':
         return <DraftScreen />;
       case 'position-assign':
-        return <PositionAssignScreen />;
+        return <DraftScreen />;
       case 'squad-complete':
         return <SquadCompleteScreen />;
       case 'pre-match':

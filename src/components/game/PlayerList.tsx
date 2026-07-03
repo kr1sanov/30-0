@@ -25,19 +25,18 @@ function getCategory(pos: string): PositionCategory {
   return POSITION_CATEGORY[pos as Position] ?? 'mid';
 }
 
-/** Get player's last name from full name */
+/** Get player's last name from full name (Russian convention: Фамилия Имя) */
 function getLastName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return parts[parts.length - 1];
-  }
-  return fullName;
+  // In Russian naming convention, the first word is the last name (Фамилия)
+  return parts[0];
 }
 
 function getFirstName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
+  // In Russian naming convention, the last word(s) are the first name (Имя)
   if (parts.length >= 2) {
-    return parts[0];
+    return parts.slice(1).join(' ');
   }
   return '';
 }
@@ -192,7 +191,7 @@ export default function PlayerList() {
                 {/* Name and positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-[#e2e8f0] truncate">
-                    {foreign ? player.fullName : getLastName(player.fullName)}{' '}
+                    {foreign ? player.fullName : (player.lastName || getLastName(player.fullName))}{' '}
                     {!foreign && <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>}
                     {flagEmoji && <span className="ml-1.5">{flagEmoji}</span>}
                   </div>

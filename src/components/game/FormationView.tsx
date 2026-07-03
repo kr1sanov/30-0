@@ -652,13 +652,7 @@ export default function FormationView() {
                       >
                         {isForeignPlayer(slot.playerNationality)
                           ? slot.playerName
-                          : (slot.playerLastName || (() => {
-                              const parts = slot.playerName!.trim().split(/\s+/);
-                              if (parts.length >= 2 && parts[0] === parts[parts.length - 1]) {
-                                return parts[0];
-                              }
-                              return parts[parts.length - 1];
-                            })())}
+                          : (slot.playerLastName || slot.playerName.trim().split(/\s+/)[0])}
                       </span>
                     )}
                   </>

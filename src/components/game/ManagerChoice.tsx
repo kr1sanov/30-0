@@ -327,7 +327,7 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
           <Dices className="w-4 h-4 text-[#22c55e]" />
         </motion.div>
         <span className="text-xs font-bold uppercase tracking-widest text-[#22c55e]">
-          Крутим барабаны…
+          Ищем тренера…
         </span>
       </div>
 
