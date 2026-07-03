@@ -1,5 +1,54 @@
 # 30-0 RPL — Work Log
 
+## Round 10 — Critical Bug Fix + UI Overhaul (04.07.2026)
+
+**Source**: User request — "Проблема сохранилась, ты не решил ее полностью. Пожалуйста перепровер весь проект, найди ошибку и исправь ее."
+
+**Reference**: Two screen recordings showing current bug + 38-0 reference app behavior
+
+### Critical Bug Fixed: "Inactive Player After Assignment"
+
+**Problem**: After selecting a player and assigning them to a position, the UI got stuck showing an "inactive" state. The player would appear assigned briefly, then the FormationView would show "Нажмите на зелёную позицию для..." prompt but with no player list visible, making the game unplayable.
+
+**Root Causes Found**:
+1. **Race condition in PlayerList**: When clicking a player with a single compatible slot, `selectPlayer()` and `assignToSlot()` were called back-to-back synchronously. This caused a brief intermediate state where `selectedPlayer` was set, triggering the "click position" prompt in FormationView, before `assignToSlot` cleared it.
+2. **Broken error recovery in assignToSlot**: If the API call failed, the revert code set `currentSpin: null`, which removed the player list entirely. The user was stuck with the "click position" prompt but no way to interact.
+3. **AnimatePresence popLayout**: The `mode="popLayout"` kept both old and new screens in the DOM simultaneously, causing layout overlap issues.
+
+**Fixes Applied**:
+1. **New `directAssign` action** in gameStore.ts — Atomic player-to-slot assignment that skips the intermediate `selectedPlayer` state entirely. No UI flash, no race condition.
+2. **Fixed error handling** in `assignToSlot` — Now saves `currentSpin` as `savedSpin` before clearing it. On API failure, restores `currentSpin: savedSpin` so the player list remains visible.
+3. **PlayerList uses `directAssign`** — Both single-slot and multi-slot player selections now use `directAssign` instead of `selectPlayer` + `assignToSlot`.
+4. **Removed AnimatePresence** — Replaced with simple conditional rendering to prevent screen overlap issues.
+
+### UI Changes (38-0 Style)
+
+1. **Compact football pitch** — Reduced from `paddingBottom: 130%` to `90%`. Player circles reduced from `w-14 h-14` to `w-10 h-10`. Font sizes reduced proportionally. Removed clutter (penalty arcs, corner arcs, penalty spots).
+2. **Slot machine animation** — Complete SpinWheel rewrite with `SlotReel` component. Two reels (Club × Season) with fast cycling → deceleration → stop animation. Club reel has blue accent, Season reel has gold accent.
+3. **Removed duplicate elements** — Move Player button and Squad Info Panel removed from FormationView (already in DraftScreen).
+4. **Foreign player names** — Non-Russian players show full name + flag emoji (🇧🇷🇷🇸🇱🇹🇧🇦🇨🇱🇬🇪). Russian players show last name + first name.
+
+### Testing Results (Agent Browser)
+- ✅ Spin → Player list appears with slot animation
+- ✅ Click single-slot player → Directly assigned, returns to spin button
+- ✅ Click multi-slot player → Expands to show position options → Click position → Assigned
+- ✅ No "inactive" or "click position" prompt after assignment
+- ✅ API calls return 200 status
+- ✅ Flag emojis display correctly for foreign players
+- ✅ Lint passes with no errors
+
+### Files Modified
+- `src/store/gameStore.ts` — Added `directAssign`, fixed `assignToSlot` error handling
+- `src/components/game/PlayerList.tsx` — Uses `directAssign` instead of `selectPlayer` + `assignToSlot`
+- `src/components/game/SpinWheel.tsx` — Complete rewrite with SlotReel animation
+- `src/components/game/FormationView.tsx` — Compact pitch, removed duplicate elements
+- `src/app/page.tsx` — Removed AnimatePresence, simple conditional rendering
+
+### Pushed to GitHub
+Commit: `4f85ba2` — Pushed to `main` branch
+
+---
+
 ## Round 9 — Slot Machine Spin Animation (03.07.2026)
 
 **Source**: User request — "Процесс игры: Я хочу чтобы вот такая анимация была во время прокрута, чтобы в одном окошке крутились команды (текст без эмодзи) в другом окошке сезон. После того как закончится останавливается на месте команды из которой выпадут игроки."
