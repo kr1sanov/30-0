@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY, POSITION_COLOR, canFillSlot } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
@@ -44,6 +44,8 @@ interface CompatibleSlot {
 
 interface ProcessedPlayer extends PlayerOption {
   canFillAny: boolean;
+  compatibleSlotCount: number;
+  bestPenalty: number;
 }
 
 type SortMode = 'rating' | 'name';
@@ -51,6 +53,9 @@ type SortMode = 'rating' | 'name';
 export default function PlayerList() {
   const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
+
+  // Track whether auto-select has been done for the current spin
+  const autoSelectDoneRef = useRef<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
 
@@ -67,6 +72,8 @@ export default function PlayerList() {
 
     const players = currentSpin.players.map((player) => {
       let canFillAny = false;
+      let compatibleSlotCount = 0;
+      let bestPenalty = 0;
 
       for (const openSlot of openPositions) {
         const result = canFillSlot(
@@ -76,11 +83,12 @@ export default function PlayerList() {
         );
         if (result.canFill) {
           canFillAny = true;
-          break;
+          compatibleSlotCount++;
+          if (result.penalty > bestPenalty) bestPenalty = result.penalty;
         }
       }
 
-      return { ...player, canFillAny };
+      return { ...player, canFillAny, compatibleSlotCount, bestPenalty };
     });
 
     // Sort by selected mode
@@ -122,14 +130,51 @@ export default function PlayerList() {
     return result;
   }, [selectedPlayer, slots]);
 
-  // Auto-assign if only ONE compatible position
+  // ─── AUTO-SELECT: After spin completes, automatically select the best player ───
+  useEffect(() => {
+    if (!currentSpin || !processedPlayers.length) return;
+
+    // Only auto-select once per spin (use clubSeasonId as unique key)
+    const spinKey = currentSpin.clubSeasonId;
+    if (autoSelectDoneRef.current === spinKey) return;
+
+    // Don't auto-select if a player is already selected (user manually chose)
+    if (selectedPlayer) return;
+
+    // Find the best compatible player (highest rating, prefer full compatibility)
+    const compatiblePlayers = processedPlayers.filter(p => p.canFillAny);
+    if (compatiblePlayers.length === 0) return;
+
+    // Sort: prefer players with full compatibility (bestPenalty=1), then by rating
+    const bestPlayer = compatiblePlayers.sort((a, b) => {
+      // Prefer full compatibility
+      if (a.bestPenalty !== b.bestPenalty) return b.bestPenalty - a.bestPenalty;
+      // Then by rating
+      return b.rating - a.rating;
+    })[0];
+
+    if (bestPlayer) {
+      autoSelectDoneRef.current = spinKey;
+      // Auto-select the best player
+      selectPlayer(bestPlayer as PlayerOption);
+    }
+  }, [currentSpin, processedPlayers, selectedPlayer, selectPlayer]);
+
+  // Reset auto-select tracking when spin changes
+  useEffect(() => {
+    if (!currentSpin) {
+      autoSelectDoneRef.current = null;
+    }
+  }, [currentSpin]);
+
+  // ─── AUTO-ASSIGN: If selected player has exactly 1 compatible slot, assign immediately ───
   useEffect(() => {
     if (selectedPlayer && compatibleSlots.length === 1) {
       const slotIndex = compatibleSlots[0].slotIndex;
-      // Use a small delay so the user sees the panel briefly before assignment
+      // Small delay so the user sees the selection briefly
       const timer = setTimeout(() => {
         assignToSlot(slotIndex);
-      }, 300);
+      }, 400);
       return () => clearTimeout(timer);
     }
   }, [selectedPlayer, compatibleSlots, assignToSlot]);
@@ -144,7 +189,7 @@ export default function PlayerList() {
       return;
     }
 
-    // Select the player — no auto-assignment, user must click a position
+    // Select the player
     selectPlayer(player as PlayerOption);
   }, [selectedPlayer, deselectPlayer, selectPlayer]);
 
@@ -267,7 +312,7 @@ export default function PlayerList() {
         })}
       </div>
 
-      {/* ── Position Selection Panel ── */}
+      {/* ── Position Selection Panel (only when >1 compatible slots) ─── */}
       <AnimatePresence>
         {selectedPlayer && compatibleSlots.length > 1 && (
           <motion.div
