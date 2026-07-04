@@ -438,3 +438,38 @@ Unresolved Issues:
 - Telegram auth requires TELEGRAM_BOT_TOKEN env var for server-side validation
 - Cloud sync only works when authenticated via Telegram
 - If API is permanently down, game progress won't persist to server (but local state survives via Zustand persist)
+
+---
+Task ID: ui-fix-all
+Agent: main
+Task: Fix multiple UI issues — player cards, move player, Russian UI, buttons, flags
+
+Work Log:
+- Analyzed screenshot from user showing issues with the current UI
+- Read all key files: FormationView.tsx, SpinWheel.tsx, GameSetup.tsx, nationality.ts, page.tsx
+- Fixed 8 issues in parallel via subagent
+
+Changes Made:
+1. **Player cards on field**: Changed from initials (СМ) to actual last name (Смолов). Cards now show: rating → position abbreviation → last name → flag. Card size slightly increased.
+2. **Move player**: `canMove` now includes `screen === 'draft'` so players can be moved during draft. Fixed the "Переместить игрока" button in page.tsx to properly start move mode.
+3. **Russian UI**: Changed "OVERALL" → "РЕЙТИНГ" in squad stats panel
+4. **Game setup button**: Made smaller (h-11, text-sm), removed ⚽ emoji and shimmer animation, text "Начать драфт"
+5. **Removed "КРУТИТЬ СОСТАВ"**: Header removed from SpinWheel idle and spinning states
+6. **Button text**: "Крутить колесо" → "Крутить", removed Zap icon
+7. **Nationality flags**: Added 60+ English nationality names (Russian→🇷🇺, Brazilian→🇧🇷, etc.) and 40+ ISO country codes to nationality.ts. Flag size on field cards increased from 6px to 8px.
+8. **Player list after spin**: Verified working — spin() correctly sets currentSpin and PlayerList renders
+
+Stage Summary:
+- All 8 UI issues fixed and verified
+- Lint passes with no errors
+- Agent-browser verified: player cards show surname, spin works, assignment works, no flickering
+- Committed as 98dac1c, pushed to GitHub
+
+Current Project Status:
+- Core game loop fully functional with offline-first resilience
+- Player cards show: rating + position + last name + flag
+- Move player works during draft
+- All UI in Russian
+- Game setup has compact "Начать драфт" button
+- Spin button says "Крутить"
+- No "КРУТИТЬ СОСТАВ" header
