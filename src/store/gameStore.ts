@@ -117,6 +117,9 @@ interface GameState {
   // Action to clear the just-assigned highlight
   clearJustAssigned: () => void;
 
+  // Draft error tracking — set when draft API fails, cleared on next action
+  lastDraftError: string | null;
+
   // Draft undo
   lastDraftState: LastDraftState | null;
 
@@ -219,6 +222,7 @@ export const useGameStore = create<GameState>()(
       clearJustAssigned: () => set({ justAssignedSlotIndex: null }),
 
       // Draft undo
+      lastDraftError: null,
       lastDraftState: null,
       draftVersion: 0,
 
@@ -310,6 +314,7 @@ export const useGameStore = create<GameState>()(
             currentManager: null,
             screen: 'draft',
             lastConfig: { ...config },
+            lastDraftError: null,
             lastDraftState: null,
             draftVersion: 0,
             newAchievements: [],
@@ -327,7 +332,7 @@ export const useGameStore = create<GameState>()(
         if (!runId || isSpinning) return;
 
         // Clear previous selection and spin state before spinning
-        set({ isSpinning: true, selectedPlayer: null, currentSpin: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+        set({ isSpinning: true, selectedPlayer: null, currentSpin: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: null });
 
         try {
           const res = await fetch(`/api/runs/${runId}/spin`, { method: 'POST' });
@@ -494,17 +499,19 @@ export const useGameStore = create<GameState>()(
         }).then(async (res) => {
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
+            const errorMsg = errData?.error || 'Не удалось назначить игрока';
             console.error('Failed to draft player:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+              set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
             }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
+          const errorMsg = 'Ошибка сети при назначении игрока';
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+            set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
           }
         });
       },
@@ -600,17 +607,19 @@ export const useGameStore = create<GameState>()(
         }).then(async (res) => {
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
+            const errorMsg = errData?.error || 'Не удалось назначить игрока';
             console.error('[directAssign] API error:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
             }
           }
         }).catch((error) => {
           console.error('[directAssign] Network error:', error);
+          const errorMsg = 'Ошибка сети при назначении игрока';
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
           }
         });
       },
@@ -879,7 +888,7 @@ export const useGameStore = create<GameState>()(
       // remaining position. Clears the spin result so the user can spin again.
       // -------------------------------------------------------------------
       skipSpin: () => {
-        set({ currentSpin: null, selectedPlayer: null });
+        set({ currentSpin: null, selectedPlayer: null, lastDraftError: null });
       },
 
       dismissAchievement: () => {
@@ -904,6 +913,7 @@ export const useGameStore = create<GameState>()(
           seasonResult: null,
           currentManager: null,
           isSpinningManager: false,
+          lastDraftError: null,
           lastDraftState: null,
           draftVersion: 0,
           newAchievements: [],
@@ -927,6 +937,7 @@ export const useGameStore = create<GameState>()(
           lastAssignedSlotIndex: null,
           justAssignedSlotIndex: null,
           isSpinningManager: false,
+          lastDraftError: null,
         };
 
         if (seasonResult) {

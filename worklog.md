@@ -298,3 +298,51 @@ Stage Summary:
 - Game setup simplified: advanced settings collapsed, main flow is Formation + Difficulty + Start
 - Home page CTA now says "Играть 30-0 →"
 - All screens more closely match 38-0.app reference design
+
+---
+Task ID: fix-db-readonly
+Agent: main
+Task: Fix critical bug - player not being fixed in team after selection (flickering/revert)
+
+Work Log:
+- Investigated the bug: "Игрок не фиксируется в составе после выбора" (Player not fixed in team after selection) with UI flickering
+- Tested with agent-browser: confirmed the bug — player appears briefly then disappears
+- Checked browser console: found error `Failed to draft player: {error: "Failed to draft player"}`
+- Checked server logs: found root cause — `SqliteError { extended_code: 1032, message: "attempt to write a readonly database" }`
+- The SQLite database was returning read-only errors from the Next.js dev server process, while external Node.js scripts could write fine
+- Restarted the dev server, which resolved the "readonly database" issue (stale Prisma client connection)
+- After server restart, the draft API works correctly (200 responses confirmed)
+- Tested full game flow: spin → auto-select → position click → player assigned → persisted after reload ✓
+
+- **Resilience improvements to prevent future flickering:**
+- Added `lastDraftError` field to gameStore.ts GameState interface
+- Updated `assignToSlot` and `directAssign` error handlers to set `lastDraftError` with descriptive error message
+- Added `autoAssignAttemptsRef` in PlayerList.tsx to prevent infinite auto-assign retry loops when API fails
+  - Key format: `playerSeasonId:slotIndex` → attempt count
+  - Maximum 1 auto-assign attempt per player+slot combination
+  - After max attempts, auto-assign is skipped to prevent flickering
+- Added error toast notification when draft API fails (using sonner toast)
+- Clear `lastDraftError` on: spin, skipSpin, resetGame, resumeGame, startRun, selectPlayer, deselectPlayer
+- `lastDraftError` excluded from persistence (not in partialize function)
+
+Files modified:
+- **gameStore.ts**: Added `lastDraftError` field, updated error handlers in `assignToSlot` and `directAssign`, added cleanup in `spin`, `skipSpin`, `resetGame`, `resumeGame`, `startRun`
+- **PlayerList.tsx**: Added `autoAssignAttemptsRef` to prevent infinite retry loops, added error toast via sonner, cleared attempts on manual player click and cancel
+
+Stage Summary:
+- **Root cause fixed**: SQLite "readonly database" error was causing draft API to fail, triggering optimistic update revert (flickering)
+- **Resilience added**: Even if API fails in the future, auto-assign won't loop infinitely, preventing flickering
+- **Error visibility**: User now sees a toast notification when draft API fails
+- Verified with agent-browser: 2 full spin→assign cycles work correctly, players persist after page reload
+- Lint passes with no errors
+
+Current Project Status:
+- Core game loop fully functional: spin → auto-select → assign (auto or manual) → persist → next spin
+- Database read/write working correctly
+- Error handling resilient: no infinite retry loops, user gets feedback on errors
+- Both manual and auto-assign flows verified
+
+Unresolved Issues:
+- SQLite readonly database issue can recur if Prisma client gets into a stale state (needs server restart)
+- Telegram auth requires TELEGRAM_BOT_TOKEN env var for server-side validation
+- Cloud sync only works when authenticated via Telegram

@@ -6,6 +6,7 @@ import { POSITION_CATEGORY, POSITION_COLOR, canFillSlot } from '@/lib/positions'
 import type { Position, PositionCategory } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
 
 /** Position category colors — matching 38-0 style */
@@ -51,11 +52,16 @@ interface ProcessedPlayer extends PlayerOption {
 type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer, skipSpin } = useGameStore();
+  const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer, skipSpin, lastDraftError } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
   // Track whether auto-select has been done for the current spin
   const autoSelectDoneRef = useRef<string | null>(null);
+
+  // Track auto-assign attempts to prevent infinite retry loops when API fails
+  // Key format: "playerSeasonId:slotIndex" → attempt count
+  const autoAssignAttemptsRef = useRef<Map<string, number>>(new Map());
+  const MAX_AUTO_ASSIGN_ATTEMPTS = 1;
 
   const isHard = config.difficulty === 'hard';
 
@@ -131,7 +137,6 @@ export default function PlayerList() {
   }, [selectedPlayer, slots]);
 
   // ─── AUTO-SELECT: After spin completes, automatically select the best player ───
-  // Added 300ms delay to let spin animation settle before auto-selecting
   useEffect(() => {
     if (!currentSpin || !processedPlayers.length) return;
 
@@ -168,14 +173,28 @@ export default function PlayerList() {
   useEffect(() => {
     if (!currentSpin) {
       autoSelectDoneRef.current = null;
+      // Also clear auto-assign attempts when spin resets
+      autoAssignAttemptsRef.current.clear();
     }
   }, [currentSpin]);
 
   // ─── AUTO-ASSIGN: If selected player has exactly 1 compatible slot, assign after delay ───
-  // Increased delay from 400ms to 600ms to give UI time to stabilize
+  // Includes protection against infinite retry loops when API fails
   useEffect(() => {
     if (selectedPlayer && compatibleSlots.length === 1) {
       const slotIndex = compatibleSlots[0].slotIndex;
+      const attemptKey = `${selectedPlayer.playerSeasonId}:${slotIndex}`;
+      const attempts = autoAssignAttemptsRef.current.get(attemptKey) ?? 0;
+
+      // Don't auto-assign if we've already tried too many times (prevents infinite loop on API failure)
+      if (attempts >= MAX_AUTO_ASSIGN_ATTEMPTS) {
+        console.warn(`[PlayerList] Auto-assign skipped: already attempted ${attempts} time(s) for ${attemptKey}`);
+        return;
+      }
+
+      // Record this attempt
+      autoAssignAttemptsRef.current.set(attemptKey, attempts + 1);
+
       // Delay so the user sees the selection briefly and UI stabilizes
       const timer = setTimeout(() => {
         assignToSlot(slotIndex);
@@ -183,6 +202,16 @@ export default function PlayerList() {
       return () => clearTimeout(timer);
     }
   }, [selectedPlayer, compatibleSlots, assignToSlot]);
+
+  // Show error toast when draft API fails
+  useEffect(() => {
+    if (lastDraftError) {
+      toast.error('Ошибка при назначении игрока', {
+        description: lastDraftError,
+        duration: 4000,
+      });
+    }
+  }, [lastDraftError]);
 
   const handlePlayerClick = useCallback((player: ProcessedPlayer) => {
     // If player can't fill any position, do nothing (grayed out)
@@ -194,7 +223,8 @@ export default function PlayerList() {
       return;
     }
 
-    // Select the player
+    // Select the player — clear auto-assign attempts for the new selection
+    autoAssignAttemptsRef.current.clear();
     selectPlayer(player as PlayerOption);
   }, [selectedPlayer, deselectPlayer, selectPlayer]);
 
@@ -203,6 +233,8 @@ export default function PlayerList() {
   }, [assignToSlot]);
 
   const handleCancel = useCallback(() => {
+    // Clear auto-assign attempts when cancelling
+    autoAssignAttemptsRef.current.clear();
     deselectPlayer();
   }, [deselectPlayer]);
 
