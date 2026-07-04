@@ -567,8 +567,9 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
+  const [lastPlacedInfo, setLastPlacedInfo] = useState<{ name: string; position: string } | null>(null);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const playerListRef = useRef<HTMLDivElement>(null);
   const pitchRef = useRef<HTMLDivElement>(null);
@@ -618,22 +619,48 @@ function DraftScreen() {
     prevCurrentSpin.current = currentSpin;
   }, [currentSpin]);
 
-  // Auto-scroll: when player is assigned, scroll to pitch briefly then to spin
+  // Auto-scroll: when player is selected, scroll to pitch to show compatible positions
+  useEffect(() => {
+    if (selectedPlayer) {
+      // Small delay to let the position panel render
+      const timer = setTimeout(() => {
+        requestAnimationFrame(() => {
+          pitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPlayer]);
+
+  // Auto-scroll: when player is assigned, scroll to spin button for next spin
   useEffect(() => {
     if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
-      requestAnimationFrame(() => {
-        pitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
-      }, 1200);
+      }, 600);
       prevLastAssignedSlot.current = lastAssignedSlotIndex;
       return () => clearTimeout(timer);
     }
     prevLastAssignedSlot.current = lastAssignedSlotIndex;
   }, [lastAssignedSlotIndex]);
+
+  // Show "player placed" success banner briefly
+  useEffect(() => {
+    if (justAssignedSlotIndex !== null && justAssignedSlotIndex >= 0) {
+      const slot = slots[justAssignedSlotIndex];
+      if (slot?.playerName) {
+        // Use microtask to avoid synchronous setState in effect
+        const info = { name: slot.playerName, position: slot.positionLabel };
+        queueMicrotask(() => {
+          setLastPlacedInfo(info);
+        });
+        const timer = setTimeout(() => setLastPlacedInfo(null), 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [justAssignedSlotIndex, slots]);
 
   const handleRestart = async () => {
     setShowRestartModal(false);
@@ -698,7 +725,28 @@ function DraftScreen() {
           >
             <span className="text-[#22c55e] text-xs font-bold">👉</span>
             <span className="text-xs text-[#22c55e] font-medium">
-              Нажмите на зелёную позицию на поле, чтобы поставить <strong>{selectedPlayer.fullName}</strong>
+              Выберите позицию для <strong>{selectedPlayer.fullName}</strong> ниже или на поле
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Player Placed Success Banner ── */}
+      <AnimatePresence>
+        {lastPlacedInfo && !selectedPlayer && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="rounded-xl bg-[#22c55e]/15 border border-[#22c55e]/40 px-3 py-2 flex items-center gap-2"
+          >
+            <span className="text-[#22c55e] text-xs font-bold">✅</span>
+            <span className="text-xs text-[#22c55e] font-medium">
+              <strong>{lastPlacedInfo.name}</strong> → {lastPlacedInfo.position}
+            </span>
+            <span className="text-[10px] text-[#94a3b8] ml-auto">
+              {openCount} поз. осталось
             </span>
           </motion.div>
         )}

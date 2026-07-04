@@ -383,7 +383,7 @@ export default function FormationView() {
       {/* ===== Compact Pitch ===== */}
       <div
         className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
-        style={{ maxWidth: '360px', paddingBottom: '62%' }}
+        style={{ maxWidth: '400px', paddingBottom: '62%' }}
       >
         {/* Pitch base — dark green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
@@ -537,8 +537,8 @@ export default function FormationView() {
                   ${isShaking ? 'animate-shake' : ''}
                 `}
                 style={{
-                  width: isFilled ? '44px' : '32px',
-                  height: isFilled ? '32px' : '24px',
+                  width: isFilled ? '48px' : '34px',
+                  height: isFilled ? '36px' : '26px',
                   backgroundColor: isFilled
                     ? `${color}cc`
                     : isIncompatible
@@ -642,7 +642,7 @@ export default function FormationView() {
       </div>
 
       {/* Bottom info bar */}
-      <div className="flex items-center justify-between w-full mt-2 px-1" style={{ maxWidth: '360px' }}>
+      <div className="flex items-center justify-between w-full mt-2 px-1" style={{ maxWidth: '400px' }}>
         {/* Filled count */}
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-[#94a3b8]">

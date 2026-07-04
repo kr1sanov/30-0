@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { POSITION_CATEGORY, canFillSlot } from '@/lib/positions';
+import { POSITION_CATEGORY, POSITION_COLOR, canFillSlot } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { PlayerOption } from '@/lib/types';
 
 /** Position category colors — matching 38-0 style */
@@ -34,6 +34,14 @@ function getFirstName(fullName: string): string {
   return '';
 }
 
+interface CompatibleSlot {
+  slotIndex: number;
+  position: string;
+  label: string;
+  category: PositionCategory;
+  penalty: number;
+}
+
 interface ProcessedPlayer extends PlayerOption {
   canFillAny: boolean;
 }
@@ -41,7 +49,7 @@ interface ProcessedPlayer extends PlayerOption {
 type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, selectPlayer, selectedPlayer } = useGameStore();
+  const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
   const isHard = config.difficulty === 'hard';
@@ -85,42 +93,73 @@ export default function PlayerList() {
     });
   }, [currentSpin, openPositions, sortMode]);
 
-  const handlePlayerClick = (player: ProcessedPlayer) => {
+  // Compute compatible slots for the selected player
+  const compatibleSlots = useMemo<CompatibleSlot[]>(() => {
+    if (!selectedPlayer) return [];
+
+    const result: CompatibleSlot[] = [];
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      // Skip filled slots
+      if (slot.playerId) continue;
+
+      const { canFill, penalty } = canFillSlot(
+        selectedPlayer.mainPosition as Position,
+        selectedPlayer.otherPositions as Position[],
+        slot.position as Position,
+      );
+
+      if (canFill) {
+        result.push({
+          slotIndex: i,
+          position: slot.position,
+          label: slot.positionLabel,
+          category: POSITION_CATEGORY[slot.position as Position] ?? 'mid',
+          penalty,
+        });
+      }
+    }
+    return result;
+  }, [selectedPlayer, slots]);
+
+  // Auto-assign if only ONE compatible position
+  useEffect(() => {
+    if (selectedPlayer && compatibleSlots.length === 1) {
+      const slotIndex = compatibleSlots[0].slotIndex;
+      // Use a small delay so the user sees the panel briefly before assignment
+      const timer = setTimeout(() => {
+        assignToSlot(slotIndex);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPlayer, compatibleSlots, assignToSlot]);
+
+  const handlePlayerClick = useCallback((player: ProcessedPlayer) => {
     // If player can't fill any position, do nothing (grayed out)
     if (!player.canFillAny) return;
 
     // If this player is already selected, deselect
     if (selectedPlayer?.playerSeasonId === player.playerSeasonId) {
-      // Deselect by selecting null — we call selectPlayer with the same player
-      // and the store will toggle or just re-set; but per spec, clicking another
-      // player switches selection, so let's deselect by calling selectPlayer again.
-      // Actually, the store doesn't have a deselectPlayer. Let's just select the
-      // new player. If it's the same one, the store will just re-select it.
-      // For deselect, we can call selectPlayer with a dummy or handle it differently.
-      // Since the user requirement says "clicking another player switches selection",
-      // we'll just always call selectPlayer. Same player = re-select (no-op feel).
+      deselectPlayer();
       return;
     }
 
-    // Select the player — no auto-assignment, user must click position on pitch
+    // Select the player — no auto-assignment, user must click a position
     selectPlayer(player as PlayerOption);
-  };
+  }, [selectedPlayer, deselectPlayer, selectPlayer]);
+
+  const handlePositionClick = useCallback((slotIndex: number) => {
+    assignToSlot(slotIndex);
+  }, [assignToSlot]);
+
+  const handleCancel = useCallback(() => {
+    deselectPlayer();
+  }, [deselectPlayer]);
 
   if (!currentSpin) return null;
 
   return (
     <div className="space-y-3">
-      {/* ── Instruction text ── */}
-      {selectedPlayer && (
-        <motion.div
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[11px] text-[#22c55e] font-medium bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-lg px-3 py-2 text-center"
-        >
-          Выберите игрока, затем нажмите на позицию на поле
-        </motion.div>
-      )}
-
       {/* ── Sort controls ── */}
       <div className="flex items-center gap-3">
         <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">
@@ -227,6 +266,85 @@ export default function PlayerList() {
           );
         })}
       </div>
+
+      {/* ── Position Selection Panel ── */}
+      <AnimatePresence>
+        {selectedPlayer && compatibleSlots.length > 1 && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="bg-[#0d1a0d] border-2 border-[#22c55e]/40 rounded-xl p-4 space-y-3 shadow-[0_0_20px_rgba(34,197,94,0.15)]"
+          >
+            {/* Selected player info */}
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                  <path d="M3 7.5L5.5 10L11 4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span className="text-sm font-bold text-[#e2e8f0] truncate">
+                {getLastName(selectedPlayer.fullName)}
+              </span>
+              <span className="text-sm text-[#94a3b8]">
+                ({isHard ? '?' : selectedPlayer.rating})
+              </span>
+              <span className="text-[#22c55e] text-xs font-medium">выбран</span>
+            </div>
+
+            {/* Instruction */}
+            <p className="text-[11px] text-[#94a3b8] font-medium">
+              Нажмите на позицию:
+            </p>
+
+            {/* Position buttons grid */}
+            <div className="flex flex-wrap gap-2">
+              {compatibleSlots.map((slot) => {
+                const catColor = POSITION_COLOR[slot.category];
+                const isPartial = slot.penalty < 1;
+                const positionBgColor = catColor;
+
+                return (
+                  <motion.button
+                    key={slot.slotIndex}
+                    onClick={() => handlePositionClick(slot.slotIndex)}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                    className="relative min-h-[44px] min-w-[56px] px-4 py-2.5 rounded-lg font-bold text-white text-sm
+                      border-2 border-[#22c55e]/60 shadow-[0_0_10px_rgba(34,197,94,0.25)]
+                      hover:border-[#22c55e] hover:shadow-[0_0_16px_rgba(34,197,94,0.4)]
+                      active:scale-95 transition-all duration-150"
+                    style={{ backgroundColor: positionBgColor }}
+                  >
+                    {/* Position label */}
+                    <span className="relative z-10">{slot.label}</span>
+
+                    {/* Partial compatibility indicator */}
+                    {isPartial && (
+                      <span className="absolute top-0.5 right-1 text-[8px] font-normal text-white/70">
+                        0.8×
+                      </span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Cancel button */}
+            <button
+              onClick={handleCancel}
+              className="w-full py-2.5 rounded-lg text-sm font-medium text-[#94a3b8]
+                bg-[#1a1a1a] border border-[#2a2a2a]
+                hover:bg-[#222222] hover:text-[#e2e8f0] hover:border-[#3a3a3a]
+                active:scale-[0.98] transition-all duration-150"
+            >
+              Отменить выбор
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

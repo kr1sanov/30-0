@@ -147,6 +147,7 @@ interface GameState {
   spin: () => Promise<void>;
   reroll: () => Promise<void>;
   selectPlayer: (player: PlayerOption) => void;
+  deselectPlayer: () => void;
   assignToSlot: (slotIndex: number) => Promise<void>;
   directAssign: (player: PlayerOption, slotIndex: number) => Promise<void>;
   movePlayer: (fromSlotIndex: number, toSlotIndex: number) => void;
@@ -392,6 +393,11 @@ export const useGameStore = create<GameState>()(
         // Simply set the selected player — nothing else.
         // The FormationView will highlight available positions for this player.
         set({ selectedPlayer: player });
+      },
+
+      deselectPlayer: () => {
+        // Clear the selected player — user cancelled position selection.
+        set({ selectedPlayer: null });
       },
 
       // -------------------------------------------------------------------
