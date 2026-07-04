@@ -208,6 +208,7 @@ export default function FormationView() {
     assignToSlot,
     movePlayer,
     screen,
+    justAssignedSlotIndex,
   } = useGameStore();
 
   const [shakingSlot, setShakingSlot] = useState<number | null>(null);
@@ -370,7 +371,7 @@ export default function FormationView() {
       {/* Pitch */}
       <div
         className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
-        style={{ paddingBottom: '55%' }}
+        style={{ paddingBottom: '45%' }}
       >
         {/* Pitch stripe pattern */}
         <div
@@ -521,6 +522,8 @@ export default function FormationView() {
             ? [slot.playerPosition, ...(slot.playerOtherPositions ?? [])]
             : [];
 
+          const isJustAssigned = justAssignedSlotIndex === index && isFilled;
+
           return (
             <motion.button
               key={index}
@@ -531,7 +534,7 @@ export default function FormationView() {
               onBlur={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
               className={`absolute -translate-x-1/2 -translate-y-1/2 ${
                 isSelected ? 'z-20' : isSwapTarget ? 'z-10' : ''
-              } ${isShaking ? 'animate-shake' : ''}`}
+              } ${isShaking ? 'animate-shake' : ''} ${isJustAssigned ? 'z-30' : ''}`}
               style={{
                 top: `${pos.row}%`,
                 left: `${pos.col}%`,
@@ -544,9 +547,24 @@ export default function FormationView() {
               }
               layout
             >
+              {/* Highlight glow ring for just-assigned slot */}
+              {isJustAssigned && (
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: [0.8, 1.8, 2.2, 1.8], opacity: [0, 0.8, 0.4, 0] }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  style={{
+                    boxShadow: `0 0 20px 8px ${ringColor}, 0 0 40px 16px ${ringColor}44`,
+                    border: `2px solid ${ringColor}`,
+                  }}
+                />
+              )}
               <div
-                className={`relative flex flex-col items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 transition-all duration-200 ${
-                  isFilled
+                className={`relative flex flex-col items-center justify-center w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-full border-2 transition-all duration-200 ${
+                  isJustAssigned
+                    ? 'animate-slot-assigned border-white/80 backdrop-blur-sm player-inner-glow player-circle-3d'
+                    : isFilled
                     ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
                     : isIncompatible
                     ? 'border-[#ef4444]/40 border-dashed animate-empty-slot-pulse'
@@ -573,7 +591,9 @@ export default function FormationView() {
                     ? `${color}33`
                     : `${color}22`,
                   // ===== Task 1a: Position color ring (3px outside) on filled slots =====
-                  boxShadow: isFilled
+                  boxShadow: isJustAssigned
+                    ? `0 0 0 3px ${ringColor}, 0 0 20px 8px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
+                    : isFilled
                     ? `0 0 0 3px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
                     : undefined,
                 }}
@@ -581,7 +601,7 @@ export default function FormationView() {
                 {/* ===== Compatibility badge (top-right) ===== */}
                 {isFilled && compatKind && (
                   <div
-                    className={`absolute -top-1 -right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center text-[7px] sm:text-[8px] font-black border border-[#0f0f1e] ${
+                    className={`absolute -top-1 -right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 rounded-full flex items-center justify-center text-[6px] sm:text-[7px] md:text-[8px] font-black border border-[#0f0f1e] ${
                       compatKind === 'full'
                         ? 'bg-[#22c55e] text-white'
                         : 'bg-[#facc15] text-black'
@@ -600,14 +620,14 @@ export default function FormationView() {
                   <>
                     {/* Position label inside circle */}
                     <span
-                      className="text-[8px] sm:text-[9px] font-bold text-white/80 leading-none"
+                      className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-white/80 leading-none"
                     >
                       {slot.positionLabel}
                     </span>
                     {/* Rating inside circle */}
                     {slot.playerRating ? (
                       <span
-                        className="text-[9px] sm:text-[10px] font-black leading-none mt-0.5"
+                        className="text-[8px] sm:text-[9px] md:text-[10px] font-black leading-none mt-0.5"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
                           opacity: compatKind === 'partial' ? 0.78 : 1,
@@ -619,7 +639,7 @@ export default function FormationView() {
                     {/* Player name below the circle — always show last name + flag emoji */}
                     {slot.playerName && (
                       <span
-                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
+                        className="absolute -bottom-3 sm:-bottom-3.5 md:-bottom-4 left-1/2 -translate-x-1/2 text-[6px] sm:text-[7px] md:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[50px] sm:max-w-[60px] md:max-w-[70px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
                         {slot.playerLastName || slot.playerName.trim().split(/\s+/)[0]}
@@ -631,13 +651,13 @@ export default function FormationView() {
                   </>
                 ) : isIncompatible ? (
                   <div className="flex flex-col items-center">
-                    <span className="text-[10px] sm:text-xs font-bold text-[#ef4444]/60 position-label-pill">
+                    <span className="text-[8px] sm:text-[10px] font-bold text-[#ef4444]/60 position-label-pill">
                       {slot.positionLabel}
                     </span>
                     <span className="text-[8px] leading-none">❌</span>
                   </div>
                 ) : (
-                  <span className="text-[10px] sm:text-xs font-bold text-white/60 position-label-pill">
+                  <span className="text-[8px] sm:text-[10px] font-bold text-white/60 position-label-pill">
                     {slot.positionLabel}
                   </span>
                 )}

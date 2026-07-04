@@ -91,6 +91,12 @@ interface GameState {
   // Track the last assigned slot index for auto-scroll/feedback
   lastAssignedSlotIndex: number | null;
 
+  // Slot index that was just assigned — used for highlight animation on pitch
+  justAssignedSlotIndex: number | null;
+
+  // Action to clear the just-assigned highlight
+  clearJustAssigned: () => void;
+
   // Draft undo
   lastDraftState: LastDraftState | null;
 
@@ -186,6 +192,9 @@ export const useGameStore = create<GameState>()(
       selectedPlayer: null,
       movingPlayerSlotIndex: null,
       lastAssignedSlotIndex: null,
+      justAssignedSlotIndex: null,
+
+      clearJustAssigned: () => set({ justAssignedSlotIndex: null }),
 
       // Draft undo
       lastDraftState: null,
@@ -271,6 +280,7 @@ export const useGameStore = create<GameState>()(
             selectedPlayer: null,
             movingPlayerSlotIndex: null,
             lastAssignedSlotIndex: null,
+            justAssignedSlotIndex: null,
             seasonResult: null,
             currentManager: null,
             screen: 'draft',
@@ -288,7 +298,7 @@ export const useGameStore = create<GameState>()(
         const { runId, isSpinning } = get();
         if (!runId || isSpinning) return;
 
-        set({ isSpinning: true, selectedPlayer: null, lastAssignedSlotIndex: null });
+        set({ isSpinning: true, selectedPlayer: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
 
         try {
           const res = await fetch(`/api/runs/${runId}/spin`, { method: 'POST' });
@@ -404,6 +414,7 @@ export const useGameStore = create<GameState>()(
           currentSpin: null,
           draftVersion: thisVersion,
           lastAssignedSlotIndex: slotIndex,
+          justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : {
             slots: prevSlots,
@@ -412,6 +423,13 @@ export const useGameStore = create<GameState>()(
             screen: 'draft',
           },
         });
+
+        // Auto-clear the highlight after 2 seconds
+        setTimeout(() => {
+          if (get().justAssignedSlotIndex === slotIndex) {
+            set({ justAssignedSlotIndex: null });
+          }
+        }, 2000);
 
         // Fire API in background
         fetch(`/api/runs/${runId}/draft`, {
@@ -427,14 +445,14 @@ export const useGameStore = create<GameState>()(
             console.error('Failed to draft player:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
             }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
           }
         });
       },
@@ -500,9 +518,17 @@ export const useGameStore = create<GameState>()(
           currentSpin: null,
           draftVersion: thisVersion,
           lastAssignedSlotIndex: slotIndex,
+          justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : undoState,
         });
+
+        // Auto-clear the highlight after 2 seconds
+        setTimeout(() => {
+          if (get().justAssignedSlotIndex === slotIndex) {
+            set({ justAssignedSlotIndex: null });
+          }
+        }, 2000);
 
         // Fire API in background
         fetch(`/api/runs/${runId}/draft`, {
@@ -518,14 +544,14 @@ export const useGameStore = create<GameState>()(
             console.error('[directAssign] API error:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
             }
           }
         }).catch((error) => {
           console.error('[directAssign] Network error:', error);
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
           }
         });
       },
@@ -766,6 +792,7 @@ export const useGameStore = create<GameState>()(
             screen: lastDraftState.screen,
             lastDraftState: null,
             lastAssignedSlotIndex: null,
+            justAssignedSlotIndex: null,
           });
         } catch (error) {
           console.error('Failed to undo pick:', error);
@@ -790,6 +817,7 @@ export const useGameStore = create<GameState>()(
           selectedPlayer: null,
           movingPlayerSlotIndex: null,
           lastAssignedSlotIndex: null,
+          justAssignedSlotIndex: null,
           seasonResult: null,
           currentManager: null,
           isSpinningManager: false,
@@ -813,7 +841,7 @@ export const useGameStore = create<GameState>()(
           set({ screen: 'squad-complete' });
         } else {
           // Always go to draft screen — clear ALL stale transient UI state
-          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null, lastAssignedSlotIndex: null });
+          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
         }
       },
 

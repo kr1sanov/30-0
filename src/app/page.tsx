@@ -22,6 +22,8 @@ import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
 import { canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
+import { useTelegramAuth } from '@/hooks/use-telegram-auth';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -569,6 +571,7 @@ function DraftScreen() {
   const [showRestartModal, setShowRestartModal] = useState(false);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const playerListRef = useRef<HTMLDivElement>(null);
+  const pitchRef = useRef<HTMLDivElement>(null);
   const prevCurrentSpin = useRef(currentSpin);
   const prevSelectedPlayer = useRef(selectedPlayer);
   const prevLastAssignedSlot = useRef(lastAssignedSlotIndex);
@@ -632,13 +635,19 @@ function DraftScreen() {
   }, [selectedPlayer, currentSpin]);
 
   // Auto-scroll: when a player is assigned via directAssign (lastAssignedSlotIndex changes)
+  // First scroll to pitch to show the player placed, then scroll to spin button after delay
   useEffect(() => {
     if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
+      // First: scroll to pitch so user sees the player placed
+      requestAnimationFrame(() => {
+        pitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      // Then: after delay, scroll to spin wheel for next spin
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
-      }, 300);
+      }, 1500);
       prevLastAssignedSlot.current = lastAssignedSlotIndex;
       return () => clearTimeout(timer);
     }
@@ -689,7 +698,9 @@ function DraftScreen() {
       </div>
 
       {/* ── Pitch / Formation View ── */}
-      <FormationView />
+      <div ref={pitchRef} data-pitch-section>
+        <FormationView />
+      </div>
 
       {/* ── Move a Player Button ── */}
       {filledSlots.length >= 2 && (
@@ -1138,6 +1149,10 @@ export default function Home() {
   const { screen, setTelegramUser, telegramUser, loadProfileFromCloud } = useGameStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
+
+  // Initialize Telegram auth and hooks
+  useTelegramAuth();
+  const { haptic, notify } = useTelegram();
 
   // Initialize Telegram WebApp on mount
   useEffect(() => {

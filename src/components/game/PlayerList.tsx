@@ -8,6 +8,7 @@ import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /** Position category colors — matching 38-0 style */
 const CATEGORY_BG: Record<PositionCategory, string> = {
@@ -44,9 +45,11 @@ type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
   const { currentSpin, slots, config, directAssign } = useGameStore();
+  const { notify: tgNotify, haptic: tgHaptic } = useTelegram();
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('rating');
   const [assigningPlayerId, setAssigningPlayerId] = useState<string | null>(null);
+  const [placingPlayerId, setPlacingPlayerId] = useState<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
 
@@ -97,22 +100,36 @@ export default function PlayerList() {
     }
 
     // Prevent double-click
-    if (assigningPlayerId) return;
+    if (assigningPlayerId || placingPlayerId) return;
 
     // If player can fill exactly one slot, assign directly without intermediate state
     if (player.availableSlots.length === 1) {
       const slotIdx = player.availableSlots[0];
       const slot = slots[slotIdx];
-      setAssigningPlayerId(player.playerSeasonId);
-      directAssign(player as PlayerOption, slotIdx).then(() => {
-        // Show success toast
-        toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
-          duration: 2000,
+      // Show "placing" animation briefly before assigning
+      setPlacingPlayerId(player.playerSeasonId);
+      setTimeout(() => {
+        setAssigningPlayerId(player.playerSeasonId);
+        setPlacingPlayerId(null);
+        directAssign(player as PlayerOption, slotIdx).then(() => {
+          // Show success toast
+          toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
+            duration: 2000,
+          });
+          setAssigningPlayerId(null);
+          // Haptic feedback for Telegram
+          tgNotify('success');
+          tgHaptic('medium');
+          // Scroll to pitch to show the player placed
+          requestAnimationFrame(() => {
+            const pitchEl = document.querySelector('[data-pitch-section]');
+            pitchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+        }).catch(() => {
+          setAssigningPlayerId(null);
+          tgNotify('error');
         });
-        setAssigningPlayerId(null);
-      }).catch(() => {
-        setAssigningPlayerId(null);
-      });
+      }, 300); // Brief delay for "placing" visual feedback
       setExpandedPlayerId(null);
       return;
     }
@@ -127,17 +144,31 @@ export default function PlayerList() {
   };
 
   const handlePositionSelect = (player: ProcessedPlayer, slotIndex: number) => {
-    if (assigningPlayerId) return;
+    if (assigningPlayerId || placingPlayerId) return;
     const slot = slots[slotIndex];
-    setAssigningPlayerId(player.playerSeasonId);
-    directAssign(player as PlayerOption, slotIndex).then(() => {
-      toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
-        duration: 2000,
+    // Show "placing" animation briefly before assigning
+    setPlacingPlayerId(player.playerSeasonId);
+    setTimeout(() => {
+      setAssigningPlayerId(player.playerSeasonId);
+      setPlacingPlayerId(null);
+      directAssign(player as PlayerOption, slotIndex).then(() => {
+        toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
+          duration: 2000,
+        });
+        setAssigningPlayerId(null);
+        // Haptic feedback for Telegram
+        tgNotify('success');
+        tgHaptic('medium');
+        // Scroll to pitch to show the player placed
+        requestAnimationFrame(() => {
+          const pitchEl = document.querySelector('[data-pitch-section]');
+          pitchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }).catch(() => {
+        setAssigningPlayerId(null);
+        tgNotify('error');
       });
-      setAssigningPlayerId(null);
-    }).catch(() => {
-      setAssigningPlayerId(null);
-    });
+    }, 300);
     setExpandedPlayerId(null);
   };
 
@@ -182,6 +213,7 @@ export default function PlayerList() {
           const posColor = CATEGORY_BG[posCategory];
           const flagEmoji = getNationalityFlag(player.nationality);
           const isAssigning = assigningPlayerId === player.playerSeasonId;
+          const isPlacing = placingPlayerId === player.playerSeasonId;
 
           return (
             <div key={player.playerSeasonId}>
@@ -190,9 +222,11 @@ export default function PlayerList() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                disabled={!!assigningPlayerId}
+                disabled={!!assigningPlayerId || !!placingPlayerId}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
-                  isAssigning
+                  isPlacing
+                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e]/60 scale-[0.98]'
+                    : isAssigning
                     ? 'bg-[#22c55e]/10 border border-[#22c55e]/40 opacity-80'
                     : !player.canFillAny
                     ? 'opacity-40 cursor-not-allowed'
@@ -206,7 +240,7 @@ export default function PlayerList() {
                   className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
                   style={{ backgroundColor: posColor }}
                 >
-                  {isAssigning ? '...' : isHard ? '?' : player.rating}
+                  {isPlacing ? '⏳' : isAssigning ? '...' : isHard ? '?' : player.rating}
                 </div>
 
                 {/* Name, flag, positions */}
@@ -244,8 +278,19 @@ export default function PlayerList() {
                   </motion.span>
                 )}
 
+                {/* Placing indicator */}
+                {isPlacing && (
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    className="text-[#22c55e] text-xs font-bold shrink-0"
+                  >
+                    Ставим...
+                  </motion.span>
+                )}
+
                 {/* Auto-assign indicator */}
-                {player.canFillAny && player.availableSlots.length === 1 && !isAssigning && (
+                {player.canFillAny && player.availableSlots.length === 1 && !isAssigning && !isPlacing && (
                   <span className="text-[10px] text-[#22c55e] font-bold shrink-0">✓</span>
                 )}
 
@@ -288,7 +333,7 @@ export default function PlayerList() {
                                 e.stopPropagation();
                                 handlePositionSelect(player, slotIdx);
                               }}
-                              disabled={!!assigningPlayerId}
+                              disabled={!!assigningPlayerId || !!placingPlayerId}
                               className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:brightness-110 shadow-sm disabled:opacity-50"
                               style={{ backgroundColor: CATEGORY_BG[slotCat] }}
                             >
