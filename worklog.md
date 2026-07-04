@@ -104,3 +104,28 @@ Unresolved Issues:
 - Telegram auth requires TELEGRAM_BOT_TOKEN env var for validation
 - Cloud sync only works when authenticated via Telegram
 - Some UI polish opportunities remain
+
+---
+Task ID: fix-auto-assign
+Agent: main
+Task: Fix critical bug - player not being fixed on field after spin
+
+Work Log:
+- Analyzed video recording of the bug (extracted 24 frames from MOV file)
+- Studied all key files: gameStore.ts, page.tsx, PlayerList.tsx, FormationView.tsx, SpinWheel.tsx, positions.ts, types.ts
+- Identified root cause: After spinning, no player was automatically selected from the player list, so `selectedPlayer` was always null and `assignToSlot()` could never execute
+- Implemented fix in PlayerList.tsx:
+  - Added auto-select logic that picks the best compatible player after spin
+  - Prefers full compatibility (penalty=1) over partial, then sorts by rating
+  - Uses ref-based tracking (autoSelectDoneRef) to prevent double auto-select
+  - Auto-assign fires immediately (400ms delay) when only 1 compatible slot exists
+  - Position selection panel shows when multiple compatible slots exist
+- Tested with agent-browser: 5 spins verified, all players correctly fixed on field
+- Goalkeeper auto-assign confirmed working (single slot → instant assignment)
+
+Stage Summary:
+- Critical bug FIXED: Players now auto-select and auto-assign after spin
+- Auto-assign for single-compatible-slot positions works instantly
+- Position selection panel shows for multi-slot players
+- Verified with 5 consecutive spins via agent-browser
+- Committed as ee7312e, pushed to GitHub
