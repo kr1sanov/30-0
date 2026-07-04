@@ -24,6 +24,7 @@ import { canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { useTelegram } from '@/hooks/use-telegram';
+import { useAuthStore } from '@/store/authStore';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -571,9 +572,6 @@ function DraftScreen() {
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [lastPlacedInfo, setLastPlacedInfo] = useState<{ name: string; position: string } | null>(null);
   const spinWheelRef = useRef<HTMLDivElement>(null);
-  const playerListRef = useRef<HTMLDivElement>(null);
-  const pitchRef = useRef<HTMLDivElement>(null);
-  const prevCurrentSpin = useRef(currentSpin);
   const prevLastAssignedSlot = useRef(lastAssignedSlotIndex);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
@@ -605,41 +603,16 @@ function DraftScreen() {
     }
   });
 
-  // Auto-scroll: when spin result appears, scroll to player list
-  useEffect(() => {
-    if (currentSpin && !prevCurrentSpin.current) {
-      const timer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }, 1200);
-      prevCurrentSpin.current = currentSpin;
-      return () => clearTimeout(timer);
-    }
-    prevCurrentSpin.current = currentSpin;
-  }, [currentSpin]);
-
-  // Auto-scroll: when player is selected, scroll to pitch to show compatible positions
-  useEffect(() => {
-    if (selectedPlayer) {
-      // Small delay to let the position panel render
-      const timer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          pitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedPlayer]);
-
   // Auto-scroll: when player is assigned, scroll to spin button for next spin
+  // This is the ONLY auto-scroll — removed scroll-to-players and scroll-to-pitch
+  // to prevent competing scroll effects that caused jittering.
   useEffect(() => {
     if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
-      }, 600);
+      }, 800);
       prevLastAssignedSlot.current = lastAssignedSlotIndex;
       return () => clearTimeout(timer);
     }
@@ -753,7 +726,7 @@ function DraftScreen() {
       </AnimatePresence>
 
       {/* ── Pitch / Formation View ── */}
-      <div ref={pitchRef} data-pitch-section>
+      <div data-pitch-section>
         <FormationView />
       </div>
 
@@ -822,7 +795,7 @@ function DraftScreen() {
       </div>
 
       {/* ── Player List ── */}
-      <div ref={playerListRef}>
+      <div>
         {currentSpin && <PlayerList />}
       </div>
 
@@ -1191,8 +1164,9 @@ export default function Home() {
   // Initialize Telegram auth and hooks
   useTelegramAuth();
   const { haptic, notify } = useTelegram();
+  const authUser = useAuthStore((s) => s.user);
 
-  // Initialize Telegram WebApp on mount
+  // Initialize Telegram WebApp on mount and set gameStore's telegramUser
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webapp = window.Telegram.WebApp;
@@ -1216,6 +1190,20 @@ export default function Home() {
       }
     }
   }, [setTelegramUser, telegramUser, loadProfileFromCloud]);
+
+  // Sync auth store user to game store for cloud sync (handles edge case where
+  // initDataUnsafe is not available but auth API succeeded)
+  useEffect(() => {
+    if (authUser && authUser.id !== 'guest' && authUser.telegramId && !telegramUser) {
+      setTelegramUser({
+        id: Number(authUser.telegramId),
+        first_name: authUser.firstName || '',
+        last_name: authUser.lastName || undefined,
+        username: authUser.username || undefined,
+        photo_url: authUser.photoUrl || undefined,
+      });
+    }
+  }, [authUser, telegramUser, setTelegramUser]);
 
   useEffect(() => {
     if (prevScreen.current !== screen) {

@@ -160,6 +160,7 @@ interface GameState {
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
+  skipSpin: () => void;
   dismissAchievement: () => void;
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
@@ -873,6 +874,14 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      // -------------------------------------------------------------------
+      // skipSpin — Discard the current spin when no players can fill any
+      // remaining position. Clears the spin result so the user can spin again.
+      // -------------------------------------------------------------------
+      skipSpin: () => {
+        set({ currentSpin: null, selectedPlayer: null });
+      },
+
       dismissAchievement: () => {
         set((state) => ({
           newAchievements: state.newAchievements.slice(1),
@@ -909,13 +918,24 @@ export const useGameStore = create<GameState>()(
         const { slots, seasonResult } = get();
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
 
+        // Always clear ALL stale transient UI state on resume
+        const clearTransient = {
+          selectedPlayer: null,
+          currentSpin: null,
+          isSpinning: false,
+          movingPlayerSlotIndex: null,
+          lastAssignedSlotIndex: null,
+          justAssignedSlotIndex: null,
+          isSpinningManager: false,
+        };
+
         if (seasonResult) {
-          set({ screen: 'result' });
+          set({ screen: 'result', ...clearTransient });
         } else if (allFilled) {
-          set({ screen: 'squad-complete' });
+          set({ screen: 'squad-complete', ...clearTransient });
         } else {
-          // Always go to draft screen — clear ALL stale transient UI state
-          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+          // Go to draft screen — clear ALL stale transient UI state
+          set({ screen: 'draft', ...clearTransient });
         }
       },
 
@@ -984,21 +1004,28 @@ export const useGameStore = create<GameState>()(
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
       // Persist profileStats, lastConfig, and game state for resuming drafts.
-      // NOTE: selectedPlayer and currentSpin are transient UI states that must NOT be persisted.
-      // Persisting them causes a stuck state on page refresh where the prompt to assign a player
-      // shows but there is no player list to choose from.
-      partialize: (state) => ({
-        profileStats: state.profileStats,
-        lastConfig: state.lastConfig,
-        runId: state.runId,
-        slots: state.slots,
-        rerollsLeft: state.rerollsLeft,
-        rerollsUsed: state.rerollsUsed,
-        currentManager: state.currentManager,
-        config: state.config,
-        seasonResult: state.seasonResult,
-        telegramUser: state.telegramUser,
-      }),
+      // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
+      // transient UI states that must NOT be persisted — they are cleared on resume.
+      // Screen is persisted but only for stable screens (home, draft, squad-complete, result).
+      partialize: (state) => {
+        // Only persist stable screen values, not transient ones like 'position-assign' or 'simulation'
+        const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'result', 'profile', 'leaderboard'];
+        const persistedScreen = stableScreens.includes(state.screen) ? state.screen : 'home';
+
+        return {
+          profileStats: state.profileStats,
+          lastConfig: state.lastConfig,
+          runId: state.runId,
+          slots: state.slots,
+          rerollsLeft: state.rerollsLeft,
+          rerollsUsed: state.rerollsUsed,
+          currentManager: state.currentManager,
+          config: state.config,
+          seasonResult: state.seasonResult,
+          telegramUser: state.telegramUser,
+          screen: persistedScreen,
+        };
+      },
     },
   ),
 );

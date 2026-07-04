@@ -129,3 +129,37 @@ Stage Summary:
 - Position selection panel shows for multi-slot players
 - Verified with 5 consecutive spins via agent-browser
 - Committed as ee7312e, pushed to GitHub
+
+---
+Task ID: 1
+Agent: main
+Task: Critical Bug Fixes for 30-0 RPL Football Draft Game
+
+Work Log:
+- **Bug 1 (Game Stuck) — FIXED**: Added `skipSpin()` action to `gameStore.ts` that clears `currentSpin` and `selectedPlayer`, allowing the user to discard an incompatible spin and spin again.
+  - Added "No compatible players" banner with "Пропустить и крутить снова" (Skip and spin again) button in `PlayerList.tsx` when all players are incompatible with remaining positions.
+  - Added "Крутить снова" (Spin again) button in `SpinWheel.tsx` that is always visible when a spin result is showing, so the user can always discard the current spin and spin again.
+- **Bug 2 (Interface Jumping/Jittering) — FIXED**: Removed two of the three competing auto-scroll effects in `DraftScreen` (`page.tsx`):
+  - Removed: scroll to player list after spin
+  - Removed: scroll to pitch when player is selected
+  - Kept only: scroll to spin button after assignment (with 800ms delay)
+  - Removed unused refs (`playerListRef`, `pitchRef`, `prevCurrentSpin`)
+- **Bug 3 (Auto-assign Race Condition) — FIXED**: In `PlayerList.tsx`:
+  - Added 300ms delay before auto-select (lets spin animation settle)
+  - Increased auto-assign delay from 400ms to 600ms (gives UI time to stabilize)
+- **Bug 4 (State Persistence) — FIXED**: In `gameStore.ts`:
+  - Added `screen` to `partialize` function, but only for stable screens ('home', 'draft', 'squad-complete', 'result', 'profile', 'leaderboard'). Transient screens like 'position-assign' or 'simulation' map to 'home'.
+  - Enhanced `resumeGame()` to clear ALL stale transient state: `selectedPlayer`, `currentSpin`, `isSpinning`, `movingPlayerSlotIndex`, `lastAssignedSlotIndex`, `justAssignedSlotIndex`, `isSpinningManager`.
+- **Bug 5 (Telegram Sync) — VERIFIED & IMPROVED**:
+  - Verified all auth/sync API endpoints work correctly (`/api/auth/telegram`, `/api/users/sync`, `/api/users/profile`)
+  - Verified `syncProfileToCloud()` is called after each game completion (in `simulate()`)
+  - Added sync from `authStore` user to `gameStore.telegramUser` in `Home()` component, handling edge case where `initDataUnsafe` is not available but auth API succeeded
+- Lint passes cleanly with no errors
+
+Stage Summary:
+- Game no longer gets stuck when all spin players are incompatible — skip button and "spin again" button provide escape
+- Interface no longer jitters due to competing auto-scroll effects
+- Auto-select and auto-assign have proper delays to prevent race conditions
+- Game state persists correctly on page refresh, including screen state
+- Stale transient state is properly cleared on resume
+- Telegram auth/sync flow verified and improved with fallback user sync

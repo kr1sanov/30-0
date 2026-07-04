@@ -51,7 +51,7 @@ interface ProcessedPlayer extends PlayerOption {
 type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer } = useGameStore();
+  const { currentSpin, slots, config, selectPlayer, deselectPlayer, assignToSlot, selectedPlayer, skipSpin } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
   // Track whether auto-select has been done for the current spin
@@ -131,6 +131,7 @@ export default function PlayerList() {
   }, [selectedPlayer, slots]);
 
   // ─── AUTO-SELECT: After spin completes, automatically select the best player ───
+  // Added 300ms delay to let spin animation settle before auto-selecting
   useEffect(() => {
     if (!currentSpin || !processedPlayers.length) return;
 
@@ -155,8 +156,11 @@ export default function PlayerList() {
 
     if (bestPlayer) {
       autoSelectDoneRef.current = spinKey;
-      // Auto-select the best player
-      selectPlayer(bestPlayer as PlayerOption);
+      // Delay auto-select to let the spin animation settle
+      const timer = setTimeout(() => {
+        selectPlayer(bestPlayer as PlayerOption);
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [currentSpin, processedPlayers, selectedPlayer, selectPlayer]);
 
@@ -167,14 +171,15 @@ export default function PlayerList() {
     }
   }, [currentSpin]);
 
-  // ─── AUTO-ASSIGN: If selected player has exactly 1 compatible slot, assign immediately ───
+  // ─── AUTO-ASSIGN: If selected player has exactly 1 compatible slot, assign after delay ───
+  // Increased delay from 400ms to 600ms to give UI time to stabilize
   useEffect(() => {
     if (selectedPlayer && compatibleSlots.length === 1) {
       const slotIndex = compatibleSlots[0].slotIndex;
-      // Small delay so the user sees the selection briefly
+      // Delay so the user sees the selection briefly and UI stabilizes
       const timer = setTimeout(() => {
         assignToSlot(slotIndex);
-      }, 400);
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [selectedPlayer, compatibleSlots, assignToSlot]);
@@ -201,10 +206,35 @@ export default function PlayerList() {
     deselectPlayer();
   }, [deselectPlayer]);
 
+  // Check if ANY player can fill any position
+  const anyCompatible = processedPlayers.some(p => p.canFillAny);
+
   if (!currentSpin) return null;
 
   return (
     <div className="space-y-3">
+      {/* ── No compatible players banner + skip button ── */}
+      {!anyCompatible && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#2a1010] border-2 border-[#ef4444]/40 rounded-xl p-4 text-center space-y-2"
+        >
+          <p className="text-sm font-bold text-[#ef4444]">
+            Нет подходящих игроков
+          </p>
+          <p className="text-xs text-[#94a3b8]">
+            Ни один игрок не подходит на оставшиеся позиции
+          </p>
+          <button
+            onClick={skipSpin}
+            className="mt-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white active:scale-95 transition-all"
+          >
+            Пропустить и крутить снова
+          </button>
+        </motion.div>
+      )}
+
       {/* ── Sort controls ── */}
       <div className="flex items-center gap-3">
         <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">

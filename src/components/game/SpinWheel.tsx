@@ -196,7 +196,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
  * SpinWheel — 38-0 style slot-machine spin component.
  */
 export default function SpinWheel() {
-  const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config } =
+  const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config, skipSpin } =
     useGameStore();
 
   const openCount = slots.filter((s) => !s.playerId).length;
@@ -328,6 +328,15 @@ export default function SpinWheel() {
                   Переброс ({rerollsLeft} ост.)
                 </motion.button>
               )}
+
+              {/* Skip / Spin again button — always visible when result is showing */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { skipSpin(); }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#64748b]/40 text-[#94a3b8] rounded-xl hover:bg-[#64748b]/10 hover:text-[#e2e8f0] transition-all mt-2"
+              >
+                Крутить снова
+              </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
