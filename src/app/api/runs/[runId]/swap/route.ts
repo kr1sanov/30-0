@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { canFillSlot } from '@/lib/positions';
+import { canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { NextResponse } from 'next/server';
 
@@ -47,83 +47,106 @@ export async function POST(
       return NextResponse.json({ error: 'Slot not found' }, { status: 404 });
     }
 
-    // Save original data for swapping
+    // Save original data for swapping — include ALL fields
     const fromData = {
       playerSeasonId: fromSlot.playerSeasonId,
       playerName: fromSlot.playerName,
+      playerLastName: fromSlot.playerLastName,
       playerRating: fromSlot.playerRating,
       playerPosition: fromSlot.playerPosition,
+      playerOtherPositions: fromSlot.playerOtherPositions,
+      playerNationality: fromSlot.playerNationality,
     };
 
     const toData = {
       playerSeasonId: toSlot.playerSeasonId,
       playerName: toSlot.playerName,
+      playerLastName: toSlot.playerLastName,
       playerRating: toSlot.playerRating,
       playerPosition: toSlot.playerPosition,
+      playerOtherPositions: toSlot.playerOtherPositions,
+      playerNationality: toSlot.playerNationality,
     };
 
-    // Calculate compatibility after swap
+    // Calculate compatibility after swap — STRICT matching
     const fromPos = fromSlotPosition.split('_')[0] as Position;
     const toPos = toSlotPosition.split('_')[0] as Position;
 
-    let fromIsCompatible = true;
-    let toIsCompatible = true;
+    // Parse otherPositions from comma-separated string
+    const parseOtherPositions = (pos: string | null | undefined): Position[] => {
+      if (!pos) return [];
+      return pos.split(',').map((p) => p.trim()) as Position[];
+    };
 
-    // Check if the player moving TO fromSlot can play there
+    // If toSlot has a player, check if that player can play at fromPos
     if (toData.playerPosition) {
-      const toPlayerOtherPositions = toSlot.playerPosition
-        ? [] // We don't have otherPositions in GameSlot, but we check main position
-        : [];
-      const result = canFillSlot(
+      const toPlayerOtherPositions = parseOtherPositions(toData.playerOtherPositions);
+      const canFill = canFillSlotStrict(
         toData.playerPosition as Position,
-        toPlayerOtherPositions as Position[],
+        toPlayerOtherPositions,
         fromPos,
       );
-      fromIsCompatible = result.canFill;
+      if (!canFill) {
+        return NextResponse.json(
+          { error: `${toData.playerName} не может играть на ${fromPos}` },
+          { status: 400 },
+        );
+      }
     }
 
-    // Check if the player moving TO toSlot can play there
+    // Check if fromSlot's player can play at toPos
     if (fromData.playerPosition) {
-      const fromPlayerOtherPositions: Position[] = [];
-      const result = canFillSlot(
+      const fromPlayerOtherPositions = parseOtherPositions(fromData.playerOtherPositions);
+      const canFill = canFillSlotStrict(
         fromData.playerPosition as Position,
         fromPlayerOtherPositions,
         toPos,
       );
-      toIsCompatible = result.canFill;
+      if (!canFill) {
+        return NextResponse.json(
+          { error: `${fromData.playerName} не может играть на ${toPos}` },
+          { status: 400 },
+        );
+      }
     }
 
-    // Swap in database — update fromSlot with toSlot's data
+    // Swap in database — update fromSlot with toSlot's data (ALL fields)
     await db.gameSlot.update({
       where: { id: fromSlot.id },
       data: {
         playerSeasonId: toData.playerSeasonId,
         playerName: toData.playerName,
+        playerLastName: toData.playerLastName,
         playerRating: toData.playerRating,
         playerPosition: toData.playerPosition,
-        isCompatible: fromIsCompatible,
+        playerOtherPositions: toData.playerOtherPositions,
+        playerNationality: toData.playerNationality,
+        isCompatible: true, // Strict matching — always full compatibility
       },
     });
 
-    // Update toSlot with fromSlot's data
+    // Update toSlot with fromSlot's data (ALL fields)
     await db.gameSlot.update({
       where: { id: toSlot.id },
       data: {
         playerSeasonId: fromData.playerSeasonId,
         playerName: fromData.playerName,
+        playerLastName: fromData.playerLastName,
         playerRating: fromData.playerRating,
         playerPosition: fromData.playerPosition,
-        isCompatible: toIsCompatible,
+        playerOtherPositions: fromData.playerOtherPositions,
+        playerNationality: fromData.playerNationality,
+        isCompatible: true, // Strict matching — always full compatibility
       },
     });
 
-    // Return the updated slots
+    // Return the updated run
     const updatedRun = await db.gameRun.findUnique({
       where: { id: runId },
       include: { slots: { orderBy: { slotPosition: 'asc' } } },
     });
 
-    return NextResponse.json({ slots: updatedRun?.slots });
+    return NextResponse.json(updatedRun);
   } catch (error) {
     console.error('Failed to swap slots:', error);
     return NextResponse.json(

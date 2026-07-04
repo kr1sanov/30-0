@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry, Achievement } from '@/lib/types';
-import { FORMATIONS, POSITION_CATEGORY, canFillSlot } from '@/lib/positions';
+import { FORMATIONS, POSITION_CATEGORY, canFillSlot, canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { DIFFICULTY_CONFIG } from '@/lib/types';
 import { MANAGERS } from '@/lib/managers';
@@ -285,6 +285,10 @@ export const useGameStore = create<GameState>()(
                 playerLastName: dbSlot.playerLastName ?? undefined,
                 playerRating: dbSlot.playerRating ?? undefined,
                 playerPosition: dbSlot.playerPosition ?? undefined,
+                playerOtherPositions: dbSlot.playerOtherPositions
+                  ? dbSlot.playerOtherPositions.split(',').map((p: string) => p.trim())
+                  : undefined,
+                playerNationality: dbSlot.playerNationality ?? undefined,
                 category,
                 isCompatible: dbSlot.isCompatible ?? true,
               };
@@ -423,8 +427,8 @@ export const useGameStore = create<GameState>()(
         const slot = slots[slotIndex];
         if (!slot) return;
 
-        // Validate that the selected player can fill this slot position
-        const { canFill, penalty } = canFillSlot(
+        // Validate that the selected player can fill this slot position — STRICT matching
+        const canFill = canFillSlotStrict(
           selectedPlayer.mainPosition as Position,
           selectedPlayer.otherPositions as Position[],
           slot.position as Position,
@@ -461,7 +465,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: selectedPlayer.mainPosition,
           playerOtherPositions: selectedPlayer.otherPositions,
           playerNationality: selectedPlayer.nationality,
-          isCompatible: penalty === 1,
+          isCompatible: true, // Strict matching — always full compatibility
         };
 
         // Step 6: After assignment — clear selectedPlayer and currentSpin so
@@ -554,7 +558,7 @@ export const useGameStore = create<GameState>()(
           return;
         }
 
-        const { canFill, penalty } = canFillSlot(
+        const canFill = canFillSlotStrict(
           player.mainPosition as Position,
           player.otherPositions as Position[],
           slot.position as Position,
@@ -591,7 +595,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: player.mainPosition,
           playerOtherPositions: player.otherPositions,
           playerNationality: player.nationality,
-          isCompatible: penalty === 1,
+          isCompatible: true, // Strict matching — always full compatibility
         };
 
         const allFilled = newSlots.every((s) => s.playerId);
@@ -670,46 +674,82 @@ export const useGameStore = create<GameState>()(
 
         if (!from?.playerId || !to) return;
 
+        // STRICT matching: both players must be able to play in each other's position
         const toCanFillFrom = to.playerPosition
-          ? canFillSlot(
+          ? canFillSlotStrict(
               to.playerPosition as Position,
               (to.playerOtherPositions ?? []) as Position[],
               from.position as Position,
             )
-          : { canFill: false };
+          : false;
 
         const fromCanFillTo = from.playerPosition
-          ? canFillSlot(
+          ? canFillSlotStrict(
               from.playerPosition as Position,
               (from.playerOtherPositions ?? []) as Position[],
               to.position as Position,
             )
-          : { canFill: false };
+          : false;
+
+        // If to-slot is empty, only the moving player needs to fit
+        // If to-slot is filled (swap), BOTH players need to fit their new positions
+        if (to.playerId) {
+          if (!toCanFillFrom || !fromCanFillTo) return;
+        } else {
+          if (!fromCanFillTo) return;
+        }
 
         const newSlots = [...slots];
 
-        newSlots[fromSlotIndex] = {
-          ...from,
-          playerId: to.playerId,
-          playerName: to.playerName,
-          playerLastName: to.playerLastName,
-          playerRating: to.playerRating,
-          playerPosition: to.playerPosition,
-          playerOtherPositions: to.playerOtherPositions,
-          playerNationality: to.playerNationality,
-          isCompatible: toCanFillFrom.canFill,
-        };
-        newSlots[toSlotIndex] = {
-          ...to,
-          playerId: from.playerId,
-          playerName: from.playerName,
-          playerLastName: from.playerLastName,
-          playerRating: from.playerRating,
-          playerPosition: from.playerPosition,
-          playerOtherPositions: from.playerOtherPositions,
-          playerNationality: from.playerNationality,
-          isCompatible: fromCanFillTo.canFill,
-        };
+        if (to.playerId) {
+          // Swap both players
+          newSlots[fromSlotIndex] = {
+            ...from,
+            playerId: to.playerId,
+            playerName: to.playerName,
+            playerLastName: to.playerLastName,
+            playerRating: to.playerRating,
+            playerPosition: to.playerPosition,
+            playerOtherPositions: to.playerOtherPositions,
+            playerNationality: to.playerNationality,
+            isCompatible: true,
+          };
+          newSlots[toSlotIndex] = {
+            ...to,
+            playerId: from.playerId,
+            playerName: from.playerName,
+            playerLastName: from.playerLastName,
+            playerRating: from.playerRating,
+            playerPosition: from.playerPosition,
+            playerOtherPositions: from.playerOtherPositions,
+            playerNationality: from.playerNationality,
+            isCompatible: true,
+          };
+        } else {
+          // Move to empty slot
+          newSlots[toSlotIndex] = {
+            ...to,
+            playerId: from.playerId,
+            playerName: from.playerName,
+            playerLastName: from.playerLastName,
+            playerRating: from.playerRating,
+            playerPosition: from.playerPosition,
+            playerOtherPositions: from.playerOtherPositions,
+            playerNationality: from.playerNationality,
+            isCompatible: true,
+          };
+          newSlots[fromSlotIndex] = {
+            ...from,
+            playerId: undefined,
+            playerName: undefined,
+            playerLastName: undefined,
+            playerRating: undefined,
+            playerPosition: undefined,
+            playerOtherPositions: undefined,
+            playerNationality: undefined,
+            isCompatible: true,
+          };
+        }
 
         set({ slots: newSlots, movingPlayerSlotIndex: null });
 

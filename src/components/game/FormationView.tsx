@@ -5,7 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import {
   POSITION_CATEGORY,
   POSITION_COLOR,
-  canFillSlot,
+  canFillSlotStrict,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
@@ -216,22 +216,11 @@ export default function FormationView() {
   // Is the squad complete and we can move players?
   const canMove = screen === 'squad-complete' || screen === 'position-assign' || screen === 'draft';
 
-  // Average rating
+  // Average rating (strict matching — no partial penalty)
   const avgRating = useMemo(() => {
     const filled = slots.filter((s) => s.playerId && s.playerRating);
     if (filled.length === 0) return null;
-    const sum = filled.reduce((acc, s) => {
-      let r = s.playerRating!;
-      if (s.playerPosition) {
-        const { penalty } = canFillSlot(
-          s.playerPosition as Position,
-          (s.playerOtherPositions ?? []) as Position[],
-          s.position as Position,
-        );
-        r = Math.round(r * penalty);
-      }
-      return acc + r;
-    }, 0);
+    const sum = filled.reduce((acc, s) => acc + (s.playerRating ?? 0), 0);
     return Math.round(sum / filled.length);
   }, [slots]);
 
@@ -254,12 +243,12 @@ export default function FormationView() {
 
       const sourceSlot = slots[movingPlayerSlotIndex];
       if (slot.playerId) {
-        // Swap two filled players
+        // Swap two filled players — validation is done in movePlayer
         movePlayer(movingPlayerSlotIndex, index);
       } else {
-        // Move to empty slot — check compatibility
+        // Move to empty slot — check strict compatibility
         if (sourceSlot?.playerPosition) {
-          const { canFill } = canFillSlot(
+          const canFill = canFillSlotStrict(
             sourceSlot.playerPosition as Position,
             (sourceSlot.playerOtherPositions ?? []) as Position[],
             slot.position as Position,
@@ -275,9 +264,9 @@ export default function FormationView() {
       return;
     }
 
-    // --- Selected player: assign to empty compatible slot ---
+    // --- Selected player: assign to empty compatible slot (STRICT) ---
     if (selectedPlayer && !slot.playerId) {
-      const { canFill } = canFillSlot(
+      const canFill = canFillSlotStrict(
         selectedPlayer.mainPosition as Position,
         selectedPlayer.otherPositions as Position[],
         slot.position as Position,
@@ -298,7 +287,7 @@ export default function FormationView() {
     }
   };
 
-  // Determine which slots are valid targets for the moving player
+  // Determine which slots are valid targets for the moving player (STRICT)
   const movingTargets = useMemo(() => {
     if (movingPlayerSlotIndex === null || movingPlayerSlotIndex < 0) return new Set<number>();
     const sourceSlot = slots[movingPlayerSlotIndex];
@@ -307,10 +296,23 @@ export default function FormationView() {
     slots.forEach((s, i) => {
       if (i === movingPlayerSlotIndex) return;
       if (s.playerId) {
-        // Any filled slot can be swapped
-        targets.add(i);
+        // For swap: check if source can go to target's slot AND target can go to source's slot
+        const sourceCanGoToTarget = canFillSlotStrict(
+          sourceSlot.playerPosition as Position,
+          (sourceSlot.playerOtherPositions ?? []) as Position[],
+          s.position as Position,
+        );
+        const targetCanGoToSource = s.playerPosition
+          ? canFillSlotStrict(
+              s.playerPosition as Position,
+              (s.playerOtherPositions ?? []) as Position[],
+              sourceSlot.position as Position,
+            )
+          : false;
+        if (sourceCanGoToTarget && targetCanGoToSource) targets.add(i);
       } else {
-        const { canFill } = canFillSlot(
+        // Empty slot: check if source player can fill it
+        const canFill = canFillSlotStrict(
           sourceSlot.playerPosition as Position,
           (sourceSlot.playerOtherPositions ?? []) as Position[],
           s.position as Position,
@@ -457,14 +459,14 @@ export default function FormationView() {
           const isJustAssigned = justAssignedSlotIndex === index && isFilled;
           const isShaking = shakingSlot === index;
 
-          // Can the selected player fill this empty slot?
+          // Can the selected player fill this empty slot? (STRICT matching)
           const isCompatible =
             selectedPlayer && !isFilled
-              ? canFillSlot(
+              ? canFillSlotStrict(
                   selectedPlayer.mainPosition as Position,
                   selectedPlayer.otherPositions as Position[],
                   slot.position as Position,
-                ).canFill
+                )
               : false;
 
           // Is this an incompatible empty slot while a player is selected?
@@ -472,22 +474,6 @@ export default function FormationView() {
 
           // Is this a valid target while moving?
           const isMoveTarget = movingTargets.has(index) && movingPlayerSlotIndex !== index;
-
-          // Compatibility info for filled slot
-          let compatKind: 'full' | 'partial' | null = null;
-          let effectiveRating = slot.playerRating;
-          if (isFilled && slot.playerPosition) {
-            const { penalty } = canFillSlot(
-              slot.playerPosition as Position,
-              (slot.playerOtherPositions ?? []) as Position[],
-              slot.position as Position,
-            );
-            if (penalty === 1) compatKind = 'full';
-            else if (penalty === 0.8) {
-              compatKind = 'partial';
-              if (slot.playerRating) effectiveRating = Math.round(slot.playerRating * 0.8);
-            }
-          }
 
           return (
             <motion.button
@@ -503,7 +489,7 @@ export default function FormationView() {
               whileTap={isFilled || isCompatible || isMoveTarget ? { scale: 0.9 } : undefined}
               aria-label={
                 isFilled
-                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${effectiveRating ?? '?'}`
+                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
                   : `Пустая позиция ${slot.positionLabel}`
               }
             >
@@ -573,39 +559,19 @@ export default function FormationView() {
                       <span
                         className="text-[9px] sm:text-[10px] font-black leading-none"
                         style={{
-                          color: getRatingColor(effectiveRating ?? slot.playerRating),
-                          opacity: compatKind === 'partial' ? 0.8 : 1,
+                          color: getRatingColor(slot.playerRating),
                         }}
                       >
-                        {effectiveRating ?? slot.playerRating}
+                        {slot.playerRating}
                       </span>
                     )}
-                    {/* Position abbreviation + Last name + flag */}
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      <span
-                        className="text-[5px] sm:text-[6px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
-                        style={{ backgroundColor: `${color}44` }}
-                      >
-                        {slot.position}
-                      </span>
-                      <span
-                        className="text-[7px] sm:text-[8px] font-bold text-white/90 leading-none truncate max-w-[32px] sm:max-w-[40px]"
-                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}
-                      >
-                        {getPlayerSurname(slot.playerLastName)}
-                      </span>
-                      {getNationalityFlag(slot.playerNationality) && (
-                        <span className="text-[8px] leading-none">
-                          {getNationalityFlag(slot.playerNationality)}
-                        </span>
-                      )}
-                    </div>
-                    {/* Partial compatibility indicator */}
-                    {compatKind === 'partial' && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#facc15] flex items-center justify-center text-[5px] font-black text-black border border-black/20">
-                        !
-                      </span>
-                    )}
+                    {/* Position abbreviation */}
+                    <span
+                      className="text-[5px] sm:text-[6px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
+                      style={{ backgroundColor: `${color}44` }}
+                    >
+                      {slot.position}
+                    </span>
                   </>
                 ) : isIncompatible ? (
                   <span className="text-[7px] font-bold text-[#ef4444]/40">{slot.positionLabel}</span>
@@ -627,6 +593,23 @@ export default function FormationView() {
                   />
                 )}
               </div>
+
+              {/* Surname + flag below the card */}
+              {isFilled && (
+                <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
+                  <span
+                    className="text-[6px] sm:text-[7px] font-bold text-white/80 leading-none truncate"
+                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+                  >
+                    {getPlayerSurname(slot.playerLastName)}
+                  </span>
+                  {getNationalityFlag(slot.playerNationality) && (
+                    <span className="text-[7px] sm:text-[8px] leading-none shrink-0">
+                      {getNationalityFlag(slot.playerNationality)}
+                    </span>
+                  )}
+                </div>
+              )}
             </motion.button>
           );
         })}

@@ -129,17 +129,19 @@ model GameRun {
 }
 
 model GameSlot {
-  id                String   @id @default(cuid())
-  runId             String
-  slotPosition      String
-  playerSeasonId    String?
-  playerName        String?
-  playerLastName    String?
-  playerRating      Int?
-  playerPosition    String?
-  isCompatible      Boolean  @default(true)
+  id                  String   @id @default(cuid())
+  runId               String
+  slotPosition        String
+  playerSeasonId      String?
+  playerName          String?
+  playerLastName      String?
+  playerRating        Int?
+  playerPosition      String?
+  playerOtherPositions String?  // Comma-separated list of secondary positions
+  playerNationality   String?   // Player's nationality for flag display
+  isCompatible        Boolean  @default(true)
   
-  run               GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run                 GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
   
   @@unique([runId, slotPosition])
 }

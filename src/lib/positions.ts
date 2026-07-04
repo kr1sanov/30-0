@@ -240,6 +240,32 @@ export function canFillSlot(
 }
 
 // ---------------------------------------------------------------------------
+// canFillSlotStrict
+// ---------------------------------------------------------------------------
+
+/**
+ * STRICT position matching — a player can only fill a slot if the slot's
+ * position is explicitly listed as one of the player's positions
+ * (mainPosition or otherPositions). No compatibility matrix lookup.
+ *
+ * This enforces the rule: "Нельзя игрока ставить на позиции которые
+ * не указаны у него в карточке."
+ */
+export function canFillSlotStrict(
+  playerMainPos: Position,
+  playerOtherPos: Position[],
+  slotPos: Position,
+): boolean {
+  // Direct match on main position
+  if (playerMainPos === slotPos) return true;
+  // Direct match on any other position
+  for (const pos of playerOtherPos) {
+    if (pos === slotPos) return true;
+  }
+  return false;
+}
+
+// ---------------------------------------------------------------------------
 // Formation Definitions
 // ---------------------------------------------------------------------------
 

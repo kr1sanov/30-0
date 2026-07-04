@@ -618,8 +618,8 @@ function DraftScreen() {
   slots.forEach((slot) => {
     const cat = POSITION_CATEGORY_LOCAL[slot.position] ?? 'mid';
     if (slot.playerRating) {
-      const r = slot.isCompatible !== false ? slot.playerRating : Math.round(slot.playerRating * 0.8);
-      categoryRatings[cat].total += r;
+      // Strict matching — no partial penalty, always full rating
+      categoryRatings[cat].total += slot.playerRating;
       categoryRatings[cat].count++;
     }
   });

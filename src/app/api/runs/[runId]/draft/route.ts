@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { canFillSlot } from '@/lib/positions';
+import { canFillSlotStrict } from '@/lib/positions';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -84,29 +84,27 @@ export async function POST(
       );
     }
 
-    // Check position compatibility
-    // Extract the position from slotPosition (format: "POSITION_INDEX")
+    // Check position compatibility — STRICT matching only
+    // Player can only be placed on positions explicitly listed on their card
     const slotPos = slotPosition.split('_')[0];
     const otherPositions = playerSeason.otherPositions
       ? playerSeason.otherPositions.split(',').map((p) => p.trim())
       : [];
 
-    const { canFill, penalty } = canFillSlot(
-      playerSeason.mainPosition as Parameters<typeof canFillSlot>[0],
-      otherPositions as Parameters<typeof canFillSlot>[1],
-      slotPos as Parameters<typeof canFillSlot>[2],
+    const canFill = canFillSlotStrict(
+      playerSeason.mainPosition as Parameters<typeof canFillSlotStrict>[0],
+      otherPositions as Parameters<typeof canFillSlotStrict>[1],
+      slotPos as Parameters<typeof canFillSlotStrict>[2],
     );
 
     if (!canFill) {
       return NextResponse.json(
-        { error: 'Player cannot fill this position' },
+        { error: 'Player cannot fill this position (strict matching)' },
         { status: 400 },
       );
     }
 
-    // Update the game slot with player info
-    const isCompatible = penalty === 1; // full compatibility = true, partial = false
-
+    // Update the game slot with player info — including otherPositions and nationality
     await db.gameSlot.update({
       where: { id: slot.id },
       data: {
@@ -115,7 +113,9 @@ export async function POST(
         playerLastName: playerSeason.player.lastName,
         playerRating: playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
-        isCompatible,
+        playerOtherPositions: playerSeason.otherPositions ?? null,
+        playerNationality: playerSeason.player.nationality ?? null,
+        isCompatible: true, // Strict matching — always full compatibility
       },
     });
 

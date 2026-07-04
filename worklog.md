@@ -473,3 +473,32 @@ Current Project Status:
 - Game setup has compact "Начать драфт" button
 - Spin button says "Крутить"
 - No "КРУТИТЬ СОСТАВ" header
+---
+Task ID: fix-all-ui-and-strict-positions
+Agent: main
+Task: Fix all UI/UX issues — player list, position cards, strict position matching, server sync, flags
+
+Work Log:
+- Removed auto-select and auto-assign from PlayerList.tsx — user now manually picks player and position
+- Added `canFillSlotStrict()` to positions.ts — only direct position match, no compatibility matrix
+- Updated FormationView player cards: rating + position inside card, surname + flag in small font below card
+- Updated all gameStore actions (assignToSlot, directAssign, movePlayer) to use strict matching
+- Updated FormationView slot click handling and moving targets to use strict matching
+- Added `playerOtherPositions` and `playerNationality` fields to GameSlot Prisma model
+- Updated draft API to save playerOtherPositions and playerNationality to DB
+- Fixed swap API: uses strict matching, transfers ALL fields (including playerLastName, playerOtherPositions, playerNationality)
+- Updated startRun to parse playerOtherPositions from DB comma-separated format
+- Removed partial compatibility indicators (compatKind, effectiveRating) since strict matching = always full
+- Updated page.tsx category rating calculation to use simple rating (no partial penalty)
+- Verified with agent-browser: player list shows, manual selection works, strict position matching enforced
+
+Stage Summary:
+- Player list appears after spin — NO auto-select or auto-assign
+- Player cards show: rating + position abbreviation inside card, surname + flag below
+- Strict position matching: players can ONLY go on positions listed in their card
+- Move player: strict validation — both players must fit their new positions
+- Server sync: playerOtherPositions and playerNationality now persisted to DB
+- Swap API fixed: uses strict matching, transfers all fields correctly
+- Nationality flags working (🇷🇺, 🇦🇷, 🇮🇱, 🇭🇺, 🇪🇸, 🇭🇷, etc.)
+- All UI in Russian language
+- Lint passes with no errors
