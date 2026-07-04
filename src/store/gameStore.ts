@@ -433,17 +433,14 @@ export const useGameStore = create<GameState>()(
 
         const slotPosition = `${slot.position}_${slotIndex}`;
 
-        // Save current spin for potential revert on API error
-        const savedSpin = currentSpin;
-
-        // Deep-copy slots for error recovery to prevent shared-reference corruption
+        // Deep-copy slots for undo — no shared references
         const prevSlots = slots.map(s => ({ ...s }));
 
         // Save undo state BEFORE assignment — includes selectedPlayer so undo
         // can restore the player selection and let user click a different position
         const undoState: LastDraftState = {
           slots: prevSlots,
-          currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
+          currentSpin: currentSpin ? { ...currentSpin, players: [...currentSpin.players] } : null,
           selectedPlayer: { ...selectedPlayer },
           screen: 'draft',
         };
@@ -451,7 +448,9 @@ export const useGameStore = create<GameState>()(
         // Increment version so stale error reverts are rejected
         const thisVersion = draftVersion + 1;
 
-        // Optimistically update UI immediately
+        // ──── OFFLINE-FIRST: Optimistic update is the source of truth ────
+        // The game continues to work even if the API is down.
+        // API persistence is best-effort; failure does NOT revert the UI.
         const newSlots = slots.map(s => ({ ...s }));
         newSlots[slotIndex] = {
           ...slot,
@@ -478,6 +477,7 @@ export const useGameStore = create<GameState>()(
           justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : undoState,
+          lastDraftError: null,
         });
 
         // Auto-clear the highlight after 2 seconds
@@ -487,33 +487,54 @@ export const useGameStore = create<GameState>()(
           }
         }, 2000);
 
-        // Step 7: Analytics/squad stats update immediately (via the slots change above)
-        // Fire API in background to persist the draft pick
-        fetch(`/api/runs/${runId}/draft`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            playerSeasonId: selectedPlayer.playerSeasonId,
-            slotPosition,
-          }),
-        }).then(async (res) => {
-          if (!res.ok) {
+        // Step 7: Fire API in background to persist the draft pick.
+        // OFFLINE-FIRST: If API fails, we retry once, then log a warning.
+        // We do NOT revert the optimistic update — the game continues.
+        const draftPayload = {
+          playerSeasonId: selectedPlayer.playerSeasonId,
+          slotPosition,
+        };
+
+        const tryDraft = async (attempt: number): Promise<boolean> => {
+          try {
+            const res = await fetch(`/api/runs/${runId}/draft`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(draftPayload),
+            });
+            if (res.ok) return true;
+
             const errData = await res.json().catch(() => ({}));
-            const errorMsg = errData?.error || 'Не удалось назначить игрока';
-            console.error('Failed to draft player:', errData);
-            // Revert on failure — but only if no other draft action has occurred since
-            if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
+            const errStatus = res.status;
+
+            // 400 = business rule violation (slot filled, player already drafted, etc.)
+            // These are permanent — retrying won't help
+            if (errStatus === 400) {
+              console.warn('[assignToSlot] Business rule violation (permanent):', errData);
+              return true; // Treat as success — local state is already correct
             }
+
+            // 404 = run not found — may need a new run, retry once
+            console.warn(`[assignToSlot] API error (attempt ${attempt}):`, errData);
+            return false;
+          } catch (error) {
+            console.warn(`[assignToSlot] Network error (attempt ${attempt}):`, error);
+            return false;
           }
-        }).catch((error) => {
-          console.error('Failed to draft player:', error);
-          const errorMsg = 'Ошибка сети при назначении игрока';
-          // Revert on failure — but only if no other draft action has occurred since
-          if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
-          }
-        });
+        };
+
+        // First attempt
+        const firstAttempt = await tryDraft(1);
+        if (firstAttempt) return; // Success!
+
+        // Retry after 1 second
+        await new Promise(r => setTimeout(r, 1000));
+        const secondAttempt = await tryDraft(2);
+        if (secondAttempt) return; // Success on retry!
+
+        // Both attempts failed — log but do NOT revert the UI
+        console.error('[assignToSlot] Both API attempts failed. Game continues with local state.');
+        set({ lastDraftError: 'Не удалось сохранить на сервер, но игра продолжается' });
       },
 
       // -------------------------------------------------------------------
@@ -545,16 +566,13 @@ export const useGameStore = create<GameState>()(
 
         const slotPosition = `${slot.position}_${slotIndex}`;
 
-        // Save current spin for potential revert
-        const savedSpin = currentSpin;
-
-        // Deep-copy slots for error recovery to prevent shared-reference corruption
+        // Deep-copy slots for undo — no shared references
         const prevSlots = slots.map(s => ({ ...s }));
 
         // Save state for undo — no selectedPlayer in direct assign flow
         const undoState: LastDraftState = {
           slots: prevSlots,
-          currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
+          currentSpin: currentSpin ? { ...currentSpin, players: [...currentSpin.players] } : null,
           selectedPlayer: null,
           screen: 'draft',
         };
@@ -562,7 +580,7 @@ export const useGameStore = create<GameState>()(
         // Increment version so stale error reverts are rejected
         const thisVersion = draftVersion + 1;
 
-        // Optimistically update UI immediately — single atomic update
+        // ──── OFFLINE-FIRST: Optimistic update is the source of truth ────
         const newSlots = slots.map(s => ({ ...s }));
         newSlots[slotIndex] = {
           ...slot,
@@ -587,6 +605,7 @@ export const useGameStore = create<GameState>()(
           justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : undoState,
+          lastDraftError: null,
         });
 
         // Auto-clear the highlight after 2 seconds
@@ -596,32 +615,49 @@ export const useGameStore = create<GameState>()(
           }
         }, 2000);
 
-        // Fire API in background
-        fetch(`/api/runs/${runId}/draft`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            playerSeasonId: player.playerSeasonId,
-            slotPosition,
-          }),
-        }).then(async (res) => {
-          if (!res.ok) {
+        // OFFLINE-FIRST: API persistence is best-effort. No revert on failure.
+        const draftPayload = {
+          playerSeasonId: player.playerSeasonId,
+          slotPosition,
+        };
+
+        const tryDraft = async (attempt: number): Promise<boolean> => {
+          try {
+            const res = await fetch(`/api/runs/${runId}/draft`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(draftPayload),
+            });
+            if (res.ok) return true;
+
             const errData = await res.json().catch(() => ({}));
-            const errorMsg = errData?.error || 'Не удалось назначить игрока';
-            console.error('[directAssign] API error:', errData);
-            // Revert on failure — but only if no other draft action has occurred since
-            if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
+            const errStatus = res.status;
+
+            if (errStatus === 400) {
+              console.warn('[directAssign] Business rule violation (permanent):', errData);
+              return true;
             }
+
+            console.warn(`[directAssign] API error (attempt ${attempt}):`, errData);
+            return false;
+          } catch (error) {
+            console.warn(`[directAssign] Network error (attempt ${attempt}):`, error);
+            return false;
           }
-        }).catch((error) => {
-          console.error('[directAssign] Network error:', error);
-          const errorMsg = 'Ошибка сети при назначении игрока';
-          // Revert on failure — but only if no other draft action has occurred since
-          if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: errorMsg });
-          }
-        });
+        };
+
+        // First attempt
+        const firstAttempt = await tryDraft(1);
+        if (firstAttempt) return;
+
+        // Retry after 1 second
+        await new Promise(r => setTimeout(r, 1000));
+        const secondAttempt = await tryDraft(2);
+        if (secondAttempt) return;
+
+        // Both attempts failed — log but do NOT revert
+        console.error('[directAssign] Both API attempts failed. Game continues with local state.');
+        set({ lastDraftError: 'Не удалось сохранить на сервер, но игра продолжается' });
       },
 
       // -------------------------------------------------------------------

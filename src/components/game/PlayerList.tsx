@@ -59,9 +59,7 @@ export default function PlayerList() {
   const autoSelectDoneRef = useRef<string | null>(null);
 
   // Track auto-assign attempts to prevent infinite retry loops when API fails
-  // Key format: "playerSeasonId:slotIndex" → attempt count
-  const autoAssignAttemptsRef = useRef<Map<string, number>>(new Map());
-  const MAX_AUTO_ASSIGN_ATTEMPTS = 1;
+  const autoAssignDoneRef = useRef<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
 
@@ -169,31 +167,25 @@ export default function PlayerList() {
     }
   }, [currentSpin, processedPlayers, selectedPlayer, selectPlayer]);
 
-  // Reset auto-select tracking when spin changes
+  // Reset auto-select and auto-assign tracking when spin changes
   useEffect(() => {
     if (!currentSpin) {
       autoSelectDoneRef.current = null;
-      // Also clear auto-assign attempts when spin resets
-      autoAssignAttemptsRef.current.clear();
+      autoAssignDoneRef.current = null;
     }
   }, [currentSpin]);
 
   // ─── AUTO-ASSIGN: If selected player has exactly 1 compatible slot, assign after delay ───
-  // Includes protection against infinite retry loops when API fails
+  // OFFLINE-FIRST: Only auto-assign once per spin to prevent loops.
+  // If API fails, the game continues — no revert, no flicker.
   useEffect(() => {
     if (selectedPlayer && compatibleSlots.length === 1) {
       const slotIndex = compatibleSlots[0].slotIndex;
-      const attemptKey = `${selectedPlayer.playerSeasonId}:${slotIndex}`;
-      const attempts = autoAssignAttemptsRef.current.get(attemptKey) ?? 0;
+      const autoKey = `${selectedPlayer.playerSeasonId}:${slotIndex}`;
 
-      // Don't auto-assign if we've already tried too many times (prevents infinite loop on API failure)
-      if (attempts >= MAX_AUTO_ASSIGN_ATTEMPTS) {
-        console.warn(`[PlayerList] Auto-assign skipped: already attempted ${attempts} time(s) for ${attemptKey}`);
-        return;
-      }
-
-      // Record this attempt
-      autoAssignAttemptsRef.current.set(attemptKey, attempts + 1);
+      // Only auto-assign once per player+slot combination
+      if (autoAssignDoneRef.current === autoKey) return;
+      autoAssignDoneRef.current = autoKey;
 
       // Delay so the user sees the selection briefly and UI stabilizes
       const timer = setTimeout(() => {
@@ -203,12 +195,12 @@ export default function PlayerList() {
     }
   }, [selectedPlayer, compatibleSlots, assignToSlot]);
 
-  // Show error toast when draft API fails
+  // Show soft warning toast when draft API fails (non-blocking — game continues)
   useEffect(() => {
     if (lastDraftError) {
-      toast.error('Ошибка при назначении игрока', {
+      toast.warning('Сохранение', {
         description: lastDraftError,
-        duration: 4000,
+        duration: 3000,
       });
     }
   }, [lastDraftError]);
@@ -223,8 +215,8 @@ export default function PlayerList() {
       return;
     }
 
-    // Select the player — clear auto-assign attempts for the new selection
-    autoAssignAttemptsRef.current.clear();
+    // Select the player — reset auto-assign guard
+    autoAssignDoneRef.current = null;
     selectPlayer(player as PlayerOption);
   }, [selectedPlayer, deselectPlayer, selectPlayer]);
 
@@ -233,8 +225,8 @@ export default function PlayerList() {
   }, [assignToSlot]);
 
   const handleCancel = useCallback(() => {
-    // Clear auto-assign attempts when cancelling
-    autoAssignAttemptsRef.current.clear();
+    // Reset auto-assign guard when cancelling
+    autoAssignDoneRef.current = null;
     deselectPlayer();
   }, [deselectPlayer]);
 
