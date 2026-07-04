@@ -101,7 +101,6 @@ export default function SimulationResult() {
   const handleSkipAll = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setCurrentMatchweek(totalMatches);
-    setIsPlaying(false);
   }, [totalMatches]);
 
   // Current stats up to currentMatchweek

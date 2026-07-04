@@ -197,3 +197,104 @@ Unresolved Issues:
 - Telegram auth requires TELEGRAM_BOT_TOKEN env var for server-side validation
 - Cloud sync only works when authenticated via Telegram
 - UI polish opportunities remain (animations, visual refinements)
+
+---
+Task ID: 3
+Agent: main
+Task: Add "СКОРО" badge to "Один клуб" card and restructure game modes section
+
+Work Log:
+- Changed "Один клуб" in GAME_MODES array: `active: false`, added `badge: 'СКОРО'`
+- Only "Классика" remains `active: true` — the only clickable game mode
+- Restructured game modes section into two distinct sections:
+  - **"PLAY WITH MATES"** section: "Игровые режимы" heading + "PLAY WITH MATES" sub-heading, with "Классика" card displayed prominently as full-width, larger card (p-6/p-8, rounded-2xl, flex layout with large emoji + title + desc + arrow)
+  - **"MORE WAYS TO PLAY"** section: "MORE WAYS TO PLAY" sub-heading, with 3 coming-soon cards in a grid (1 col mobile, 3 cols sm+)
+- Updated inactive card styling:
+  - `bg-[#0d2d0d]/40` — more transparent background
+  - `border-[#1a3a1a]/30` — more transparent border
+  - `opacity-60` — reduced opacity
+  - `cursor-not-allowed` — indicates non-interactive
+  - No hover effect, no arrow, no transition-all
+  - Emoji uses `grayscale` class (full grayscale instead of 0.3)
+  - Text colors reduced: `text-[#e2e8f0]/70` for title, `text-[#9ca3af]/50` for desc
+- Clicking inactive cards shows toast "Скоро!" (was already implemented)
+- Lint passes with no errors
+- Dev server responding 200
+
+Stage Summary:
+- "Один клуб" now shows "СКОРО" badge and is non-clickable
+- Game modes section split into "PLAY WITH MATES" (active) and "MORE WAYS TO PLAY" (coming soon)
+- "Классика" card is prominent (full width, larger), coming-soon cards are visually muted
+- Clean visual distinction between active and inactive modes
+
+---
+Task ID: 2
+Agent: main
+Task: Fix the Footer (bottom toolbar) display on mobile and desktop
+
+Work Log:
+- **Mobile footer fixes** (Footer.tsx):
+  - Removed `-mt-5` from Play button container — was causing overlap/visual issues
+  - Changed Play button size from `w-14/w-16` to `w-11/w-12` — smaller and cleaner
+  - Reduced Play button icon from `w-6 h-6` to `w-5 h-5` — proportional to new size
+  - Removed pulsing glow animation (`motion.div` with `animate` boxShadow keyframes) — replaced with static `shadow-md shadow-[#22c55e]/40`
+  - Changed Play button label from `font-bold` to `font-medium` — consistent with other tabs
+  - Changed bar layout from `items-end` to `items-center` — cleaner alignment
+  - Reduced bar height from `h-16` to `h-14` — more compact
+  - Kept `footer-gradient-border` gradient top border and `bg-[#0a1a0a]/95 backdrop-blur-md`
+- **Mobile spacer** (Footer.tsx):
+  - Added spacer `<div>` with `h-14 sm:hidden` after the fixed nav — reserves flow space for the fixed footer
+  - Uses `h-14` (3.5rem) to match the nav bar height, NOT including safe-area (body already handles safe-area via layout.tsx)
+  - `aria-hidden="true"` for accessibility
+- **Desktop footer fixes** (Footer.tsx):
+  - Changed from `hidden sm:block` to `hidden sm:flex` — proper flex display for `justify-between` layout
+  - Reduced Play button shadow from `shadow-lg shadow-[#22c55e]/25` to `shadow-md shadow-[#22c55e]/20`
+  - Reduced Play button padding from `px-5 py-2.5` to `px-4 py-2`
+  - Added `w-full` to inner div for proper flex layout
+- **Main content padding** (page.tsx):
+  - Replaced `pb-20 sm:pb-6` with `pb-4` — the spacer div in Footer now handles the mobile footer height
+  - Removed `overflow-y-auto` from main — scrolling happens at the document level (main has flex-1 and grows)
+- Lint passes with no errors
+- Dev server responding 200
+
+Stage Summary:
+- Mobile bottom toolbar: clean 3-tab bar with properly sized Play button (no overlap, no excessive glow)
+- Mobile safe area: handled by body padding (layout.tsx) + footer paddingBottom, spacer uses h-14 only
+- Desktop footer: proper flex layout with `mt-auto` for bottom-sticking
+- Main content: simplified padding (pb-4), spacer in Footer accounts for fixed nav height
+
+---
+Task ID: 4
+Agent: main
+Task: Full refactor of all game screens to match the 38-0.app video reference
+
+Work Log:
+- **FormationView.tsx — Position Legend**: Added a horizontal row of colored dots with labels below the pitch: 🟠 ВР (Keeper), 🔵 Защита (Defence), 🟢 Полузащита (Midfield), 🔴 Атака (Attack), ⚫ Не может играть (Can't play there). Matches 38-0 style exactly.
+- **page.tsx — DraftScreen improvements**:
+  - "Move a player" button now has subtitle: "Переместите задрафтованного игрока, чтобы освободить слот"
+  - Squad Stats Panel redesigned with prominent OVERALL number (text-3xl/text-4xl) on the left and category bars on the right, plus "OVERALL" label
+  - Added "Начать заново" link below SpinWheel for easy restart during draft
+- **SpinWheel.tsx — Idle state redesign**:
+  - Idle state now shows "КРУТИТЬ СОСТАВ" header with position count
+  - Empty Club × Season fields (dashed, placeholder style) — matching 38-0 "SPIN FOR A SQUAD" layout
+  - "Крутить колесо" button with Zap icon instead of just "Крутить"
+  - Added "или нажмите Пробел" subtitle
+  - Spinning state shows "КРУТИТЬ СОСТАВ" header + spinning indicator
+  - Result state shows "СОСТАВ ВЫПАЛ" header (uppercase green)
+  - Added spacebar keyboard shortcut support
+- **GameSetup.tsx — Simplified**:
+  - Moved Draft Mode, Rating Mode, Era Filter, and Show Ratings toggle into a collapsible "⚙️ Расширенные настройки" section
+  - Main setup screen now shows only: Formation selector + Difficulty selector + Start button
+  - Start button text changed from "Начать драфт" to "Крутить колесо" (matching the draft screen flow)
+  - Subtitle changed from "Выберите схему и параметры драфта" to "Выберите схему и сложность"
+- **HomePage — CTA button text**: Changed "Играть →" to "Играть 30-0 →" matching the reference
+- **SimulationResult.tsx — Bug fix**: Removed stale `setIsPlaying(false)` call that referenced non-existent state
+- Lint passes with no errors
+
+Stage Summary:
+- Position legend added to FormationView below pitch — matches 38-0 visual reference
+- Draft screen has prominent OVERALL rating with category bars layout
+- Spin section redesigned with "КРУТИТЬ СОСТАВ" header, empty fields, and spacebar support
+- Game setup simplified: advanced settings collapsed, main flow is Formation + Difficulty + Start
+- Home page CTA now says "Играть 30-0 →"
+- All screens more closely match 38-0.app reference design

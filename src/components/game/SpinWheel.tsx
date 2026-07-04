@@ -192,6 +192,33 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
   );
 }
 
+/* ─── Empty Field Display (idle state) ─── */
+function EmptyField({ label, value, onClear }: { label: string; value: string | null; onClear?: () => void }) {
+  return (
+    <div className="flex-1 rounded-xl bg-[#0a1628] border border-white/10 px-3 py-2 text-center relative">
+      <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
+        {label}
+      </div>
+      {value ? (
+        <div className="flex items-center justify-center gap-1">
+          <span className="text-sm font-black text-white">{value}</span>
+          {onClear && (
+            <button
+              onClick={onClear}
+              className="text-[#64748b] hover:text-[#e2e8f0] transition-colors text-xs ml-1"
+              aria-label="Очистить"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="text-sm font-black text-[#64748b]/40">—</div>
+      )}
+    </div>
+  );
+}
+
 /**
  * SpinWheel — 38-0 style slot-machine spin component.
  */
@@ -213,29 +240,66 @@ export default function SpinWheel() {
     await reroll();
   }, [isSpinning, rerollsLeft, reroll]);
 
+  // Spacebar support
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !hasResult && !isSpinning) {
+        e.preventDefault();
+        handleSpin();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasResult, isSpinning, handleSpin]);
+
   return (
     <div className="space-y-3">
       {/* ── Spin Section ── */}
       <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 overflow-hidden">
         <AnimatePresence mode="wait">
-          {/* ── Idle / No spin yet ── */}
+          {/* ── Idle / No spin yet — 38-0 style with header ── */}
           {!hasResult && !isSpinning && (
             <motion.div
               key="idle"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="p-4 text-center"
+              className="p-4"
             >
-              <div className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold mb-1">
-                Крути состав
+              {/* "КРУТИТЬ СОСТАВ" header */}
+              <div className="text-center mb-3">
+                <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold mb-2">
+                  КРУТИТЬ СОСТАВ
+                </div>
+                <div className="text-2xl font-black text-white mb-0.5">
+                  {openCount}{' '}
+                  <span className="text-sm font-bold text-[#94a3b8]">
+                    позиций осталось
+                  </span>
+                </div>
               </div>
-              <div className="text-2xl font-black text-white mb-1">
-                {openCount}{' '}
-                <span className="text-sm font-bold text-[#94a3b8]">
-                  позиций осталось
-                </span>
+
+              {/* Empty Club × Season fields */}
+              <div className="flex items-center gap-2 mb-4">
+                <EmptyField label="Клуб" value={null} />
+                <span className="text-[#64748b]/40 font-bold text-lg shrink-0">×</span>
+                <EmptyField label="Сезон" value={null} />
               </div>
+
+              {/* Spin Button — big green with wheel icon */}
+              <motion.div whileTap={{ scale: 0.97 }}>
+                <Button
+                  onClick={handleSpin}
+                  disabled={isSpinning}
+                  className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  Крутить колесо
+                </Button>
+              </motion.div>
+              <p className="text-[10px] text-[#64748b] text-center mt-1.5">
+                или нажмите Пробел
+              </p>
             </motion.div>
           )}
 
@@ -248,6 +312,9 @@ export default function SpinWheel() {
               exit={{ opacity: 0 }}
               className="p-4"
             >
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold text-center mb-2">
+                КРУТИТЬ СОСТАВ
+              </div>
               <div className="flex items-center gap-2">
                 <SlotReel
                   items={RPL_CLUBS}
@@ -272,6 +339,10 @@ export default function SpinWheel() {
                   resultColor="#fbbf24"
                 />
               </div>
+              <div className="flex items-center justify-center mt-3 gap-1.5">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#22c55e]" />
+                <span className="text-xs text-[#94a3b8]">Крутим...</span>
+              </div>
             </motion.div>
           )}
 
@@ -285,8 +356,8 @@ export default function SpinWheel() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="p-4"
             >
-              <div className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold mb-2">
-                Состав выпал
+              <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold text-center mb-2">
+                СОСТАВ ВЫПАЛ
               </div>
 
               {/* Club × Season banner */}
@@ -322,7 +393,7 @@ export default function SpinWheel() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleReroll}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#fbbf24]/40 text-[#fbbf24] rounded-xl hover:bg-[#fbbf24]/10 transition-all"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#fbbf24]/40 text-[#fbbf24] rounded-xl hover:bg-[#fbbf24]/10 transition-all mb-2"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   Переброс ({rerollsLeft} ост.)
@@ -333,35 +404,13 @@ export default function SpinWheel() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { skipSpin(); }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#64748b]/40 text-[#94a3b8] rounded-xl hover:bg-[#64748b]/10 hover:text-[#e2e8f0] transition-all mt-2"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#64748b]/40 text-[#94a3b8] rounded-xl hover:bg-[#64748b]/10 hover:text-[#e2e8f0] transition-all"
               >
                 Крутить снова
               </motion.button>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* ── Spin Button (shown when no result) ── */}
-        {!hasResult && (
-          <div className="px-4 pb-4">
-            <motion.div whileTap={{ scale: 0.97 }}>
-              <Button
-                onClick={handleSpin}
-                disabled={isSpinning}
-                className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
-              >
-                {isSpinning ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" />
-                    Крутить
-                  </>
-                )}
-              </Button>
-            </motion.div>
-          </div>
-        )}
       </div>
     </div>
   );

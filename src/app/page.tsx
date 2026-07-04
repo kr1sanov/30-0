@@ -37,7 +37,7 @@ const STEPS = [
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6' },
-  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#3b82f6' },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#3b82f6', badge: 'СКОРО' },
   { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#22c55e', badge: 'СКОРО' },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', badge: 'СКОРО' },
 ];
@@ -350,7 +350,7 @@ function HomePage() {
             onClick={() => setScreen('setup')}
             className="h-12 sm:h-14 px-8 sm:px-12 text-base sm:text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-[0.97] btn-inner-shimmer"
           >
-            Играть →
+            Играть 30-0 →
           </Button>
           <button
             onClick={() => setShowHowToPlay(true)}
@@ -371,55 +371,76 @@ function HomePage() {
         )}
       </motion.div>
 
-      {/* ── Game Modes Section ── */}
+      {/* ── PLAY WITH MATES Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
-        className="space-y-2"
+        className="space-y-3"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
-          Игровые режимы
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {GAME_MODES.map((mode, i) => (
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">Игровые режимы</h2>
+          <p className="text-xs font-semibold tracking-[0.2em] text-[#22c55e]/70 mt-1">PLAY WITH MATES</p>
+        </div>
+        {GAME_MODES.filter(m => m.active).map((mode, i) => (
+          <motion.button
+            key={mode.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 + i * 0.08 }}
+            onClick={() => {
+              if (mode.active) {
+                setScreen('setup');
+              }
+            }}
+            className="relative w-full rounded-2xl p-6 sm:p-8 text-left border transition-all overflow-hidden group bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)] active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-4xl sm:text-5xl">{mode.emoji}</div>
+              <div className="flex-1 min-w-0">
+                <div className="text-lg sm:text-xl font-bold text-[#e2e8f0] mb-1">{mode.title}</div>
+                <div className="text-sm text-[#9ca3af] leading-relaxed">{mode.desc}</div>
+              </div>
+              <div className="text-[#22c55e]/50 group-hover:text-[#22c55e] transition-colors text-2xl">
+                →
+              </div>
+            </div>
+          </motion.button>
+        ))}
+      </motion.div>
+
+      {/* ── MORE WAYS TO PLAY Section ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="space-y-3"
+      >
+        <p className="text-xs font-semibold tracking-[0.2em] text-[#9ca3af]/60 text-center">MORE WAYS TO PLAY</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {GAME_MODES.filter(m => !m.active).map((mode, i) => (
             <motion.button
               key={mode.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.08 }}
+              transition={{ delay: 0.3 + i * 0.08 }}
               onClick={() => {
-                if (mode.active) {
-                  setScreen('setup');
-                } else {
-                  toast('Скоро!');
-                }
+                toast('Скоро!');
               }}
-              className={`relative rounded-xl p-4 text-left border transition-all overflow-hidden group ${
-                mode.active
-                  ? 'bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_15px_rgba(34,197,94,0.08)]'
-                  : 'bg-[#0d2d0d]/60 border-[#1a3a1a]/50 opacity-70'
-              }`}
+              className="relative rounded-xl p-4 text-left border overflow-hidden bg-[#0d2d0d]/40 border-[#1a3a1a]/30 opacity-60 cursor-not-allowed"
             >
               {/* Badge for coming soon */}
-              {!mode.active && mode.badge && (
+              {mode.badge && (
                 <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
                   {mode.badge}
                 </span>
               )}
 
-              <div className="text-2xl mb-2" style={{ filter: mode.active ? 'none' : 'grayscale(0.3)' }}>
+              <div className="text-2xl mb-2 grayscale">
                 {mode.emoji}
               </div>
-              <div className="text-sm font-semibold text-[#e2e8f0] mb-1">{mode.title}</div>
-              <div className="text-xs text-[#9ca3af] leading-relaxed">{mode.desc}</div>
-
-              {/* Right arrow for active card */}
-              {mode.active && (
-                <div className="absolute bottom-3 right-3 text-[#22c55e]/50 group-hover:text-[#22c55e] transition-colors">
-                  →
-                </div>
-              )}
+              <div className="text-sm font-semibold text-[#e2e8f0]/70 mb-1">{mode.title}</div>
+              <div className="text-xs text-[#9ca3af]/50 leading-relaxed">{mode.desc}</div>
             </motion.button>
           ))}
         </div>
@@ -732,7 +753,7 @@ function DraftScreen() {
 
       {/* ── Move a Player Button ── */}
       {filledSlots.length >= 2 && !selectedPlayer && (
-        <div className="flex items-center gap-2">
+        <div className="space-y-1">
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => {
@@ -740,7 +761,7 @@ function DraftScreen() {
                 finishMoving();
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
               isMoving
                 ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
                 : 'bg-[#0d2d0d] border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10'
@@ -748,50 +769,68 @@ function DraftScreen() {
           >
             {isMoving ? '✓ Завершить' : '↔ Переместить игрока'}
           </motion.button>
+          {!isMoving && (
+            <p className="text-[9px] text-[#64748b] text-center">
+              Переместите задрафтованного игрока, чтобы освободить слот
+            </p>
+          )}
+          {isMoving && (
+            <p className="text-[10px] text-[#94a3b8] text-center">
+              Нажмите на занятую позицию, затем на другую для обмена
+            </p>
+          )}
         </div>
-      )}
-      {isMoving && (
-        <p className="text-[10px] text-[#94a3b8] text-center">
-          Нажмите на занятую позицию, затем на другую для обмена
-        </p>
       )}
 
-      {/* ── Squad Stats Panel (38-0 style, compact) ── */}
+      {/* ── Squad Stats Panel (38-0 style, prominent OVERALL) ── */}
       <div className="rounded-xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold">Рейтинг</span>
-          <span className="text-xl font-black" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
-            {avgRating ?? '—'}
-          </span>
-        </div>
-        <div className="space-y-1.5">
-          {['att', 'mid', 'def', 'gk'].map((cat) => {
-            const r = categoryRatings[cat];
-            const avg = r.count > 0 ? Math.round(r.total / r.count) : 0;
-            return (
-              <div key={cat} className="flex items-center gap-2">
-                <span className="text-[10px] text-[#94a3b8] w-16 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: r.count > 0 ? `${(avg / 99) * 100}%` : '0%' }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className="h-full rounded-full"
-                    style={{ backgroundColor: CATEGORY_COLORS_LOCAL[cat] }}
-                  />
+        <div className="flex items-center gap-3 mb-3">
+          {/* Big OVERALL number */}
+          <div className="text-center">
+            <div className="text-3xl sm:text-4xl font-black leading-none" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
+              {avgRating ?? '—'}
+            </div>
+            <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mt-1">OVERALL</div>
+          </div>
+          {/* Category bars */}
+          <div className="flex-1 space-y-1.5">
+            {['att', 'mid', 'def', 'gk'].map((cat) => {
+              const r = categoryRatings[cat];
+              const avg = r.count > 0 ? Math.round(r.total / r.count) : 0;
+              return (
+                <div key={cat} className="flex items-center gap-2">
+                  <span className="text-[9px] text-[#94a3b8] w-14 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: r.count > 0 ? `${(avg / 99) * 100}%` : '0%' }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      className="h-full rounded-full"
+                      style={{ backgroundColor: CATEGORY_COLORS_LOCAL[cat] }}
+                    />
+                  </div>
+                  <span className="text-[9px] font-bold text-[#e2e8f0] w-5 text-right">
+                    {r.count > 0 ? avg : '—'}
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold text-[#e2e8f0] w-5 text-right">
-                  {r.count > 0 ? avg : '—'}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* ── Spin Section ── */}
-      <div ref={spinWheelRef}>
+      <div ref={spinWheelRef} className="space-y-2">
         <SpinWheel />
+        {/* Restart run link */}
+        <div className="text-center">
+          <button
+            onClick={() => setShowRestartModal(true)}
+            className="text-[10px] text-[#64748b] hover:text-[#94a3b8] transition-colors"
+          >
+            Начать заново
+          </button>
+        </div>
       </div>
 
       {/* ── Player List ── */}
@@ -1246,7 +1285,7 @@ export default function Home() {
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />
-      <main className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-20 sm:pb-6 relative z-10 overflow-y-auto">
+      <main className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10">
         {renderScreen()}
       </main>
       <Footer />

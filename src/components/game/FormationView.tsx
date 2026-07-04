@@ -675,6 +675,30 @@ export default function FormationView() {
           </button>
         )}
       </div>
+
+      {/* Position Legend — matching 38-0 style */}
+      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2 flex-wrap" style={{ maxWidth: '400px' }}>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f97316', boxShadow: '0 0 4px #f97316' }} />
+          <span className="text-[9px] text-[#94a3b8]">ВР</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }} />
+          <span className="text-[9px] text-[#94a3b8]">Защита</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
+          <span className="text-[9px] text-[#94a3b8]">Полузащита</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444', boxShadow: '0 0 4px #ef4444' }} />
+          <span className="text-[9px] text-[#94a3b8]">Атака</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#64748b', boxShadow: '0 0 4px #64748b' }} />
+          <span className="text-[9px] text-[#94a3b8]">Не может играть</span>
+        </div>
+      </div>
     </div>
   );
 }

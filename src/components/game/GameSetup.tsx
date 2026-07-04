@@ -211,6 +211,7 @@ function FormationPitch({ formationId }: { formationId: string }) {
 
 export default function GameSetup() {
   const { config, setConfig, startRun } = useGameStore();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleStart = async () => {
     await startRun();
@@ -231,7 +232,7 @@ export default function GameSetup() {
           Настройка игры
         </h2>
         <p className="text-sm text-[#94a3b8] mt-1">
-          Выберите схему и параметры драфта
+          Выберите схему и сложность
         </p>
       </div>
 
@@ -367,127 +368,158 @@ export default function GameSetup() {
         </div>
       </div>
 
-      {/* Show Ratings Toggle (Hard mode) */}
-      <div className="flex items-center justify-between rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
-        <div>
-          <div className="text-sm font-bold text-[#e2e8f0]">
-            Показывать рейтинги
+      {/* ─── Advanced Settings (collapsible) ─── */}
+      <div className="rounded-2xl border border-[#1a3a1a]/60 overflow-hidden">
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-[#0d1a0d] hover:bg-[#0d2d0d]/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-[#94a3b8]">⚙️ Расширенные настройки</span>
           </div>
-          <div className="text-xs text-[#94a3b8] mt-0.5">
-            Скрывает рейтинги игроков для усложнения
-          </div>
-        </div>
-        <Switch
-          checked={config.difficulty !== 'hard'}
-          onCheckedChange={(checked) => {
-            if (!checked) {
-              setConfig({ difficulty: 'hard' });
-            } else if (config.difficulty === 'hard') {
-              setConfig({ difficulty: 'normal' });
-            }
-          }}
-          className="data-[state=checked]:bg-[#22c55e]"
-        />
-      </div>
+          <motion.span
+            animate={{ rotate: showAdvanced ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-[#64748b] text-sm"
+          >
+            ▼
+          </motion.span>
+        </button>
 
-      {/* ─── Draft Mode ─── */}
-      <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Режим драфта</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {(
-            Object.entries(DRAFT_MODE_CONFIG) as [
-              string,
-              { label: string; description: string },
-            ][]
-          ).map(([key, val]) => (
-            <button
-              key={key}
-              onClick={() =>
-                setConfig({ draftMode: key as 'squad_first' | 'position_first' })
-              }
-              className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
-                config.draftMode === key
-                  ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                  : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-              }`}
+        <AnimatePresence>
+          {showAdvanced && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
             >
-              <div
-                className={`font-bold ${
-                  config.draftMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                }`}
-              >
-                {val.label}
-              </div>
-              <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
-                {val.description}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Rating Mode ─── */}
-      <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">
-          Режим рейтинга
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {(
-            Object.entries(RATING_MODE_CONFIG) as [
-              string,
-              { label: string; description: string },
-            ][]
-          ).map(([key, val]) => (
-            <button
-              key={key}
-              onClick={() => setConfig({ ratingMode: key as 'season' | 'prime' })}
-              className={`rounded-2xl p-4 text-center transition-all duration-200 border-2 ${
-                config.ratingMode === key
-                  ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                  : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-              }`}
-            >
-              <div
-                className={`font-bold ${
-                  config.ratingMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                }`}
-              >
-                {val.label}
-              </div>
-              <div className="text-xs text-[#94a3b8] mt-1 leading-relaxed">
-                {val.description}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── Era Filter ─── */}
-      <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Эпоха</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
-            ([key, val]) => (
-              <button
-                key={key}
-                onClick={() => setConfig({ eraFilter: key })}
-                className={`rounded-2xl p-3 text-center transition-all duration-200 border-2 ${
-                  config.eraFilter === key
-                    ? 'border-[#22c55e] bg-[#22c55e]/10 shadow-lg shadow-[#22c55e]/10'
-                    : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-                }`}
-              >
-                <div
-                  className={`font-bold text-sm ${
-                    config.eraFilter === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                  }`}
-                >
-                  {val.label}
+              <div className="p-4 space-y-5 bg-[#0a150a]">
+                {/* Show Ratings Toggle */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-[#e2e8f0]">
+                      Показывать рейтинги
+                    </div>
+                    <div className="text-xs text-[#94a3b8] mt-0.5">
+                      Скрывает рейтинги игроков для усложнения
+                    </div>
+                  </div>
+                  <Switch
+                    checked={config.difficulty !== 'hard'}
+                    onCheckedChange={(checked) => {
+                      if (!checked) {
+                        setConfig({ difficulty: 'hard' });
+                      } else if (config.difficulty === 'hard') {
+                        setConfig({ difficulty: 'normal' });
+                      }
+                    }}
+                    className="data-[state=checked]:bg-[#22c55e]"
+                  />
                 </div>
-              </button>
-            ),
+
+                {/* ─── Draft Mode ─── */}
+                <div>
+                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Режим драфта</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      Object.entries(DRAFT_MODE_CONFIG) as [
+                        string,
+                        { label: string; description: string },
+                      ][]
+                    ).map(([key, val]) => (
+                      <button
+                        key={key}
+                        onClick={() =>
+                          setConfig({ draftMode: key as 'squad_first' | 'position_first' })
+                        }
+                        className={`rounded-xl p-3 text-center transition-all duration-200 border-2 ${
+                          config.draftMode === key
+                            ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
+                            : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
+                        }`}
+                      >
+                        <div
+                          className={`font-bold text-sm ${
+                            config.draftMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+                          }`}
+                        >
+                          {val.label}
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
+                          {val.description}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ─── Rating Mode ─── */}
+                <div>
+                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Режим рейтинга</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(
+                      Object.entries(RATING_MODE_CONFIG) as [
+                        string,
+                        { label: string; description: string },
+                      ][]
+                    ).map(([key, val]) => (
+                      <button
+                        key={key}
+                        onClick={() => setConfig({ ratingMode: key as 'season' | 'prime' })}
+                        className={`rounded-xl p-3 text-center transition-all duration-200 border-2 ${
+                          config.ratingMode === key
+                            ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
+                            : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
+                        }`}
+                      >
+                        <div
+                          className={`font-bold text-sm ${
+                            config.ratingMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+                          }`}
+                        >
+                          {val.label}
+                        </div>
+                        <div className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
+                          {val.description}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ─── Era Filter ─── */}
+                <div>
+                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Эпоха</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+                      ([key, val]) => (
+                        <button
+                          key={key}
+                          onClick={() => setConfig({ eraFilter: key })}
+                          className={`rounded-xl p-2.5 text-center transition-all duration-200 border-2 ${
+                            config.eraFilter === key
+                              ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
+                              : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
+                          }`}
+                        >
+                          <div
+                            className={`font-bold text-xs ${
+                              config.eraFilter === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
+                            }`}
+                          >
+                            {val.label}
+                          </div>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* ─── Start Button ─── */}
@@ -523,7 +555,7 @@ export default function GameSetup() {
             >
               ⚽
             </motion.span>
-            Начать драфт
+            Крутить колесо
           </span>
         </Button>
       </motion.div>

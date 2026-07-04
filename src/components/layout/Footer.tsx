@@ -62,12 +62,12 @@ export default function Footer() {
       id: 'play',
       label: 'Играть',
       icon: (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z" />
         </svg>
       ),
       activeIcon: (
-        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none">
           <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z" />
         </svg>
       ),
@@ -92,23 +92,23 @@ export default function Footer() {
 
   return (
     <>
-      {/* Mobile Tab Bar — fixed to bottom, 3 tabs with centered Play */}
+      {/* Mobile Tab Bar — fixed to bottom */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 sm:hidden footer-gradient-border"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
         <div className="bg-[#0a1a0a]/95 backdrop-blur-md">
-          <div className="flex items-end justify-around h-16 px-4">
+          <div className="flex items-center justify-around h-14 px-2">
             {/* Home tab */}
             <motion.button
               onClick={() => handleTabClick('home')}
               whileTap={{ scale: 0.9 }}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-14 transition-colors"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
             >
               <span className={activeTab === 'home' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}>
                 {activeTab === 'home' ? tabs[0].activeIcon : tabs[0].icon}
               </span>
-              <span className={`text-[10px] font-medium ${activeTab === 'home' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'home' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
                 Главная
               </span>
             </motion.button>
@@ -117,28 +117,18 @@ export default function Footer() {
             <motion.button
               onClick={() => handleTabClick('play')}
               whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center justify-center -mt-5"
+              className="flex flex-col items-center justify-center min-w-[56px] h-full"
             >
-              <motion.div
-                className={`flex items-center justify-center rounded-full transition-all ${
+              <div
+                className={`flex items-center justify-center rounded-full transition-all duration-200 ${
                   activeTab === 'play'
-                    ? 'bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/50 w-16 h-16'
-                    : 'bg-gradient-to-br from-[#22c55e]/80 to-[#16a34a]/80 text-white shadow-lg shadow-[#22c55e]/30 w-14 h-14'
+                    ? 'bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white shadow-md shadow-[#22c55e]/40 w-12 h-12'
+                    : 'bg-gradient-to-br from-[#22c55e]/70 to-[#16a34a]/70 text-white shadow-sm shadow-[#22c55e]/20 w-11 h-11'
                 }`}
-                animate={activeTab === 'play' ? {
-                  boxShadow: [
-                    '0 0 15px rgba(34, 197, 94, 0.3)',
-                    '0 0 25px rgba(34, 197, 94, 0.5)',
-                    '0 0 15px rgba(34, 197, 94, 0.3)',
-                  ],
-                } : {
-                  boxShadow: '0 0 10px rgba(34, 197, 94, 0.2)',
-                }}
-                transition={{ duration: 2, repeat: activeTab === 'play' ? Infinity : 0, ease: 'easeInOut' }}
               >
                 {tabs[1].icon}
-              </motion.div>
-              <span className={`text-[10px] font-bold mt-1 ${activeTab === 'play' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              </div>
+              <span className={`text-[10px] font-medium leading-tight mt-0.5 ${activeTab === 'play' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
                 Играть
               </span>
             </motion.button>
@@ -147,12 +137,12 @@ export default function Footer() {
             <motion.button
               onClick={() => handleTabClick('profile')}
               whileTap={{ scale: 0.9 }}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-14 transition-colors"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
             >
               <span className={activeTab === 'profile' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}>
                 {activeTab === 'profile' ? tabs[2].activeIcon : tabs[2].icon}
               </span>
-              <span className={`text-[10px] font-medium ${activeTab === 'profile' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'profile' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
                 Профиль
               </span>
             </motion.button>
@@ -160,9 +150,17 @@ export default function Footer() {
         </div>
       </nav>
 
-      {/* Desktop Footer — normal flow */}
-      <footer className="hidden sm:block w-full bg-[#0a1a0a] mt-auto footer-gradient-border">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      {/* Spacer for mobile — reserves space for the fixed bottom bar.
+          Body already has paddingBottom: env(safe-area-inset-bottom) in layout.tsx,
+          so we only need to account for the nav bar height itself. */}
+      <div
+        className="sm:hidden h-14"
+        aria-hidden="true"
+      />
+
+      {/* Desktop Footer — normal flow, sticks to bottom via flex mt-auto */}
+      <footer className="hidden sm:flex w-full bg-[#0a1a0a] mt-auto footer-gradient-border">
+        <div className="max-w-4xl mx-auto px-4 py-4 w-full">
           <div className="flex items-center justify-between">
             {/* Desktop nav links */}
             <div className="flex items-center gap-5">
@@ -177,7 +175,7 @@ export default function Footer() {
                     whileTap={{ scale: 0.92 }}
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
                       isPlay
-                        ? 'px-5 py-2.5 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-lg shadow-[#22c55e]/25'
+                        ? 'px-4 py-2 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-md shadow-[#22c55e]/20'
                         : isActive
                         ? 'text-[#22c55e]'
                         : 'text-[#94a3b8] hover:text-[#e2e8f0]'
