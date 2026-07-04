@@ -163,3 +163,37 @@ Stage Summary:
 - Game state persists correctly on page refresh, including screen state
 - Stale transient state is properly cleared on resume
 - Telegram auth/sync flow verified and improved with fallback user sync
+
+---
+Task ID: deploy-1
+Agent: main
+Task: Record all changes and deploy to GitHub
+
+Work Log:
+- Verified project state: dev server running on port 3000, all API endpoints returning 200
+- Checked git status: 2 unpushed commits on main branch
+- Reviewed worklog: comprehensive record of all bug fixes exists
+- Committed worklog update and pushing to origin/main
+
+Changes Summary (all unpushed commits):
+- **gameStore.ts**: Added `skipSpin()` action, fixed `partialize` for screen persistence, enhanced `resumeGame()` to clear stale transient state
+- **PlayerList.tsx**: Auto-select best compatible player after spin, position selection panel, "skip and spin again" for incompatible players, proper delays (300ms auto-select, 600ms auto-assign)
+- **SpinWheel.tsx**: Added "Крутить снова" (spin again) button always visible after spin result
+- **page.tsx**: Removed competing auto-scroll effects (kept only scroll-to-spin after assignment), added Telegram user sync fallback
+
+Stage Summary:
+- All 5 critical bugs fixed: game stuck, UI jumping, auto-assign race condition, state persistence, Telegram sync
+- 2 commits ready to push: b2172e3, 2dce382
+- Pushing to https://github.com/kr1sanov/30-0.git (main branch)
+
+Current Project Status:
+- Core game loop fully functional: spin → auto-select → place (auto or manual) → next spin
+- No game-freezing bugs remain
+- UI no longer jumps/jitters
+- Telegram auth/sync verified working
+- State persists correctly on page refresh
+
+Unresolved Issues:
+- Telegram auth requires TELEGRAM_BOT_TOKEN env var for server-side validation
+- Cloud sync only works when authenticated via Telegram
+- UI polish opportunities remain (animations, visual refinements)
