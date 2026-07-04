@@ -5,10 +5,8 @@ import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY, canFillSlot } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import type { PlayerOption } from '@/lib/types';
-import { useTelegram } from '@/hooks/use-telegram';
 
 /** Position category colors — matching 38-0 style */
 const CATEGORY_BG: Record<PositionCategory, string> = {
@@ -38,18 +36,13 @@ function getFirstName(fullName: string): string {
 
 interface ProcessedPlayer extends PlayerOption {
   canFillAny: boolean;
-  availableSlots: number[];
 }
 
 type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
-  const { currentSpin, slots, config, directAssign } = useGameStore();
-  const { notify: tgNotify, haptic: tgHaptic } = useTelegram();
-  const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
+  const { currentSpin, slots, config, selectPlayer, selectedPlayer } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
-  const [assigningPlayerId, setAssigningPlayerId] = useState<string | null>(null);
-  const [placingPlayerId, setPlacingPlayerId] = useState<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
 
@@ -65,7 +58,6 @@ export default function PlayerList() {
     if (!currentSpin) return [];
 
     const players = currentSpin.players.map((player) => {
-      const availableSlots: number[] = [];
       let canFillAny = false;
 
       for (const openSlot of openPositions) {
@@ -76,11 +68,11 @@ export default function PlayerList() {
         );
         if (result.canFill) {
           canFillAny = true;
-          availableSlots.push(openSlot.index);
+          break;
         }
       }
 
-      return { ...player, canFillAny, availableSlots };
+      return { ...player, canFillAny };
     });
 
     // Sort by selected mode
@@ -94,88 +86,41 @@ export default function PlayerList() {
   }, [currentSpin, openPositions, sortMode]);
 
   const handlePlayerClick = (player: ProcessedPlayer) => {
-    if (!player.canFillAny) {
-      toast.error(`${getLastName(player.fullName)} не подходит ни на одну позицию`);
+    // If player can't fill any position, do nothing (grayed out)
+    if (!player.canFillAny) return;
+
+    // If this player is already selected, deselect
+    if (selectedPlayer?.playerSeasonId === player.playerSeasonId) {
+      // Deselect by selecting null — we call selectPlayer with the same player
+      // and the store will toggle or just re-set; but per spec, clicking another
+      // player switches selection, so let's deselect by calling selectPlayer again.
+      // Actually, the store doesn't have a deselectPlayer. Let's just select the
+      // new player. If it's the same one, the store will just re-select it.
+      // For deselect, we can call selectPlayer with a dummy or handle it differently.
+      // Since the user requirement says "clicking another player switches selection",
+      // we'll just always call selectPlayer. Same player = re-select (no-op feel).
       return;
     }
 
-    // Prevent double-click
-    if (assigningPlayerId || placingPlayerId) return;
-
-    // If player can fill exactly one slot, assign directly without intermediate state
-    if (player.availableSlots.length === 1) {
-      const slotIdx = player.availableSlots[0];
-      const slot = slots[slotIdx];
-      // Show "placing" animation briefly before assigning
-      setPlacingPlayerId(player.playerSeasonId);
-      setTimeout(() => {
-        setAssigningPlayerId(player.playerSeasonId);
-        setPlacingPlayerId(null);
-        directAssign(player as PlayerOption, slotIdx).then(() => {
-          // Show success toast
-          toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
-            duration: 2000,
-          });
-          setAssigningPlayerId(null);
-          // Haptic feedback for Telegram
-          tgNotify('success');
-          tgHaptic('medium');
-          // Scroll to pitch to show the player placed
-          requestAnimationFrame(() => {
-            const pitchEl = document.querySelector('[data-pitch-section]');
-            pitchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          });
-        }).catch(() => {
-          setAssigningPlayerId(null);
-          tgNotify('error');
-        });
-      }, 300); // Brief delay for "placing" visual feedback
-      setExpandedPlayerId(null);
-      return;
-    }
-
-    // Multiple positions — toggle expanded state
-    if (expandedPlayerId === player.playerSeasonId) {
-      setExpandedPlayerId(null);
-      return;
-    }
-
-    setExpandedPlayerId(player.playerSeasonId);
-  };
-
-  const handlePositionSelect = (player: ProcessedPlayer, slotIndex: number) => {
-    if (assigningPlayerId || placingPlayerId) return;
-    const slot = slots[slotIndex];
-    // Show "placing" animation briefly before assigning
-    setPlacingPlayerId(player.playerSeasonId);
-    setTimeout(() => {
-      setAssigningPlayerId(player.playerSeasonId);
-      setPlacingPlayerId(null);
-      directAssign(player as PlayerOption, slotIndex).then(() => {
-        toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
-          duration: 2000,
-        });
-        setAssigningPlayerId(null);
-        // Haptic feedback for Telegram
-        tgNotify('success');
-        tgHaptic('medium');
-        // Scroll to pitch to show the player placed
-        requestAnimationFrame(() => {
-          const pitchEl = document.querySelector('[data-pitch-section]');
-          pitchEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }).catch(() => {
-        setAssigningPlayerId(null);
-        tgNotify('error');
-      });
-    }, 300);
-    setExpandedPlayerId(null);
+    // Select the player — no auto-assignment, user must click position on pitch
+    selectPlayer(player as PlayerOption);
   };
 
   if (!currentSpin) return null;
 
   return (
     <div className="space-y-3">
+      {/* ── Instruction text ── */}
+      {selectedPlayer && (
+        <motion.div
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[11px] text-[#22c55e] font-medium bg-[#22c55e]/10 border border-[#22c55e]/20 rounded-lg px-3 py-2 text-center"
+        >
+          Выберите игрока, затем нажмите на позицию на поле
+        </motion.div>
+      )}
+
       {/* ── Sort controls ── */}
       <div className="flex items-center gap-3">
         <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">
@@ -206,147 +151,79 @@ export default function PlayerList() {
       </div>
 
       {/* ── Player list ── */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {processedPlayers.map((player, idx) => {
-          const isExpanded = expandedPlayerId === player.playerSeasonId;
+          const isSelected = selectedPlayer?.playerSeasonId === player.playerSeasonId;
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
           const flagEmoji = getNationalityFlag(player.nationality);
-          const isAssigning = assigningPlayerId === player.playerSeasonId;
-          const isPlacing = placingPlayerId === player.playerSeasonId;
 
           return (
-            <div key={player.playerSeasonId}>
-              <motion.button
-                onClick={() => handlePlayerClick(player)}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                disabled={!!assigningPlayerId || !!placingPlayerId}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
-                  isPlacing
-                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e]/60 scale-[0.98]'
-                    : isAssigning
-                    ? 'bg-[#22c55e]/10 border border-[#22c55e]/40 opacity-80'
-                    : !player.canFillAny
-                    ? 'opacity-40 cursor-not-allowed'
-                    : isExpanded
-                    ? 'bg-[#0d2d0d] border border-[#22c55e]/40'
-                    : 'bg-[#0d1a0d]/80 border border-transparent hover:border-[#22c55e]/20 hover:bg-[#0d2d0d]/50'
-                }`}
+            <motion.button
+              key={player.playerSeasonId}
+              onClick={() => handlePlayerClick(player)}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(idx * 0.03, 0.5) }}
+              className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left ${
+                isSelected
+                  ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.3)]'
+                  : !player.canFillAny
+                  ? 'opacity-35 cursor-not-allowed border-2 border-transparent'
+                  : 'bg-[#0d1a0d]/80 border-2 border-transparent hover:border-[#22c55e]/30 hover:bg-[#0d2d0d]/50'
+              }`}
+            >
+              {/* Rating square — color-coded by position category */}
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
+                style={{ backgroundColor: posColor }}
               >
-                {/* Rating square — color-coded by position category */}
-                <div
-                  className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
-                  style={{ backgroundColor: posColor }}
-                >
-                  {isPlacing ? '⏳' : isAssigning ? '...' : isHard ? '?' : player.rating}
+                {isHard ? '?' : player.rating}
+              </div>
+
+              {/* Name, flag, positions */}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm leading-tight truncate">
+                  <span className="font-bold text-[#e2e8f0]">{getLastName(player.fullName)}</span>{' '}
+                  <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>
+                  {flagEmoji && <span className="ml-1">{flagEmoji}</span>}
                 </div>
-
-                {/* Name, flag, positions */}
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold text-[#e2e8f0] truncate">
-                    {getLastName(player.fullName)}{' '}
-                    <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>
-                    {flagEmoji && <span className="ml-1.5">{flagEmoji}</span>}
-                  </div>
-                  {/* Position badges */}
-                  <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    {[player.mainPosition, ...player.otherPositions].map((pos, posIdx) => {
-                      const cat = getCategory(pos);
-                      return (
-                        <span
-                          key={`${pos}-${posIdx}`}
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white/90"
-                          style={{ backgroundColor: `${CATEGORY_BG[cat]}99` }}
-                        >
-                          {pos}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Arrow if multiple positions */}
-                {player.canFillAny && player.availableSlots.length > 1 && (
-                  <motion.span
-                    animate={{ rotate: isExpanded ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-[#64748b] text-xs shrink-0"
-                  >
-                    ▼
-                  </motion.span>
-                )}
-
-                {/* Placing indicator */}
-                {isPlacing && (
-                  <motion.span
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                    className="text-[#22c55e] text-xs font-bold shrink-0"
-                  >
-                    Ставим...
-                  </motion.span>
-                )}
-
-                {/* Auto-assign indicator */}
-                {player.canFillAny && player.availableSlots.length === 1 && !isAssigning && !isPlacing && (
-                  <span className="text-[10px] text-[#22c55e] font-bold shrink-0">✓</span>
-                )}
-
-                {/* Assigning spinner */}
-                {isAssigning && (
-                  <motion.span
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="text-[#22c55e] text-sm shrink-0"
-                  >
-                    ⟳
-                  </motion.span>
-                )}
-              </motion.button>
-
-              {/* ── Expanded: Position selection buttons ── */}
-              <AnimatePresence>
-                {isExpanded && player.availableSlots.length > 1 && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-3 py-2.5 bg-[#0a1a0a] rounded-b-xl border border-t-0 border-[#22c55e]/15">
-                      <span className="text-[10px] text-[#22c55e] font-bold uppercase tracking-wider mb-2 block">
-                        Поставить на ({player.availableSlots.length})
+                {/* Position badges */}
+                <div className="flex items-center gap-1 mt-1 flex-wrap">
+                  {[player.mainPosition, ...player.otherPositions].map((pos, posIdx) => {
+                    const cat = getCategory(pos);
+                    return (
+                      <span
+                        key={`${pos}-${posIdx}`}
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white/90"
+                        style={{ backgroundColor: `${CATEGORY_BG[cat]}99` }}
+                      >
+                        {pos}
                       </span>
-                      <div className="flex flex-wrap gap-2">
-                        {player.availableSlots.map((slotIdx) => {
-                          const slot = slots[slotIdx];
-                          if (!slot) return null;
-                          const slotCat = getCategory(slot.position);
-                          return (
-                            <motion.button
-                              key={slotIdx}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePositionSelect(player, slotIdx);
-                              }}
-                              disabled={!!assigningPlayerId || !!placingPlayerId}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:brightness-110 shadow-sm disabled:opacity-50"
-                              style={{ backgroundColor: CATEGORY_BG[slotCat] }}
-                            >
-                              {slot.positionLabel}
-                            </motion.button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Selected checkmark */}
+              {isSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                  className="shrink-0 w-6 h-6 rounded-full bg-[#22c55e] flex items-center justify-center"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7.5L5.5 10L11 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </motion.div>
+              )}
+
+              {/* Arrow indicator for selectable but not selected */}
+              {!isSelected && player.canFillAny && (
+                <span className="text-[#4a5a4a] text-xs shrink-0">›</span>
+              )}
+            </motion.button>
           );
         })}
       </div>

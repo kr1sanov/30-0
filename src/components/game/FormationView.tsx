@@ -6,175 +6,175 @@ import {
   POSITION_CATEGORY,
   POSITION_COLOR,
   canFillSlot,
-  getCompatiblePositions,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
+// ---------------------------------------------------------------------------
 // Formation position layout coordinates (percentage-based)
+// ---------------------------------------------------------------------------
 const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
   '4-3-3': [
-    { row: 90, col: 50 },  // ВР
-    { row: 70, col: 20 },  // ПЗ
-    { row: 70, col: 40 },  // ЦЗ
-    { row: 70, col: 60 },  // ЦЗ
-    { row: 70, col: 80 },  // ЛЗ
-    { row: 50, col: 25 },  // ЦП
-    { row: 50, col: 50 },  // ЦП
-    { row: 50, col: 75 },  // ЦП
-    { row: 25, col: 20 },  // ПВ
-    { row: 25, col: 50 },  // НП
-    { row: 25, col: 80 },  // ЛВ
+    { row: 88, col: 50 },  // ВР
+    { row: 68, col: 18 },  // ПЗ
+    { row: 68, col: 39 },  // ЦЗ
+    { row: 68, col: 61 },  // ЦЗ
+    { row: 68, col: 82 },  // ЛЗ
+    { row: 48, col: 24 },  // ЦП
+    { row: 48, col: 50 },  // ЦП
+    { row: 48, col: 76 },  // ЦП
+    { row: 24, col: 18 },  // ПВ
+    { row: 24, col: 50 },  // НП
+    { row: 24, col: 82 },  // ЛВ
   ],
   '4-4-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 45, col: 20 },
-    { row: 45, col: 40 },
-    { row: 45, col: 60 },
-    { row: 45, col: 80 },
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 44, col: 18 },
+    { row: 44, col: 39 },
+    { row: 44, col: 61 },
+    { row: 44, col: 82 },
     { row: 22, col: 35 },
     { row: 22, col: 65 },
   ],
   '4-2-3-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 53, col: 35 },
-    { row: 53, col: 65 },
-    { row: 35, col: 20 },
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 52, col: 35 },
+    { row: 52, col: 65 },
+    { row: 35, col: 18 },
     { row: 35, col: 50 },
-    { row: 35, col: 80 },
-    { row: 18, col: 50 },
+    { row: 35, col: 82 },
+    { row: 16, col: 50 },
   ],
   '3-5-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 },
-    { row: 70, col: 50 },
-    { row: 70, col: 75 },
-    { row: 48, col: 10 },
-    { row: 48, col: 35 },
-    { row: 48, col: 50 },
-    { row: 48, col: 65 },
-    { row: 48, col: 90 },
+    { row: 88, col: 50 },
+    { row: 68, col: 25 },
+    { row: 68, col: 50 },
+    { row: 68, col: 75 },
+    { row: 46, col: 10 },
+    { row: 46, col: 33 },
+    { row: 46, col: 50 },
+    { row: 46, col: 67 },
+    { row: 46, col: 90 },
     { row: 22, col: 35 },
     { row: 22, col: 65 },
   ],
   '3-4-3': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 },
-    { row: 70, col: 50 },
-    { row: 70, col: 75 },
-    { row: 45, col: 20 },
-    { row: 45, col: 40 },
-    { row: 45, col: 60 },
-    { row: 45, col: 80 },
-    { row: 22, col: 20 },
+    { row: 88, col: 50 },
+    { row: 68, col: 25 },
+    { row: 68, col: 50 },
+    { row: 68, col: 75 },
+    { row: 44, col: 18 },
+    { row: 44, col: 39 },
+    { row: 44, col: 61 },
+    { row: 44, col: 82 },
+    { row: 22, col: 18 },
     { row: 22, col: 50 },
-    { row: 22, col: 80 },
+    { row: 22, col: 82 },
   ],
   '5-3-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 10 },
-    { row: 70, col: 30 },
-    { row: 70, col: 50 },
-    { row: 70, col: 70 },
-    { row: 70, col: 90 },
-    { row: 45, col: 25 },
-    { row: 45, col: 50 },
-    { row: 45, col: 75 },
+    { row: 88, col: 50 },
+    { row: 68, col: 10 },
+    { row: 68, col: 30 },
+    { row: 68, col: 50 },
+    { row: 68, col: 70 },
+    { row: 68, col: 90 },
+    { row: 44, col: 25 },
+    { row: 44, col: 50 },
+    { row: 44, col: 75 },
     { row: 22, col: 35 },
     { row: 22, col: 65 },
   ],
   '5-4-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 10 },
-    { row: 70, col: 30 },
-    { row: 70, col: 50 },
-    { row: 70, col: 70 },
-    { row: 70, col: 90 },
-    { row: 45, col: 15 },
-    { row: 45, col: 38 },
-    { row: 45, col: 62 },
-    { row: 45, col: 85 },
-    { row: 20, col: 50 },
-  ],
-  '4-1-4-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 53, col: 50 },
-    { row: 38, col: 15 },
-    { row: 38, col: 38 },
-    { row: 38, col: 62 },
-    { row: 38, col: 85 },
+    { row: 88, col: 50 },
+    { row: 68, col: 10 },
+    { row: 68, col: 30 },
+    { row: 68, col: 50 },
+    { row: 68, col: 70 },
+    { row: 68, col: 90 },
+    { row: 44, col: 15 },
+    { row: 44, col: 38 },
+    { row: 44, col: 62 },
+    { row: 44, col: 85 },
     { row: 18, col: 50 },
   ],
-  '4-5-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 45, col: 15 },
-    { row: 45, col: 35 },
-    { row: 45, col: 50 },
-    { row: 45, col: 65 },
-    { row: 45, col: 85 },
-    { row: 20, col: 50 },
-  ],
-  '4-4-1-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 48, col: 15 },
-    { row: 48, col: 38 },
-    { row: 48, col: 62 },
-    { row: 48, col: 85 },
-    { row: 30, col: 50 },
+  '4-1-4-1': [
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 52, col: 50 },
+    { row: 36, col: 15 },
+    { row: 36, col: 38 },
+    { row: 36, col: 62 },
+    { row: 36, col: 85 },
     { row: 16, col: 50 },
   ],
+  '4-5-1': [
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 44, col: 15 },
+    { row: 44, col: 35 },
+    { row: 44, col: 50 },
+    { row: 44, col: 65 },
+    { row: 44, col: 85 },
+    { row: 18, col: 50 },
+  ],
+  '4-4-1-1': [
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 46, col: 15 },
+    { row: 46, col: 38 },
+    { row: 46, col: 62 },
+    { row: 46, col: 85 },
+    { row: 28, col: 50 },
+    { row: 14, col: 50 },
+  ],
   '3-4-1-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 },
-    { row: 70, col: 50 },
-    { row: 70, col: 75 },
-    { row: 48, col: 15 },
-    { row: 48, col: 38 },
-    { row: 48, col: 62 },
-    { row: 48, col: 85 },
-    { row: 32, col: 50 },
-    { row: 18, col: 35 },
-    { row: 18, col: 65 },
+    { row: 88, col: 50 },
+    { row: 68, col: 25 },
+    { row: 68, col: 50 },
+    { row: 68, col: 75 },
+    { row: 46, col: 15 },
+    { row: 46, col: 38 },
+    { row: 46, col: 62 },
+    { row: 46, col: 85 },
+    { row: 30, col: 50 },
+    { row: 16, col: 35 },
+    { row: 16, col: 65 },
   ],
   '4-2-2-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 },
-    { row: 70, col: 40 },
-    { row: 70, col: 60 },
-    { row: 70, col: 80 },
-    { row: 50, col: 30 },
-    { row: 50, col: 70 },
-    { row: 33, col: 30 },
-    { row: 33, col: 70 },
-    { row: 18, col: 35 },
-    { row: 18, col: 65 },
+    { row: 88, col: 50 },
+    { row: 68, col: 18 },
+    { row: 68, col: 39 },
+    { row: 68, col: 61 },
+    { row: 68, col: 82 },
+    { row: 48, col: 30 },
+    { row: 48, col: 70 },
+    { row: 31, col: 30 },
+    { row: 31, col: 70 },
+    { row: 16, col: 35 },
+    { row: 16, col: 65 },
   ],
 };
 
-// Updated rating color tiers (Task 1c):
-//   78+: Gold, 73-77: Green, 68-72: Orange, <68: Red
+// Rating color tiers
 function getRatingColor(rating: number): string {
   if (rating >= 78) return '#fbbf24';
   if (rating >= 73) return '#22c55e';
@@ -182,23 +182,24 @@ function getRatingColor(rating: number): string {
   return '#ef4444';
 }
 
-// Position category ring colors (Task 1a)
-const CATEGORY_RING_COLOR: Record<PositionCategory, string> = {
-  gk: '#f97316', // orange
-  def: '#3b82f6', // blue
-  mid: '#22c55e', // green
-  att: '#ef4444', // red
-};
-
-// Chemistry color mapping (Task 3d)
-function getChemistryColor(chem: number): string {
-  if (chem >= 100) return '#22c55e';
-  if (chem >= 80) return '#a3e635';
-  if (chem >= 60) return '#facc15';
-  if (chem >= 40) return '#f97316';
-  return '#ef4444';
+// Get 2-letter initials from last name
+function getInitials(lastName?: string, fullName?: string): string {
+  if (lastName) {
+    const parts = lastName.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return lastName.slice(0, 2).toUpperCase();
+  }
+  if (fullName) {
+    const parts = fullName.trim().split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return '??';
 }
 
+// ---------------------------------------------------------------------------
+// Main Component
+// ---------------------------------------------------------------------------
 export default function FormationView() {
   const {
     config,
@@ -207,24 +208,22 @@ export default function FormationView() {
     movingPlayerSlotIndex,
     assignToSlot,
     movePlayer,
+    finishMoving,
     screen,
     justAssignedSlotIndex,
   } = useGameStore();
 
   const [shakingSlot, setShakingSlot] = useState<number | null>(null);
-  const [hoveredSlot, setHoveredSlot] = useState<number | null>(null);
 
   const layout = FORMATION_LAYOUTS[config.formation] ?? FORMATION_LAYOUTS['4-3-3'];
 
   const filledCount = slots.filter((s) => s.playerId).length;
   const openCount = 11 - filledCount;
 
-  // Get compatible positions for the selected player
-  const compatiblePositions = selectedPlayer
-    ? getCompatiblePositions(selectedPlayer.mainPosition as Position)
-    : [];
+  // Is the squad complete and we can move players?
+  const canMove = screen === 'squad-complete' || screen === 'position-assign';
 
-  // Average rating of filled players (with penalty applied)
+  // Average rating
   const avgRating = useMemo(() => {
     const filled = slots.filter((s) => s.playerId && s.playerRating);
     if (filled.length === 0) return null;
@@ -252,47 +251,20 @@ export default function FormationView() {
     const slot = slots[index];
     if (!slot) return;
 
-    // If we have a selected player and the slot is empty, try to assign
-    if (selectedPlayer && !slot.playerId) {
-      const { canFill } = canFillSlot(
-        selectedPlayer.mainPosition as Position,
-        selectedPlayer.otherPositions as Position[],
-        slot.position as Position,
-      );
-      if (canFill) {
-        toast.success(`${selectedPlayer.fullName} назначен на ${slot.positionLabel}`);
-        assignToSlot(index);
-      } else {
-        // Trigger shake animation on incompatible slot
-        triggerShake(index);
-        toast.error(`${selectedPlayer.fullName} не может играть на позиции ${slot.positionLabel}`);
-      }
-      return;
-    }
-
-    // Move mode logic
+    // --- Moving mode: a player is selected for move ---
     if (movingPlayerSlotIndex !== null) {
-      if (movingPlayerSlotIndex === -1) {
-        // Move mode active but no player selected yet — select this filled player
-        if (slot.playerId) {
-          useGameStore.setState({ movingPlayerSlotIndex: index });
-        }
-        return;
-      }
-
       if (movingPlayerSlotIndex === index) {
-        // Deselect — cancel move for this player
-        useGameStore.setState({ movingPlayerSlotIndex: -1 });
+        // Deselect — cancel move
+        finishMoving();
         return;
       }
 
-      // A player is selected and we clicked another slot
+      const sourceSlot = slots[movingPlayerSlotIndex];
       if (slot.playerId) {
-        // Swap the two players
+        // Swap two filled players
         movePlayer(movingPlayerSlotIndex, index);
       } else {
-        // Empty slot — check if the moving player can fill it
-        const sourceSlot = slots[movingPlayerSlotIndex];
+        // Move to empty slot — check compatibility
         if (sourceSlot?.playerPosition) {
           const { canFill } = canFillSlot(
             sourceSlot.playerPosition as Position,
@@ -303,204 +275,214 @@ export default function FormationView() {
             movePlayer(movingPlayerSlotIndex, index);
           } else {
             triggerShake(index);
-            toast.error(`${sourceSlot.playerName} не может играть на позиции ${slot.positionLabel}`);
+            toast.error(`${sourceSlot.playerName} не может играть на ${slot.positionLabel}`);
           }
         }
       }
       return;
     }
 
-    // If the slot is filled and we're in squad-complete or position-assign, start moving
-    if (slot.playerId && (screen === 'squad-complete' || screen === 'position-assign')) {
-      if (movingPlayerSlotIndex === null) {
-        useGameStore.setState({ movingPlayerSlotIndex: index });
-      } else if (movingPlayerSlotIndex !== index) {
-        movePlayer(movingPlayerSlotIndex, index);
+    // --- Selected player: assign to empty compatible slot ---
+    if (selectedPlayer && !slot.playerId) {
+      const { canFill } = canFillSlot(
+        selectedPlayer.mainPosition as Position,
+        selectedPlayer.otherPositions as Position[],
+        slot.position as Position,
+      );
+      if (canFill) {
+        toast.success(`${selectedPlayer.fullName} → ${slot.positionLabel}`);
+        assignToSlot(index);
+      } else {
+        triggerShake(index);
+        toast.error('Несовместимая позиция');
       }
+      return;
+    }
+
+    // --- Click filled player to start moving ---
+    if (slot.playerId && canMove) {
+      useGameStore.setState({ movingPlayerSlotIndex: index });
     }
   };
 
-  // ----- Task 2c: Connection lines from moving source to valid swap/move targets -----
-  const swapTargets = useMemo(() => {
-    if (movingPlayerSlotIndex === null || movingPlayerSlotIndex < 0) return [];
-    const source = layout[movingPlayerSlotIndex];
-    if (!source) return [];
+  // Determine which slots are valid targets for the moving player
+  const movingTargets = useMemo(() => {
+    if (movingPlayerSlotIndex === null || movingPlayerSlotIndex < 0) return new Set<number>();
     const sourceSlot = slots[movingPlayerSlotIndex];
-    const targets: { from: { row: number; col: number }; to: { row: number; col: number }; isEmpty?: boolean }[] = [];
+    if (!sourceSlot?.playerPosition) return new Set<number>();
+    const targets = new Set<number>();
     slots.forEach((s, i) => {
       if (i === movingPlayerSlotIndex) return;
-      const to = layout[i];
-      if (!to) return;
       if (s.playerId) {
-        // Filled slot — swap
-        targets.push({ from: source, to });
-      } else if (sourceSlot?.playerPosition) {
-        // Empty slot — can move if compatible
+        // Any filled slot can be swapped
+        targets.add(i);
+      } else {
         const { canFill } = canFillSlot(
           sourceSlot.playerPosition as Position,
           (sourceSlot.playerOtherPositions ?? []) as Position[],
           s.position as Position,
         );
-        if (canFill) {
-          targets.push({ from: source, to, isEmpty: true });
-        }
+        if (canFill) targets.add(i);
       }
     });
     return targets;
-  }, [movingPlayerSlotIndex, slots, layout]);
+  }, [movingPlayerSlotIndex, slots]);
+
+  // Connection lines for moving mode
+  const swapLines = useMemo(() => {
+    if (movingPlayerSlotIndex === null || movingPlayerSlotIndex < 0) return [];
+    const from = layout[movingPlayerSlotIndex];
+    if (!from) return [];
+    const lines: { from: { row: number; col: number }; to: { row: number; col: number } }[] = [];
+    movingTargets.forEach((i) => {
+      const to = layout[i];
+      if (to) lines.push({ from, to });
+    });
+    return lines;
+  }, [movingPlayerSlotIndex, movingTargets, layout]);
 
   return (
-    <div className="relative w-full">
-      {/* Selected player prompt — click on pitch to assign */}
-      {selectedPlayer && compatiblePositions.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-3 px-3 py-2 rounded-xl bg-[#0d2d0d] border border-[#22c55e]/20 flex items-center gap-2 flex-wrap"
-        >
-          <span className="text-xs text-[#94a3b8] shrink-0">
-            Нажмите на зелёную позицию для
-          </span>
-          <span className="text-xs font-bold text-[#22c55e]">
-            {selectedPlayer.fullName}
-          </span>
-          <span className="text-xs text-[#94a3b8]">({selectedPlayer.rating})</span>
-        </motion.div>
-      )}
+    <div className="relative w-full flex flex-col items-center">
+      {/* Selected player prompt */}
+      <AnimatePresence>
+        {selectedPlayer && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="mb-2 px-3 py-1.5 rounded-lg bg-[#0d2d0d]/90 border border-[#22c55e]/25 flex items-center gap-1.5 flex-wrap"
+          >
+            <span className="text-[10px] text-[#94a3b8]">Нажмите на</span>
+            <span className="text-[10px] font-bold text-[#22c55e]">зелёную</span>
+            <span className="text-[10px] text-[#94a3b8]">позицию для</span>
+            <span className="text-[10px] font-bold text-white">
+              {selectedPlayer.fullName}
+            </span>
+            <span className="text-[10px] text-[#94a3b8]">({selectedPlayer.rating})</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Pitch */}
+      {/* Moving player prompt */}
+      <AnimatePresence>
+        {movingPlayerSlotIndex !== null && movingPlayerSlotIndex >= 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            className="mb-2 px-3 py-1.5 rounded-lg bg-[#2d1d0d]/90 border border-[#facc15]/25 flex items-center gap-1.5 flex-wrap"
+          >
+            <span className="text-[10px] text-[#94a3b8]">Выберите позицию для обмена с</span>
+            <span className="text-[10px] font-bold text-[#facc15]">
+              {slots[movingPlayerSlotIndex]?.playerName}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== Compact Pitch ===== */}
       <div
-        className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
-        style={{ paddingBottom: '45%' }}
+        className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
+        style={{ maxWidth: '360px', paddingBottom: '62%' }}
       >
-        {/* Pitch stripe pattern */}
+        {/* Pitch base — dark green */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
+
+        {/* Subtle stripe pattern */}
         <div
-          className="absolute inset-0 pitch-stripes"
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(0deg, transparent 0px, transparent 18px, rgba(255,255,255,0.4) 18px, rgba(255,255,255,0.4) 36px)',
+          }}
         />
 
         {/* V-shaped mowing pattern */}
-        <div className="absolute inset-0 pitch-mowing-pattern pointer-events-none" aria-hidden />
-
-        {/* Pitch grass texture lines (vertical) */}
-        <div className="absolute inset-0 pitch-grass-lines" />
-
-        {/* ===== Task 4a: Diagonal mowing pattern overlay ===== */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-[0.04]"
           style={{
             backgroundImage:
-              'repeating-linear-gradient(60deg, transparent 0px, transparent 36px, rgba(255,255,255,0.025) 36px, rgba(255,255,255,0.025) 72px)',
-          }}
-          aria-hidden
-        />
-
-        {/* Pitch gradient overlay for depth */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%)',
+              'repeating-linear-gradient(60deg, transparent 0px, transparent 40px, rgba(255,255,255,0.3) 40px, rgba(255,255,255,0.3) 80px)',
           }}
         />
-
-        {/* Pitch vignette overlay — darker at edges */}
-        <div className="absolute inset-0 pitch-vignette pointer-events-none" />
 
         {/* Pitch border outline */}
-        <div className="absolute inset-3 sm:inset-4 rounded-sm border-2 border-white/20" />
+        <div className="absolute inset-2.5 sm:inset-3 rounded-sm border border-white/15" />
 
         {/* Center line */}
-        <div className="absolute inset-x-3 sm:inset-x-4 top-1/2 h-px bg-white/20" />
+        <div className="absolute inset-x-2.5 sm:inset-x-3 top-1/2 h-px bg-white/12" />
 
         {/* Center circle */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-20 sm:h-20 rounded-full border border-white/20 flex items-center justify-center">
-        </div>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/12" />
 
         {/* Center dot */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white/30" />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20" />
 
-        {/* Top penalty box */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-36 sm:w-44 h-16 sm:h-20 border-b border-x border-white/20" />
-        {/* Top goal box */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-3 sm:top-4 w-20 sm:w-24 h-8 border-b border-x border-white/20" />
+        {/* Top penalty area */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-24 sm:w-28 h-10 border-b border-x border-white/10" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-12 sm:w-14 h-5 border-b border-x border-white/10" />
 
-        {/* Bottom penalty box */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-36 sm:w-44 h-16 sm:h-20 border-t border-x border-white/20" />
-        {/* Bottom goal box */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 sm:bottom-4 w-20 sm:w-24 h-8 border-t border-x border-white/20" />
+        {/* Bottom penalty area */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-24 sm:w-28 h-10 border-t border-x border-white/10" />
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-12 sm:w-14 h-5 border-t border-x border-white/10" />
 
-        {/* ===== Task 2c: SVG connection lines from source slot to valid swap targets ===== */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 100 90"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          {swapTargets.map((t, i) => (
-            <motion.line
-              key={i}
-              x1={t.from.col}
-              y1={t.from.row * 0.9}
-              x2={t.to.col}
-              y2={t.to.row * 0.9}
-              stroke="rgba(250, 204, 21, 0.7)"
-              strokeWidth={0.4}
-              strokeDasharray="1.5 1"
-              className="animate-swap-line-glow"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 1 }}
-              transition={{ duration: 0.3, delay: i * 0.03 }}
-            />
-          ))}
-        </svg>
+        {/* SVG connection lines for move mode */}
+        {swapLines.length > 0 && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            viewBox="0 0 100 88"
+            preserveAspectRatio="none"
+            aria-hidden
+          >
+            {swapLines.map((l, i) => (
+              <motion.line
+                key={i}
+                x1={l.from.col}
+                y1={l.from.row * 0.88}
+                x2={l.to.col}
+                y2={l.to.row * 0.88}
+                stroke="rgba(250, 204, 21, 0.6)"
+                strokeWidth={0.4}
+                strokeDasharray="1.5 1"
+                initial={{ pathLength: 0, opacity: 0 }}
+                animate={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 0.25, delay: i * 0.02 }}
+              />
+            ))}
+          </svg>
+        )}
 
-        {/* Position Slots */}
+        {/* ===== Position Slots ===== */}
         {slots.map((slot, index) => {
           const pos = layout[index];
           if (!pos) return null;
 
           const category = POSITION_CATEGORY[slot.position as Position] ?? ('mid' as PositionCategory);
           const color = POSITION_COLOR[category];
-          const ringColor = CATEGORY_RING_COLOR[category];
           const isFilled = !!slot.playerId;
-          const isSelected = movingPlayerSlotIndex === index;
-          const isCompatible = selectedPlayer
-            ? canFillSlot(
-                selectedPlayer.mainPosition as Position,
-                selectedPlayer.otherPositions as Position[],
-                slot.position as Position,
-              ).canFill
-            : false;
-          const isIncompatible = selectedPlayer && !isFilled && !isCompatible;
+          const isMoving = movingPlayerSlotIndex === index;
+          const isJustAssigned = justAssignedSlotIndex === index && isFilled;
           const isShaking = shakingSlot === index;
 
-          // Valid swap target = another filled slot while a move is in progress
-          // Also highlight empty slots where the moving player can be placed
-          const isSwapTarget =
-            movingPlayerSlotIndex !== null &&
-            movingPlayerSlotIndex >= 0 &&
-            movingPlayerSlotIndex !== index &&
-            isFilled;
+          // Can the selected player fill this empty slot?
+          const isCompatible =
+            selectedPlayer && !isFilled
+              ? canFillSlot(
+                  selectedPlayer.mainPosition as Position,
+                  selectedPlayer.otherPositions as Position[],
+                  slot.position as Position,
+                ).canFill
+              : false;
 
-          // Empty slot that the moving player can fill
-          const isMoveTarget =
-            movingPlayerSlotIndex !== null &&
-            movingPlayerSlotIndex >= 0 &&
-            movingPlayerSlotIndex !== index &&
-            !isFilled &&
-            (() => {
-              const sourceSlot = slots[movingPlayerSlotIndex];
-              if (!sourceSlot?.playerPosition) return false;
-              return canFillSlot(
-                sourceSlot.playerPosition as Position,
-                (sourceSlot.playerOtherPositions ?? []) as Position[],
-                slot.position as Position,
-              ).canFill;
-            })();
+          // Is this an incompatible empty slot while a player is selected?
+          const isIncompatible = !!selectedPlayer && !isFilled && !isCompatible;
 
-          // ===== Task 1b: Compatibility info for filled slot =====
+          // Is this a valid target while moving?
+          const isMoveTarget = movingTargets.has(index) && movingPlayerSlotIndex !== index;
+
+          // Compatibility info for filled slot
           let compatKind: 'full' | 'partial' | null = null;
           let effectiveRating = slot.playerRating;
-          let baseRating = slot.playerRating;
           if (isFilled && slot.playerPosition) {
             const { penalty } = canFillSlot(
               slot.playerPosition as Position,
@@ -514,238 +496,184 @@ export default function FormationView() {
             }
           }
 
-          // Tooltip direction: above if slot is in bottom half, below if in top half
-          const tooltipBelow = pos.row < 50;
-
-          // All positions the assigned player can play (for tooltip)
-          const playerAllPositions: string[] = isFilled && slot.playerPosition
-            ? [slot.playerPosition, ...(slot.playerOtherPositions ?? [])]
-            : [];
-
-          const isJustAssigned = justAssignedSlotIndex === index && isFilled;
-
           return (
             <motion.button
               key={index}
               onClick={() => handleSlotClick(index)}
-              onMouseEnter={() => isFilled && setHoveredSlot(index)}
-              onMouseLeave={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
-              onFocus={() => isFilled && setHoveredSlot(index)}
-              onBlur={() => setHoveredSlot((prev) => (prev === index ? null : prev))}
               className={`absolute -translate-x-1/2 -translate-y-1/2 ${
-                isSelected ? 'z-20' : isSwapTarget ? 'z-10' : ''
+                isMoving ? 'z-20' : isMoveTarget ? 'z-10' : ''
               } ${isShaking ? 'animate-shake' : ''} ${isJustAssigned ? 'z-30' : ''}`}
               style={{
                 top: `${pos.row}%`,
                 left: `${pos.col}%`,
               }}
-              whileTap={isFilled || isCompatible ? { scale: 0.92 } : undefined}
+              whileTap={isFilled || isCompatible || isMoveTarget ? { scale: 0.9 } : undefined}
               aria-label={
                 isFilled
-                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
+                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${effectiveRating ?? '?'}`
                   : `Пустая позиция ${slot.positionLabel}`
               }
-              layout
             >
-              {/* Highlight glow ring for just-assigned slot */}
+              {/* Just-assigned glow burst */}
               {isJustAssigned && (
                 <motion.div
-                  className="absolute inset-0 rounded-full"
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: [0.8, 1.8, 2.2, 1.8], opacity: [0, 0.8, 0.4, 0] }}
-                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  className="absolute inset-0 rounded-md"
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: [0.7, 1.6, 2, 1.5], opacity: [0, 0.7, 0.3, 0] }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }}
                   style={{
-                    boxShadow: `0 0 20px 8px ${ringColor}, 0 0 40px 16px ${ringColor}44`,
-                    border: `2px solid ${ringColor}`,
+                    boxShadow: `0 0 16px 6px ${color}, 0 0 32px 12px ${color}44`,
+                    border: `2px solid ${color}`,
                   }}
                 />
               )}
+
+              {/* Position card — small rounded rectangle */}
               <div
-                className={`relative flex flex-col items-center justify-center w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-full border-2 transition-all duration-200 ${
-                  isJustAssigned
-                    ? 'animate-slot-assigned border-white/80 backdrop-blur-sm player-inner-glow player-circle-3d'
-                    : isFilled
-                    ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
-                    : isIncompatible
-                    ? 'border-[#ef4444]/40 border-dashed animate-empty-slot-pulse'
-                    : isMoveTarget
-                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
-                    : isCompatible && !isFilled
-                    ? 'border-[#22c55e] border-dashed animate-strong-pulse-green'
-                    : 'border-white/25 border-dashed animate-empty-slot-pulse'
-                } ${
-                  isSelected
-                    ? 'ring-2 ring-yellow-400 ring-offset-2 ring-offset-[#1a5c30]'
-                    : isSwapTarget
-                    ? 'ring-2 ring-yellow-400/70 ring-offset-1 ring-offset-[#1a5c30]'
-                    : isMoveTarget
-                    ? 'ring-2 ring-[#22c55e]/70 ring-offset-1 ring-offset-[#1a5c30]'
-                    : ''
-                }`}
+                className={`
+                  relative flex flex-col items-center justify-center
+                  rounded-md transition-all duration-200 cursor-pointer select-none
+                  ${isJustAssigned ? 'animate-slot-assigned' : ''}
+                  ${isShaking ? 'animate-shake' : ''}
+                `}
                 style={{
+                  width: isFilled ? '44px' : '32px',
+                  height: isFilled ? '32px' : '24px',
                   backgroundColor: isFilled
-                    ? `${color}dd`
+                    ? `${color}cc`
                     : isIncompatible
-                    ? `${color}15`
+                    ? `${color}10`
+                    : isCompatible || isMoveTarget
+                    ? `${color}30`
+                    : `${color}18`,
+                  border: isFilled
+                    ? `2px solid ${color}`
+                    : isCompatible && !isFilled
+                    ? '2px solid #22c55e'
                     : isMoveTarget
-                    ? `${color}33`
-                    : `${color}22`,
-                  // ===== Task 1a: Position color ring (3px outside) on filled slots =====
-                  boxShadow: isJustAssigned
-                    ? `0 0 0 3px ${ringColor}, 0 0 20px 8px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
-                    : isFilled
-                    ? `0 0 0 3px ${ringColor}, 0 4px 10px rgba(0,0,0,0.45)`
+                    ? '2px solid #22c55e'
+                    : isIncompatible
+                    ? '1px dashed rgba(239,68,68,0.3)'
+                    : '1px dashed rgba(255,255,255,0.2)',
+                  boxShadow: isFilled
+                    ? `0 0 0 2px ${color}88, 0 2px 6px rgba(0,0,0,0.4)`
+                    : isCompatible && !isFilled
+                    ? '0 0 8px 2px rgba(34,197,94,0.5), 0 0 16px 4px rgba(34,197,94,0.2)'
+                    : isMoveTarget
+                    ? '0 0 8px 2px rgba(34,197,94,0.5), 0 0 16px 4px rgba(34,197,94,0.2)'
+                    : undefined,
+                  animation: isCompatible && !isFilled
+                    ? 'strongGreenPulse 1.2s ease-in-out infinite'
+                    : isMoveTarget
+                    ? 'strongGreenPulse 1.2s ease-in-out infinite'
+                    : !isFilled && !isIncompatible
+                    ? 'emptySlotPulse 3s ease-in-out infinite'
                     : undefined,
                 }}
               >
-                {/* ===== Compatibility badge (top-right) ===== */}
-                {isFilled && compatKind && (
-                  <div
-                    className={`absolute -top-1 -right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 rounded-full flex items-center justify-center text-[6px] sm:text-[7px] md:text-[8px] font-black border border-[#0f0f1e] ${
-                      compatKind === 'full'
-                        ? 'bg-[#22c55e] text-white'
-                        : 'bg-[#facc15] text-black'
-                    }`}
-                    aria-label={
-                      compatKind === 'full'
-                        ? 'Полная совместимость'
-                        : 'Частичная совместимость (-20% к рейтингу)'
-                    }
-                  >
-                    {compatKind === 'full' ? '✓' : '⚠'}
-                  </div>
-                )}
-
                 {isFilled ? (
                   <>
-                    {/* Position label inside circle */}
-                    <span
-                      className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-white/80 leading-none"
-                    >
-                      {slot.positionLabel}
-                    </span>
-                    {/* Rating inside circle */}
-                    {slot.playerRating ? (
+                    {/* Rating number — colored by rating tier */}
+                    {slot.playerRating && (
                       <span
-                        className="text-[8px] sm:text-[9px] md:text-[10px] font-black leading-none mt-0.5"
+                        className="text-[9px] font-black leading-none"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
-                          opacity: compatKind === 'partial' ? 0.78 : 1,
+                          opacity: compatKind === 'partial' ? 0.8 : 1,
                         }}
                       >
                         {effectiveRating ?? slot.playerRating}
                       </span>
-                    ) : null}
-                    {/* Player name below the circle — always show last name + flag emoji */}
-                    {slot.playerName && (
+                    )}
+                    {/* 2-letter initials + flag */}
+                    <div className="flex items-center gap-0.5 mt-0.5">
                       <span
-                        className="absolute -bottom-3 sm:-bottom-3.5 md:-bottom-4 left-1/2 -translate-x-1/2 text-[6px] sm:text-[7px] md:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[50px] sm:max-w-[60px] md:max-w-[70px] truncate"
-                        style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                        className="text-[7px] font-bold text-white/90 leading-none"
+                        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}
                       >
-                        {slot.playerLastName || slot.playerName.trim().split(/\s+/)[0]}
-                        {getNationalityFlag(slot.playerNationality) && (
-                          <span className="ml-0.5">{getNationalityFlag(slot.playerNationality)}</span>
-                        )}
+                        {getInitials(slot.playerLastName, slot.playerName)}
+                      </span>
+                      {getNationalityFlag(slot.playerNationality) && (
+                        <span className="text-[6px] leading-none">
+                          {getNationalityFlag(slot.playerNationality)}
+                        </span>
+                      )}
+                    </div>
+                    {/* Position tag */}
+                    <span
+                      className="text-[5px] font-semibold leading-none mt-px px-1 py-px rounded-sm"
+                      style={{
+                        backgroundColor: `${color}44`,
+                        color: 'rgba(255,255,255,0.7)',
+                      }}
+                    >
+                      {slot.positionLabel}
+                    </span>
+                    {/* Partial compatibility indicator */}
+                    {compatKind === 'partial' && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#facc15] flex items-center justify-center text-[5px] font-black text-black border border-black/20">
+                        !
                       </span>
                     )}
                   </>
                 ) : isIncompatible ? (
-                  <div className="flex flex-col items-center">
-                    <span className="text-[8px] sm:text-[10px] font-bold text-[#ef4444]/60 position-label-pill">
-                      {slot.positionLabel}
-                    </span>
-                    <span className="text-[8px] leading-none">❌</span>
-                  </div>
+                  <span className="text-[7px] font-bold text-[#ef4444]/40">{slot.positionLabel}</span>
                 ) : (
-                  <span className="text-[8px] sm:text-[10px] font-bold text-white/60 position-label-pill">
+                  <span
+                    className={`text-[7px] font-bold ${
+                      isCompatible || isMoveTarget ? 'text-[#22c55e]' : 'text-white/40'
+                    }`}
+                  >
                     {slot.positionLabel}
                   </span>
                 )}
-              </div>
 
-              {/* ===== Task 1d: Hover Info Tooltip ===== */}
-              <AnimatePresence>
-                {hoveredSlot === index && isFilled && (
-                  <motion.div
-                    initial={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: tooltipBelow ? -4 : 4 }}
-                    transition={{ duration: 0.15 }}
-                    className={`absolute left-1/2 -translate-x-1/2 z-30 w-max max-w-[200px] pointer-events-none ${
-                      tooltipBelow ? 'top-full mt-2' : 'bottom-full mb-2'
-                    }`}
-                  >
-                    <div className="px-2 py-1.5 rounded-lg bg-[#0f0f1e]/95 border border-white/15 shadow-xl backdrop-blur-sm text-left">
-                      {/* Full name with flag */}
-                      <div className="text-[10px] font-bold text-white leading-tight mb-0.5 truncate">
-                        {slot.playerName ?? 'Игрок'}
-                        {getNationalityFlag(slot.playerNationality) && (
-                          <span className="ml-1">{getNationalityFlag(slot.playerNationality)}</span>
-                        )}
-                      </div>
-
-                      {/* All positions they can play */}
-                      {playerAllPositions.length > 0 && (
-                        <div className="flex items-center gap-1 mb-1 flex-wrap">
-                          <span className="text-[8px] text-[#94a3b8]">Позиции:</span>
-                          {playerAllPositions.map((p) => (
-                            <span
-                              key={p}
-                              className={`text-[7px] font-bold px-0.5 py-0.5 rounded ${
-                                p === slot.position
-                                  ? 'bg-[#22c55e]/25 text-[#4ade80]'
-                                  : 'bg-white/5 text-white/60'
-                              }`}
-                            >
-                              {p}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Rating line — current vs base if penalty applies */}
-                      {slot.playerRating && (
-                        <div className="text-[8px] text-[#94a3b8]">
-                          Рейтинг:{' '}
-                          {compatKind === 'partial' && baseRating ? (
-                            <>
-                              <span className="line-through text-white/40">{baseRating}</span>
-                              <span className="ml-1" style={{ color: getRatingColor(effectiveRating ?? slot.playerRating) }}>
-                                → {effectiveRating}
-                              </span>
-                              <span className="ml-1 text-[#facc15]">(-20%)</span>
-                            </>
-                          ) : (
-                            <span className="font-bold" style={{ color: getRatingColor(slot.playerRating) }}>
-                              {slot.playerRating}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    {/* Arrow */}
-                    <div
-                      className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0f0f1e] border-white/15 ${
-                        tooltipBelow
-                          ? 'top-0 -translate-y-1/2 -rotate-45 border-t border-l'
-                          : 'bottom-0 translate-y-1/2 -rotate-45 border-b border-r'
-                      }`}
-                      aria-hidden
-                    />
-                  </motion.div>
+                {/* Moving indicator ring */}
+                {isMoving && (
+                  <div
+                    className="absolute -inset-1 rounded-md border-2 border-[#facc15] animate-pulse"
+                    style={{ boxShadow: '0 0 8px 2px rgba(250,204,21,0.4)' }}
+                  />
                 )}
-              </AnimatePresence>
+              </div>
             </motion.button>
           );
         })}
       </div>
 
-      {/* Open positions counter */}
-      <div className="flex items-center justify-center mt-1.5">
-        <span className="text-[10px] text-[#94a3b8]">
-          Заполнено: <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
-          {openCount > 0 && <span className="ml-1">· Осталось: {openCount} поз.</span>}
-        </span>
+      {/* Bottom info bar */}
+      <div className="flex items-center justify-between w-full mt-2 px-1" style={{ maxWidth: '360px' }}>
+        {/* Filled count */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] text-[#94a3b8]">
+            <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
+          </span>
+          {avgRating !== null && (
+            <span className="text-[10px] text-[#94a3b8]">
+              · Ср. <span className="font-bold text-white">{avgRating}</span>
+            </span>
+          )}
+        </div>
+
+        {/* Move player button */}
+        {canMove && filledCount > 0 && movingPlayerSlotIndex === null && (
+          <button
+            onClick={() => useGameStore.setState({ movingPlayerSlotIndex: -1 })}
+            className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white/80 transition-colors active:scale-95"
+          >
+            Переставить игрока
+          </button>
+        )}
+
+        {/* Cancel moving */}
+        {movingPlayerSlotIndex !== null && (
+          <button
+            onClick={() => finishMoving()}
+            className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors active:scale-95"
+          >
+            Отмена
+          </button>
+        )}
       </div>
     </div>
   );

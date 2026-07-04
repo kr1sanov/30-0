@@ -7,6 +7,26 @@ import { DIFFICULTY_CONFIG } from '@/lib/types';
 import { MANAGERS } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
 
+/**
+ * ============================================================================
+ * 30-0 RPL — Football Draft Simulator Store
+ * ============================================================================
+ *
+ * CRITICAL FLOW (matching 38-0.app):
+ *
+ * 1. User clicks "Spin the Wheel" → spin() API call, slot machine animation plays
+ * 2. Result: Club × Season appears, player list shows below
+ * 3. User clicks a player from the list → selectPlayer() sets selectedPlayer (NOT auto-assigned!)
+ * 4. FormationView shows available positions highlighted for the selected player
+ * 5. User clicks a position on the football field → assignToSlot() assigns the player
+ * 6. After assignment → selectedPlayer cleared, currentSpin cleared, ready for next spin immediately
+ * 7. Analytics/squad stats update immediately upon placement
+ *
+ * The screen state stays 'draft' throughout the entire draft phase.
+ * Only transitions to 'squad-complete' when all 11 positions are filled.
+ * ============================================================================
+ */
+
 // All available achievements (must match ProfileScreen TROPHIES)
 const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'champion', name: 'Чемпион', description: 'Выиграть чемпионат', icon: '🏆', condition: 'position === 1' },
@@ -219,7 +239,10 @@ export const useGameStore = create<GameState>()(
       // New achievements
       newAchievements: [],
 
-      // Actions
+      // =====================================================================
+      // ACTIONS
+      // =====================================================================
+
       startRun: async () => {
         const { config } = get();
         // Immediately switch to draft screen so the UI feels instant
@@ -294,11 +317,15 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      // -------------------------------------------------------------------
+      // spin — Step 1: User clicks "Spin the Wheel"
+      // -------------------------------------------------------------------
       spin: async () => {
         const { runId, isSpinning } = get();
         if (!runId || isSpinning) return;
 
-        set({ isSpinning: true, selectedPlayer: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+        // Clear previous selection and spin state before spinning
+        set({ isSpinning: true, selectedPlayer: null, currentSpin: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
 
         try {
           const res = await fetch(`/api/runs/${runId}/spin`, { method: 'POST' });
@@ -309,6 +336,7 @@ export const useGameStore = create<GameState>()(
           }
 
           const data: SpinResult = await res.json();
+          // Step 2: Result arrives — Club × Season is set, player list will show
           set({ currentSpin: data, isSpinning: false });
         } catch (error) {
           console.error('Failed to spin:', error);
@@ -316,11 +344,15 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      // -------------------------------------------------------------------
+      // reroll — Re-spin with a different club/season
+      // -------------------------------------------------------------------
       reroll: async () => {
         const { runId, rerollsLeft } = get();
         if (!runId || rerollsLeft <= 0) return;
 
-        set({ isSpinning: true, selectedPlayer: null });
+        // Clear previous selection before rerolling
+        set({ isSpinning: true, selectedPlayer: null, currentSpin: null });
 
         try {
           const res = await fetch(`/api/runs/${runId}/reroll`, { method: 'POST' });
@@ -350,23 +382,28 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      // -------------------------------------------------------------------
+      // selectPlayer — Step 3: User clicks a player from the list
+      //
+      // This ONLY sets selectedPlayer. It does NOT auto-assign.
+      // The user must then click a position on the pitch (Step 5).
+      // -------------------------------------------------------------------
       selectPlayer: (player) => {
-        const { slots, currentSpin } = get();
-
-        // Save state before selection for undo — deep copy slots to prevent shared-reference corruption
-        set({
-          lastDraftState: {
-            slots: slots.map(s => ({ ...s })),
-            currentSpin: currentSpin ? { ...currentSpin, players: [...currentSpin.players] } : null,
-            selectedPlayer: null,
-            screen: 'draft',
-          },
-        });
-
-        // Stay on draft screen — position assignment happens inline
+        // Simply set the selected player — nothing else.
+        // The FormationView will highlight available positions for this player.
         set({ selectedPlayer: player });
       },
 
+      // -------------------------------------------------------------------
+      // assignToSlot — Step 5: User clicks a position on the football field
+      //
+      // This assigns the currently selectedPlayer to the given slot index.
+      // After assignment:
+      //   - selectedPlayer is cleared
+      //   - currentSpin is cleared (user can spin again immediately)
+      //   - justAssignedSlotIndex is set for highlight animation
+      //   - screen stays 'draft' unless all 11 positions are filled
+      // -------------------------------------------------------------------
       assignToSlot: async (slotIndex) => {
         const { runId, slots, selectedPlayer, currentSpin, draftVersion } = get();
         if (!runId || !selectedPlayer) return;
@@ -374,6 +411,7 @@ export const useGameStore = create<GameState>()(
         const slot = slots[slotIndex];
         if (!slot) return;
 
+        // Validate that the selected player can fill this slot position
         const { canFill, penalty } = canFillSlot(
           selectedPlayer.mainPosition as Position,
           selectedPlayer.otherPositions as Position[],
@@ -383,11 +421,20 @@ export const useGameStore = create<GameState>()(
 
         const slotPosition = `${slot.position}_${slotIndex}`;
 
-        // Save current spin for potential revert
+        // Save current spin for potential revert on API error
         const savedSpin = currentSpin;
 
         // Deep-copy slots for error recovery to prevent shared-reference corruption
         const prevSlots = slots.map(s => ({ ...s }));
+
+        // Save undo state BEFORE assignment — includes selectedPlayer so undo
+        // can restore the player selection and let user click a different position
+        const undoState: LastDraftState = {
+          slots: prevSlots,
+          currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
+          selectedPlayer: { ...selectedPlayer },
+          screen: 'draft',
+        };
 
         // Increment version so stale error reverts are rejected
         const thisVersion = draftVersion + 1;
@@ -406,6 +453,8 @@ export const useGameStore = create<GameState>()(
           isCompatible: penalty === 1,
         };
 
+        // Step 6: After assignment — clear selectedPlayer and currentSpin so
+        // user can spin again immediately. Screen stays 'draft' unless complete.
         const allFilled = newSlots.every((s) => s.playerId);
 
         set({
@@ -416,12 +465,7 @@ export const useGameStore = create<GameState>()(
           lastAssignedSlotIndex: slotIndex,
           justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
-          lastDraftState: allFilled ? null : {
-            slots: prevSlots,
-            currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
-            selectedPlayer: null,
-            screen: 'draft',
-          },
+          lastDraftState: allFilled ? null : undoState,
         });
 
         // Auto-clear the highlight after 2 seconds
@@ -431,7 +475,8 @@ export const useGameStore = create<GameState>()(
           }
         }, 2000);
 
-        // Fire API in background
+        // Step 7: Analytics/squad stats update immediately (via the slots change above)
+        // Fire API in background to persist the draft pick
         fetch(`/api/runs/${runId}/draft`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -445,18 +490,25 @@ export const useGameStore = create<GameState>()(
             console.error('Failed to draft player:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+              set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
             }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
+            set({ slots: prevSlots, selectedPlayer, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null, justAssignedSlotIndex: null });
           }
         });
       },
 
+      // -------------------------------------------------------------------
+      // directAssign — Assign a player directly to a slot without going
+      // through the selectPlayer → assignToSlot flow.
+      //
+      // NOTE: This should NOT be called automatically from PlayerList.
+      // It exists for programmatic use cases (e.g., auto-fill, testing).
+      // -------------------------------------------------------------------
       directAssign: async (player, slotIndex) => {
         const { runId, slots, currentSpin, draftVersion } = get();
         if (!runId) return;
@@ -485,7 +537,7 @@ export const useGameStore = create<GameState>()(
         // Deep-copy slots for error recovery to prevent shared-reference corruption
         const prevSlots = slots.map(s => ({ ...s }));
 
-        // Save state for undo
+        // Save state for undo — no selectedPlayer in direct assign flow
         const undoState: LastDraftState = {
           slots: prevSlots,
           currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
@@ -556,6 +608,9 @@ export const useGameStore = create<GameState>()(
         });
       },
 
+      // -------------------------------------------------------------------
+      // movePlayer — Reposition already-drafted players between slots
+      // -------------------------------------------------------------------
       movePlayer: (fromSlotIndex, toSlotIndex) => {
         const { slots, runId } = get();
         const from = slots[fromSlotIndex];
@@ -624,6 +679,9 @@ export const useGameStore = create<GameState>()(
         set({ movingPlayerSlotIndex: null });
       },
 
+      // -------------------------------------------------------------------
+      // spinManager — Pick a random manager with animation
+      // -------------------------------------------------------------------
       spinManager: async (manager?: Manager) => {
         // Pick the manager immediately so the UI can render reel targets
         // while the spin animation plays out.
@@ -634,6 +692,9 @@ export const useGameStore = create<GameState>()(
         set({ isSpinningManager: false });
       },
 
+      // -------------------------------------------------------------------
+      // simulate — Run the season simulation
+      // -------------------------------------------------------------------
       simulate: async (manager?: Manager | null) => {
         const { runId } = get();
         if (!runId) return;
@@ -669,6 +730,9 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      // -------------------------------------------------------------------
+      // updateProfileStats — Update persistent profile stats after simulation
+      // -------------------------------------------------------------------
       updateProfileStats: (result) => {
         const r = result as {
           wins: number;
@@ -773,6 +837,9 @@ export const useGameStore = create<GameState>()(
         });
       },
 
+      // -------------------------------------------------------------------
+      // undoLastPick — Undo the last draft assignment
+      // -------------------------------------------------------------------
       undoLastPick: async () => {
         const { runId, lastDraftState } = get();
         if (!runId || !lastDraftState) return;
@@ -784,7 +851,8 @@ export const useGameStore = create<GameState>()(
             return;
           }
 
-          // Restore the previous state
+          // Restore the previous state — this brings back currentSpin and
+          // selectedPlayer so the user can choose a different position or player
           set({
             slots: lastDraftState.slots,
             currentSpin: lastDraftState.currentSpin,
@@ -909,7 +977,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      // Persist profileStats, lastConfig, and game state for resuming drafts
+      // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer and currentSpin are transient UI states that must NOT be persisted.
       // Persisting them causes a stuck state on page refresh where the prompt to assign a player
       // shows but there is no player list to choose from.

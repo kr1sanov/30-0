@@ -567,13 +567,12 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, movePlayer, finishMoving, lastAssignedSlotIndex } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const playerListRef = useRef<HTMLDivElement>(null);
   const pitchRef = useRef<HTMLDivElement>(null);
   const prevCurrentSpin = useRef(currentSpin);
-  const prevSelectedPlayer = useRef(selectedPlayer);
   const prevLastAssignedSlot = useRef(lastAssignedSlotIndex);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
@@ -587,15 +586,15 @@ function DraftScreen() {
     : null;
 
   // Compute category ratings (like 38-0)
+  const CATEGORY_LABELS_LOCAL: Record<string, string> = { gk: 'ВР', def: 'Защита', mid: 'Полузащита', att: 'Атака' };
+  const CATEGORY_COLORS_LOCAL: Record<string, string> = { gk: '#f97316', def: '#3b82f6', mid: '#22c55e', att: '#ef4444' };
+
+  const categoryRatings: Record<string, { total: number; count: number }> = { gk: { total: 0, count: 0 }, def: { total: 0, count: 0 }, mid: { total: 0, count: 0 }, att: { total: 0, count: 0 } };
   const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
     'ВР': 'gk', 'ЦЗ': 'def', 'ПЗ': 'def', 'ЛЗ': 'def', 'ПФЗ': 'def', 'ЛФЗ': 'def',
     'ОП': 'mid', 'ЦП': 'mid', 'АП': 'mid', 'ЛП': 'mid', 'ПП': 'mid',
     'ЛВ': 'att', 'ПВ': 'att', 'НП': 'att', 'ЦН': 'att',
   };
-  const CATEGORY_LABELS_LOCAL: Record<string, string> = { gk: 'ВР', def: 'Защита', mid: 'Полузащита', att: 'Атака' };
-  const CATEGORY_COLORS_LOCAL: Record<string, string> = { gk: '#f97316', def: '#3b82f6', mid: '#22c55e', att: '#ef4444' };
-
-  const categoryRatings: Record<string, { total: number; count: number }> = { gk: { total: 0, count: 0 }, def: { total: 0, count: 0 }, mid: { total: 0, count: 0 }, att: { total: 0, count: 0 } };
   slots.forEach((slot) => {
     const cat = POSITION_CATEGORY_LOCAL[slot.position] ?? 'mid';
     if (slot.playerRating) {
@@ -606,48 +605,30 @@ function DraftScreen() {
   });
 
   // Auto-scroll: when spin result appears, scroll to player list
-  // Delay accounts for slot-machine animation (deceleration phase ~1s)
   useEffect(() => {
     if (currentSpin && !prevCurrentSpin.current) {
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           playerListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
-      }, 1500);
+      }, 1200);
       prevCurrentSpin.current = currentSpin;
       return () => clearTimeout(timer);
     }
     prevCurrentSpin.current = currentSpin;
   }, [currentSpin]);
 
-  // Auto-scroll: when a player is assigned via selectPlayer→assignToSlot flow
-  useEffect(() => {
-    if (!selectedPlayer && prevSelectedPlayer.current && !currentSpin) {
-      const timer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }, 400);
-      prevSelectedPlayer.current = selectedPlayer;
-      return () => clearTimeout(timer);
-    }
-    prevSelectedPlayer.current = selectedPlayer;
-  }, [selectedPlayer, currentSpin]);
-
-  // Auto-scroll: when a player is assigned via directAssign (lastAssignedSlotIndex changes)
-  // First scroll to pitch to show the player placed, then scroll to spin button after delay
+  // Auto-scroll: when player is assigned, scroll to pitch briefly then to spin
   useEffect(() => {
     if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
-      // First: scroll to pitch so user sees the player placed
       requestAnimationFrame(() => {
         pitchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
-      // Then: after delay, scroll to spin wheel for next spin
       const timer = setTimeout(() => {
         requestAnimationFrame(() => {
           spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
-      }, 1500);
+      }, 1200);
       prevLastAssignedSlot.current = lastAssignedSlotIndex;
       return () => clearTimeout(timer);
     }
@@ -673,23 +654,32 @@ function DraftScreen() {
   }
 
   return (
-    <div className="space-y-4 animate-fade-in pb-20 sm:pb-4">
-      {/* ── Header: Formation + Restart ── */}
+    <div className="space-y-3 animate-fade-in pb-24 sm:pb-4">
+      {/* ── Header: Formation + Rerolls + Restart ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-black text-[#e2e8f0] tracking-wide">{config.formation}</span>
-          <span className="text-[10px] text-[#64748b]">· Заблокировано — перезапуск для смены</span>
+          <span className="text-xs font-black text-[#e2e8f0] tracking-wide bg-[#1a3a1a] px-2 py-1 rounded-lg">{config.formation}</span>
+          <span className="text-[10px] text-[#64748b]">{openCount} поз. осталось</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-[#fbbf24] font-bold flex items-center gap-1">
             🔄 {rerollsLeft}/{maxRerolls}
           </span>
+          {lastDraftState && (
+            <button
+              onClick={undoLastPick}
+              className="text-[10px] px-2 py-1 rounded-lg bg-[#f97316]/10 text-[#f97316] font-bold hover:bg-[#f97316]/20 transition-colors"
+              title="Отменить последний выбор"
+            >
+              ↩ Отмена
+            </button>
+          )}
           <button
             onClick={() => setShowRestartModal(true)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
             title="Начать заново"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
               <path d="M3 3v5h5" />
             </svg>
@@ -697,13 +687,30 @@ function DraftScreen() {
         </div>
       </div>
 
+      {/* ── Selected Player Instruction Banner ── */}
+      <AnimatePresence>
+        {selectedPlayer && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 px-3 py-2 flex items-center gap-2"
+          >
+            <span className="text-[#22c55e] text-xs font-bold">👉</span>
+            <span className="text-xs text-[#22c55e] font-medium">
+              Нажмите на зелёную позицию на поле, чтобы поставить <strong>{selectedPlayer.fullName}</strong>
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Pitch / Formation View ── */}
       <div ref={pitchRef} data-pitch-section>
         <FormationView />
       </div>
 
       {/* ── Move a Player Button ── */}
-      {filledSlots.length >= 2 && (
+      {filledSlots.length >= 2 && !selectedPlayer && (
         <div className="flex items-center gap-2">
           <motion.button
             whileTap={{ scale: 0.97 }}
@@ -712,13 +719,13 @@ function DraftScreen() {
                 finishMoving();
               }
             }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
               isMoving
                 ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
                 : 'bg-[#0d2d0d] border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10'
             }`}
           >
-            {isMoving ? '✓ Завершить перемещение' : '↔ Переместить игрока'}
+            {isMoving ? '✓ Завершить' : '↔ Переместить игрока'}
           </motion.button>
         </div>
       )}
@@ -728,48 +735,31 @@ function DraftScreen() {
         </p>
       )}
 
-      {/* ── Position Legend ── */}
-      <div className="flex items-center justify-center gap-3 flex-wrap">
-        {[
-          { color: '#f97316', label: 'Вратарь' },
-          { color: '#3b82f6', label: 'Защита' },
-          { color: '#22c55e', label: 'Полузащита' },
-          { color: '#ef4444', label: 'Атака' },
-          { color: '#64748b', label: 'Не подходит' },
-        ].map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-1">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-[#94a3b8]">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Squad Stats Panel (38-0 style) ── */}
-      <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold">Общий</span>
-          <span className="text-2xl font-black" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
+      {/* ── Squad Stats Panel (38-0 style, compact) ── */}
+      <div className="rounded-xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[9px] uppercase tracking-widest text-[#64748b] font-bold">Рейтинг</span>
+          <span className="text-xl font-black" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
             {avgRating ?? '—'}
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {['att', 'mid', 'def', 'gk'].map((cat) => {
             const r = categoryRatings[cat];
             const avg = r.count > 0 ? Math.round(r.total / r.count) : 0;
-            const maxRating = 99;
             return (
-              <div key={cat} className="flex items-center gap-3">
-                <span className="text-xs text-[#94a3b8] w-20 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
-                <div className="flex-1 h-2 rounded-full bg-[#1a2a1a] overflow-hidden">
+              <div key={cat} className="flex items-center gap-2">
+                <span className="text-[10px] text-[#94a3b8] w-16 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: r.count > 0 ? `${(avg / maxRating) * 100}%` : '0%' }}
+                    animate={{ width: r.count > 0 ? `${(avg / 99) * 100}%` : '0%' }}
                     transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="h-full rounded-full"
                     style={{ backgroundColor: CATEGORY_COLORS_LOCAL[cat] }}
                   />
                 </div>
-                <span className="text-xs font-bold text-[#e2e8f0] w-6 text-right">
+                <span className="text-[10px] font-bold text-[#e2e8f0] w-5 text-right">
                   {r.count > 0 ? avg : '—'}
                 </span>
               </div>
@@ -1216,11 +1206,11 @@ export default function Home() {
   }, [screen]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a1a0a]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#0a1a0a]">
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />
-      <main className="flex-1 w-full max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6 pb-20 sm:pb-6 relative z-10">
+      <main className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-20 sm:pb-6 relative z-10 overflow-y-auto">
         {renderScreen()}
       </main>
       <Footer />
