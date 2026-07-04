@@ -502,3 +502,28 @@ Stage Summary:
 - Nationality flags working (🇷🇺, 🇦🇷, 🇮🇱, 🇭🇺, 🇪🇸, 🇭🇷, etc.)
 - All UI in Russian language
 - Lint passes with no errors
+
+---
+Task ID: 2
+Agent: Main
+Task: Implement inline position expansion in PlayerList — click player → positions expand below → click position → assign
+
+Work Log:
+- Read and analyzed all key components: PlayerList.tsx, FormationView.tsx, SpinWheel.tsx, GameSetup.tsx, gameStore.ts, page.tsx
+- Analyzed uploaded screenshot with VLM to understand current UI state
+- Redesigned PlayerList.tsx: instead of a separate "Position Selection Panel" at the bottom, positions now expand INLINE below the clicked player card
+- Removed separate `expandedPlayerId` state in favor of deriving expansion from `selectedPlayer` in the store (avoids state sync issues and lint errors)
+- When user clicks a player card: positions that the player can fill (strict matching) expand below with animated buttons
+- Each position button is color-coded by category (GK=orange, DEF=blue, MID=green, ATT=red)
+- Clicking a position assigns the player immediately via `assignToSlot()`
+- After assignment, `currentSpin` and `selectedPlayer` are cleared by the store → player list disappears → "Крутить" button appears again
+- Updated FormationView prompt from "Нажмите на зелёную позицию для..." to "Выберите позицию в списке для..."
+- Updated DraftScreen instruction banner to "Выберите позицию для ... в списке ниже"
+- Verified full flow with agent-browser: Spin → player list appears → click player → positions expand inline → click position → player assigned → spin button reappears
+
+Stage Summary:
+- New UX flow fully working: click player → inline position expansion → click position → player assigned
+- No more need to click on the football field to select positions
+- Position restrictions (strict matching) enforced — only positions listed on player's card are shown
+- All lint checks pass
+- Flow verified end-to-end with agent-browser

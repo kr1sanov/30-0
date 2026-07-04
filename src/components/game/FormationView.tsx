@@ -338,7 +338,7 @@ export default function FormationView() {
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      {/* Selected player prompt */}
+      {/* Selected player indicator — subtle badge showing who is being placed */}
       <AnimatePresence>
         {selectedPlayer && (
           <motion.div
@@ -347,9 +347,7 @@ export default function FormationView() {
             exit={{ opacity: 0, y: -6 }}
             className="mb-2 px-3 py-1.5 rounded-lg bg-[#0d2d0d]/90 border border-[#22c55e]/25 flex items-center gap-1.5 flex-wrap"
           >
-            <span className="text-[10px] text-[#94a3b8]">Нажмите на</span>
-            <span className="text-[10px] font-bold text-[#22c55e]">зелёную</span>
-            <span className="text-[10px] text-[#94a3b8]">позицию для</span>
+            <span className="text-[10px] text-[#94a3b8]">Выберите позицию в списке для</span>
             <span className="text-[10px] font-bold text-white">
               {selectedPlayer.fullName}
             </span>

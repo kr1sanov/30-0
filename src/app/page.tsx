@@ -719,7 +719,7 @@ function DraftScreen() {
           >
             <span className="text-[#22c55e] text-xs font-bold">👉</span>
             <span className="text-xs text-[#22c55e] font-medium">
-              Выберите позицию для <strong>{selectedPlayer.fullName}</strong> ниже или на поле
+              Выберите позицию для <strong>{selectedPlayer.fullName}</strong> в списке ниже
             </span>
           </motion.div>
         )}
