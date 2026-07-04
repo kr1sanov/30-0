@@ -346,3 +346,46 @@ Unresolved Issues:
 - SQLite readonly database issue can recur if Prisma client gets into a stale state (needs server restart)
 - Telegram auth requires TELEGRAM_BOT_TOKEN env var for server-side validation
 - Cloud sync only works when authenticated via Telegram
+
+---
+Task ID: deploy-2
+Agent: main
+Task: Deploy all changes to GitHub and record all modifications
+
+Work Log:
+- Checked git status: working tree clean, 2 unpushed commits (6afc9e4, 1ea886c)
+- Pushed all unpushed commits to origin/main successfully
+- Commits 7c377ac..1ea886c now live on GitHub
+
+Full list of changes deployed (all commits since last deployment):
+
+**Commit 7c377ac — "refactor: full game flow overhaul matching 38-0.app reference"**
+- FormationView.tsx: Added position legend (🟠 ВР, 🔵 Защита, 🟢 Полузащита, 🔴 Атака, ⚫ Не может играть)
+- page.tsx: Squad Stats Panel redesigned with prominent OVERALL rating, "Начать заново" link
+- SpinWheel.tsx: Idle state redesign ("КРУТИТЬ СОСТАВ"), spacebar shortcut, "Крутить колесо" button with Zap icon
+- GameSetup.tsx: Simplified — advanced settings collapsed, main flow: Formation + Difficulty + Start
+- HomePage: CTA changed to "Играть 30-0 →"
+- SimulationResult.tsx: Removed stale `setIsPlaying(false)` call
+
+**Commit 6afc9e4 — Fix: player flickering after selection (resilience improvements)**
+- gameStore.ts: Added `lastDraftError` field, error handlers set descriptive messages in `assignToSlot` and `directAssign`, cleanup on spin/skipSpin/resetGame/resumeGame/startRun
+- PlayerList.tsx: Added `autoAssignAttemptsRef` (max 1 attempt per player+slot), error toast via sonner
+
+**Commit 1ea886c — Latest fix continuation**
+- PlayerList.tsx: Clear auto-assign attempts on manual player click, cancel, and spin reset
+- gameStore.ts: Clear `lastDraftError` on all state transitions
+
+Previous commits already deployed (b2172e3, 2dce382, b5e7898):
+- 5 critical bug fixes: game stuck, UI jumping, auto-assign race condition, state persistence, Telegram sync
+- "СКОРО" badge on "Один клуб" card, game modes restructured
+- Bottom toolbar fixed on mobile and desktop
+- Position Selection Panel added below player list
+- Auto-scroll improvements, "Player Placed" success banner
+
+Stage Summary:
+- All code deployed to https://github.com/kr1sanov/30-0.git (main branch)
+- Latest commit: 1ea886c
+- All 5 critical bugs fixed and deployed
+- UI redesign matching 38-0.app reference deployed
+- Player flickering resilience fix deployed
+- "СКОРО" badge and footer fix deployed
