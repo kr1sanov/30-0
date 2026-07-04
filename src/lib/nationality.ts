@@ -7,7 +7,7 @@
  * Uses Unicode regional indicator symbols.
  */
 const NATIONALITY_FLAGS: Record<string, string> = {
-  // Common nationalities in RPL
+  // Common nationalities in RPL (Russian names)
   'Россия': '🇷🇺',
   'Украина': '🇺🇦',
   'Беларусь': '🇧🇾',
@@ -106,6 +106,156 @@ const NATIONALITY_FLAGS: Record<string, string> = {
   // Oceania
   'Австралия': '🇦🇺',
   'Новая Зеландия': '🇳🇿',
+
+  // ── English nationality names (in case DB uses them) ──
+  'Russian': '🇷🇺',
+  'Ukrainian': '🇺🇦',
+  'Belarusian': '🇧🇾',
+  'Kazakh': '🇰🇿',
+  'Uzbek': '🇺🇿',
+  'Georgian': '🇬🇪',
+  'Armenian': '🇦🇲',
+  'Azerbaijani': '🇦🇿',
+  'Moldovan': '🇲🇩',
+  'Latvian': '🇱🇻',
+  'Lithuanian': '🇱🇹',
+  'Estonian': '🇪🇪',
+
+  'Serbian': '🇷🇸',
+  'Croatian': '🇭🇷',
+  'Bosnian': '🇧🇦',
+  'Montenegrin': '🇲🇪',
+  'Slovenian': '🇸🇮',
+  'Macedonian': '🇲🇰',
+  'Albanian': '🇦🇱',
+  'Polish': '🇵🇱',
+  'Czech': '🇨🇿',
+  'Slovak': '🇸🇰',
+  'Hungarian': '🇭🇺',
+  'Romanian': '🇷🇴',
+  'Bulgarian': '🇧🇬',
+  'Greek': '🇬🇷',
+  'Turkish': '🇹🇷',
+  'Austrian': '🇦🇹',
+  'Swiss': '🇨🇭',
+  'German': '🇩🇪',
+  'French': '🇫🇷',
+  'Spanish': '🇪🇸',
+  'Italian': '🇮🇹',
+  'Portuguese': '🇵🇹',
+  'Dutch': '🇳🇱',
+  'Belgian': '🇧🇪',
+  'Danish': '🇩🇰',
+  'Swedish': '🇸🇪',
+  'Norwegian': '🇳🇴',
+  'Finnish': '🇫🇮',
+  'Icelandic': '🇮🇸',
+  'Irish': '🇮🇪',
+  'English': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'Scottish': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+  'Welsh': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+
+  'Brazilian': '🇧🇷',
+  'Argentine': '🇦🇷',
+  'Argentinian': '🇦🇷',
+  'Uruguayan': '🇺🇾',
+  'Paraguayan': '🇵🇾',
+  'Chilean': '🇨🇱',
+  'Colombian': '🇨🇴',
+  'Ecuadorian': '🇪🇨',
+  'Peruvian': '🇵🇪',
+  'Venezuelan': '🇻🇪',
+  'Bolivian': '🇧🇴',
+
+  'Nigerian': '🇳🇬',
+  'Cameroonian': '🇨🇲',
+  'Ghanaian': '🇬🇭',
+  'Ivorian': '🇨🇮',
+  'Senegalese': '🇸🇳',
+  'Malian': '🇲🇱',
+  'Guinean': '🇬🇳',
+  'Congolese': '🇨🇬',
+  'Angolan': '🇦🇴',
+  'Moroccan': '🇲🇦',
+  'Tunisian': '🇹🇳',
+  'Egyptian': '🇪🇬',
+  'South African': '🇿🇦',
+
+  'Japanese': '🇯🇵',
+  'South Korean': '🇰🇷',
+  'Chinese': '🇨🇳',
+  'Iranian': '🇮🇷',
+  'Iraqi': '🇮🇶',
+  'Saudi': '🇸🇦',
+  'Israeli': '🇮🇱',
+
+  'American': '🇺🇸',
+  'Mexican': '🇲🇽',
+  'Costa Rican': '🇨🇷',
+  'Jamaican': '🇯🇲',
+
+  'Australian': '🇦🇺',
+  'New Zealander': '🇳🇿',
+
+  // ── Common 2-letter country codes (ISO 3166-1 alpha-2) ──
+  'RU': '🇷🇺',
+  'UA': '🇺🇦',
+  'BY': '🇧🇾',
+  'KZ': '🇰🇿',
+  'UZ': '🇺🇿',
+  'GE': '🇬🇪',
+  'AM': '🇦🇲',
+  'AZ': '🇦🇿',
+  'MD': '🇲🇩',
+  'LV': '🇱🇻',
+  'LT': '🇱🇹',
+  'EE': '🇪🇪',
+  'RS': '🇷🇸',
+  'HR': '🇭🇷',
+  'BA': '🇧🇦',
+  'ME': '🇲🇪',
+  'SI': '🇸🇮',
+  'PL': '🇵🇱',
+  'CZ': '🇨🇿',
+  'SK': '🇸🇰',
+  'HU': '🇭🇺',
+  'RO': '🇷🇴',
+  'BG': '🇧🇬',
+  'GR': '🇬🇷',
+  'TR': '🇹🇷',
+  'AT': '🇦🇹',
+  'CH': '🇨🇭',
+  'DE': '🇩🇪',
+  'FR': '🇫🇷',
+  'ES': '🇪🇸',
+  'IT': '🇮🇹',
+  'PT': '🇵🇹',
+  'NL': '🇳🇱',
+  'BE': '🇧🇪',
+  'DK': '🇩🇰',
+  'SE': '🇸🇪',
+  'NO': '🇳🇴',
+  'FI': '🇫🇮',
+  'BR': '🇧🇷',
+  'AR': '🇦🇷',
+  'UY': '🇺🇾',
+  'CL': '🇨🇱',
+  'CO': '🇨🇴',
+  'JP': '🇯🇵',
+  'KR': '🇰🇷',
+  'CN': '🇨🇳',
+  'IR': '🇮🇷',
+  'US': '🇺🇸',
+  'MX': '🇲🇽',
+  'AU': '🇦🇺',
+  'NZ': '🇳🇿',
+  'NG': '🇳🇬',
+  'CM': '🇨🇲',
+  'GH': '🇬🇭',
+  'MA': '🇲🇦',
+  'TN': '🇹🇳',
+  'EG': '🇪🇬',
+  'ZA': '🇿🇦',
 };
 
 /**
@@ -114,7 +264,15 @@ const NATIONALITY_FLAGS: Record<string, string> = {
  */
 export function getNationalityFlag(nationality?: string | null): string {
   if (!nationality) return '';
-  return NATIONALITY_FLAGS[nationality] ?? '';
+  // Try direct lookup first
+  const direct = NATIONALITY_FLAGS[nationality];
+  if (direct) return direct;
+  // Try case-insensitive lookup as fallback
+  const lower = nationality.toLowerCase();
+  for (const [key, flag] of Object.entries(NATIONALITY_FLAGS)) {
+    if (key.toLowerCase() === lower) return flag;
+  }
+  return '';
 }
 
 /**

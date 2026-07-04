@@ -523,42 +523,18 @@ export default function GameSetup() {
       </div>
 
       {/* ─── Start Button ─── */}
-      <motion.div whileTap={{ scale: 0.98 }} whileHover={{ scale: 1.015 }} className="relative">
-        {/* Pulsing ring animation */}
-        <div className="absolute inset-0 rounded-2xl border-2 border-[#22c55e]/40 animate-pulse-ring pointer-events-none" />
-        <Button
-          onClick={handleStart}
-          className="w-full h-16 text-xl font-black text-white rounded-2xl transition-all relative overflow-hidden animate-button-glow btn-shimmer"
-          style={{
-            background:
-              'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-            boxShadow:
-              '0 6px 24px rgba(34, 197, 94, 0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
-          }}
-        >
-          {/* Shimmer sweep */}
-          <motion.span
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.25) 50%, transparent 65%)',
-              backgroundSize: '200% 100%',
-            }}
-            animate={{ backgroundPosition: ['200% 0', '-200% 0'] }}
-            transition={{ duration: 2.8, repeat: Infinity, ease: 'linear' }}
-          />
-          <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow">
-            <motion.span
-              className="text-2xl"
-              animate={{ rotate: [0, -10, 10, 0] }}
-              transition={{ duration: 1.6, repeat: Infinity, repeatDelay: 1 }}
-            >
-              ⚽
-            </motion.span>
-            Крутить колесо
-          </span>
-        </Button>
-      </motion.div>
+      <Button
+        onClick={handleStart}
+        className="w-full h-11 text-sm font-bold text-white rounded-xl transition-all"
+        style={{
+          background:
+            'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+          boxShadow:
+            '0 2px 10px rgba(34, 197, 94, 0.3)',
+        }}
+      >
+        Начать драфт
+      </Button>
     </div>
   );
 }

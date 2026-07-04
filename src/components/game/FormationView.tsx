@@ -182,19 +182,12 @@ function getRatingColor(rating: number): string {
   return '#ef4444';
 }
 
-// Get 2-letter initials from last name
-function getInitials(lastName?: string, fullName?: string): string {
-  if (lastName) {
-    const parts = lastName.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return lastName.slice(0, 2).toUpperCase();
-  }
-  if (fullName) {
-    const parts = fullName.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-  return '??';
+// Get player's last name (surname) for display on field card
+function getPlayerSurname(lastName?: string): string {
+  if (!lastName) return '';
+  // Take only the first word (surname) if multiple words
+  const parts = lastName.trim().split(/\s+/);
+  return parts[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -221,7 +214,7 @@ export default function FormationView() {
   const openCount = 11 - filledCount;
 
   // Is the squad complete and we can move players?
-  const canMove = screen === 'squad-complete' || screen === 'position-assign';
+  const canMove = screen === 'squad-complete' || screen === 'position-assign' || screen === 'draft';
 
   // Average rating
   const avgRating = useMemo(() => {
@@ -537,8 +530,10 @@ export default function FormationView() {
                   ${isShaking ? 'animate-shake' : ''}
                 `}
                 style={{
-                  width: isFilled ? '48px' : '34px',
-                  height: isFilled ? '36px' : '26px',
+                  width: isFilled ? undefined : '34px',
+                  height: isFilled ? undefined : '26px',
+                  minWidth: isFilled ? '52px' : '34px',
+                  minHeight: isFilled ? '38px' : '26px',
                   backgroundColor: isFilled
                     ? `${color}cc`
                     : isIncompatible
@@ -576,7 +571,7 @@ export default function FormationView() {
                     {/* Rating number — colored by rating tier */}
                     {slot.playerRating && (
                       <span
-                        className="text-[9px] font-black leading-none"
+                        className="text-[9px] sm:text-[10px] font-black leading-none"
                         style={{
                           color: getRatingColor(effectiveRating ?? slot.playerRating),
                           opacity: compatKind === 'partial' ? 0.8 : 1,
@@ -585,30 +580,26 @@ export default function FormationView() {
                         {effectiveRating ?? slot.playerRating}
                       </span>
                     )}
-                    {/* 2-letter initials + flag */}
+                    {/* Position abbreviation + Last name + flag */}
                     <div className="flex items-center gap-0.5 mt-0.5">
                       <span
-                        className="text-[7px] font-bold text-white/90 leading-none"
+                        className="text-[5px] sm:text-[6px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
+                        style={{ backgroundColor: `${color}44` }}
+                      >
+                        {slot.position}
+                      </span>
+                      <span
+                        className="text-[7px] sm:text-[8px] font-bold text-white/90 leading-none truncate max-w-[32px] sm:max-w-[40px]"
                         style={{ textShadow: '0 1px 2px rgba(0,0,0,0.7)' }}
                       >
-                        {getInitials(slot.playerLastName, slot.playerName)}
+                        {getPlayerSurname(slot.playerLastName)}
                       </span>
                       {getNationalityFlag(slot.playerNationality) && (
-                        <span className="text-[6px] leading-none">
+                        <span className="text-[8px] leading-none">
                           {getNationalityFlag(slot.playerNationality)}
                         </span>
                       )}
                     </div>
-                    {/* Position tag */}
-                    <span
-                      className="text-[5px] font-semibold leading-none mt-px px-1 py-px rounded-sm"
-                      style={{
-                        backgroundColor: `${color}44`,
-                        color: 'rgba(255,255,255,0.7)',
-                      }}
-                    >
-                      {slot.positionLabel}
-                    </span>
                     {/* Partial compatibility indicator */}
                     {compatKind === 'partial' && (
                       <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#facc15] flex items-center justify-center text-[5px] font-black text-black border border-black/20">

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Zap, Loader2 } from 'lucide-react';
+import { RotateCcw, Loader2 } from 'lucide-react';
 
 /* ─── RPL data for slot reels ─── */
 const RPL_CLUBS = [
@@ -266,11 +266,8 @@ export default function SpinWheel() {
               exit={{ opacity: 0 }}
               className="p-4"
             >
-              {/* "КРУТИТЬ СОСТАВ" header */}
+              {/* Positions remaining counter */}
               <div className="text-center mb-3">
-                <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold mb-2">
-                  КРУТИТЬ СОСТАВ
-                </div>
                 <div className="text-2xl font-black text-white mb-0.5">
                   {openCount}{' '}
                   <span className="text-sm font-bold text-[#94a3b8]">
@@ -293,8 +290,7 @@ export default function SpinWheel() {
                   disabled={isSpinning}
                   className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                 >
-                  <Zap className="w-4 h-4" />
-                  Крутить колесо
+                  Крутить
                 </Button>
               </motion.div>
               <p className="text-[10px] text-[#64748b] text-center mt-1.5">
@@ -312,9 +308,6 @@ export default function SpinWheel() {
               exit={{ opacity: 0 }}
               className="p-4"
             >
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold text-center mb-2">
-                КРУТИТЬ СОСТАВ
-              </div>
               <div className="flex items-center gap-2">
                 <SlotReel
                   items={RPL_CLUBS}

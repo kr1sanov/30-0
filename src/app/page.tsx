@@ -759,6 +759,8 @@ function DraftScreen() {
             onClick={() => {
               if (isMoving) {
                 finishMoving();
+              } else {
+                useGameStore.setState({ movingPlayerSlotIndex: -1 });
               }
             }}
             className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -790,7 +792,7 @@ function DraftScreen() {
             <div className="text-3xl sm:text-4xl font-black leading-none" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
               {avgRating ?? '—'}
             </div>
-            <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mt-1">OVERALL</div>
+            <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mt-1">РЕЙТИНГ</div>
           </div>
           {/* Category bars */}
           <div className="flex-1 space-y-1.5">
