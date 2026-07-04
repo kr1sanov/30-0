@@ -1,18 +1,8 @@
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
+import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -40,33 +30,12 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   hard: '#ef4444',
 };
 
-const DEFAULT_PROFILE_STATS = {
-  totalSeasons: 0,
-  bestPoints: 0,
-  bestRecord: '0-0-0',
-  titles: 0,
-  perfect: 0,
-  totalWins: 0,
-  totalGoals: 0,
-  favoriteFormation: '4-3-3',
-  achievements: [] as string[],
-  history: [] as Array<{
-    id: string;
-    date: string;
-    formation: string;
-    difficulty: string;
-    wins: number;
-    draws: number;
-    losses: number;
-    points: number;
-    position: number;
-    managerName?: string | null;
-  }>,
-};
-
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
+  const { user, updateDisplayName } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(user?.displayName || '');
 
   const winRate = profileStats.totalSeasons > 0
     ? Math.round((profileStats.totalWins / (profileStats.totalSeasons * 30)) * 100)
@@ -121,16 +90,19 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleResetStats = () => {
-    useGameStore.setState({ profileStats: DEFAULT_PROFILE_STATS });
-    // Also clear localStorage
-    try {
-      localStorage.removeItem('30-0-rpl-storage');
-    } catch {
-      // ignore
+  const handleSaveName = () => {
+    if (editName.trim().length >= 2) {
+      updateDisplayName(editName.trim());
+      setIsEditingName(false);
+      toast.success('Никнейм обновлён!');
+    } else {
+      toast.error('Минимум 2 символа');
     }
-    toast.success('🗑️ Статистика сброшена');
   };
+
+  // Avatar source — Telegram photo or fallback
+  const avatarUrl = user?.photoUrl;
+  const displayName = user?.displayName || 'Игрок';
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
@@ -141,8 +113,17 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-3xl shadow-lg shadow-[#22c55e]/20 avatar-conic-ring">
-            ⚽
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-3xl shadow-lg shadow-[#22c55e]/20 avatar-conic-ring overflow-hidden">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={displayName}
+                className="w-full h-full object-cover rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              '⚽'
+            )}
           </div>
           {profileStats.titles > 0 && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
@@ -150,7 +131,47 @@ export default function ProfileScreen() {
             </div>
           )}
         </motion.div>
-        <h2 className="text-xl font-bold text-[#e2e8f0] mt-3">Профиль игрока</h2>
+
+        {/* Display name with edit button */}
+        <div className="flex items-center justify-center gap-2 mt-3">
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                className="bg-[#0d2d0d] border border-[#22c55e]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#e2e8f0] focus:outline-none focus:border-[#22c55e] w-40"
+                autoFocus
+                maxLength={20}
+              />
+              <button
+                onClick={handleSaveName}
+                className="text-xs font-bold text-[#22c55e] hover:text-[#16a34a]"
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => { setIsEditingName(false); setEditName(user?.displayName || ''); }}
+                className="text-xs font-bold text-[#ef4444] hover:text-[#dc2626]"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-[#e2e8f0]">{displayName}</h2>
+              <button
+                onClick={() => { setIsEditingName(true); setEditName(displayName); }}
+                className="text-[10px] text-[#64748b] hover:text-[#94a3b8] transition-colors"
+                title="Изменить никнейм"
+              >
+                ✏️
+              </button>
+            </>
+          )}
+        </div>
+
         <p className="text-sm text-[#94a3b8] mt-1">
           {profileStats.totalSeasons > 0
             ? `${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'} · ${winRate}% побед`
@@ -349,7 +370,7 @@ export default function ProfileScreen() {
         </div>
       )}
 
-      {/* Trophy Cabinet — Enhanced with golden glow & lock icons */}
+      {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-[#e2e8f0]">🏆 Витрина трофеев</h3>
@@ -469,7 +490,7 @@ export default function ProfileScreen() {
         </div>
       )}
 
-      {/* Share Profile + Reset Stats */}
+      {/* Share Profile — NO Reset Stats, NO New Season buttons */}
       <div className="space-y-3">
         <Button
           onClick={handleShareProfile}
@@ -478,45 +499,7 @@ export default function ProfileScreen() {
         >
           📤 Поделиться профилем
         </Button>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full h-12 text-sm font-bold border-[#ef4444]/30 text-[#ef4444] hover:bg-[#ef4444]/10 rounded-xl"
-            >
-              🗑️ Сбросить статистику
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent className="bg-[#0d2d0d] border-[#0d2d0d]">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[#e2e8f0]">Сбросить статистику?</AlertDialogTitle>
-              <AlertDialogDescription className="text-[#94a3b8]">
-                Это действие удалит все ваши результаты, достижения и историю. Это невозможно отменить.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="bg-[#0a1a0a] text-[#94a3b8] border-[#0d2d0d] hover:bg-[#0d2d0d] hover:text-[#e2e8f0]">
-                Отмена
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleResetStats}
-                className="bg-[#ef4444] text-white hover:bg-[#dc2626]"
-              >
-                Сбросить
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
-
-      {/* New Season */}
-      <Button
-        onClick={() => { resetGame(); setScreen('setup'); }}
-        className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
-      >
-        🎮 Новый сезон
-      </Button>
     </div>
   );
 }

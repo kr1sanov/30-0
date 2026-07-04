@@ -565,12 +565,13 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, movePlayer, finishMoving } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, movePlayer, finishMoving, lastAssignedSlotIndex } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const playerListRef = useRef<HTMLDivElement>(null);
   const prevCurrentSpin = useRef(currentSpin);
   const prevSelectedPlayer = useRef(selectedPlayer);
+  const prevLastAssignedSlot = useRef(lastAssignedSlotIndex);
 
   const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
   const openCount = slots.filter((s) => !s.playerId).length;
@@ -616,7 +617,7 @@ function DraftScreen() {
     prevCurrentSpin.current = currentSpin;
   }, [currentSpin]);
 
-  // Auto-scroll: when player is assigned (selectedPlayer goes from non-null to null AND currentSpin goes to null), scroll to spin button
+  // Auto-scroll: when a player is assigned via selectPlayer→assignToSlot flow
   useEffect(() => {
     if (!selectedPlayer && prevSelectedPlayer.current && !currentSpin) {
       const timer = setTimeout(() => {
@@ -629,6 +630,20 @@ function DraftScreen() {
     }
     prevSelectedPlayer.current = selectedPlayer;
   }, [selectedPlayer, currentSpin]);
+
+  // Auto-scroll: when a player is assigned via directAssign (lastAssignedSlotIndex changes)
+  useEffect(() => {
+    if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
+      const timer = setTimeout(() => {
+        requestAnimationFrame(() => {
+          spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }, 300);
+      prevLastAssignedSlot.current = lastAssignedSlotIndex;
+      return () => clearTimeout(timer);
+    }
+    prevLastAssignedSlot.current = lastAssignedSlotIndex;
+  }, [lastAssignedSlotIndex]);
 
   const handleRestart = async () => {
     setShowRestartModal(false);
@@ -1120,9 +1135,34 @@ const pageVariants = {
 
 /* ─── Main Home Component ─── */
 export default function Home() {
-  const { screen } = useGameStore();
+  const { screen, setTelegramUser, telegramUser, loadProfileFromCloud } = useGameStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
+
+  // Initialize Telegram WebApp on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const webapp = window.Telegram.WebApp;
+      webapp.ready();
+      webapp.expand();
+
+      const tgUser = webapp.initDataUnsafe?.user;
+      if (tgUser && !telegramUser) {
+        setTelegramUser({
+          id: tgUser.id,
+          first_name: tgUser.first_name || '',
+          last_name: tgUser.last_name,
+          username: tgUser.username,
+          photo_url: tgUser.photo_url,
+          language_code: tgUser.language_code,
+        });
+        // Load profile from cloud after setting Telegram user
+        setTimeout(() => {
+          loadProfileFromCloud();
+        }, 500);
+      }
+    }
+  }, [setTelegramUser, telegramUser, loadProfileFromCloud]);
 
   useEffect(() => {
     if (prevScreen.current !== screen) {

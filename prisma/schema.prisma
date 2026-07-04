@@ -80,6 +80,22 @@ model PlayerSeason {
   @@unique([playerId, clubSeasonId])
 }
 
+model User {
+  id               String   @id @default(cuid())
+  telegramId       String   @unique
+  username         String?
+  firstName        String?
+  lastName         String?
+  photoUrl         String?
+  displayName      String   @default("Игрок")
+  profileStatsJson String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  runs             GameRun[]
+}
+
 model GameRun {
   id            String   @id @default(cuid())
   formation     String   @default("4-3-3")
@@ -103,6 +119,9 @@ model GameRun {
   managerName   String?
   managerRating Int?
   teamName      String?
+
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   
   createdAt     DateTime @default(now())
   

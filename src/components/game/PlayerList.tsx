@@ -4,8 +4,9 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY, canFillSlot } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
-import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
+import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
 
 /** Position category colors — matching 38-0 style */
@@ -45,6 +46,7 @@ export default function PlayerList() {
   const { currentSpin, slots, config, directAssign } = useGameStore();
   const [expandedPlayerId, setExpandedPlayerId] = useState<string | null>(null);
   const [sortMode, setSortMode] = useState<SortMode>('rating');
+  const [assigningPlayerId, setAssigningPlayerId] = useState<string | null>(null);
 
   const isHard = config.difficulty === 'hard';
 
@@ -89,11 +91,28 @@ export default function PlayerList() {
   }, [currentSpin, openPositions, sortMode]);
 
   const handlePlayerClick = (player: ProcessedPlayer) => {
-    if (!player.canFillAny) return;
+    if (!player.canFillAny) {
+      toast.error(`${getLastName(player.fullName)} не подходит ни на одну позицию`);
+      return;
+    }
+
+    // Prevent double-click
+    if (assigningPlayerId) return;
 
     // If player can fill exactly one slot, assign directly without intermediate state
     if (player.availableSlots.length === 1) {
-      directAssign(player as PlayerOption, player.availableSlots[0]);
+      const slotIdx = player.availableSlots[0];
+      const slot = slots[slotIdx];
+      setAssigningPlayerId(player.playerSeasonId);
+      directAssign(player as PlayerOption, slotIdx).then(() => {
+        // Show success toast
+        toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
+          duration: 2000,
+        });
+        setAssigningPlayerId(null);
+      }).catch(() => {
+        setAssigningPlayerId(null);
+      });
       setExpandedPlayerId(null);
       return;
     }
@@ -108,7 +127,17 @@ export default function PlayerList() {
   };
 
   const handlePositionSelect = (player: ProcessedPlayer, slotIndex: number) => {
-    directAssign(player as PlayerOption, slotIndex);
+    if (assigningPlayerId) return;
+    const slot = slots[slotIndex];
+    setAssigningPlayerId(player.playerSeasonId);
+    directAssign(player as PlayerOption, slotIndex).then(() => {
+      toast.success(`${getLastName(player.fullName)} → ${slot?.positionLabel ?? slot?.position ?? 'позиция'}`, {
+        duration: 2000,
+      });
+      setAssigningPlayerId(null);
+    }).catch(() => {
+      setAssigningPlayerId(null);
+    });
     setExpandedPlayerId(null);
   };
 
@@ -152,7 +181,7 @@ export default function PlayerList() {
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
           const flagEmoji = getNationalityFlag(player.nationality);
-          const foreign = isForeignPlayer(player.nationality);
+          const isAssigning = assigningPlayerId === player.playerSeasonId;
 
           return (
             <div key={player.playerSeasonId}>
@@ -161,8 +190,11 @@ export default function PlayerList() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
+                disabled={!!assigningPlayerId}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 text-left ${
-                  !player.canFillAny
+                  isAssigning
+                    ? 'bg-[#22c55e]/10 border border-[#22c55e]/40 opacity-80'
+                    : !player.canFillAny
                     ? 'opacity-40 cursor-not-allowed'
                     : isExpanded
                     ? 'bg-[#0d2d0d] border border-[#22c55e]/40'
@@ -174,14 +206,14 @@ export default function PlayerList() {
                   className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
                   style={{ backgroundColor: posColor }}
                 >
-                  {isHard ? '?' : player.rating}
+                  {isAssigning ? '...' : isHard ? '?' : player.rating}
                 </div>
 
-                {/* Name, nationality, positions */}
+                {/* Name, flag, positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-[#e2e8f0] truncate">
-                    {foreign ? player.fullName : (player.lastName || getLastName(player.fullName))}{' '}
-                    {!foreign && <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>}
+                    {getLastName(player.fullName)}{' '}
+                    <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>
                     {flagEmoji && <span className="ml-1.5">{flagEmoji}</span>}
                   </div>
                   {/* Position badges */}
@@ -213,8 +245,19 @@ export default function PlayerList() {
                 )}
 
                 {/* Auto-assign indicator */}
-                {player.canFillAny && player.availableSlots.length === 1 && (
+                {player.canFillAny && player.availableSlots.length === 1 && !isAssigning && (
                   <span className="text-[10px] text-[#22c55e] font-bold shrink-0">✓</span>
+                )}
+
+                {/* Assigning spinner */}
+                {isAssigning && (
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="text-[#22c55e] text-sm shrink-0"
+                  >
+                    ⟳
+                  </motion.span>
                 )}
               </motion.button>
 
@@ -245,7 +288,8 @@ export default function PlayerList() {
                                 e.stopPropagation();
                                 handlePositionSelect(player, slotIdx);
                               }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:brightness-110 shadow-sm"
+                              disabled={!!assigningPlayerId}
+                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:brightness-110 shadow-sm disabled:opacity-50"
                               style={{ backgroundColor: CATEGORY_BG[slotCat] }}
                             >
                               {slot.positionLabel}

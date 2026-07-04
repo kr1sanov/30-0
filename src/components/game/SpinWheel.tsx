@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,28 +35,33 @@ interface SlotReelProps {
 }
 
 function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
-  const [displayItem, setDisplayItem] = useState<string>(items[0]);
+  const [displayItems, setDisplayItems] = useState<string[]>([items[0]]);
   const [isStopped, setIsStopped] = useState(false);
   const [showGlow, setShowGlow] = useState(false);
+  const [phase, setPhase] = useState<'idle' | 'spinning' | 'decelerating' | 'stopped'>('idle');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isAnimatingRef = useRef(false);
 
   // Fast cycling phase: rapidly show random items
   useEffect(() => {
-    if (isSpinning && !hasResult) {
+    if (isSpinning && !hasResult && phase === 'idle') {
+      setPhase('spinning');
       setIsStopped(false);
       setShowGlow(false);
-      isAnimatingRef.current = true;
-      let interval = 60;
-
-      const cycle = () => {
-        if (!isAnimatingRef.current) return;
-        const randomIdx = Math.floor(Math.random() * items.length);
-        setDisplayItem(items[randomIdx]);
-        timerRef.current = setTimeout(cycle, interval);
-      };
-      cycle();
     }
+  }, [isSpinning, hasResult, phase]);
+
+  // Spinning: cycle through items rapidly
+  useEffect(() => {
+    if (phase !== 'spinning') return;
+
+    let interval = 60;
+    const cycle = () => {
+      if (phase !== 'spinning') return;
+      const randomIdx = Math.floor(Math.random() * items.length);
+      setDisplayItems([items[randomIdx]]);
+      timerRef.current = setTimeout(cycle, interval);
+    };
+    cycle();
 
     return () => {
       if (timerRef.current) {
@@ -64,12 +69,14 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
         timerRef.current = null;
       }
     };
-  }, [isSpinning, hasResult, items]);
+  }, [phase, items]);
 
-  // Deceleration phase: slow down and land on target
+  // Deceleration: slow down and land on target
   useEffect(() => {
-    if (hasResult && targetItem && isAnimatingRef.current) {
-      // Clear cycling timer
+    if (hasResult && targetItem && phase === 'spinning') {
+      setPhase('decelerating');
+
+      // Clear spinning timer
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -81,10 +88,10 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 
       const decelerate = () => {
         if (steps >= maxSteps) {
-          setDisplayItem(targetItem);
+          setDisplayItems([targetItem]);
           setIsStopped(true);
+          setPhase('stopped');
           setTimeout(() => setShowGlow(true), 100);
-          isAnimatingRef.current = false;
           return;
         }
         // Last 2 steps: show items near the target for drama
@@ -92,13 +99,13 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
           const targetIdx = items.indexOf(targetItem);
           const offset = maxSteps - steps;
           const idx = (targetIdx + offset) % items.length;
-          setDisplayItem(items[idx >= 0 ? idx : 0]);
+          setDisplayItems([items[idx >= 0 ? idx : 0]]);
         } else {
           const randomIdx = Math.floor(Math.random() * items.length);
-          setDisplayItem(items[randomIdx]);
+          setDisplayItems([items[randomIdx]]);
         }
         steps++;
-        interval += 40; // Slow down progressively
+        interval += 50; // Slow down progressively
         timerRef.current = setTimeout(decelerate, interval);
       };
       decelerate();
@@ -110,18 +117,18 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
         timerRef.current = null;
       }
     };
-  }, [hasResult, targetItem, items]);
+  }, [hasResult, targetItem, items, phase]);
 
   // Reset when idle
   useEffect(() => {
     if (!isSpinning && !hasResult) {
-      isAnimatingRef.current = false;
+      setPhase('idle');
       setIsStopped(false);
       setShowGlow(false);
     }
   }, [isSpinning, hasResult]);
 
-  const isActive = isAnimatingRef.current;
+  const isAnimating = phase === 'spinning' || phase === 'decelerating';
 
   return (
     <div className="flex-1 relative rounded-xl bg-[#0a1628] border border-white/10 overflow-hidden">
@@ -147,30 +154,35 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
       {/* Reel content area */}
       <div className="relative h-10 flex items-center justify-center overflow-hidden">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={displayItem + (isStopped ? '-stopped' : isActive ? '-active' : '-idle')}
-            initial={isActive ? { y: -20, opacity: 0 } : { opacity: 0 }}
-            animate={isActive
-              ? { y: 0, opacity: 1 }
-              : isStopped
-              ? { opacity: 1, scale: [1, 1.08, 1] }
-              : { opacity: 1 }
-            }
-            exit={isActive ? { y: 20, opacity: 0 } : { opacity: 0 }}
-            transition={isActive
-              ? { duration: 0.05, ease: 'linear' }
-              : isStopped
-              ? { duration: 0.3, ease: 'easeOut' }
-              : { duration: 0.15 }
-            }
-            className="text-sm font-black text-center truncate px-2"
-            style={{
-              color: isStopped ? resultColor : '#94a3b8',
-              textShadow: showGlow && isStopped ? `0 0 12px ${accentColor}60` : 'none',
-            }}
-          >
-            {displayItem}
-          </motion.div>
+          {isAnimating ? (
+            <motion.div
+              key={displayItems[0] + '-anim'}
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 20, opacity: 0 }}
+              transition={{ duration: 0.05, ease: 'linear' }}
+              className="text-sm font-black text-center truncate px-2"
+              style={{ color: '#94a3b8' }}
+            >
+              {displayItems[0]}
+            </motion.div>
+          ) : isStopped ? (
+            <motion.div
+              key={displayItems[0] + '-stopped'}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              className="text-sm font-black text-center truncate px-2"
+              style={{
+                color: resultColor,
+                textShadow: showGlow ? `0 0 12px ${accentColor}60` : 'none',
+              }}
+            >
+              {displayItems[0]}
+            </motion.div>
+          ) : (
+            <div className="text-sm font-black text-[#64748b]/50">—</div>
+          )}
         </AnimatePresence>
       </div>
 

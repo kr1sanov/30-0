@@ -19,6 +19,18 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'elite', name: 'Элита', description: 'Средний рейтинг 80+', icon: '💎', condition: 'squadRating >= 80' },
 ];
 
+// ---------------------------------------------------------------------------
+// Telegram User
+// ---------------------------------------------------------------------------
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  language_code?: string;
+}
+
 interface ProfileStats {
   totalSeasons: number;
   bestPoints: number;
@@ -56,6 +68,10 @@ interface GameState {
   screen: GameScreen;
   setScreen: (screen: GameScreen) => void;
 
+  // Telegram user
+  telegramUser: TelegramUser | null;
+  setTelegramUser: (user: TelegramUser | null) => void;
+
   // Game config
   config: GameConfig;
   setConfig: (config: Partial<GameConfig>) => void;
@@ -71,6 +87,9 @@ interface GameState {
   isSpinning: boolean;
   selectedPlayer: PlayerOption | null;
   movingPlayerSlotIndex: number | null;
+
+  // Track the last assigned slot index for auto-scroll/feedback
+  lastAssignedSlotIndex: number | null;
 
   // Draft undo
   lastDraftState: LastDraftState | null;
@@ -115,6 +134,8 @@ interface GameState {
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
   dismissAchievement: () => void;
+  syncProfileToCloud: () => Promise<void>;
+  loadProfileFromCloud: () => Promise<void>;
 }
 
 const defaultConfig: GameConfig = {
@@ -145,6 +166,10 @@ export const useGameStore = create<GameState>()(
       screen: 'home',
       setScreen: (screen) => set({ screen }),
 
+      // Telegram user
+      telegramUser: null,
+      setTelegramUser: (user) => set({ telegramUser: user }),
+
       // Config
       config: defaultConfig,
       setConfig: (config) => set((state) => ({ config: { ...state.config, ...config } })),
@@ -160,6 +185,7 @@ export const useGameStore = create<GameState>()(
       isSpinning: false,
       selectedPlayer: null,
       movingPlayerSlotIndex: null,
+      lastAssignedSlotIndex: null,
 
       // Draft undo
       lastDraftState: null,
@@ -244,6 +270,7 @@ export const useGameStore = create<GameState>()(
             currentSpin: null,
             selectedPlayer: null,
             movingPlayerSlotIndex: null,
+            lastAssignedSlotIndex: null,
             seasonResult: null,
             currentManager: null,
             screen: 'draft',
@@ -261,7 +288,7 @@ export const useGameStore = create<GameState>()(
         const { runId, isSpinning } = get();
         if (!runId || isSpinning) return;
 
-        set({ isSpinning: true, selectedPlayer: null });
+        set({ isSpinning: true, selectedPlayer: null, lastAssignedSlotIndex: null });
 
         try {
           const res = await fetch(`/api/runs/${runId}/spin`, { method: 'POST' });
@@ -376,6 +403,7 @@ export const useGameStore = create<GameState>()(
           selectedPlayer: null,
           currentSpin: null,
           draftVersion: thisVersion,
+          lastAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : {
             slots: prevSlots,
@@ -399,14 +427,14 @@ export const useGameStore = create<GameState>()(
             console.error('Failed to draft player:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
             }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
           }
         });
       },
@@ -416,14 +444,20 @@ export const useGameStore = create<GameState>()(
         if (!runId) return;
 
         const slot = slots[slotIndex];
-        if (!slot) return;
+        if (!slot) {
+          console.warn('[directAssign] Slot not found at index:', slotIndex);
+          return;
+        }
 
         const { canFill, penalty } = canFillSlot(
           player.mainPosition as Position,
           player.otherPositions as Position[],
           slot.position as Position,
         );
-        if (!canFill) return;
+        if (!canFill) {
+          console.warn('[directAssign] Player cannot fill slot:', player.fullName, '→', slot.position);
+          return;
+        }
 
         const slotPosition = `${slot.position}_${slotIndex}`;
 
@@ -433,10 +467,18 @@ export const useGameStore = create<GameState>()(
         // Deep-copy slots for error recovery to prevent shared-reference corruption
         const prevSlots = slots.map(s => ({ ...s }));
 
+        // Save state for undo
+        const undoState: LastDraftState = {
+          slots: prevSlots,
+          currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
+          selectedPlayer: null,
+          screen: 'draft',
+        };
+
         // Increment version so stale error reverts are rejected
         const thisVersion = draftVersion + 1;
 
-        // Optimistically update UI immediately — single atomic update, no intermediate selectedPlayer state
+        // Optimistically update UI immediately — single atomic update
         const newSlots = slots.map(s => ({ ...s }));
         newSlots[slotIndex] = {
           ...slot,
@@ -457,13 +499,9 @@ export const useGameStore = create<GameState>()(
           selectedPlayer: null,
           currentSpin: null,
           draftVersion: thisVersion,
+          lastAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
-          lastDraftState: allFilled ? null : {
-            slots: prevSlots,
-            currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
-            selectedPlayer: null,
-            screen: 'draft',
-          },
+          lastDraftState: allFilled ? null : undoState,
         });
 
         // Fire API in background
@@ -476,17 +514,18 @@ export const useGameStore = create<GameState>()(
           }),
         }).then(async (res) => {
           if (!res.ok) {
-            console.error('Failed to draft player:', await res.json().catch(() => ({})));
+            const errData = await res.json().catch(() => ({}));
+            console.error('[directAssign] API error:', errData);
             // Revert on failure — but only if no other draft action has occurred since
             if (get().draftVersion === thisVersion) {
-              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
             }
           }
         }).catch((error) => {
-          console.error('Failed to draft player:', error);
+          console.error('[directAssign] Network error:', error);
           // Revert on failure — but only if no other draft action has occurred since
           if (get().draftVersion === thisVersion) {
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft', lastAssignedSlotIndex: null });
           }
         });
       },
@@ -595,6 +634,9 @@ export const useGameStore = create<GameState>()(
           // Update profile stats
           get().updateProfileStats(data);
           set({ seasonResult: data, screen: 'result' });
+
+          // Sync to cloud after simulation
+          get().syncProfileToCloud();
         } catch (error) {
           console.error('Failed to simulate:', error);
           set({ screen: 'squad-complete' });
@@ -723,6 +765,7 @@ export const useGameStore = create<GameState>()(
             selectedPlayer: lastDraftState.selectedPlayer,
             screen: lastDraftState.screen,
             lastDraftState: null,
+            lastAssignedSlotIndex: null,
           });
         } catch (error) {
           console.error('Failed to undo pick:', error);
@@ -746,6 +789,7 @@ export const useGameStore = create<GameState>()(
           isSpinning: false,
           selectedPlayer: null,
           movingPlayerSlotIndex: null,
+          lastAssignedSlotIndex: null,
           seasonResult: null,
           currentManager: null,
           isSpinningManager: false,
@@ -769,7 +813,7 @@ export const useGameStore = create<GameState>()(
           set({ screen: 'squad-complete' });
         } else {
           // Always go to draft screen — clear ALL stale transient UI state
-          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null });
+          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null, lastAssignedSlotIndex: null });
         }
       },
 
@@ -793,6 +837,46 @@ export const useGameStore = create<GameState>()(
           console.error('Failed to load leaderboard:', error);
         }
       },
+
+      // Cloud sync — save profile to database
+      syncProfileToCloud: async () => {
+        const { telegramUser, profileStats } = get();
+        if (!telegramUser) return; // Only sync if logged in via Telegram
+
+        try {
+          await fetch('/api/users/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegramId: telegramUser.id,
+              username: telegramUser.username,
+              firstName: telegramUser.first_name,
+              lastName: telegramUser.last_name,
+              photoUrl: telegramUser.photo_url,
+              profileStats,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to sync profile to cloud:', error);
+        }
+      },
+
+      // Load profile from cloud
+      loadProfileFromCloud: async () => {
+        const { telegramUser } = get();
+        if (!telegramUser) return;
+
+        try {
+          const res = await fetch(`/api/users/profile?telegramId=${telegramUser.id}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.profileStats) {
+            set({ profileStats: data.profileStats });
+          }
+        } catch (error) {
+          console.error('Failed to load profile from cloud:', error);
+        }
+      },
     }),
     {
       name: '30-0-rpl-storage',
@@ -811,6 +895,7 @@ export const useGameStore = create<GameState>()(
         currentManager: state.currentManager,
         config: state.config,
         seasonResult: state.seasonResult,
+        telegramUser: state.telegramUser,
       }),
     },
   ),

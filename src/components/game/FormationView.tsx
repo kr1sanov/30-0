@@ -9,7 +9,7 @@ import {
   getCompatiblePositions,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
-import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
+import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -370,7 +370,7 @@ export default function FormationView() {
       {/* Pitch */}
       <div
         className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
-        style={{ paddingBottom: '65%' }}
+        style={{ paddingBottom: '55%' }}
       >
         {/* Pitch stripe pattern */}
         <div
@@ -616,15 +616,13 @@ export default function FormationView() {
                         {effectiveRating ?? slot.playerRating}
                       </span>
                     ) : null}
-                    {/* Player name below the circle */}
+                    {/* Player name below the circle — always show last name + flag emoji */}
                     {slot.playerName && (
                       <span
-                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[60px] truncate"
+                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-bold text-white/80 whitespace-nowrap max-w-[70px] truncate"
                         style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                       >
-                        {isForeignPlayer(slot.playerNationality)
-                          ? slot.playerName
-                          : (slot.playerLastName || slot.playerName.trim().split(/\s+/)[0])}
+                        {slot.playerLastName || slot.playerName.trim().split(/\s+/)[0]}
                         {getNationalityFlag(slot.playerNationality) && (
                           <span className="ml-0.5">{getNationalityFlag(slot.playerNationality)}</span>
                         )}
