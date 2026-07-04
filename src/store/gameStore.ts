@@ -75,6 +75,9 @@ interface GameState {
   // Draft undo
   lastDraftState: LastDraftState | null;
 
+  // Draft version counter — incremented on each draft action to prevent stale error reverts
+  draftVersion: number;
+
   // Manager
   currentManager: Manager | null;
   isSpinningManager: boolean;
@@ -160,6 +163,7 @@ export const useGameStore = create<GameState>()(
 
       // Draft undo
       lastDraftState: null,
+      draftVersion: 0,
 
       // Manager
       currentManager: null,
@@ -245,6 +249,7 @@ export const useGameStore = create<GameState>()(
             screen: 'draft',
             lastConfig: { ...config },
             lastDraftState: null,
+            draftVersion: 0,
             newAchievements: [],
           });
         } catch (error) {
@@ -311,11 +316,11 @@ export const useGameStore = create<GameState>()(
       selectPlayer: (player) => {
         const { slots, currentSpin } = get();
 
-        // Save state before selection for undo
+        // Save state before selection for undo — deep copy slots to prevent shared-reference corruption
         set({
           lastDraftState: {
-            slots: [...slots],
-            currentSpin,
+            slots: slots.map(s => ({ ...s })),
+            currentSpin: currentSpin ? { ...currentSpin, players: [...currentSpin.players] } : null,
             selectedPlayer: null,
             screen: 'draft',
           },
@@ -326,13 +331,13 @@ export const useGameStore = create<GameState>()(
       },
 
       assignToSlot: async (slotIndex) => {
-        const { runId, slots, selectedPlayer, currentSpin } = get();
+        const { runId, slots, selectedPlayer, currentSpin, draftVersion } = get();
         if (!runId || !selectedPlayer) return;
 
         const slot = slots[slotIndex];
         if (!slot) return;
 
-        const { canFill } = canFillSlot(
+        const { canFill, penalty } = canFillSlot(
           selectedPlayer.mainPosition as Position,
           selectedPlayer.otherPositions as Position[],
           slot.position as Position,
@@ -344,9 +349,14 @@ export const useGameStore = create<GameState>()(
         // Save current spin for potential revert
         const savedSpin = currentSpin;
 
+        // Deep-copy slots for error recovery to prevent shared-reference corruption
+        const prevSlots = slots.map(s => ({ ...s }));
+
+        // Increment version so stale error reverts are rejected
+        const thisVersion = draftVersion + 1;
+
         // Optimistically update UI immediately
-        const prevSlots = [...slots];
-        const newSlots = [...slots];
+        const newSlots = slots.map(s => ({ ...s }));
         newSlots[slotIndex] = {
           ...slot,
           playerId: selectedPlayer.playerSeasonId,
@@ -356,7 +366,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: selectedPlayer.mainPosition,
           playerOtherPositions: selectedPlayer.otherPositions,
           playerNationality: selectedPlayer.nationality,
-          isCompatible: true,
+          isCompatible: penalty === 1,
         };
 
         const allFilled = newSlots.every((s) => s.playerId);
@@ -365,10 +375,11 @@ export const useGameStore = create<GameState>()(
           slots: newSlots,
           selectedPlayer: null,
           currentSpin: null,
+          draftVersion: thisVersion,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : {
             slots: prevSlots,
-            currentSpin: savedSpin,
+            currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
             selectedPlayer: null,
             screen: 'draft',
           },
@@ -386,24 +397,28 @@ export const useGameStore = create<GameState>()(
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             console.error('Failed to draft player:', errData);
-            // Revert on failure — restore spin so user can try again
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            // Revert on failure — but only if no other draft action has occurred since
+            if (get().draftVersion === thisVersion) {
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
-          // Revert on failure — restore spin so user can try again
-          set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+          // Revert on failure — but only if no other draft action has occurred since
+          if (get().draftVersion === thisVersion) {
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+          }
         });
       },
 
       directAssign: async (player, slotIndex) => {
-        const { runId, slots, currentSpin } = get();
+        const { runId, slots, currentSpin, draftVersion } = get();
         if (!runId) return;
 
         const slot = slots[slotIndex];
         if (!slot) return;
 
-        const { canFill } = canFillSlot(
+        const { canFill, penalty } = canFillSlot(
           player.mainPosition as Position,
           player.otherPositions as Position[],
           slot.position as Position,
@@ -415,11 +430,14 @@ export const useGameStore = create<GameState>()(
         // Save current spin for potential revert
         const savedSpin = currentSpin;
 
-        // Save undo state
-        const prevSlots = [...slots];
+        // Deep-copy slots for error recovery to prevent shared-reference corruption
+        const prevSlots = slots.map(s => ({ ...s }));
+
+        // Increment version so stale error reverts are rejected
+        const thisVersion = draftVersion + 1;
 
         // Optimistically update UI immediately — single atomic update, no intermediate selectedPlayer state
-        const newSlots = [...slots];
+        const newSlots = slots.map(s => ({ ...s }));
         newSlots[slotIndex] = {
           ...slot,
           playerId: player.playerSeasonId,
@@ -429,7 +447,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: player.mainPosition,
           playerOtherPositions: player.otherPositions,
           playerNationality: player.nationality,
-          isCompatible: true,
+          isCompatible: penalty === 1,
         };
 
         const allFilled = newSlots.every((s) => s.playerId);
@@ -438,10 +456,11 @@ export const useGameStore = create<GameState>()(
           slots: newSlots,
           selectedPlayer: null,
           currentSpin: null,
+          draftVersion: thisVersion,
           screen: allFilled ? 'squad-complete' : 'draft',
           lastDraftState: allFilled ? null : {
             slots: prevSlots,
-            currentSpin: savedSpin,
+            currentSpin: savedSpin ? { ...savedSpin, players: [...savedSpin.players] } : null,
             selectedPlayer: null,
             screen: 'draft',
           },
@@ -458,13 +477,17 @@ export const useGameStore = create<GameState>()(
         }).then(async (res) => {
           if (!res.ok) {
             console.error('Failed to draft player:', await res.json().catch(() => ({})));
-            // Revert on failure — restore spin so user can try again
-            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            // Revert on failure — but only if no other draft action has occurred since
+            if (get().draftVersion === thisVersion) {
+              set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+            }
           }
         }).catch((error) => {
           console.error('Failed to draft player:', error);
-          // Revert on failure — restore spin so user can try again
-          set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+          // Revert on failure — but only if no other draft action has occurred since
+          if (get().draftVersion === thisVersion) {
+            set({ slots: prevSlots, selectedPlayer: null, currentSpin: savedSpin, screen: 'draft' });
+          }
         });
       },
 
@@ -712,10 +735,6 @@ export const useGameStore = create<GameState>()(
         }));
       },
 
-      goHome: () => {
-        set({ screen: 'home' });
-      },
-
       resetGame: () => {
         set({
           screen: 'home',
@@ -731,6 +750,7 @@ export const useGameStore = create<GameState>()(
           currentManager: null,
           isSpinningManager: false,
           lastDraftState: null,
+          draftVersion: 0,
           newAchievements: [],
         });
       },
@@ -748,8 +768,8 @@ export const useGameStore = create<GameState>()(
         } else if (allFilled) {
           set({ screen: 'squad-complete' });
         } else {
-          // Always go to draft screen — clear stale transient UI state
-          set({ screen: 'draft', selectedPlayer: null, currentSpin: null });
+          // Always go to draft screen — clear ALL stale transient UI state
+          set({ screen: 'draft', selectedPlayer: null, currentSpin: null, isSpinning: false, movingPlayerSlotIndex: null });
         }
       },
 

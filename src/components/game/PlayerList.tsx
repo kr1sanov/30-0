@@ -184,14 +184,6 @@ export default function PlayerList() {
                     {!foreign && <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>}
                     {flagEmoji && <span className="ml-1.5">{flagEmoji}</span>}
                   </div>
-                  <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    {/* Nationality text */}
-                    {player.nationality && (
-                      <span className="text-[10px] text-[#64748b]">
-                        {player.nationality}
-                      </span>
-                    )}
-                  </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
                     {[player.mainPosition, ...player.otherPositions].map((pos, posIdx) => {

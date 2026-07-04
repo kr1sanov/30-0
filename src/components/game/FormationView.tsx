@@ -370,7 +370,7 @@ export default function FormationView() {
       {/* Pitch */}
       <div
         className="relative w-full rounded-2xl overflow-hidden border border-[#1a5c30]/50 pitch-elevated"
-        style={{ paddingBottom: '90%' }}
+        style={{ paddingBottom: '65%' }}
       >
         {/* Pitch stripe pattern */}
         <div
@@ -545,7 +545,7 @@ export default function FormationView() {
               layout
             >
               <div
-                className={`relative flex flex-col items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all duration-200 ${
+                className={`relative flex flex-col items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-full border-2 transition-all duration-200 ${
                   isFilled
                     ? 'border-white/60 backdrop-blur-sm player-inner-glow player-circle-3d animate-subtle-pulse'
                     : isIncompatible
@@ -625,6 +625,9 @@ export default function FormationView() {
                         {isForeignPlayer(slot.playerNationality)
                           ? slot.playerName
                           : (slot.playerLastName || slot.playerName.trim().split(/\s+/)[0])}
+                        {getNationalityFlag(slot.playerNationality) && (
+                          <span className="ml-0.5">{getNationalityFlag(slot.playerNationality)}</span>
+                        )}
                       </span>
                     )}
                   </>

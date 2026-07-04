@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RotateCcw, Zap } from 'lucide-react';
+import { RotateCcw, Zap, Loader2 } from 'lucide-react';
 
 /* ─── RPL data for slot reels ─── */
 const RPL_CLUBS = [
@@ -36,16 +36,21 @@ interface SlotReelProps {
 
 function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
   const [displayItem, setDisplayItem] = useState<string>(items[0]);
-  const [phase, setPhase] = useState<'idle' | 'cycling' | 'decelerating' | 'stopped'>('idle');
+  const [isStopped, setIsStopped] = useState(false);
+  const [showGlow, setShowGlow] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isAnimatingRef = useRef(false);
 
   // Fast cycling phase: rapidly show random items
   useEffect(() => {
     if (isSpinning && !hasResult) {
-      setPhase('cycling');
-      let interval = 80;
+      setIsStopped(false);
+      setShowGlow(false);
+      isAnimatingRef.current = true;
+      let interval = 60;
 
       const cycle = () => {
+        if (!isAnimatingRef.current) return;
         const randomIdx = Math.floor(Math.random() * items.length);
         setDisplayItem(items[randomIdx]);
         timerRef.current = setTimeout(cycle, interval);
@@ -63,27 +68,27 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 
   // Deceleration phase: slow down and land on target
   useEffect(() => {
-    if (hasResult && targetItem && (phase === 'cycling' || phase === 'idle')) {
+    if (hasResult && targetItem && isAnimatingRef.current) {
       // Clear cycling timer
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
 
-      setPhase('decelerating');
-      let interval = 100;
+      let interval = 80;
       let steps = 0;
-      const maxSteps = 8;
+      const maxSteps = 10;
 
       const decelerate = () => {
         if (steps >= maxSteps) {
           setDisplayItem(targetItem);
-          setPhase('stopped');
+          setIsStopped(true);
+          setTimeout(() => setShowGlow(true), 100);
+          isAnimatingRef.current = false;
           return;
         }
-        // Show random items as we decelerate, gradually showing items closer to target
+        // Last 2 steps: show items near the target for drama
         if (steps >= maxSteps - 2) {
-          // Last 2 steps: show items near the target for drama
           const targetIdx = items.indexOf(targetItem);
           const offset = maxSteps - steps;
           const idx = (targetIdx + offset) % items.length;
@@ -93,7 +98,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
           setDisplayItem(items[randomIdx]);
         }
         steps++;
-        interval += 50; // Slow down progressively
+        interval += 40; // Slow down progressively
         timerRef.current = setTimeout(decelerate, interval);
       };
       decelerate();
@@ -105,17 +110,18 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
         timerRef.current = null;
       }
     };
-  }, [hasResult, targetItem, items, phase]);
+  }, [hasResult, targetItem, items]);
 
   // Reset when idle
   useEffect(() => {
     if (!isSpinning && !hasResult) {
-      setPhase('idle');
+      isAnimatingRef.current = false;
+      setIsStopped(false);
+      setShowGlow(false);
     }
   }, [isSpinning, hasResult]);
 
-  const isActive = phase === 'cycling' || phase === 'decelerating';
-  const isStopped = phase === 'stopped' || (hasResult && !isSpinning);
+  const isActive = isAnimatingRef.current;
 
   return (
     <div className="flex-1 relative rounded-xl bg-[#0a1628] border border-white/10 overflow-hidden">
@@ -142,7 +148,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
       <div className="relative h-10 flex items-center justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
-            key={displayItem + (isActive ? '-active' : isStopped ? '-stopped' : '-idle')}
+            key={displayItem + (isStopped ? '-stopped' : isActive ? '-active' : '-idle')}
             initial={isActive ? { y: -20, opacity: 0 } : { opacity: 0 }}
             animate={isActive
               ? { y: 0, opacity: 1 }
@@ -152,7 +158,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
             }
             exit={isActive ? { y: 20, opacity: 0 } : { opacity: 0 }}
             transition={isActive
-              ? { duration: 0.06, ease: 'linear' }
+              ? { duration: 0.05, ease: 'linear' }
               : isStopped
               ? { duration: 0.3, ease: 'easeOut' }
               : { duration: 0.15 }
@@ -160,7 +166,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
             className="text-sm font-black text-center truncate px-2"
             style={{
               color: isStopped ? resultColor : '#94a3b8',
-              textShadow: isStopped ? `0 0 12px ${accentColor}60` : 'none',
+              textShadow: showGlow && isStopped ? `0 0 12px ${accentColor}60` : 'none',
             }}
           >
             {displayItem}
@@ -176,11 +182,6 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 
 /**
  * SpinWheel — 38-0 style slot-machine spin component.
- *
- * Flow:
- * 1. Idle: Shows "КРУТИТЬ СОСТАВ" + "X позиций осталось" + Spin button
- * 2. Spinning: Two slot reels rapidly cycling clubs & seasons
- * 3. Result: Reels decelerate and stop on target + Re-roll button
  */
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config } =
@@ -235,9 +236,6 @@ export default function SpinWheel() {
               exit={{ opacity: 0 }}
               className="p-4"
             >
-              <div className="text-[10px] uppercase tracking-widest text-[#64748b] font-bold mb-2 text-center">
-                Крутим состав
-              </div>
               <div className="flex items-center gap-2">
                 <SlotReel
                   items={RPL_CLUBS}
@@ -332,7 +330,7 @@ export default function SpinWheel() {
                 className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {isSpinning ? (
-                  <span className="animate-pulse">Крутится...</span>
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     <Zap className="w-4 h-4" />
