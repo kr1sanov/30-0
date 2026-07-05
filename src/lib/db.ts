@@ -10,7 +10,7 @@ const isProd = process.env.NODE_ENV === 'production'
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: isProd ? ['error', 'warn'] : ['query'],
+    log: ['error'],
     datasources: {
       db: {
         url: process.env.DATABASE_URL,

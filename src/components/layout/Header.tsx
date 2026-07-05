@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { useSound } from '@/hooks/use-sound';
-import { Home, User, Trophy, HelpCircle, Volume2, VolumeX } from 'lucide-react';
+import { Home, User, HelpCircle, Volume2, VolumeX } from 'lucide-react';
 
 const GAME_SCREENS = new Set([
   'draft',
@@ -115,13 +115,7 @@ export default function Header() {
               <User className="w-4 h-4" />
             </button>
 
-            <button
-              onClick={() => useGameStore.getState().loadLeaderboard()}
-              className="p-2 text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#0d2d0d] transition-all"
-              title="Лидерборд"
-            >
-              <Trophy className="w-4 h-4" />
-            </button>
+            {/* Leaderboard hidden */}
           </div>
         </div>
       </header>

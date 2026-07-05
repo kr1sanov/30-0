@@ -1259,7 +1259,7 @@ export default function Home() {
       case 'profile':
         return <ProfileScreen />;
       case 'leaderboard':
-        return <LeaderboardScreen />;
+        return <HomePage />; // Leaderboard hidden
       default:
         return <HomePage />;
     }

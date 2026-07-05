@@ -709,3 +709,31 @@ Stage Summary:
 - UI polished to be closer to 38-0.app style
 - All changes pass lint
 - No functionality broken
+
+---
+Task ID: 1-8
+Agent: Main
+Task: Fix UI issues and gameplay errors per user request
+
+Work Log:
+- Removed "30-0 RPL" from: Footer copyright (→ "© 2025 Футбольный драфт"), page title metadata (→ "Футбольный драфт РПЛ")
+- Header already didn't have "30-0 RPL" text (removed in previous session)
+- Verified game modes: Only Классика is active, others (Один клуб, Ежедневный челлендж, Кубок наций) show "СКОРО" badge - already correct
+- Searched for "PLAY WITH MATES" and "MORE WAYS TO PLAY" - NOT FOUND in codebase
+- Hidden Leaderboard: Removed Trophy button from Header.tsx, disabled leaderboard screen in page.tsx
+- Searched for "Режим клуба" - NOT FOUND in GameSetup.tsx (already absent)
+- Fixed ROOT CAUSE of gameplay failure: SQLite database was read-only! `chmod 666 /home/z/my-project/db/custom.db` and `chmod 777 /home/z/my-project/db/` fixed the issue
+- Verified "OVERALL" → "Рейтинг": Already displays as "Рейтинг" in SquadStats.tsx and PreMatchAnalysis.tsx
+- Reduced Prisma logging from ['query'] to ['error'] to reduce memory usage
+- Tested API: Create Run returns 201, Spin returns 200 with valid data (Club, Season, Players)
+- Game flow matches 38-0.app: Spin → Pick player → Assign position → Repeat 11x → Squad Complete → Manager → Simulate → Results
+- Lint passes with no errors
+
+Stage Summary:
+- "30-0 RPL" removed from all visible header/footer locations
+- Leaderboard hidden (button removed, screen disabled)
+- Gameplay fixed: Database was read-only (chmod fix), API returns valid data
+- "OVERALL" already shows as "Рейтинг" - no change needed
+- Game modes already correct (only Классика active)
+- "PLAY WITH MATES", "MORE WAYS TO PLAY", "Режим клуба" not found in codebase
+- Sandbox memory constraints cause server to die during heavy operations (agent-browser + spin API)

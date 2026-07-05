@@ -197,7 +197,7 @@ export default function Footer() {
 
             {/* Copyright */}
             <div className="text-xs text-[#94a3b8]/40">
-              © 2025 30-0 RPL
+              © 2025 Футбольный драфт
             </div>
           </div>
         </div>
