@@ -359,7 +359,7 @@ export default function SpinWheel() {
                   <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
                     Клуб
                   </div>
-                  <div className="text-base font-black text-white">
+                  <div className="text-lg font-black text-white">
                     {currentSpin!.clubName}
                   </div>
                 </div>

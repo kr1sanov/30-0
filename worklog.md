@@ -595,3 +595,41 @@ Stage Summary:
 - Achievement system fires correctly during simulation
 - Minor note: Next.js dev tools portal occasionally covers position assignment buttons in dev mode — this is NOT a production issue
 - No crashes, no JavaScript errors, full cycle completes cleanly
+
+---
+Task ID: 4
+Agent: Phase 4 UI Polish
+Task: UI polish improvements to match 38-0 style
+
+Work Log:
+- Home Screen: Added `whitespace-nowrap` to h1 title to prevent "30-0" from wrapping across lines
+- Home Screen: Reduced overall spacing from `space-y-4` to `space-y-3` for more compact layout
+- Home Screen: Reduced hero section spacing from `space-y-2` to `space-y-1.5`
+- Home Screen: Reduced hero container padding from `p-3 sm:p-5` to `p-2 sm:p-4`
+- Home Screen: Reduced subtitle size from `text-xl sm:text-3xl` to `text-lg sm:text-2xl` and margin from `mt-2` to `mt-1`
+- Home Screen: Reduced CTA button gap from `gap-2` to `gap-1.5`
+- Home Screen: Reduced Game Modes section spacing and heading size
+- Home Screen: Reduced Game Mode card padding from `p-6 sm:p-8` to `p-4 sm:p-6`
+- Home Screen: Compacted "Как играть" section: reduced spacing from `space-y-3` to `space-y-2`, step card padding from `p-3` to `p-2`, heading from `text-2xl sm:text-3xl` to `text-xl sm:text-2xl`, step card gap from `space-y-3` to `space-y-1.5`
+- Home Screen: Reduced Челленджи and FAQ heading sizes for consistency
+- Draft Screen: Changed "РЕЙТИНГ" (all-caps) to "Рейтинг" with normal casing and improved styling
+- SpinWheel: Increased club name font size from `text-base` to `text-lg` for more prominent display
+- FormationView: Increased pitch paddingBottom from 62% to 68% for taller pitch
+- FormationView: Increased filled player card minWidth from 52px to 56px and minHeight from 38px to 42px
+- FormationView: Increased rating text size from `text-[9px] sm:text-[10px]` to `text-[10px] sm:text-[11px]`
+- FormationView: Increased position label text from `text-[5px] sm:text-[6px]` to `text-[6px] sm:text-[7px]`
+- PlayerList: Increased position button min-height from 40px to 44px and min-width from 52px to 56px for better touch targets
+- PlayerList: Increased position button padding from `py-2` to `py-2.5`
+- SquadStats: Changed "Рейтинг" label from `text-[#94a3b8]` to `text-[#e2e8f0] font-bold` for proper heading emphasis
+- SimulationResult: Increased final stats grid numbers from `text-xl` to `text-2xl` for more prominent display
+
+Stage Summary:
+- Home screen is more compact with reduced spacing throughout, no excessive scrolling
+- "30-0" title displays on a single line with whitespace-nowrap
+- Draft screen rating label shows as "Рейтинг" (normal casing) instead of all-caps
+- Club name banner is more prominent with larger font
+- Pitch is taller (68% vs 62%) giving player cards more room
+- Player cards are slightly larger with more readable text
+- Position buttons have better touch targets (44px min-height)
+- Stats numbers in simulation results are more prominent (text-2xl)
+- Lint passes with no errors

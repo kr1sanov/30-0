@@ -376,7 +376,7 @@ export default function FormationView() {
       {/* ===== Compact Pitch ===== */}
       <div
         className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
-        style={{ maxWidth: '400px', paddingBottom: '62%' }}
+        style={{ maxWidth: '400px', paddingBottom: '68%' }}
       >
         {/* Pitch base — dark green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
@@ -516,8 +516,8 @@ export default function FormationView() {
                 style={{
                   width: isFilled ? undefined : '34px',
                   height: isFilled ? undefined : '26px',
-                  minWidth: isFilled ? '52px' : '34px',
-                  minHeight: isFilled ? '38px' : '26px',
+                  minWidth: isFilled ? '56px' : '34px',
+                  minHeight: isFilled ? '42px' : '26px',
                   backgroundColor: isFilled
                     ? `${color}cc`
                     : isIncompatible
@@ -555,7 +555,7 @@ export default function FormationView() {
                     {/* Rating number — colored by rating tier */}
                     {slot.playerRating && (
                       <span
-                        className="text-[9px] sm:text-[10px] font-black leading-none"
+                        className="text-[10px] sm:text-[11px] font-black leading-none"
                         style={{
                           color: getRatingColor(slot.playerRating),
                         }}
@@ -565,7 +565,7 @@ export default function FormationView() {
                     )}
                     {/* Position abbreviation */}
                     <span
-                      className="text-[5px] sm:text-[6px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
+                      className="text-[6px] sm:text-[7px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
                       style={{ backgroundColor: `${color}44` }}
                     >
                       {slot.position}

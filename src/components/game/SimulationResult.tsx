@@ -290,19 +290,19 @@ export default function SimulationResult() {
       >
         <div className="grid grid-cols-4 gap-3 mb-3">
           <div className="text-center">
-            <div className="text-xl font-black text-[#22c55e]">{currentStats.w}</div>
+            <div className="text-2xl font-black text-[#22c55e]">{currentStats.w}</div>
             <div className="text-[10px] text-[#94a3b8] uppercase tracking-wider">Побед</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-black text-[#e2e8f0]">{currentStats.d}</div>
+            <div className="text-2xl font-black text-[#e2e8f0]">{currentStats.d}</div>
             <div className="text-[10px] text-[#94a3b8] uppercase tracking-wider">Ничьи</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-black text-[#ef4444]">{currentStats.l}</div>
+            <div className="text-2xl font-black text-[#ef4444]">{currentStats.l}</div>
             <div className="text-[10px] text-[#94a3b8] uppercase tracking-wider">Поражений</div>
           </div>
           <div className="text-center">
-            <div className="text-xl font-black text-[#fbbf24]">{currentStats.pts}</div>
+            <div className="text-2xl font-black text-[#fbbf24]">{currentStats.pts}</div>
             <div className="text-[10px] text-[#94a3b8] uppercase tracking-wider">Очки</div>
           </div>
         </div>

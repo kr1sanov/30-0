@@ -290,7 +290,7 @@ export default function PlayerList() {
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                              className="relative min-h-[40px] min-w-[52px] px-4 py-2 rounded-lg font-bold text-white text-sm
+                              className="relative min-h-[44px] min-w-[56px] px-4 py-2.5 rounded-lg font-bold text-white text-sm
                                 border-2 border-[#22c55e]/60 shadow-[0_0_10px_rgba(34,197,94,0.25)]
                                 hover:border-[#22c55e] hover:shadow-[0_0_16px_rgba(34,197,94,0.4)]
                                 active:scale-95 transition-all duration-150"

@@ -101,7 +101,7 @@ export default function SquadStats() {
           className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
         >
           <div className="text-4xl font-black text-[#e2e8f0]">{overall}</div>
-          <div className="text-sm text-[#94a3b8] mt-1">Рейтинг</div>
+          <div className="text-sm font-bold text-[#e2e8f0] mt-1">Рейтинг</div>
           <div className="text-xs text-[#94a3b8]/60 mt-0.5">{filledCount}/11 заполнено</div>
         </motion.div>
 

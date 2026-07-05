@@ -279,16 +279,16 @@ function HomePage() {
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-3 pb-8">
       {/* ── Hero Section ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.15 }}
-        className="flex flex-col items-center justify-center text-center space-y-2 pt-1"
+        className="flex flex-col items-center justify-center text-center space-y-1.5 pt-1"
       >
         {/* Hero container — simple, clean */}
-        <div className="relative rounded-3xl p-3 sm:p-5 overflow-hidden">
+        <div className="relative rounded-3xl p-2 sm:p-4 overflow-hidden">
           {/* Green radial glow behind title */}
           <div
             className="absolute inset-0 pointer-events-none"
@@ -300,7 +300,7 @@ function HomePage() {
           <div className="relative z-10">
             {/* Animated Score Counter */}
             <div className="relative inline-block">
-              <h1 className="text-7xl sm:text-9xl font-black leading-none" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
+              <h1 className="text-7xl sm:text-9xl font-black leading-none whitespace-nowrap" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
                 <AnimatedCounter target={30} duration={350} delay={0} />
                 <span className="text-[#22c55e]">-</span>
                 <motion.span
@@ -336,7 +336,7 @@ function HomePage() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05, duration: 0.2 }}
-              className="text-xl sm:text-3xl font-black text-white mt-2"
+              className="text-lg sm:text-2xl font-black text-white mt-1"
             >
               Составьте символическую сборную лучших российских команд всех времен
             </motion.p>
@@ -344,7 +344,7 @@ function HomePage() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-1.5">
           <Button
             onClick={() => setScreen('setup')}
             className="h-12 sm:h-14 px-8 sm:px-12 text-base sm:text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-[0.97] btn-inner-shimmer"
@@ -375,10 +375,10 @@ function HomePage() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
-        className="space-y-3"
+        className="space-y-2"
       >
         <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">Игровые режимы</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-[#e2e8f0]">Игровые режимы</h2>
         </div>
         {/* Active mode: Классика */}
         {GAME_MODES.filter(m => m.active).map((mode, i) => (
@@ -392,7 +392,7 @@ function HomePage() {
                 setScreen('setup');
               }
             }}
-            className="relative w-full rounded-2xl p-6 sm:p-8 text-left border transition-all overflow-hidden group bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)] active:scale-[0.98]"
+            className="relative w-full rounded-2xl p-4 sm:p-6 text-left border transition-all overflow-hidden group bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)] active:scale-[0.98]"
           >
             <div className="flex items-center gap-4">
               <div className="text-4xl sm:text-5xl">{mode.emoji}</div>
@@ -434,19 +434,19 @@ function HomePage() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.08 }}
-        className="space-y-3"
+        className="space-y-2"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0]">
           Как играть
         </h2>
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.title}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 + i * 0.08 }}
-              className="flex items-center gap-3 rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a]"
+              className="flex items-center gap-2.5 rounded-xl bg-[#0d2d0d] p-2 border border-[#1a3a1a]"
             >
               {/* Green numbered circle */}
               <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
@@ -488,7 +488,7 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.12 }}
         className="space-y-2"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0] mb-2">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0] mb-1">
           Челленджи
         </h2>
         <div className="grid grid-cols-2 gap-3">
@@ -544,7 +544,7 @@ function HomePage() {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="space-y-3"
       >
-        <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0] mb-2">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0] mb-1">
           Частые вопросы
         </h2>
         <Accordion type="single" collapsible className="space-y-3">
@@ -775,7 +775,7 @@ function DraftScreen() {
             <div className="text-3xl sm:text-4xl font-black leading-none" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
               {avgRating ?? '—'}
             </div>
-            <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mt-1">РЕЙТИНГ</div>
+            <div className="text-[10px] tracking-wide text-[#94a3b8] font-bold mt-1">Рейтинг</div>
           </div>
           {/* Category bars */}
           <div className="flex-1 space-y-1.5">
