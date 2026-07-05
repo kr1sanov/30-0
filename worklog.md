@@ -633,3 +633,79 @@ Stage Summary:
 - Position buttons have better touch targets (44px min-height)
 - Stats numbers in simulation results are more prominent (text-2xl)
 - Lint passes with no errors
+
+---
+
+## Session: 2026-07-05 — MVP Classic Mode Cleanup & Full Game Cycle
+
+---
+Task ID: 1
+Agent: Phase 1 UI Cleanup
+Task: UI cleanup - remove 30-0 from header, only Классика active, remove unused sections, replace OVERALL with Рейтинг
+
+Work Log:
+- Removed "30-0" text from Header.tsx on all screens
+- Only "Классика" mode is active on home screen, other modes show "Скоро" badge
+- Removed "PLAY WITH MATES" and "MORE WAYS TO PLAY" sections from home screen
+- Hidden Leaderboard navigation (Footer removed)
+- Replaced "OVERALL" / "Общий рейтинг" with "Рейтинг" in SquadStats.tsx and PreMatchAnalysis.tsx
+- "Режим клуба" block confirmed not present in GameSetup.tsx
+
+Stage Summary:
+- Home screen cleaned up to show only active Классика mode
+- Header is now minimal (empty bar) on non-game screens
+- Footer completely removed from all screens
+- All OVERALL references replaced with Рейтинг
+
+---
+Task ID: 2
+Agent: Phase 2 Spin Fix Verification
+Task: Verify spin button works correctly with SQLite database
+
+Work Log:
+- Tested POST /api/runs API — creates game run successfully
+- Tested POST /api/runs/{runId}/spin API — returns player data correctly
+- Browser tested full spin flow: click Крутить → spin animation → player list appears
+- Player selection and position assignment work correctly
+- No errors in dev server logs
+
+Stage Summary:
+- Spin button works perfectly in local SQLite environment
+- The original crash was likely on production (30-0.app) with misconfigured Supabase/PostgreSQL
+- Local development environment is fully functional
+
+---
+Task ID: 3
+Agent: Phase 3 Full Game Cycle
+Task: Verify full game cycle end-to-end
+
+Work Log:
+- Browser tested complete flow: Home → Классика → Setup → Draft (11 spins) → Squad Complete → Manager Choice (skipped) → Pre-Match Analysis → Simulate → Result → Awards → Home
+- Added navigation from Result screen to Awards screen (🏆 Награды сезона button)
+- All 11 draft rounds completed successfully
+- Simulation runs and produces results with match details
+- Achievement system triggers correctly
+- Awards screen shows MVP, Golden Boot, etc.
+
+Stage Summary:
+- Full game cycle works end-to-end with no crashes
+- Result → Awards navigation added
+- All screens render correctly
+
+---
+Task ID: 4
+Agent: Phase 4 UI Polish
+Task: UI polish improvements to match 38-0 style
+
+Work Log:
+- Home screen: compact spacing, whitespace-nowrap on 30-0 title, tighter sections
+- Draft screen: "РЕЙТИНГ" → "Рейтинг" proper casing, larger club name in spin result
+- FormationView: taller pitch (62% → 68%), larger player cards (52→56px min, 38→42px min), larger text
+- PlayerList: larger position buttons (40→44px min-height) for mobile touch targets
+- SquadStats: emphasized Рейтинг heading with bold white text
+- SimulationResult: larger stats numbers (text-xl → text-2xl)
+
+Stage Summary:
+- UI polished to be closer to 38-0.app style
+- All changes pass lint
+- No functionality broken
