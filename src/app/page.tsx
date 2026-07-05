@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import GameSetup from '@/components/game/GameSetup';
 import FormationView from '@/components/game/FormationView';
 import SpinWheel from '@/components/game/SpinWheel';
@@ -371,7 +370,7 @@ function HomePage() {
         )}
       </motion.div>
 
-      {/* ── PLAY WITH MATES Section ── */}
+      {/* ── Game Modes Section (only Классика active) ── */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -380,8 +379,8 @@ function HomePage() {
       >
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0]">Игровые режимы</h2>
-          <p className="text-xs font-semibold tracking-[0.2em] text-[#22c55e]/70 mt-1">PLAY WITH MATES</p>
         </div>
+        {/* Active mode: Классика */}
         {GAME_MODES.filter(m => m.active).map((mode, i) => (
           <motion.button
             key={mode.title}
@@ -407,41 +406,25 @@ function HomePage() {
             </div>
           </motion.button>
         ))}
-      </motion.div>
-
-      {/* ── MORE WAYS TO PLAY Section ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.15 }}
-        className="space-y-3"
-      >
-        <p className="text-xs font-semibold tracking-[0.2em] text-[#9ca3af]/60 text-center">MORE WAYS TO PLAY</p>
+        {/* Inactive modes with "Скоро" badge */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {GAME_MODES.filter(m => !m.active).map((mode, i) => (
-            <motion.button
+            <motion.div
               key={mode.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.08 }}
-              onClick={() => {
-                toast('Скоро!');
-              }}
               className="relative rounded-xl p-4 text-left border overflow-hidden bg-[#0d2d0d]/40 border-[#1a3a1a]/30 opacity-60 cursor-not-allowed"
             >
-              {/* Badge for coming soon */}
-              {mode.badge && (
-                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
-                  {mode.badge}
-                </span>
-              )}
-
+              <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
+                Скоро
+              </span>
               <div className="text-2xl mb-2 grayscale">
                 {mode.emoji}
               </div>
               <div className="text-sm font-semibold text-[#e2e8f0]/70 mb-1">{mode.title}</div>
               <div className="text-xs text-[#9ca3af]/50 leading-relaxed">{mode.desc}</div>
-            </motion.button>
+            </motion.div>
           ))}
         </div>
       </motion.div>
@@ -784,10 +767,10 @@ function DraftScreen() {
         </div>
       )}
 
-      {/* ── Squad Stats Panel (38-0 style, prominent OVERALL) ── */}
+      {/* ── Squad Stats Panel ── */}
       <div className="rounded-xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-3">
         <div className="flex items-center gap-3 mb-3">
-          {/* Big OVERALL number */}
+          {/* Big rating number */}
           <div className="text-center">
             <div className="text-3xl sm:text-4xl font-black leading-none" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
               {avgRating ?? '—'}
@@ -1290,7 +1273,6 @@ export default function Home() {
       <main className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10">
         {renderScreen()}
       </main>
-      <Footer />
       <AchievementUnlocked />
     </div>
   );

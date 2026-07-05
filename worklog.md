@@ -527,3 +527,71 @@ Stage Summary:
 - Position restrictions (strict matching) enforced — only positions listed on player's card are shown
 - All lint checks pass
 - Flow verified end-to-end with agent-browser
+
+---
+Task ID: 1
+Agent: Phase 1 UI Cleanup
+Task: UI cleanup - remove 30-0 from header, only Классика active, remove unused sections, replace OVERALL with Рейтинг
+
+Work Log:
+- Removed "30-0" text from Header.tsx — header now shows empty minimal bar (background only, no text)
+- Removed "PLAY WITH MATES" section heading from home screen game modes area
+- Removed "MORE WAYS TO PLAY" section heading and its separate block from home screen
+- Consolidated game modes into single section: active mode (Классика) on top, inactive modes (Один клуб, Ежедневный челлендж, Кубок наций) shown below with "Скоро" badges and cursor-not-allowed
+- Removed Footer import and <Footer /> component from page.tsx — footer no longer renders on any screen
+- Leaderboard is now inaccessible (was only reachable via Footer navigation)
+- Confirmed "Режим клуба" does not exist in GameSetup.tsx — no changes needed
+- Replaced comment "OVERALL" references in page.tsx Squad Stats Panel
+- Replaced "Общий рейтинг" → "Рейтинг" in SquadStats.tsx and PreMatchAnalysis.tsx
+- Removed all "OVERALL" text from comments/user-facing strings across the codebase
+- Lint passes with no errors
+- Dev server compiles successfully
+
+Stage Summary:
+- Header is now minimal (no "30-0" text) on all screens
+- Home screen only has "Классика" as active mode; other modes show "Скоро" badge
+- "PLAY WITH MATES" and "MORE WAYS TO PLAY" sections removed
+- Footer completely removed — leaderboard inaccessible in MVP
+- All "OVERALL"/"Общий рейтинг" replaced with "Рейтинг" in user-facing text
+- "Режим клуба" not found in codebase — no action needed
+
+---
+Task ID: 3
+Agent: Browser Test Agent
+Task: Full game cycle browser test
+
+Work Log:
+- Read existing worklog for context (previous tasks 1-8 covered player assignment fix, UX improvements, layout changes, etc.)
+- Opened http://localhost:3000 with agent-browser, set viewport to 390x844 (mobile/TMA size)
+- Step 1: Home screen verified — shows "30-0" heading, "Играть 30-0 →" button, "⚔️ Классика" mode, challenge cards, FAQ section
+- Step 2: Clicked "⚔️ Классика" → navigated to Game Setup screen with formation picker (4-3-3 default), difficulty selector, "Начать драфт" button
+- Step 3: Clicked "Начать драфт" → Draft screen loaded with 11 empty positions (ВР, ПЗ, ЦЗ×2, ЛЗ, ЦП×3, ПВ, НП, ЛВ) and "Крутить" button
+- Step 4-14: Completed full draft (11 spins + selections + assignments):
+  - Spin 1: Каряка Андрей (79) → ЛЗ
+  - Spin 2: Кержаков Александр (78) → НП
+  - Spin 3: Игнашевич Сергей (84) → ЦЗ (2nd ЦЗ slot — first ЦЗ button was covered by nextjs-portal overlay, clicked 2nd one)
+  - Spin 4: Шунин Антон (69) → ВР
+  - Spin 5: Мамаев Павел (78) → ЦП
+  - Spin 6: Лебеденко Игорь (72) → ЛВ
+  - Spin 7: Козлов Дмитрий (66) → ПВ
+  - Spin 8: Шумуликоски Величе (70) → ЦП
+  - Spin 9: Федотов Евгений (67) → ПЗ
+  - Spin 10: Гарая Эсекьель (74) → ЦЗ
+  - Spin 11: Норманн Матиас (76) → ЦП (filled last position)
+- Minor issue: On 2 occasions, position assignment buttons were covered by `<nextjs-portal>` overlay at click point. Worked around by scrolling or clicking alternate position. This is a Next.js dev tools overlay issue, not a game bug — only occurs in dev mode.
+- Step 15: Squad Complete screen ("Состав готов!") appeared with all 11 players listed, formation stats, "Играть с тренером?" section, and two buttons: "🎰 Крутить тренера" and "Без тренера → Разведка"
+- Step 16: Clicked "Без тренера → Разведка" → Pre-Match Analysis screen ("Разведка перед матчем") appeared with lineup, ratings by line, strong points, and "Сыграть сезон ▶" button
+- Step 17: Clicked "Сыграть сезон ▶" → Season simulation ran
+- Step 18: Result screen appeared with "📊 Итоговая таблица", "🏆 Награды сезона", "🏠 На главную", "🔄 Новая игра" buttons. An achievement popup appeared ("ДОСТИЖЕНИЕ ОТКРЫТО! 🔥 Серия побед — 5+ побед подряд") — clicked to dismiss
+- Step 19: Clicked "🏆 Награды сезона" → Awards screen ("Награды сезона") appeared with "🏠 На главную" button
+- Step 20: Clicked "🏠 На главную" → Successfully returned to Home screen
+- No console errors detected during the entire flow
+
+Stage Summary:
+- Full game cycle works correctly from start to finish: Home → Классика → Draft (11 spins) → Squad Complete → Skip Manager → Pre-Match Analysis → Simulation → Results → Awards → Home
+- All screens render correctly with proper Russian text and navigation
+- Draft flow works well: spin shows player list, click player to select, position buttons appear, click position to assign
+- Auto-scroll and placement feedback work as designed (from previous task fixes)
+- Achievement system fires correctly during simulation
+- Minor note: Next.js dev tools portal occasionally covers position assignment buttons in dev mode — this is NOT a production issue
+- No crashes, no JavaScript errors, full cycle completes cleanly

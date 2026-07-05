@@ -69,7 +69,7 @@ function getPositionColor(pos: string): string {
 // ---------------------------------------------------------------------------
 
 export default function SimulationResult() {
-  const { seasonResult, resetGame, goHome, slots } = useGameStore();
+  const { seasonResult, resetGame, goHome, slots, setScreen } = useGameStore();
   const [currentMatchweek, setCurrentMatchweek] = useState(0);
   const [showTable, setShowTable] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -417,20 +417,28 @@ export default function SimulationResult() {
             )}
 
             {/* Action buttons */}
-            <div className="flex gap-3">
+            <div className="space-y-3">
               <Button
-                onClick={goHome}
-                variant="outline"
-                className="flex-1 h-12 rounded-xl border-[#1a3a1a] text-[#94a3b8] hover:bg-[#0d2d0d] hover:text-[#e2e8f0]"
+                onClick={() => setScreen('awards')}
+                className="w-full h-14 text-base font-black bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40"
               >
-                🏠 На главную
+                🏆 Награды сезона
               </Button>
-              <Button
-                onClick={resetGame}
-                className="flex-1 h-12 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold shadow-lg shadow-[#22c55e]/20"
-              >
-                🔄 Новая игра
-              </Button>
+              <div className="flex gap-3">
+                <Button
+                  onClick={goHome}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl border-[#1a3a1a] text-[#94a3b8] hover:bg-[#0d2d0d] hover:text-[#e2e8f0]"
+                >
+                  🏠 На главную
+                </Button>
+                <Button
+                  onClick={resetGame}
+                  className="flex-1 h-11 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold shadow-lg shadow-[#22c55e]/20"
+                >
+                  🔄 Новая игра
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}

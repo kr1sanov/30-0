@@ -92,7 +92,7 @@ export default function SquadStats() {
 
   return (
     <div className="space-y-4">
-      {/* Overall Rating & Chemistry */}
+      {/* Rating & Chemistry */}
       <div className="grid grid-cols-2 gap-3">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -101,7 +101,7 @@ export default function SquadStats() {
           className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
         >
           <div className="text-4xl font-black text-[#e2e8f0]">{overall}</div>
-          <div className="text-sm text-[#94a3b8] mt-1">Общий рейтинг</div>
+          <div className="text-sm text-[#94a3b8] mt-1">Рейтинг</div>
           <div className="text-xs text-[#94a3b8]/60 mt-0.5">{filledCount}/11 заполнено</div>
         </motion.div>
 
