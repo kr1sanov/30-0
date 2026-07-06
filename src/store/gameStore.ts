@@ -158,6 +158,7 @@ interface GameState {
   finishMoving: () => void;
   spinManager: (manager?: Manager) => Promise<void>;
   simulate: (manager?: Manager | null) => Promise<void>;
+  syncRunWithDB: () => Promise<boolean>;
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => void;
@@ -512,11 +513,30 @@ export const useGameStore = create<GameState>()(
             const errData = await res.json().catch(() => ({}));
             const errStatus = res.status;
 
-            // 400 = business rule violation (slot filled, player already drafted, etc.)
-            // These are permanent — retrying won't help
+            // 400 = business rule violation
             if (errStatus === 400) {
-              console.warn('[assignToSlot] Business rule violation (permanent):', errData);
-              return true; // Treat as success — local state is already correct
+              const errMsg = (errData as { error?: string }).error ?? '';
+
+              // "Slot is already filled" — DB already has this, local state matches
+              if (errMsg.includes('already filled')) {
+                return true;
+              }
+
+              // "Player already drafted" or "cannot fill position" — DB rejected our update
+              // We need to revert the optimistic update
+              console.warn('[assignToSlot] Rejected by server, reverting:', errMsg);
+              const { lastDraftState, draftVersion: currentVersion } = get();
+              if (lastDraftState && currentVersion === thisVersion) {
+                set({
+                  slots: lastDraftState.slots,
+                  currentSpin: lastDraftState.currentSpin,
+                  selectedPlayer: lastDraftState.selectedPlayer,
+                  screen: lastDraftState.screen,
+                  lastDraftError: errMsg,
+                  justAssignedSlotIndex: null,
+                });
+              }
+              return true; // Don't retry — the revert already happened
             }
 
             // 404 = run not found — may need a new run, retry once
@@ -786,6 +806,126 @@ export const useGameStore = create<GameState>()(
       },
 
       // -------------------------------------------------------------------
+      // syncRunWithDB — Sync local slot state with the database
+      // Returns true if all 11 slots are filled in the DB (ready to simulate)
+      // -------------------------------------------------------------------
+      syncRunWithDB: async () => {
+        const { runId, slots } = get();
+        if (!runId) return false;
+
+        try {
+          const res = await fetch(`/api/runs/${runId}`);
+          if (!res.ok) {
+            console.error('[syncRunWithDB] Failed to fetch run');
+            return false;
+          }
+
+          const run = await res.json();
+          const dbSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = run.slots || [];
+
+          // Check which slots are missing from DB but present locally
+          const missingSlots: Array<{ slotIndex: number; slot: DraftSlot }> = [];
+
+          for (let i = 0; i < slots.length; i++) {
+            const slot = slots[i];
+            if (!slot.playerId) continue; // Not filled locally either
+
+            const dbSlot = dbSlots.find((s: { slotPosition: string }) => s.slotPosition === `${slot.position}_${i}`);
+            if (dbSlot && !dbSlot.playerSeasonId) {
+              // Slot is filled locally but not in DB — need to re-save
+              missingSlots.push({ slotIndex: i, slot });
+            }
+          }
+
+          if (missingSlots.length > 0) {
+            console.warn(`[syncRunWithDB] ${missingSlots.length} slots missing from DB, re-saving...`);
+
+            // Re-save each missing slot
+            for (const { slotIndex, slot } of missingSlots) {
+              try {
+                const draftRes = await fetch(`/api/runs/${runId}/draft`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    playerSeasonId: slot.playerId,
+                    slotPosition: `${slot.position}_${slotIndex}`,
+                  }),
+                });
+
+                if (!draftRes.ok) {
+                  const errData = await draftRes.json().catch(() => ({}));
+                  console.error(`[syncRunWithDB] Failed to re-save slot ${slotIndex}:`, errData);
+
+                  // If "slot already filled" — that's fine, DB has it
+                  // If "player already drafted" — we need to handle this differently
+                  if (errData.error?.includes('already drafted')) {
+                    // The player was drafted to a different slot in DB
+                    // Update local state from DB
+                    console.warn(`[syncRunWithDB] Player already drafted elsewhere, syncing from DB`);
+                  }
+                }
+              } catch (err) {
+                console.error(`[syncRunWithDB] Network error re-saving slot ${slotIndex}:`, err);
+              }
+            }
+
+            // Re-fetch the run to get the latest state
+            const refreshRes = await fetch(`/api/runs/${runId}`);
+            if (refreshRes.ok) {
+              const refreshedRun = await refreshRes.json();
+              const refreshedSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = refreshedRun.slots || [];
+
+              const formation = FORMATIONS.find((f) => f.id === get().config.formation);
+              if (formation) {
+                const syncedSlots: DraftSlot[] = formation.slots.map((fSlot, idx) => {
+                  const category = POSITION_CATEGORY[fSlot.position];
+                  const dbSlot = refreshedSlots.find((s: { slotPosition: string }) => s.slotPosition === `${fSlot.position}_${idx}`);
+
+                  if (dbSlot?.playerSeasonId) {
+                    return {
+                      position: fSlot.position,
+                      positionLabel: fSlot.label,
+                      playerId: dbSlot.playerSeasonId,
+                      playerName: dbSlot.playerName ?? undefined,
+                      playerLastName: dbSlot.playerLastName ?? undefined,
+                      playerRating: dbSlot.playerRating ?? undefined,
+                      playerPosition: dbSlot.playerPosition ?? undefined,
+                      playerOtherPositions: dbSlot.playerOtherPositions
+                        ? dbSlot.playerOtherPositions.split(',').map((p: string) => p.trim())
+                        : undefined,
+                      playerNationality: dbSlot.playerNationality ?? undefined,
+                      category,
+                      isCompatible: dbSlot.isCompatible ?? true,
+                    };
+                  }
+
+                  return {
+                    position: fSlot.position,
+                    positionLabel: fSlot.label,
+                    category,
+                    isCompatible: true,
+                  };
+                });
+
+                set({ slots: syncedSlots });
+
+                // Check if all 11 are filled in DB
+                const filledInDB = refreshedSlots.filter((s: { playerSeasonId: string | null }) => s.playerSeasonId).length;
+                return filledInDB >= 11;
+              }
+            }
+          }
+
+          // Check if all 11 are filled in DB
+          const filledInDB = dbSlots.filter((s: { playerSeasonId: string | null }) => s.playerSeasonId).length;
+          return filledInDB >= 11;
+        } catch (error) {
+          console.error('[syncRunWithDB] Error:', error);
+          return false;
+        }
+      },
+
+      // -------------------------------------------------------------------
       // simulate — Run the season simulation
       // -------------------------------------------------------------------
       simulate: async (manager?: Manager | null) => {
@@ -795,6 +935,15 @@ export const useGameStore = create<GameState>()(
         set({ screen: 'simulation' });
 
         try {
+          // First, sync with DB to ensure all slots are persisted
+          const isReady = await get().syncRunWithDB();
+
+          if (!isReady) {
+            console.error('[simulate] Not all slots are filled in DB after sync');
+            set({ screen: 'pre-match' });
+            return;
+          }
+
           const res = await fetch(`/api/runs/${runId}/simulate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -806,8 +955,16 @@ export const useGameStore = create<GameState>()(
           });
 
           if (!res.ok) {
-            console.error('Failed to simulate:', await res.json());
-            set({ screen: 'squad-complete' });
+            const errData = await res.json().catch(() => ({}));
+            console.error('Failed to simulate:', errData);
+
+            // If run already completed, just go to home
+            if (errData.error?.includes('already completed')) {
+              set({ screen: 'home' });
+              return;
+            }
+
+            set({ screen: 'pre-match' });
             return;
           }
 
@@ -820,7 +977,7 @@ export const useGameStore = create<GameState>()(
           get().syncProfileToCloud();
         } catch (error) {
           console.error('Failed to simulate:', error);
-          set({ screen: 'squad-complete' });
+          set({ screen: 'pre-match' });
         }
       },
 
