@@ -79,8 +79,8 @@ export function useTelegram() {
 
     // Set dark theme colors
     try {
-      tg.setHeaderColor('#0a1a0a');
-      tg.setBackgroundColor('#0a1a0a');
+      tg.setHeaderColor('#0A0A0A');
+      tg.setBackgroundColor('#0A0A0A');
     } catch {
       // Some versions may not support these
     }

@@ -197,7 +197,7 @@ function Reel({
             <span
               style={{ fontSize, lineHeight: 1 }}
               className={
-                isEmoji ? '' : 'font-black text-[#e2e8f0] tracking-tight'
+                isEmoji ? '' : 'font-black text-[#FFFFFF] tracking-tight'
               }
             >
               {item}
@@ -237,7 +237,7 @@ function ManagerPoolPreview() {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center gap-3"
     >
-      <div className="text-xs font-semibold uppercase tracking-wider text-[#94a3b8]">
+      <div className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
         {MANAGERS.length} тренеров доступны
       </div>
       <div className="flex items-center -space-x-2">
@@ -250,10 +250,10 @@ function ManagerPoolPreview() {
               initial={{ scale: 0, x: -10 }}
               animate={{ scale: 1, x: 0 }}
               transition={{ type: 'spring', stiffness: 320, damping: 18 }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#0d2d0d]"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border-2 border-[#141414]"
               style={{
                 background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-                color: tier === 'silver' ? '#0a1a0a' : '#0a1a0a',
+                color: tier === 'silver' ? '#0A0A0A' : '#0A0A0A',
                 boxShadow: `0 0 8px ${color}50`,
               }}
               title={`${m.name} · ${m.rating}`}
@@ -262,7 +262,7 @@ function ManagerPoolPreview() {
             </motion.div>
           );
         })}
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[#0d2d0d] bg-[#0a200a] text-[#94a3b8]">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-[#141414] bg-[#0a200a] text-[#9CA3AF]">
           +{remaining}
         </div>
       </div>
@@ -324,9 +324,9 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
           animate={{ rotate: 360 }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
         >
-          <Dices className="w-4 h-4 text-[#22c55e]" />
+          <Dices className="w-4 h-4 text-[#00C896]" />
         </motion.div>
-        <span className="text-xs font-bold uppercase tracking-widest text-[#22c55e]">
+        <span className="text-xs font-bold uppercase tracking-widest text-[#00C896]">
           Ищем тренера…
         </span>
       </div>
@@ -380,7 +380,7 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
 
       {/* Footer hint */}
       <div className="mt-3 text-center text-[10px] text-[#64748b]">
-        Бонус <span className="text-[#22c55e] font-bold">+2</span> к рейтингу
+        Бонус <span className="text-[#00C896] font-bold">+2</span> к рейтингу
         команды
       </div>
     </motion.div>
@@ -440,7 +440,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
               className="absolute top-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-0.5 rounded-full"
               style={{
                 background: `linear-gradient(135deg, ${color}, ${color}cc)`,
-                color: '#0a1a0a',
+                color: '#0A0A0A',
               }}
             >
               <Sparkles className="w-3 h-3" />
@@ -467,7 +467,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
         <div
           className="relative w-20 h-20 rounded-full flex items-center justify-center text-4xl"
           style={{
-            background: `radial-gradient(circle at 30% 30%, ${color}30, #0a1a0a 75%)`,
+            background: `radial-gradient(circle at 30% 30%, ${color}30, #0A0A0A 75%)`,
             border: `2px solid ${color}40`,
           }}
         >
@@ -480,7 +480,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="text-xl font-black text-[#e2e8f0] mb-1.5 leading-tight"
+        className="text-xl font-black text-[#FFFFFF] mb-1.5 leading-tight"
       >
         {manager.name}
       </motion.div>
@@ -534,7 +534,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
             transition={{ delay: 0.35, type: 'spring', stiffness: 320, damping: 14 }}
             className="mt-1 px-3 py-1.5 rounded-lg flex items-center gap-1 font-black text-sm"
             style={{
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              background: 'linear-gradient(135deg, #00C896, #00A67A)',
               color: '#fff',
               boxShadow: '0 4px 12px rgba(34,197,94,0.4)',
             }}
@@ -558,8 +558,8 @@ function ManagerCard({ manager }: { manager: Manager }) {
               border: '1px solid rgba(34, 197, 94, 0.35)',
             }}
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#22c55e]" />
-            <span className="text-xs font-bold text-[#22c55e]">
+            <Sparkles className="w-3.5 h-3.5 text-[#00C896]" />
+            <span className="text-xs font-bold text-[#00C896]">
               {manager.specialAbility}
             </span>
           </motion.div>
@@ -568,7 +568,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
 
       {/* Subtle "play with" preview line */}
       <div className="mt-3 text-[11px] text-[#64748b]">
-        Играть с <span className="text-[#94a3b8] font-semibold">{firstName}</span>{' '}
+        Играть с <span className="text-[#9CA3AF] font-semibold">{firstName}</span>{' '}
         — бонус к рейтингу команды
       </div>
     </motion.div>
@@ -617,14 +617,14 @@ export default function ManagerChoice() {
   const activeTarget = reelTarget || currentManager;
 
   return (
-    <div className="rounded-2xl bg-[#0d2d0d] p-5 space-y-4 border border-[#0d2d0d]">
+    <div className="rounded-2xl bg-[#141414] p-5 space-y-4 border border-[#141414]">
       <div className="text-center">
-        <h3 className="text-lg font-black text-[#e2e8f0]">
+        <h3 className="text-lg font-black text-[#FFFFFF]">
           Играть с тренером?
         </h3>
-        <p className="text-xs text-[#94a3b8] mt-1">
+        <p className="text-xs text-[#9CA3AF] mt-1">
           Тренер даёт{' '}
-          <span className="text-[#22c55e] font-bold">+2 к рейтингу</span>{' '}
+          <span className="text-[#00C896] font-bold">+2 к рейтингу</span>{' '}
           команды в симуляции
         </p>
       </div>
@@ -657,7 +657,7 @@ export default function ManagerChoice() {
         {!currentManager && !isSpinningManager && (
           <Button
             onClick={handleSpinManager}
-            className="w-full h-14 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/30 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
+            className="w-full h-14 text-base font-black bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/30 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
           >
             <motion.span
               animate={{ rotate: [0, 360] }}
@@ -673,7 +673,7 @@ export default function ManagerChoice() {
         {currentManager && !isSpinningManager && (
           <Button
             onClick={handleWithManager}
-            className="w-full h-14 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full h-14 text-base font-black bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Zap className="w-4 h-4 mr-1.5 fill-white" />
             Разведка перед сезоном
@@ -685,7 +685,7 @@ export default function ManagerChoice() {
             onClick={handleSpinManager}
             disabled={isSpinningManager}
             variant="outline"
-            className="w-full h-11 text-sm font-bold border-[#22c55e]/40 text-[#22c55e] hover:bg-[#22c55e]/10 hover:border-[#22c55e]/60 rounded-xl transition-colors"
+            className="w-full h-11 text-sm font-bold border-[#00C896]/40 text-[#00C896] hover:bg-[#00C896]/10 hover:border-[#00C896]/60 rounded-xl transition-colors"
           >
             <RotateCw className="w-4 h-4 mr-2" />
             Крутить ещё раз
@@ -695,7 +695,7 @@ export default function ManagerChoice() {
         {currentManager && !isSpinningManager && (
           <button
             onClick={handleWithoutManager}
-            className="w-full text-xs text-[#64748b] hover:text-[#94a3b8] transition-colors py-2"
+            className="w-full text-xs text-[#64748b] hover:text-[#9CA3AF] transition-colors py-2"
           >
             Без тренера → Разведка
           </button>
@@ -705,7 +705,7 @@ export default function ManagerChoice() {
         {!currentManager && !isSpinningManager && (
           <button
             onClick={handleWithoutManager}
-            className="w-full text-xs text-[#64748b] hover:text-[#94a3b8] transition-colors py-1.5"
+            className="w-full text-xs text-[#64748b] hover:text-[#9CA3AF] transition-colors py-1.5"
           >
             Без тренера → Разведка
           </button>

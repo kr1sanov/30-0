@@ -38,9 +38,9 @@ const STEPS = [
 export default function HowToPlayModal({ open, onClose }: HowToPlayModalProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="bg-[#0d2d0d] border-[#0d2d0d] text-[#e2e8f0] max-w-md rounded-2xl">
+      <DialogContent className="bg-[#141414] border-[#141414] text-[#FFFFFF] max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black text-[#22c55e] text-center">
+          <DialogTitle className="text-xl font-black text-[#00C896] text-center">
             ⚽ Как играть
           </DialogTitle>
         </DialogHeader>
@@ -52,24 +52,24 @@ export default function HowToPlayModal({ open, onClose }: HowToPlayModalProps) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="flex gap-4 items-start p-3 rounded-xl bg-[#0a1a0a]/50 border border-[#0a1a0a]"
+              className="flex gap-4 items-start p-3 rounded-xl bg-[#0A0A0A]/50 border border-[#0A0A0A]"
             >
               <div className="flex flex-col items-center shrink-0">
-                <div className="w-10 h-10 rounded-xl bg-[#22c55e]/15 flex items-center justify-center text-lg">
+                <div className="w-10 h-10 rounded-xl bg-[#00C896]/15 flex items-center justify-center text-lg">
                   {step.emoji}
                 </div>
-                <div className="text-[10px] font-bold text-[#22c55e] mt-1">Шаг {step.number}</div>
+                <div className="text-[10px] font-bold text-[#00C896] mt-1">Шаг {step.number}</div>
               </div>
               <div>
-                <div className="text-sm font-bold text-[#e2e8f0]">{step.title}</div>
-                <div className="text-xs text-[#94a3b8] mt-0.5 leading-relaxed">{step.desc}</div>
+                <div className="text-sm font-bold text-[#FFFFFF]">{step.title}</div>
+                <div className="text-xs text-[#9CA3AF] mt-0.5 leading-relaxed">{step.desc}</div>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/20 p-3 mt-2">
-          <p className="text-xs text-[#22c55e] text-center font-medium">
+        <div className="rounded-xl bg-[#00C896]/10 border border-[#00C896]/20 p-3 mt-2">
+          <p className="text-xs text-[#00C896] text-center font-medium">
             💡 Совет: выбирай формацию под свой стиль игры и используй перебросы, чтобы получить нужный клуб!
           </p>
         </div>

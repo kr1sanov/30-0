@@ -12,6 +12,17 @@ import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
+/* ─── Colors ─── */
+const ACCENT = '#00C896';
+
+// Slot category colors for circles
+const SLOT_COLORS: Record<PositionCategory, string> = {
+  gk: '#fbbf24',    // yellow
+  def: '#3b82f6',   // blue
+  mid: '#22c55e',   // green
+  att: '#f97316',   // red/orange
+};
+
 // ---------------------------------------------------------------------------
 // Formation position layout coordinates (percentage-based)
 // ---------------------------------------------------------------------------
@@ -174,18 +185,19 @@ const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
   ],
 };
 
-// Rating color tiers
-function getRatingColor(rating: number): string {
-  if (rating >= 78) return '#fbbf24';
-  if (rating >= 73) return '#22c55e';
-  if (rating >= 68) return '#f97316';
-  return '#ef4444';
+// Get player initials for filled circle
+function getInitials(name?: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0].substring(0, 2).toUpperCase();
 }
 
-// Get player's last name (surname) for display on field card
+// Get player surname for label below circle
 function getPlayerSurname(lastName?: string): string {
   if (!lastName) return '';
-  // Take only the first word (surname) if multiple words
   const parts = lastName.trim().split(/\s+/);
   return parts[0];
 }
@@ -236,17 +248,14 @@ export default function FormationView() {
     // --- Moving mode: a player is selected for move ---
     if (movingPlayerSlotIndex !== null) {
       if (movingPlayerSlotIndex === index) {
-        // Deselect — cancel move
         finishMoving();
         return;
       }
 
       const sourceSlot = slots[movingPlayerSlotIndex];
       if (slot.playerId) {
-        // Swap two filled players — validation is done in movePlayer
         movePlayer(movingPlayerSlotIndex, index);
       } else {
-        // Move to empty slot — check strict compatibility
         if (sourceSlot?.playerPosition) {
           const canFill = canFillSlotStrict(
             sourceSlot.playerPosition as Position,
@@ -296,7 +305,6 @@ export default function FormationView() {
     slots.forEach((s, i) => {
       if (i === movingPlayerSlotIndex) return;
       if (s.playerId) {
-        // For swap: check if source can go to target's slot AND target can go to source's slot
         const sourceCanGoToTarget = canFillSlotStrict(
           sourceSlot.playerPosition as Position,
           (sourceSlot.playerOtherPositions ?? []) as Position[],
@@ -311,7 +319,6 @@ export default function FormationView() {
           : false;
         if (sourceCanGoToTarget && targetCanGoToSource) targets.add(i);
       } else {
-        // Empty slot: check if source player can fill it
         const canFill = canFillSlotStrict(
           sourceSlot.playerPosition as Position,
           (sourceSlot.playerOtherPositions ?? []) as Position[],
@@ -338,16 +345,17 @@ export default function FormationView() {
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      {/* Selected player indicator — subtle badge showing who is being placed */}
+      {/* Selected player indicator */}
       <AnimatePresence>
         {selectedPlayer && (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="mb-2 px-3 py-1.5 rounded-lg bg-[#0d2d0d]/90 border border-[#22c55e]/25 flex items-center gap-1.5 flex-wrap"
+            className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
+            style={{ backgroundColor: '#0a0a0a', border: `1px solid ${ACCENT}25` }}
           >
-            <span className="text-[10px] text-[#94a3b8]">Выберите позицию в списке для</span>
+            <span className="text-[10px] text-[#94a3b8]">Выберите позицию для</span>
             <span className="text-[10px] font-bold text-white">
               {selectedPlayer.fullName}
             </span>
@@ -363,7 +371,8 @@ export default function FormationView() {
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="mb-2 px-3 py-1.5 rounded-lg bg-[#2d1d0d]/90 border border-[#facc15]/25 flex items-center gap-1.5 flex-wrap"
+            className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
+            style={{ backgroundColor: '#1a150a', border: '1px solid #facc1525' }}
           >
             <span className="text-[10px] text-[#94a3b8]">Выберите позицию для обмена с</span>
             <span className="text-[10px] font-bold text-[#facc15]">
@@ -373,12 +382,12 @@ export default function FormationView() {
         )}
       </AnimatePresence>
 
-      {/* ===== Compact Pitch ===== */}
+      {/* ===== Green Pitch with White Lines ===== */}
       <div
         className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
         style={{ maxWidth: '400px', paddingBottom: '68%' }}
       >
-        {/* Pitch base — dark green */}
+        {/* Pitch base — green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
 
         {/* Subtle stripe pattern */}
@@ -390,34 +399,25 @@ export default function FormationView() {
           }}
         />
 
-        {/* V-shaped mowing pattern */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-[0.04]"
-          style={{
-            backgroundImage:
-              'repeating-linear-gradient(60deg, transparent 0px, transparent 40px, rgba(255,255,255,0.3) 40px, rgba(255,255,255,0.3) 80px)',
-          }}
-        />
-
-        {/* Pitch border outline */}
-        <div className="absolute inset-2.5 sm:inset-3 rounded-sm border border-white/15" />
+        {/* Pitch border outline — white lines */}
+        <div className="absolute inset-2.5 sm:inset-3 rounded-sm border border-white/20" />
 
         {/* Center line */}
-        <div className="absolute inset-x-2.5 sm:inset-x-3 top-1/2 h-px bg-white/12" />
+        <div className="absolute inset-x-2.5 sm:inset-x-3 top-1/2 h-px bg-white/15" />
 
         {/* Center circle */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/12" />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-white/15" />
 
         {/* Center dot */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20" />
 
         {/* Top penalty area */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-24 sm:w-28 h-10 border-b border-x border-white/10" />
-        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-12 sm:w-14 h-5 border-b border-x border-white/10" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-24 sm:w-28 h-10 border-b border-x border-white/12" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-2.5 sm:top-3 w-12 sm:w-14 h-5 border-b border-x border-white/12" />
 
         {/* Bottom penalty area */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-24 sm:w-28 h-10 border-t border-x border-white/10" />
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-12 sm:w-14 h-5 border-t border-x border-white/10" />
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-24 sm:w-28 h-10 border-t border-x border-white/12" />
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-2.5 sm:bottom-3 w-12 sm:w-14 h-5 border-t border-x border-white/12" />
 
         {/* SVG connection lines for move mode */}
         {swapLines.length > 0 && (
@@ -451,7 +451,7 @@ export default function FormationView() {
           if (!pos) return null;
 
           const category = POSITION_CATEGORY[slot.position as Position] ?? ('mid' as PositionCategory);
-          const color = POSITION_COLOR[category];
+          const slotColor = SLOT_COLORS[category];
           const isFilled = !!slot.playerId;
           const isMoving = movingPlayerSlotIndex === index;
           const isJustAssigned = justAssignedSlotIndex === index && isFilled;
@@ -477,7 +477,7 @@ export default function FormationView() {
             <motion.button
               key={index}
               onClick={() => handleSlotClick(index)}
-              className={`absolute -translate-x-1/2 -translate-y-1/2 ${
+              className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center ${
                 isMoving ? 'z-20' : isMoveTarget ? 'z-10' : ''
               } ${isShaking ? 'animate-shake' : ''} ${isJustAssigned ? 'z-30' : ''}`}
               style={{
@@ -494,118 +494,131 @@ export default function FormationView() {
               {/* Just-assigned glow burst */}
               {isJustAssigned && (
                 <motion.div
-                  className="absolute inset-0 rounded-md"
+                  className="absolute rounded-full"
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
                   initial={{ scale: 0.7, opacity: 0 }}
                   animate={{ scale: [0.7, 1.6, 2, 1.5], opacity: [0, 0.7, 0.3, 0] }}
                   transition={{ duration: 1.2, ease: 'easeOut' }}
-                  style={{
-                    boxShadow: `0 0 16px 6px ${color}, 0 0 32px 12px ${color}44`,
-                    border: `2px solid ${color}`,
-                  }}
-                />
+                >
+                  <div
+                    className="w-full h-full rounded-full"
+                    style={{
+                      boxShadow: `0 0 16px 6px ${slotColor}, 0 0 32px 12px ${slotColor}44`,
+                      border: `2px solid ${slotColor}`,
+                    }}
+                  />
+                </motion.div>
               )}
 
-              {/* Position card — small rounded rectangle */}
-              <div
-                className={`
-                  relative flex flex-col items-center justify-center
-                  rounded-md transition-all duration-200 cursor-pointer select-none
-                  ${isJustAssigned ? 'animate-slot-assigned' : ''}
-                  ${isShaking ? 'animate-shake' : ''}
-                `}
-                style={{
-                  width: isFilled ? undefined : '34px',
-                  height: isFilled ? undefined : '26px',
-                  minWidth: isFilled ? '56px' : '34px',
-                  minHeight: isFilled ? '42px' : '26px',
-                  backgroundColor: isFilled
-                    ? `${color}cc`
-                    : isIncompatible
-                    ? `${color}10`
-                    : isCompatible || isMoveTarget
-                    ? `${color}30`
-                    : `${color}18`,
-                  border: isFilled
-                    ? `2px solid ${color}`
-                    : isCompatible && !isFilled
-                    ? '2px solid #22c55e'
-                    : isMoveTarget
-                    ? '2px solid #22c55e'
-                    : isIncompatible
-                    ? '1px dashed rgba(239,68,68,0.3)'
-                    : '1px dashed rgba(255,255,255,0.2)',
-                  boxShadow: isFilled
-                    ? `0 0 0 2px ${color}88, 0 2px 6px rgba(0,0,0,0.4)`
-                    : isCompatible && !isFilled
-                    ? '0 0 8px 2px rgba(34,197,94,0.5), 0 0 16px 4px rgba(34,197,94,0.2)'
-                    : isMoveTarget
-                    ? '0 0 8px 2px rgba(34,197,94,0.5), 0 0 16px 4px rgba(34,197,94,0.2)'
-                    : undefined,
-                  animation: isCompatible && !isFilled
-                    ? 'strongGreenPulse 1.2s ease-in-out infinite'
-                    : isMoveTarget
-                    ? 'strongGreenPulse 1.2s ease-in-out infinite'
-                    : !isFilled && !isIncompatible
-                    ? 'emptySlotPulse 3s ease-in-out infinite'
-                    : undefined,
-                }}
-              >
-                {isFilled ? (
-                  <>
-                    {/* Rating number — colored by rating tier */}
-                    {slot.playerRating && (
-                      <span
-                        className="text-[10px] sm:text-[11px] font-black leading-none"
-                        style={{
-                          color: getRatingColor(slot.playerRating),
-                        }}
-                      >
-                        {slot.playerRating}
+              {/* ── Filled slot: colored circle with initials ── */}
+              {isFilled ? (
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer select-none ${
+                      isJustAssigned ? 'animate-slot-assigned' : ''
+                    } ${isShaking ? 'animate-shake' : ''}`}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: slotColor,
+                      border: '2px solid rgba(255,255,255,0.5)',
+                      boxShadow: `0 0 0 2px ${slotColor}88, 0 2px 8px rgba(0,0,0,0.5)`,
+                    }}
+                  >
+                    <span className="text-[10px] font-black text-white leading-none">
+                      {getInitials(slot.playerName)}
+                    </span>
+                  </div>
+                  {/* Player name below circle */}
+                  <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
+                    <span
+                      className="text-[6px] sm:text-[7px] font-bold text-white/80 leading-none truncate"
+                      style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+                    >
+                      {getPlayerSurname(slot.playerLastName)}
+                    </span>
+                    {getNationalityFlag(slot.playerNationality) && (
+                      <span className="text-[7px] sm:text-[8px] leading-none shrink-0">
+                        {getNationalityFlag(slot.playerNationality)}
                       </span>
                     )}
-                    {/* Position abbreviation */}
+                  </div>
+
+                  {/* Moving indicator ring */}
+                  {isMoving && (
+                    <div
+                      className="absolute rounded-full animate-pulse"
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -55%)',
+                        border: '2px solid #facc15',
+                        boxShadow: '0 0 8px 2px rgba(250,204,21,0.4)',
+                      }}
+                    />
+                  )}
+                </div>
+              ) : (
+                /* ── Empty slot: gray dashed circle with position abbreviation ── */
+                <div className="flex flex-col items-center">
+                  <div
+                    className="rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer select-none"
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      backgroundColor: isIncompatible
+                        ? 'rgba(239,68,68,0.05)'
+                        : isCompatible || isMoveTarget
+                        ? `${slotColor}20`
+                        : 'rgba(255,255,255,0.05)',
+                      border: isIncompatible
+                        ? '2px dashed rgba(239,68,68,0.25)'
+                        : isCompatible || isMoveTarget
+                        ? `2px solid ${ACCENT}`
+                        : '2px dashed rgba(255,255,255,0.2)',
+                      boxShadow: isCompatible || isMoveTarget
+                        ? `0 0 8px 2px ${ACCENT}40, 0 0 16px 4px ${ACCENT}15`
+                        : 'none',
+                      animation: isCompatible || isMoveTarget
+                        ? 'strongGreenPulse 1.2s ease-in-out infinite'
+                        : !isIncompatible
+                        ? 'emptySlotPulse 3s ease-in-out infinite'
+                        : undefined,
+                    }}
+                  >
                     <span
-                      className="text-[6px] sm:text-[7px] font-bold text-white/60 leading-none px-0.5 rounded-sm"
-                      style={{ backgroundColor: `${color}44` }}
+                      className={`text-[8px] font-bold leading-none ${
+                        isCompatible || isMoveTarget
+                          ? ''
+                          : isIncompatible
+                          ? 'text-[#ef4444]/40'
+                          : 'text-white/30'
+                      }`}
+                      style={{
+                        color: isCompatible || isMoveTarget ? ACCENT : undefined,
+                      }}
                     >
                       {slot.position}
                     </span>
-                  </>
-                ) : isIncompatible ? (
-                  <span className="text-[7px] font-bold text-[#ef4444]/40">{slot.positionLabel}</span>
-                ) : (
+                  </div>
+                  {/* Position label below circle */}
                   <span
-                    className={`text-[7px] font-bold ${
-                      isCompatible || isMoveTarget ? 'text-[#22c55e]' : 'text-white/40'
-                    }`}
+                    className="text-[6px] sm:text-[7px] font-bold leading-none mt-0.5"
+                    style={{
+                      color: isCompatible || isMoveTarget ? ACCENT : isIncompatible ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.25)',
+                      textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                    }}
                   >
                     {slot.positionLabel}
                   </span>
-                )}
-
-                {/* Moving indicator ring */}
-                {isMoving && (
-                  <div
-                    className="absolute -inset-1 rounded-md border-2 border-[#facc15] animate-pulse"
-                    style={{ boxShadow: '0 0 8px 2px rgba(250,204,21,0.4)' }}
-                  />
-                )}
-              </div>
-
-              {/* Surname + flag below the card */}
-              {isFilled && (
-                <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
-                  <span
-                    className="text-[6px] sm:text-[7px] font-bold text-white/80 leading-none truncate"
-                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
-                  >
-                    {getPlayerSurname(slot.playerLastName)}
-                  </span>
-                  {getNationalityFlag(slot.playerNationality) && (
-                    <span className="text-[7px] sm:text-[8px] leading-none shrink-0">
-                      {getNationalityFlag(slot.playerNationality)}
-                    </span>
-                  )}
                 </div>
               )}
             </motion.button>
@@ -618,7 +631,7 @@ export default function FormationView() {
         {/* Filled count */}
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-[#94a3b8]">
-            <span className="font-bold text-[#22c55e]">{filledCount}</span>/11
+            <span className="font-bold" style={{ color: ACCENT }}>{filledCount}</span>/11
           </span>
           {avgRating !== null && (
             <span className="text-[10px] text-[#94a3b8]">
@@ -631,7 +644,8 @@ export default function FormationView() {
         {canMove && filledCount > 0 && movingPlayerSlotIndex === null && (
           <button
             onClick={() => useGameStore.setState({ movingPlayerSlotIndex: -1 })}
-            className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white/80 transition-colors active:scale-95"
+            className="text-[10px] font-medium px-2.5 py-1 rounded-md text-white/60 hover:bg-white/10 hover:text-white/80 transition-colors active:scale-95"
+            style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
           >
             Переставить игрока
           </button>
@@ -641,7 +655,8 @@ export default function FormationView() {
         {movingPlayerSlotIndex !== null && (
           <button
             onClick={() => finishMoving()}
-            className="text-[10px] font-medium px-2.5 py-1 rounded-md bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors active:scale-95"
+            className="text-[10px] font-medium px-2.5 py-1 rounded-md text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors active:scale-95"
+            style={{ backgroundColor: '#ef444410', border: '1px solid #ef444420' }}
           >
             Отмена
           </button>
@@ -651,24 +666,24 @@ export default function FormationView() {
       {/* Position Legend — matching 38-0 style */}
       <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2 flex-wrap" style={{ maxWidth: '400px' }}>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#f97316', boxShadow: '0 0 4px #f97316' }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#fbbf24', boxShadow: '0 0 4px #fbbf24' }} />
           <span className="text-[9px] text-[#94a3b8]">ВР</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }} />
           <span className="text-[9px] text-[#94a3b8]">Защита</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
           <span className="text-[9px] text-[#94a3b8]">Полузащита</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444', boxShadow: '0 0 4px #ef4444' }} />
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f97316', boxShadow: '0 0 4px #f97316' }} />
           <span className="text-[9px] text-[#94a3b8]">Атака</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#64748b', boxShadow: '0 0 4px #64748b' }} />
-          <span className="text-[9px] text-[#94a3b8]">Не может играть</span>
+          <div className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-white/20" />
+          <span className="text-[9px] text-[#94a3b8]">Нельзя поставить</span>
         </div>
       </div>
     </div>

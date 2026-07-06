@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 const CATEGORY_GRADIENT: Record<PositionCategory, string> = {
   gk: 'linear-gradient(135deg, #f97316, #ea580c)',
   def: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-  mid: 'linear-gradient(135deg, #22c55e, #16a34a)',
+  mid: 'linear-gradient(135deg, #00C896, #00A67A)',
   att: 'linear-gradient(135deg, #ef4444, #dc2626)',
 };
 
@@ -55,21 +55,21 @@ export default function DraftProgressTracker() {
       {/* Header with team name and undo button */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-[#e2e8f0]">
+          <span className="text-xs font-bold text-[#FFFFFF]">
             {teamName}
           </span>
-          <span className="text-xs font-medium text-[#94a3b8]">
+          <span className="text-xs font-medium text-[#9CA3AF]">
             {filledCount}/11
           </span>
         </div>
         <div className="flex items-center gap-2">
           {filledCount > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-[#94a3b8]">Рейтинг состава</span>
+              <span className="text-[10px] text-[#9CA3AF]">Рейтинг состава</span>
               <motion.span
                 key={squadRating}
-                initial={{ scale: 1.3, color: '#22c55e' }}
-                animate={{ scale: 1, color: '#e2e8f0' }}
+                initial={{ scale: 1.3, color: '#00C896' }}
+                animate={{ scale: 1, color: '#FFFFFF' }}
                 transition={{ duration: 0.4 }}
                 className="text-sm font-black"
               >
@@ -96,13 +96,13 @@ export default function DraftProgressTracker() {
       </div>
 
       {/* Linear progress bar */}
-      <div className="h-1.5 rounded-full bg-[#0d2d0d] overflow-hidden mb-3">
+      <div className="h-1.5 rounded-full bg-[#141414] overflow-hidden mb-3">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${(filledCount / 11) * 100}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="h-full rounded-full"
-          style={{ background: 'linear-gradient(90deg, #22c55e, #16a34a)' }}
+          style={{ background: 'linear-gradient(90deg, #00C896, #00A67A)' }}
         />
       </div>
 
@@ -141,8 +141,8 @@ export default function DraftProgressTracker() {
                   </motion.div>
                 ) : isCurrent ? (
                   // Current slot being drafted: pulsing green outline
-                  <div className="w-9 h-9 rounded-full border-2 border-[#22c55e] flex items-center justify-center relative animate-pulse">
-                    <div className="absolute inset-0 rounded-full bg-[#22c55e]/10" />
+                  <div className="w-9 h-9 rounded-full border-2 border-[#00C896] flex items-center justify-center relative animate-pulse">
+                    <div className="absolute inset-0 rounded-full bg-[#00C896]/10" />
                     <div
                       className="w-2.5 h-2.5 rounded-full"
                       style={{ backgroundColor: posColor, opacity: 0.6 }}
@@ -161,15 +161,15 @@ export default function DraftProgressTracker() {
                 {/* Rating tooltip for filled slots */}
                 {isFilled && slot.playerRating && (
                   <div
-                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black text-white border border-[#0a1a0a] shadow-sm px-0.5"
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black text-white border border-[#0A0A0A] shadow-sm px-0.5"
                     style={{
                       backgroundColor:
-                        slot.playerRating >= 78 ? '#22c55e' :
+                        slot.playerRating >= 78 ? '#00C896' :
                         slot.playerRating >= 73 ? '#3b82f6' :
                         slot.playerRating >= 68 ? '#f97316' : '#ef4444',
                     }}
                   >
-                    {config.difficulty === 'hard' ? '?' : slot.playerRating}
+                    {(config.showRatings !== undefined ? !config.showRatings : config.difficulty === 'hard') ? '?' : slot.playerRating}
                   </div>
                 )}
               </motion.div>
@@ -178,10 +178,10 @@ export default function DraftProgressTracker() {
               <span
                 className={`text-[9px] font-bold leading-none ${
                   isFilled
-                    ? 'text-[#e2e8f0]'
+                    ? 'text-[#FFFFFF]'
                     : isCurrent
-                    ? 'text-[#22c55e]'
-                    : 'text-[#94a3b8]/50'
+                    ? 'text-[#00C896]'
+                    : 'text-[#9CA3AF]/50'
                 }`}
               >
                 {slot.position}
@@ -197,14 +197,14 @@ export default function DraftProgressTracker() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', damping: 15, stiffness: 300 }}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white border-2 border-[#22c55e]/40"
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black text-white border-2 border-[#00C896]/40"
               style={{
-                background: 'linear-gradient(135deg, #22c55e/20, #16a34a/20)',
+                background: 'linear-gradient(135deg, #00C896/20, #00A67A/20)',
               }}
             >
               {squadRating}
             </motion.div>
-            <span className="text-[9px] font-bold text-[#22c55e] leading-none">СР</span>
+            <span className="text-[9px] font-bold text-[#00C896] leading-none">СР</span>
           </div>
         )}
       </div>

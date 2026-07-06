@@ -32,9 +32,46 @@ export default function Header() {
     setSoundOn(newState);
   };
 
-  // Mode 1: Home screen — hide everything
+  // Mode 1: Home screen — show a minimal header with navigation
   if (screen === 'home') {
-    return null;
+    return (
+      <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#1E1E1E]/50">
+        <div className="max-w-4xl mx-auto flex items-center justify-between h-12 px-4">
+          {/* Left: Home indicator */}
+          <div className="flex items-center gap-2">
+            <Home className="w-4 h-4 text-[#00C896]" />
+            <span className="text-sm font-semibold text-[#9CA3AF]">Главная</span>
+          </div>
+
+          {/* Right: Navigation buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleToggleSound}
+              className="p-2 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
+              title={soundOn ? 'Выключить звук' : 'Включить звук'}
+            >
+              {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            </button>
+
+            <button
+              onClick={() => setShowHowToPlay(true)}
+              className="p-2 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
+              title="Как играть"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => useGameStore.getState().setScreen('profile')}
+              className="p-2 text-[#9CA3AF] hover:text-[#FFFFFF] rounded-lg hover:bg-[#141414] transition-all"
+              title="Профиль"
+            >
+              <User className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </header>
+    );
   }
 
   // Mode 2: Game screens — subtle overlay buttons
@@ -66,7 +103,7 @@ export default function Header() {
     );
   }
 
-  // Mode 3: Setup, profile, leaderboard — normal header with buttons
+  // Mode 3: Setup, profile, etc. — normal header with buttons
   const handleHome = () => {
     if (screen === 'home') return;
     if (runId) {
@@ -78,22 +115,22 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-[#1a3a1a]/80 bg-[#0a1a0a]/90 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto flex items-center justify-between h-12 px-3">
+      <header className="sticky top-0 z-50 w-full border-b border-[#1E1E1E]/50 bg-[#0A0A0A]/90 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto flex items-center justify-between h-12 px-4">
           {/* Left: Home button */}
           <button
             onClick={handleHome}
             className="flex items-center gap-1.5 hover:opacity-80 transition-opacity group"
             aria-label="Домой"
           >
-            <Home className="w-5 h-5 text-[#22c55e] group-hover:text-[#16a34a] transition-colors" />
+            <Home className="w-5 h-5 text-[#00C896] group-hover:text-[#00A67A] transition-colors" />
           </button>
 
           {/* Right: Navigation buttons */}
           <div className="flex items-center gap-1">
             <button
               onClick={handleToggleSound}
-              className="p-2 text-[#94a3b8] hover:text-[#22c55e] rounded-lg hover:bg-[#22c55e]/10 transition-all"
+              className="p-2 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
               title={soundOn ? 'Выключить звук' : 'Включить звук'}
             >
               {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -101,7 +138,7 @@ export default function Header() {
 
             <button
               onClick={() => setShowHowToPlay(true)}
-              className="p-2 text-[#94a3b8] hover:text-[#22c55e] rounded-lg hover:bg-[#22c55e]/10 transition-all"
+              className="p-2 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
               title="Как играть"
             >
               <HelpCircle className="w-4 h-4" />
@@ -109,13 +146,11 @@ export default function Header() {
 
             <button
               onClick={() => useGameStore.getState().setScreen('profile')}
-              className="p-2 text-[#94a3b8] hover:text-[#e2e8f0] rounded-lg hover:bg-[#0d2d0d] transition-all"
+              className="p-2 text-[#9CA3AF] hover:text-[#FFFFFF] rounded-lg hover:bg-[#141414] transition-all"
               title="Профиль"
             >
               <User className="w-4 h-4" />
             </button>
-
-            {/* Leaderboard hidden */}
           </div>
         </div>
       </header>

@@ -6,6 +6,10 @@ import type { Position, PositionCategory } from '@/lib/positions';
 import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
 import { motion } from 'framer-motion';
 
+/* ─── Colors ─── */
+const ACCENT = '#00C896';
+const BG_CARD = '#141414';
+
 const CATEGORY_LABELS: Record<PositionCategory, string> = {
   gk: 'Вратарь',
   def: 'Защита',
@@ -13,22 +17,22 @@ const CATEGORY_LABELS: Record<PositionCategory, string> = {
   att: 'Атака',
 };
 
-const CATEGORY_COLORS: Record<PositionCategory, string> = {
-  gk: '#f97316',
-  def: '#3b82f6',
-  mid: '#22c55e',
-  att: '#ef4444',
+const CATEGORY_EMOJIS: Record<PositionCategory, string> = {
+  gk: '🥅',
+  def: '🛡️',
+  mid: '🌀',
+  att: '⚡',
 };
 
-const CATEGORY_ICONS: Record<PositionCategory, string> = {
-  gk: '🧤',
-  def: '🛡️',
-  mid: '⚽',
-  att: '🎯',
+const CATEGORY_COLORS: Record<PositionCategory, string> = {
+  gk: '#fbbf24',   // yellow for GK
+  def: '#3b82f6',   // blue for Defence
+  mid: '#00C896',   // green for Midfield
+  att: '#f97316',   // orange for Attack
 };
 
 function getChemistryLabel(score: number): { text: string; color: string } {
-  if (score >= 80) return { text: 'Отличная химия!', color: '#22c55e' };
+  if (score >= 80) return { text: 'Отличная химия!', color: '#00C896' };
   if (score >= 60) return { text: 'Хорошая химия', color: '#3b82f6' };
   if (score >= 40) return { text: 'Средняя химия', color: '#f97316' };
   return { text: 'Нужна доработка', color: '#ef4444' };
@@ -98,18 +102,20 @@ export default function SquadStats() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200 }}
-          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
+          className="rounded-2xl p-5 text-center"
+          style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
         >
-          <div className="text-4xl font-black text-[#e2e8f0]">{overall}</div>
-          <div className="text-sm font-bold text-[#e2e8f0] mt-1">Рейтинг</div>
-          <div className="text-xs text-[#94a3b8]/60 mt-0.5">{filledCount}/11 заполнено</div>
+          <div className="text-4xl font-black text-white">{overall || '—'}</div>
+          <div className="text-sm font-bold text-white mt-1">Рейтинг</div>
+          <div className="text-xs text-[#64748b] mt-0.5">{filledCount}/11 заполнено</div>
         </motion.div>
 
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d] card-glow"
+          className="rounded-2xl p-5 text-center"
+          style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
         >
           {/* Chemistry ring */}
           <div className="relative w-16 h-16 mx-auto">
@@ -117,7 +123,7 @@ export default function SquadStats() {
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#0d2d0d"
+                stroke="#1f1f1f"
                 strokeWidth="3"
               />
               <path
@@ -136,16 +142,21 @@ export default function SquadStats() {
               </span>
             </div>
           </div>
-          <div className="text-sm text-[#94a3b8] mt-1">Химия</div>
+          <div className="text-sm text-[#9CA3AF] mt-1">Химия</div>
           <div className="text-[10px] font-bold mt-0.5" style={{ color: chemistry.color }}>
             {chemistry.text}
           </div>
         </motion.div>
       </div>
 
-      {/* Category Ratings with animated bars */}
-      <div className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]">
-        <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Рейтинг по линиям</h4>
+      {/* Category Ratings — Рейтинг [number] ⚡ Attack 🌀 Midfield 🛡️ Defence 🥅 GK */}
+      <div
+        className="rounded-2xl p-4 space-y-3"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#9CA3AF]">
+          Рейтинг по линиям
+        </h4>
         {categories.map((cat, i) => (
           <motion.div
             key={cat}
@@ -156,16 +167,16 @@ export default function SquadStats() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm">{CATEGORY_ICONS[cat]}</span>
+                <span className="text-sm">{CATEGORY_EMOJIS[cat]}</span>
                 <span className="text-sm font-medium" style={{ color: CATEGORY_COLORS[cat] }}>
                   {CATEGORY_LABELS[cat]}
                 </span>
               </div>
-              <span className="text-sm font-bold text-[#e2e8f0]">
-                {categoryRatings[cat].avg || '—'}
+              <span className="text-sm font-bold text-white">
+                {categoryRatings[cat].count > 0 ? categoryRatings[cat].avg : '—'}
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-[#0a1a0a] overflow-hidden">
+            <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#0a0a0a' }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max((categoryRatings[cat].avg / 100) * 100, 0)}%` }}
@@ -179,8 +190,13 @@ export default function SquadStats() {
       </div>
 
       {/* Player list summary */}
-      <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
-        <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Состав</h4>
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#9CA3AF] mb-2">
+          Состав
+        </h4>
         <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
           {slots.filter(s => s.playerId).map((slot, i) => (
             <motion.div
@@ -188,13 +204,16 @@ export default function SquadStats() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[#0a1a0a]/30 transition-colors"
+              className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-white/[0.03] transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e]">
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: `${ACCENT}15`, color: ACCENT }}
+                >
                   {slot.positionLabel}
                 </span>
-                <span className="text-xs font-medium text-[#e2e8f0]">
+                <span className="text-xs font-medium text-[#FFFFFF]">
                   {isForeignPlayer(slot.playerNationality)
                     ? slot.playerName
                     : (slot.playerLastName || slot.playerName)}
@@ -203,7 +222,7 @@ export default function SquadStats() {
                   )}
                 </span>
               </div>
-              <span className="text-xs font-bold text-[#94a3b8]">
+              <span className="text-xs font-bold text-[#9CA3AF]">
                 {slot.playerRating}
               </span>
             </motion.div>

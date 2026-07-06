@@ -63,7 +63,7 @@ export const POSITION_CATEGORY: Record<Position, PositionCategory> = {
 export const POSITION_COLOR: Record<PositionCategory, string> = {
   gk:  '#f97316', // orange
   def: '#3b82f6', // blue
-  mid: '#22c55e', // green
+  mid: '#00C896', // green
   att: '#ef4444', // red
 };
 

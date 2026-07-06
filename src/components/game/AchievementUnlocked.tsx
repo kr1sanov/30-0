@@ -43,7 +43,7 @@ export default function AchievementUnlocked() {
             exit={{ scale: 0.8, opacity: 0, rotateY: 180 }}
             transition={{ type: 'spring', damping: 15, stiffness: 200 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-80 rounded-3xl bg-gradient-to-b from-yellow-500/20 to-[#0d2d0d] border-2 border-yellow-500/50 p-8 text-center shadow-[0_0_60px_rgba(234,179,8,0.3)]"
+            className="relative w-80 rounded-3xl bg-gradient-to-b from-yellow-500/20 to-[#141414] border-2 border-yellow-500/50 p-8 text-center shadow-[0_0_60px_rgba(234,179,8,0.3)]"
           >
             {/* Sparkle particles */}
             {[...Array(6)].map((_, i) => (
@@ -104,7 +104,7 @@ export default function AchievementUnlocked() {
               initial={{ y: 5, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
-              className="text-lg font-bold text-[#e2e8f0]"
+              className="text-lg font-bold text-[#FFFFFF]"
             >
               {currentAchievement.name}
             </motion.p>
@@ -114,7 +114,7 @@ export default function AchievementUnlocked() {
               initial={{ y: 5, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="text-sm text-[#94a3b8] mt-1"
+              className="text-sm text-[#9CA3AF] mt-1"
             >
               {currentAchievement.description}
             </motion.p>
@@ -137,7 +137,7 @@ export default function AchievementUnlocked() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="mt-3 text-xs text-[#94a3b8]"
+                className="mt-3 text-xs text-[#9CA3AF]"
               >
                 Ещё {newAchievements.length - 1} достижени{newAchievements.length - 1 === 1 ? 'е' : newAchievements.length - 1 < 5 ? 'я' : 'й'}
               </motion.div>

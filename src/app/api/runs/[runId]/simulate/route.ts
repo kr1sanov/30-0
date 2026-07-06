@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
-import { simulateSeason, type SquadSlot } from '@/lib/simulation';
+import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { NextResponse } from 'next/server';
-import { calculateSquadStrength } from '@/lib/simulation';
 
 export async function POST(
   request: Request,
@@ -12,6 +11,7 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const managerName = (body as { managerName?: string }).managerName;
     const managerRating = (body as { managerRating?: number }).managerRating;
+    const januaryTransfer = (body as { januaryTransfer?: boolean }).januaryTransfer ?? false;
 
     // Get the run with slots
     const run = await db.gameRun.findUnique({
@@ -47,11 +47,33 @@ export async function POST(
       isCompatible: slot.isCompatible,
     }));
 
-    // Run the simulation
-    const result = simulateSeason(squadSlots, managerRating);
+    // Get previous best points for personal best trophy
+    // We'll get this from user's profile if available
+    let previousBestPoints = 0;
+    if (run.userId) {
+      const user = await db.user.findUnique({
+        where: { id: run.userId },
+      });
+      if (user?.profileStatsJson) {
+        try {
+          const stats = JSON.parse(user.profileStatsJson as string) as { bestPoints?: number };
+          previousBestPoints = stats.bestPoints ?? 0;
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+
+    // Run the improved simulation
+    const result = simulateSeason(
+      squadSlots,
+      managerRating ?? undefined,
+      januaryTransfer,
+      previousBestPoints,
+    );
 
     // Calculate squad strength for overall rating
-    const strength = calculateSquadStrength(squadSlots, managerRating);
+    const strength = calculateSquadStrength(squadSlots, managerRating ?? undefined);
 
     // Update the game run with results
     await db.gameRun.update({
@@ -79,7 +101,7 @@ export async function POST(
       isCompatible: slot.isCompatible,
     }));
 
-    // Return full season result including table, matches and squad
+    // Return full season result including table, matches, trophies and squad
     return NextResponse.json({
       ...result,
       runId,

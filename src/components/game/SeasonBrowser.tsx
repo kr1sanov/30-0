@@ -145,14 +145,14 @@ const CATEGORY_LABELS: Record<PositionCategory, string> = {
 const CATEGORY_GRADIENT: Record<PositionCategory, string> = {
   gk: 'linear-gradient(135deg, #f97316, #ea580c)',
   def: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-  mid: 'linear-gradient(135deg, #22c55e, #16a34a)',
+  mid: 'linear-gradient(135deg, #00C896, #00A67A)',
   att: 'linear-gradient(135deg, #ef4444, #dc2626)',
 };
 
 const CATEGORY_COLOR: Record<PositionCategory, string> = {
   gk: '#f97316',
   def: '#3b82f6',
-  mid: '#22c55e',
+  mid: '#00C896',
   att: '#ef4444',
 };
 
@@ -195,9 +195,9 @@ function getInitials(fullName: string): string {
 
 function getRatingColor(rating: number): string {
   if (rating >= 80) return '#fbbf24';
-  if (rating >= 70) return '#22c55e';
+  if (rating >= 70) return '#00C896';
   if (rating >= 60) return '#f97316';
-  return '#94a3b8';
+  return '#9CA3AF';
 }
 
 function getPositionCategory(pos: string): PositionCategory {
@@ -232,18 +232,18 @@ function SeasonCard({
       whileHover={{ scale: 1.04 }}
       whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="relative rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-4 text-left overflow-hidden group transition-all duration-200 hover:border-[#22c55e]/40 hover:shadow-lg hover:shadow-[#22c55e]/10"
+      className="relative rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-4 text-left overflow-hidden group transition-all duration-200 hover:border-[#00C896]/40 hover:shadow-lg hover:shadow-[#00C896]/10"
     >
       {/* Subtle gradient overlay */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
         style={{
-          background: 'linear-gradient(135deg, #22c55e/5 0%, transparent 60%)',
+          background: 'linear-gradient(135deg, #00C896/5 0%, transparent 60%)',
         }}
       />
       <div className="relative z-10">
-        <div className="text-lg font-black text-[#e2e8f0]">{season.label}</div>
-        <div className="text-xs text-[#94a3b8] mt-1.5 flex items-center gap-1.5">
+        <div className="text-lg font-black text-[#FFFFFF]">{season.label}</div>
+        <div className="text-xs text-[#9CA3AF] mt-1.5 flex items-center gap-1.5">
           <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="9" cy="7" r="4" />
@@ -252,7 +252,7 @@ function SeasonCard({
           </svg>
           <span>{clubCount} клубов</span>
         </div>
-        <div className="text-[10px] text-[#94a3b8]/60 mt-0.5">
+        <div className="text-[10px] text-[#9CA3AF]/60 mt-0.5">
           {season.matchesPerTeam} матчей
         </div>
       </div>
@@ -290,8 +290,8 @@ function PositionBadge({ position, total }: { position: number; total: number })
   if (position <= 3) {
     return (
       <div className="flex items-center gap-1.5">
-        <span className="font-black text-sm" style={{ color: '#94a3b8' }}>{position}</span>
-        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#94a3b8]/15 text-[#94a3b8]">ЛЧ</span>
+        <span className="font-black text-sm" style={{ color: '#9CA3AF' }}>{position}</span>
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#9CA3AF]/15 text-[#9CA3AF]">ЛЧ</span>
       </div>
     );
   }
@@ -311,7 +311,7 @@ function PositionBadge({ position, total }: { position: number; total: number })
       </div>
     );
   }
-  return <span className="font-black text-sm text-[#e2e8f0]">{position}</span>;
+  return <span className="font-black text-sm text-[#FFFFFF]">{position}</span>;
 }
 
 /** Player card for squad view */
@@ -345,7 +345,7 @@ function PlayerCard({ player }: { player: PlayerRow }) {
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-bold text-[#e2e8f0] truncate">
+        <div className="text-sm font-bold text-[#FFFFFF] truncate">
           {player.player.fullName}
         </div>
         <div className="flex items-center gap-1.5 mt-0.5">
@@ -360,18 +360,18 @@ function PlayerCard({ player }: { player: PlayerRow }) {
 
       {/* Stats */}
       <div className="shrink-0 text-right">
-        <div className="flex items-center gap-3 text-[11px] text-[#94a3b8]">
+        <div className="flex items-center gap-3 text-[11px] text-[#9CA3AF]">
           <div className="text-center">
-            <div className="font-bold text-[#e2e8f0]">{player.matches ?? '—'}</div>
-            <div className="text-[8px] text-[#94a3b8]/60">И</div>
+            <div className="font-bold text-[#FFFFFF]">{player.matches ?? '—'}</div>
+            <div className="text-[8px] text-[#9CA3AF]/60">И</div>
           </div>
           <div className="text-center">
-            <div className="font-bold text-[#e2e8f0]">{player.goals ?? '—'}</div>
-            <div className="text-[8px] text-[#94a3b8]/60">Г</div>
+            <div className="font-bold text-[#FFFFFF]">{player.goals ?? '—'}</div>
+            <div className="text-[8px] text-[#9CA3AF]/60">Г</div>
           </div>
           <div className="text-center">
-            <div className="font-bold text-[#e2e8f0]">{player.assists ?? '—'}</div>
-            <div className="text-[8px] text-[#94a3b8]/60">П</div>
+            <div className="font-bold text-[#FFFFFF]">{player.assists ?? '—'}</div>
+            <div className="text-[8px] text-[#9CA3AF]/60">П</div>
           </div>
         </div>
       </div>
@@ -585,11 +585,11 @@ export default function SeasonBrowser() {
     >
       {/* Title */}
       <div className="mb-5">
-        <h2 className="text-xl font-black text-[#e2e8f0] flex items-center gap-2">
+        <h2 className="text-xl font-black text-[#FFFFFF] flex items-center gap-2">
           <span>📅</span>
           <span>Сезоны РПЛ</span>
         </h2>
-        <p className="text-sm text-[#94a3b8] mt-1">
+        <p className="text-sm text-[#9CA3AF] mt-1">
           {seasons.length} сезонов · 1992–2026
         </p>
       </div>
@@ -602,8 +602,8 @@ export default function SeasonBrowser() {
             onClick={() => setEraFilter(key)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 ${
               eraFilter === key
-                ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
-                : 'bg-[#1a1a2e] text-[#94a3b8] hover:text-[#e2e8f0] border border-[#2a2a4a]'
+                ? 'bg-[#00C896] text-white shadow-lg shadow-[#00C896]/20'
+                : 'bg-[#1a1a2e] text-[#9CA3AF] hover:text-[#FFFFFF] border border-[#2a2a4a]'
             }`}
           >
             {label}
@@ -621,7 +621,7 @@ export default function SeasonBrowser() {
           <p className="text-sm text-[#ef4444]">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-3 px-4 py-2 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] text-xs font-bold text-[#e2e8f0] hover:border-[#22c55e]/30 transition-colors"
+            className="mt-3 px-4 py-2 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] text-xs font-bold text-[#FFFFFF] hover:border-[#00C896]/30 transition-colors"
           >
             Попробовать снова
           </button>
@@ -632,8 +632,8 @@ export default function SeasonBrowser() {
       {!loadingSeasons && !error && filteredSeasons.length === 0 && (
         <div className="text-center py-12">
           <div className="text-4xl mb-3">🔍</div>
-          <p className="text-sm text-[#94a3b8]">Сезоны не найдены</p>
-          <p className="text-xs text-[#94a3b8]/60 mt-1">Выберите другую эпоху</p>
+          <p className="text-sm text-[#9CA3AF]">Сезоны не найдены</p>
+          <p className="text-xs text-[#9CA3AF]/60 mt-1">Выберите другую эпоху</p>
         </div>
       )}
 
@@ -692,7 +692,7 @@ export default function SeasonBrowser() {
         {/* Back button */}
         <button
           onClick={goBackToGrid}
-          className="flex items-center gap-1.5 text-sm text-[#94a3b8] hover:text-[#22c55e] transition-colors mb-4 group"
+          className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-[#00C896] transition-colors mb-4 group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
@@ -703,10 +703,10 @@ export default function SeasonBrowser() {
 
         {/* Season header */}
         <div className="mb-5">
-          <h2 className="text-xl font-black text-[#e2e8f0]">
+          <h2 className="text-xl font-black text-[#FFFFFF]">
             {seasonDetail.label}
           </h2>
-          <p className="text-sm text-[#94a3b8] mt-1">
+          <p className="text-sm text-[#9CA3AF] mt-1">
             {seasonDetail.matchesPerTeam} матчей · {totalClubs} клубов
           </p>
         </div>
@@ -714,7 +714,7 @@ export default function SeasonBrowser() {
         {/* Table */}
         <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] overflow-hidden">
           {/* Table header */}
-          <div className="grid grid-cols-[40px_1fr_36px_36px_36px_36px_56px_40px] sm:grid-cols-[44px_1fr_44px_44px_44px_44px_70px_48px] items-center px-3 py-2.5 bg-[#0a0a0f]/50 border-b border-[#2a2a4a] text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+          <div className="grid grid-cols-[40px_1fr_36px_36px_36px_36px_56px_40px] sm:grid-cols-[44px_1fr_44px_44px_44px_44px_70px_48px] items-center px-3 py-2.5 bg-[#0a0a0f]/50 border-b border-[#2a2a4a] text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">
             <span>#</span>
             <span>Клуб</span>
             <span className="text-center">И</span>
@@ -739,7 +739,7 @@ export default function SeasonBrowser() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: Math.min(idx * 0.03, 0.6), duration: 0.2 }}
                   onClick={() => fetchClubSquad(cs.id)}
-                  className="w-full grid grid-cols-[40px_1fr_36px_36px_36px_36px_56px_40px] sm:grid-cols-[44px_1fr_44px_44px_44px_44px_70px_48px] items-center px-3 py-2.5 border-b border-[#2a2a4a]/30 hover:bg-[#22c55e]/5 transition-colors cursor-pointer group"
+                  className="w-full grid grid-cols-[40px_1fr_36px_36px_36px_36px_56px_40px] sm:grid-cols-[44px_1fr_44px_44px_44px_44px_70px_48px] items-center px-3 py-2.5 border-b border-[#2a2a4a]/30 hover:bg-[#00C896]/5 transition-colors cursor-pointer group"
                   style={{
                     backgroundColor: isEven ? 'rgba(26,26,46,0.4)' : 'transparent',
                   }}
@@ -758,37 +758,37 @@ export default function SeasonBrowser() {
                         className="w-5 h-5 rounded object-contain shrink-0"
                       />
                     ) : (
-                      <div className="w-5 h-5 rounded bg-[#2a2a4a] flex items-center justify-center text-[8px] font-bold text-[#94a3b8] shrink-0">
+                      <div className="w-5 h-5 rounded bg-[#2a2a4a] flex items-center justify-center text-[8px] font-bold text-[#9CA3AF] shrink-0">
                         {cs.club.nameRu.slice(0, 2)}
                       </div>
                     )}
-                    <span className="text-sm font-medium text-[#e2e8f0] truncate group-hover:text-[#22c55e] transition-colors">
+                    <span className="text-sm font-medium text-[#FFFFFF] truncate group-hover:text-[#00C896] transition-colors">
                       {cs.club.nameRu}
                     </span>
                   </div>
 
                   {/* Played */}
-                  <span className="text-sm text-[#94a3b8] text-center">{cs.played ?? '—'}</span>
+                  <span className="text-sm text-[#9CA3AF] text-center">{cs.played ?? '—'}</span>
 
                   {/* Won */}
-                  <span className="text-sm text-[#e2e8f0] text-center font-medium">{cs.won ?? '—'}</span>
+                  <span className="text-sm text-[#FFFFFF] text-center font-medium">{cs.won ?? '—'}</span>
 
                   {/* Drawn */}
-                  <span className="text-sm text-[#94a3b8] text-center">{cs.drawn ?? '—'}</span>
+                  <span className="text-sm text-[#9CA3AF] text-center">{cs.drawn ?? '—'}</span>
 
                   {/* Lost */}
-                  <span className="text-sm text-[#94a3b8] text-center">{cs.lost ?? '—'}</span>
+                  <span className="text-sm text-[#9CA3AF] text-center">{cs.lost ?? '—'}</span>
 
                   {/* Goals */}
-                  <span className="text-[11px] text-[#94a3b8] text-center">
+                  <span className="text-[11px] text-[#9CA3AF] text-center">
                     {cs.goalsFor ?? '—'}-{cs.goalsAgainst ?? '—'}
-                    <span className="ml-1 text-[9px]" style={{ color: goalDiff.startsWith('+') ? '#22c55e' : goalDiff.startsWith('-') ? '#ef4444' : '#94a3b8' }}>
+                    <span className="ml-1 text-[9px]" style={{ color: goalDiff.startsWith('+') ? '#00C896' : goalDiff.startsWith('-') ? '#ef4444' : '#9CA3AF' }}>
                       {goalDiff !== '—' ? goalDiff : ''}
                     </span>
                   </span>
 
                   {/* Points */}
-                  <span className="text-sm font-black text-[#e2e8f0] text-center">{cs.points ?? '—'}</span>
+                  <span className="text-sm font-black text-[#FFFFFF] text-center">{cs.points ?? '—'}</span>
                 </motion.button>
               );
             })}
@@ -799,19 +799,19 @@ export default function SeasonBrowser() {
         <div className="flex flex-wrap items-center gap-3 mt-3 px-1">
           <div className="flex items-center gap-1 text-[9px]">
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ backgroundColor: '#fbbf2420', color: '#fbbf24' }}>🏆</span>
-            <span className="text-[#94a3b8]">Чемпион</span>
+            <span className="text-[#9CA3AF]">Чемпион</span>
           </div>
           <div className="flex items-center gap-1 text-[9px]">
-            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#94a3b8]/15 text-[#94a3b8]">ЛЧ</span>
-            <span className="text-[#94a3b8]">Лига чемпионов</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#9CA3AF]/15 text-[#9CA3AF]">ЛЧ</span>
+            <span className="text-[#9CA3AF]">Лига чемпионов</span>
           </div>
           <div className="flex items-center gap-1 text-[9px]">
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#3b82f6]/15 text-[#3b82f6]">ЛЕ</span>
-            <span className="text-[#94a3b8]">Лига Европы</span>
+            <span className="text-[#9CA3AF]">Лига Европы</span>
           </div>
           <div className="flex items-center gap-1 text-[9px]">
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#ef4444]/15 text-[#ef4444]">↓</span>
-            <span className="text-[#94a3b8]">Выбытие</span>
+            <span className="text-[#9CA3AF]">Выбытие</span>
           </div>
         </div>
       </motion.div>
@@ -860,7 +860,7 @@ export default function SeasonBrowser() {
         {/* Back button */}
         <button
           onClick={goBackToTable}
-          className="flex items-center gap-1.5 text-sm text-[#94a3b8] hover:text-[#22c55e] transition-colors mb-4 group"
+          className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-[#00C896] transition-colors mb-4 group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
@@ -872,19 +872,19 @@ export default function SeasonBrowser() {
         {/* Club header */}
         <div className="flex items-start gap-4 mb-5">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-black text-[#e2e8f0] truncate">
+            <h2 className="text-xl font-black text-[#FFFFFF] truncate">
               {clubSquad.club.nameRu}
             </h2>
             {clubSquad.club.city && (
-              <p className="text-sm text-[#94a3b8] mt-0.5">{clubSquad.club.city}</p>
+              <p className="text-sm text-[#9CA3AF] mt-0.5">{clubSquad.club.city}</p>
             )}
-            <p className="text-xs text-[#94a3b8]/60 mt-0.5">{clubSquad.season.label}</p>
+            <p className="text-xs text-[#9CA3AF]/60 mt-0.5">{clubSquad.season.label}</p>
           </div>
           {/* Average rating badge */}
           <div className="shrink-0 px-3 py-1.5 rounded-xl bg-[#1a1a2e] border border-[#fbbf24]/20 shadow-sm">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">⭐</span>
-              <span className="text-xs text-[#94a3b8]">Ср. рейтинг:</span>
+              <span className="text-xs text-[#9CA3AF]">Ср. рейтинг:</span>
               <span className="text-sm font-black" style={{ color: getRatingColor(avgRating) }}>
                 {avgRating}
               </span>
@@ -898,7 +898,7 @@ export default function SeasonBrowser() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => fetchClubHistory(clubSquad.club.id)}
-            className="w-full py-2.5 rounded-xl bg-[#1a1a2e] border border-[#22c55e]/20 text-sm font-bold text-[#22c55e] hover:bg-[#22c55e]/10 hover:border-[#22c55e]/30 transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-[#1a1a2e] border border-[#00C896]/20 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/10 hover:border-[#00C896]/30 transition-all flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
@@ -907,7 +907,7 @@ export default function SeasonBrowser() {
           </motion.button>
           {/* Search */}
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94a3b8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
             </svg>
             <input
@@ -915,13 +915,13 @@ export default function SeasonBrowser() {
               value={squadSearch}
               onChange={(e) => setSquadSearch(e.target.value)}
               placeholder="Поиск игрока..."
-              className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] text-sm text-[#e2e8f0] placeholder:text-[#94a3b8]/50 focus:border-[#22c55e]/40 focus:outline-none transition-colors"
+              className="w-full h-10 pl-9 pr-4 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] text-sm text-[#FFFFFF] placeholder:text-[#9CA3AF]/50 focus:border-[#00C896]/40 focus:outline-none transition-colors"
             />
           </div>
 
           {/* Sort */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-[#94a3b8] mr-1">Сортировка:</span>
+            <span className="text-[10px] text-[#9CA3AF] mr-1">Сортировка:</span>
             {([
               { mode: 'rating' as SortMode, label: 'Рейтинг' },
               { mode: 'name' as SortMode, label: 'Имя' },
@@ -932,8 +932,8 @@ export default function SeasonBrowser() {
                 onClick={() => setSquadSort(s.mode)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 ${
                   squadSort === s.mode
-                    ? 'bg-[#22c55e]/20 text-[#22c55e] border border-[#22c55e]/30'
-                    : 'text-[#94a3b8] hover:text-[#e2e8f0] border border-transparent'
+                    ? 'bg-[#00C896]/20 text-[#00C896] border border-[#00C896]/30'
+                    : 'text-[#9CA3AF] hover:text-[#FFFFFF] border border-transparent'
                 }`}
               >
                 {s.label}
@@ -959,7 +959,7 @@ export default function SeasonBrowser() {
                   <span className="text-xs font-bold uppercase tracking-wider" style={{ color: CATEGORY_COLOR[cat] }}>
                     {CATEGORY_LABELS[cat]}
                   </span>
-                  <span className="text-[10px] text-[#94a3b8]/60">({players.length})</span>
+                  <span className="text-[10px] text-[#9CA3AF]/60">({players.length})</span>
                 </div>
 
                 {/* Player cards */}
@@ -977,8 +977,8 @@ export default function SeasonBrowser() {
         {squadSearch.trim() && Object.values(processedPlayers).every((p) => p.length === 0) && (
           <div className="text-center py-8">
             <div className="text-3xl mb-2">🔍</div>
-            <p className="text-sm text-[#94a3b8]">Игроки не найдены</p>
-            <p className="text-xs text-[#94a3b8]/60 mt-1">Попробуйте другой запрос</p>
+            <p className="text-sm text-[#9CA3AF]">Игроки не найдены</p>
+            <p className="text-xs text-[#9CA3AF]/60 mt-1">Попробуйте другой запрос</p>
           </div>
         )}
       </motion.div>
@@ -1033,7 +1033,7 @@ export default function SeasonBrowser() {
         {/* Back button */}
         <button
           onClick={goBackToSquad}
-          className="flex items-center gap-1.5 text-sm text-[#94a3b8] hover:text-[#22c55e] transition-colors mb-4 group"
+          className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-[#00C896] transition-colors mb-4 group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
@@ -1044,11 +1044,11 @@ export default function SeasonBrowser() {
 
         {/* Club header */}
         <div className="mb-5">
-          <h2 className="text-xl font-black text-[#e2e8f0]">
+          <h2 className="text-xl font-black text-[#FFFFFF]">
             {clubHistory.nameRu}
           </h2>
           {clubHistory.city && (
-            <p className="text-sm text-[#94a3b8] mt-0.5">{clubHistory.city}</p>
+            <p className="text-sm text-[#9CA3AF] mt-0.5">{clubHistory.city}</p>
           )}
         </div>
 
@@ -1056,38 +1056,38 @@ export default function SeasonBrowser() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
           <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-3 text-center">
             <div className="text-2xl font-black text-[#fbbf24]">{titles}</div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">🏆 Титулов</div>
+            <div className="text-[10px] text-[#9CA3AF] mt-0.5">🏆 Титулов</div>
           </div>
           <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-3 text-center">
-            <div className="text-2xl font-black text-[#e2e8f0]">{totalSeasons}</div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">Сезонов</div>
+            <div className="text-2xl font-black text-[#FFFFFF]">{totalSeasons}</div>
+            <div className="text-[10px] text-[#9CA3AF] mt-0.5">Сезонов</div>
           </div>
           <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-3 text-center">
-            <div className="text-2xl font-black text-[#22c55e]">{bestPosition}</div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">Лучшее место</div>
+            <div className="text-2xl font-black text-[#00C896]">{bestPosition}</div>
+            <div className="text-[10px] text-[#9CA3AF] mt-0.5">Лучшее место</div>
           </div>
           <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-3 text-center">
             <div className="text-2xl font-black text-[#3b82f6]">{avgPosition}</div>
-            <div className="text-[10px] text-[#94a3b8] mt-0.5">Ср. позиция</div>
+            <div className="text-[10px] text-[#9CA3AF] mt-0.5">Ср. позиция</div>
           </div>
         </div>
 
         {/* Position chart (simple bar visualization) */}
         <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] p-4 mb-5">
-          <div className="text-xs font-bold text-[#94a3b8] mb-3">ПОЗИЦИИ ПО СЕЗОНАМ</div>
+          <div className="text-xs font-bold text-[#9CA3AF] mb-3">ПОЗИЦИИ ПО СЕЗОНАМ</div>
           <div className="flex items-end gap-1 h-32 overflow-x-auto pb-1">
             {s.map((cs) => {
               const pos = cs.position ?? 16;
               const height = Math.max(8, ((16 - pos + 1) / 16) * 100);
-              const color = pos === 1 ? '#fbbf24' : pos <= 3 ? '#94a3b8' : pos <= 4 ? '#3b82f6' : pos >= 14 ? '#ef4444' : '#22c55e';
+              const color = pos === 1 ? '#fbbf24' : pos <= 3 ? '#9CA3AF' : pos <= 4 ? '#3b82f6' : pos >= 14 ? '#ef4444' : '#00C896';
               return (
                 <div key={cs.id} className="flex flex-col items-center gap-0.5 min-w-[28px]" title={`${cs.season.label}: ${pos}-е место, ${cs.points ?? '—'} очков`}>
-                  <span className="text-[8px] font-bold text-[#94a3b8]">{pos}</span>
+                  <span className="text-[8px] font-bold text-[#9CA3AF]">{pos}</span>
                   <div
                     className="w-full rounded-t-sm transition-all duration-300"
                     style={{ height: `${height}%`, backgroundColor: color, minHeight: 4 }}
                   />
-                  <span className="text-[7px] text-[#94a3b8]/60 whitespace-nowrap">{cs.season.label.slice(-2)}</span>
+                  <span className="text-[7px] text-[#9CA3AF]/60 whitespace-nowrap">{cs.season.label.slice(-2)}</span>
                 </div>
               );
             })}
@@ -1096,7 +1096,7 @@ export default function SeasonBrowser() {
 
         {/* Season-by-season table */}
         <div className="rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] overflow-hidden">
-          <div className="grid grid-cols-[1fr_36px_36px_36px_36px_56px_40px] items-center px-3 py-2.5 bg-[#0a0a0f]/50 border-b border-[#2a2a4a] text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+          <div className="grid grid-cols-[1fr_36px_36px_36px_36px_56px_40px] items-center px-3 py-2.5 bg-[#0a0a0f]/50 border-b border-[#2a2a4a] text-[10px] font-bold text-[#9CA3AF] uppercase tracking-wider">
             <span>Сезон</span>
             <span className="text-center">И</span>
             <span className="text-center">В</span>
@@ -1110,7 +1110,7 @@ export default function SeasonBrowser() {
               const pos = cs.position ?? idx + 1;
               const isEven = idx % 2 === 1;
               const goalDiff = getGoalDiff(cs.goalsFor, cs.goalsAgainst);
-              const posColor = pos === 1 ? '#fbbf24' : pos <= 3 ? '#94a3b8' : pos === 4 ? '#3b82f6' : pos >= 14 ? '#ef4444' : '#e2e8f0';
+              const posColor = pos === 1 ? '#fbbf24' : pos <= 3 ? '#9CA3AF' : pos === 4 ? '#3b82f6' : pos >= 14 ? '#ef4444' : '#FFFFFF';
 
               return (
                 <motion.button
@@ -1119,24 +1119,24 @@ export default function SeasonBrowser() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: Math.min(idx * 0.02, 0.4), duration: 0.15 }}
                   onClick={() => fetchClubSquad(cs.id)}
-                  className="w-full grid grid-cols-[1fr_36px_36px_36px_36px_56px_40px] items-center px-3 py-2 border-b border-[#2a2a4a]/30 hover:bg-[#22c55e]/5 transition-colors cursor-pointer"
+                  className="w-full grid grid-cols-[1fr_36px_36px_36px_36px_56px_40px] items-center px-3 py-2 border-b border-[#2a2a4a]/30 hover:bg-[#00C896]/5 transition-colors cursor-pointer"
                   style={{ backgroundColor: isEven ? 'rgba(26,26,46,0.4)' : 'transparent' }}
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className="text-xs font-black shrink-0" style={{ color: posColor }}>{pos}.</span>
-                    <span className="text-sm font-medium text-[#e2e8f0] truncate">{cs.season.label}</span>
+                    <span className="text-sm font-medium text-[#FFFFFF] truncate">{cs.season.label}</span>
                   </div>
-                  <span className="text-xs text-[#94a3b8] text-center">{cs.played ?? '—'}</span>
-                  <span className="text-xs text-[#e2e8f0] text-center font-medium">{cs.won ?? '—'}</span>
-                  <span className="text-xs text-[#94a3b8] text-center">{cs.drawn ?? '—'}</span>
-                  <span className="text-xs text-[#94a3b8] text-center">{cs.lost ?? '—'}</span>
-                  <span className="text-[10px] text-[#94a3b8] text-center">
+                  <span className="text-xs text-[#9CA3AF] text-center">{cs.played ?? '—'}</span>
+                  <span className="text-xs text-[#FFFFFF] text-center font-medium">{cs.won ?? '—'}</span>
+                  <span className="text-xs text-[#9CA3AF] text-center">{cs.drawn ?? '—'}</span>
+                  <span className="text-xs text-[#9CA3AF] text-center">{cs.lost ?? '—'}</span>
+                  <span className="text-[10px] text-[#9CA3AF] text-center">
                     {cs.goalsFor ?? '—'}-{cs.goalsAgainst ?? '—'}
-                    <span className="ml-0.5 text-[8px]" style={{ color: goalDiff.startsWith('+') ? '#22c55e' : goalDiff.startsWith('-') ? '#ef4444' : '#94a3b8' }}>
+                    <span className="ml-0.5 text-[8px]" style={{ color: goalDiff.startsWith('+') ? '#00C896' : goalDiff.startsWith('-') ? '#ef4444' : '#9CA3AF' }}>
                       {goalDiff !== '—' ? goalDiff : ''}
                     </span>
                   </span>
-                  <span className="text-xs font-black text-[#e2e8f0] text-center">{cs.points ?? '—'}</span>
+                  <span className="text-xs font-black text-[#FFFFFF] text-center">{cs.points ?? '—'}</span>
                 </motion.button>
               );
             })}
@@ -1145,8 +1145,8 @@ export default function SeasonBrowser() {
 
         {/* Summary */}
         <div className="mt-4 p-3 rounded-xl bg-[#1a1a2e] border border-[#2a2a4a] flex items-center justify-between">
-          <span className="text-xs text-[#94a3b8]">Всего очков за все сезоны:</span>
-          <span className="text-sm font-black text-[#22c55e]">{totalPoints}</span>
+          <span className="text-xs text-[#9CA3AF]">Всего очков за все сезоны:</span>
+          <span className="text-sm font-black text-[#00C896]">{totalPoints}</span>
         </div>
       </motion.div>
     );

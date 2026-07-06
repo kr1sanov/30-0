@@ -25,7 +25,7 @@ const CATEGORY_LABELS: Record<PositionCategory, string> = {
 const CATEGORY_COLORS: Record<PositionCategory, string> = {
   gk: '#f97316',
   def: '#3b82f6',
-  mid: '#22c55e',
+  mid: '#00C896',
   att: '#ef4444',
 };
 
@@ -164,7 +164,7 @@ function useAnimatedValue(target: number, duration: number = 800, delay: number 
 // ---------------------------------------------------------------------------
 
 function getPrediction(avgRating: number): { text: string; color: string; emoji: string } {
-  if (avgRating >= 75) return { text: 'Борьба за чемпионство', color: '#22c55e', emoji: '🏆' };
+  if (avgRating >= 75) return { text: 'Борьба за чемпионство', color: '#00C896', emoji: '🏆' };
   if (avgRating >= 70) return { text: 'Еврозона', color: '#3b82f6', emoji: '🏟️' };
   if (avgRating >= 65) return { text: 'Середняк', color: '#f97316', emoji: '⚖️' };
   return { text: 'Борьба за выживание', color: '#ef4444', emoji: '⚠️' };
@@ -292,8 +292,8 @@ export default function PreMatchAnalysis() {
         >
           📋
         </motion.div>
-        <h2 className="text-2xl font-black text-[#e2e8f0]">Разведка перед матчем</h2>
-        <p className="text-sm text-[#94a3b8] mt-1">Анализ состава перед сезоном</p>
+        <h2 className="text-2xl font-black text-[#FFFFFF]">Разведка перед матчем</h2>
+        <p className="text-sm text-[#9CA3AF] mt-1">Анализ состава перед сезоном</p>
       </motion.div>
 
       {/* Formation Visualization */}
@@ -301,11 +301,11 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]"
+        className="rounded-2xl bg-[#141414] p-4 border border-[#141414]"
       >
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-[#e2e8f0]">Расстановка</h3>
-          <span className="text-xs font-bold px-2 py-1 rounded-md bg-[#22c55e]/15 text-[#22c55e]">
+          <h3 className="text-sm font-bold text-[#FFFFFF]">Расстановка</h3>
+          <span className="text-xs font-bold px-2 py-1 rounded-md bg-[#00C896]/15 text-[#00C896]">
             {config.formation}
           </span>
         </div>
@@ -347,7 +347,7 @@ export default function PreMatchAnalysis() {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold border-2"
                   style={{
-                    backgroundColor: hasPlayer ? `${color}30` : '#0a1a0a50',
+                    backgroundColor: hasPlayer ? `${color}30` : '#0A0A0A50',
                     borderColor: hasPlayer ? color : '#ffffff20',
                     color: hasPlayer ? '#fff' : '#ffffff40',
                   }}
@@ -374,31 +374,31 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
+          className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
         >
-          <div className="text-4xl font-black text-[#e2e8f0]">{animatedOverall}</div>
-          <div className="text-sm text-[#94a3b8] mt-1">Рейтинг</div>
-          <div className="text-xs text-[#94a3b8]/60 mt-0.5">{stats.filledCount}/11</div>
+          <div className="text-4xl font-black text-[#FFFFFF]">{animatedOverall}</div>
+          <div className="text-sm text-[#9CA3AF] mt-1">Рейтинг</div>
+          <div className="text-xs text-[#9CA3AF]/60 mt-0.5">{stats.filledCount}/11</div>
         </motion.div>
 
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
-          className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
+          className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
         >
           <div className="relative w-14 h-14 mx-auto">
             <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#0d2d0d"
+                stroke="#141414"
                 strokeWidth="3"
               />
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke={stats.chemistryScore >= 80 ? '#22c55e' : stats.chemistryScore >= 60 ? '#3b82f6' : stats.chemistryScore >= 40 ? '#f97316' : '#ef4444'}
+                stroke={stats.chemistryScore >= 80 ? '#00C896' : stats.chemistryScore >= 60 ? '#3b82f6' : stats.chemistryScore >= 40 ? '#f97316' : '#ef4444'}
                 strokeWidth="3"
                 strokeDasharray={`${animatedChemistry}, 100`}
                 strokeLinecap="round"
@@ -406,12 +406,12 @@ export default function PreMatchAnalysis() {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-sm font-black text-[#e2e8f0]">
+              <span className="text-sm font-black text-[#FFFFFF]">
                 {Math.round(animatedChemistry)}
               </span>
             </div>
           </div>
-          <div className="text-sm text-[#94a3b8] mt-1">Химия</div>
+          <div className="text-sm text-[#9CA3AF] mt-1">Химия</div>
         </motion.div>
       </div>
 
@@ -420,9 +420,9 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]"
+        className="rounded-2xl bg-[#141414] p-4 space-y-3 border border-[#141414]"
       >
-        <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Рейтинг по линиям</h4>
+        <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider">Рейтинг по линиям</h4>
         {(['gk', 'def', 'mid', 'att'] as PositionCategory[]).map((cat, i) => (
           <motion.div
             key={cat}
@@ -438,11 +438,11 @@ export default function PreMatchAnalysis() {
                   {CATEGORY_LABELS[cat]}
                 </span>
               </div>
-              <span className="text-sm font-bold text-[#e2e8f0]">
+              <span className="text-sm font-bold text-[#FFFFFF]">
                 {animatedCategoryAvgs[cat] || '—'}
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-[#0a1a0a] overflow-hidden">
+            <div className="h-2.5 rounded-full bg-[#0A0A0A] overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.max((stats.categoryRatings[cat].avg / 100) * 100, 0)}%` }}
@@ -468,8 +468,8 @@ export default function PreMatchAnalysis() {
               <span className="text-xl">👨‍💼</span>
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs text-[#94a3b8]">Тренер</div>
-              <div className="text-sm font-bold text-[#e2e8f0] truncate">{currentManager.name}</div>
+              <div className="text-xs text-[#9CA3AF]">Тренер</div>
+              <div className="text-sm font-bold text-[#FFFFFF] truncate">{currentManager.name}</div>
               {currentManager.specialAbility && (
                 <div className="text-[10px] text-[#8b5cf6] font-bold mt-0.5">
                   ✨ {currentManager.specialAbility}
@@ -478,7 +478,7 @@ export default function PreMatchAnalysis() {
             </div>
             <div className="text-right shrink-0">
               <div className="text-2xl font-black text-[#8b5cf6]">{currentManager.rating}</div>
-              <div className="text-[10px] text-[#94a3b8]">рейтинг</div>
+              <div className="text-[10px] text-[#9CA3AF]">рейтинг</div>
             </div>
           </div>
         </motion.div>
@@ -489,14 +489,14 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="rounded-2xl bg-[#0d2d0d] p-5 text-center border border-[#0d2d0d]"
+        className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
       >
-        <div className="text-xs text-[#94a3b8] uppercase tracking-wider mb-2">Прогноз на сезон</div>
+        <div className="text-xs text-[#9CA3AF] uppercase tracking-wider mb-2">Прогноз на сезон</div>
         <div className="text-3xl mb-2">{prediction.emoji}</div>
         <div className="text-xl font-black" style={{ color: prediction.color }}>
           {prediction.text}
         </div>
-        <div className="text-xs text-[#94a3b8] mt-1">
+        <div className="text-xs text-[#9CA3AF] mt-1">
           На основе среднего рейтинга {stats.overall}
         </div>
       </motion.div>
@@ -510,8 +510,8 @@ export default function PreMatchAnalysis() {
           className="space-y-3"
         >
           {stats.strengths.length > 0 && (
-            <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#22c55e]/20">
-              <h4 className="text-xs font-bold text-[#22c55e] uppercase tracking-wider mb-2">
+            <div className="rounded-2xl bg-[#141414] p-4 border border-[#00C896]/20">
+              <h4 className="text-xs font-bold text-[#00C896] uppercase tracking-wider mb-2">
                 ✅ Сильные стороны
               </h4>
               <div className="space-y-1.5">
@@ -521,7 +521,7 @@ export default function PreMatchAnalysis() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.9 + i * 0.1 }}
-                    className="text-sm text-[#e2e8f0]"
+                    className="text-sm text-[#FFFFFF]"
                   >
                     {s}
                   </motion.div>
@@ -531,7 +531,7 @@ export default function PreMatchAnalysis() {
           )}
 
           {stats.weaknesses.length > 0 && (
-            <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#ef4444]/20">
+            <div className="rounded-2xl bg-[#141414] p-4 border border-[#ef4444]/20">
               <h4 className="text-xs font-bold text-[#ef4444] uppercase tracking-wider mb-2">
                 ⚠️ Зоны риска
               </h4>
@@ -542,7 +542,7 @@ export default function PreMatchAnalysis() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.0 + i * 0.1 }}
-                    className="text-sm text-[#e2e8f0]"
+                    className="text-sm text-[#FFFFFF]"
                   >
                     {w}
                   </motion.div>
@@ -562,7 +562,7 @@ export default function PreMatchAnalysis() {
         <Button
           onClick={handleSimulate}
           disabled={isSimulating}
-          className="w-full h-16 text-lg font-black bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#16a34a] hover:to-[#15803d] text-white rounded-2xl shadow-lg shadow-[#22c55e]/25 transition-all hover:shadow-[#22c55e]/40 disabled:opacity-50"
+          className="w-full h-16 text-lg font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-2xl shadow-lg shadow-[#00C896]/25 transition-all hover:shadow-[#00C896]/40 disabled:opacity-50"
         >
           {isSimulating ? (
             <div className="flex items-center gap-2">

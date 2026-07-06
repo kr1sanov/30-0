@@ -737,3 +737,230 @@ Stage Summary:
 - Game modes already correct (only Классика active)
 - "PLAY WITH MATES", "MORE WAYS TO PLAY", "Режим клуба" not found in codebase
 - Sandbox memory constraints cause server to die during heavy operations (agent-browser + spin API)
+
+---
+
+## Session: 2026-07-04 — Home Screen & Header Rebuild (38-0.app Style)
+
+---
+Task ID: 2
+Agent: Senior Full Stack Engineer
+Task: Rebuild home screen and header to match the 38-0.app style
+
+Work Log:
+
+### Color Scheme Overhaul (Global)
+- Replaced all green-tinted dark colors with pure dark scheme across entire codebase:
+  - `#0a1a0a` (green-tinted black) → `#0A0A0A` (pure almost-black)
+  - `#0d2d0d` (green-tinted card bg) → `#141414` (pure dark card)
+  - `#1a3a1a` (green-tinted border) → `#1E1E1E` (pure dark border/hover)
+  - `#22c55e` (bright green) → `#00C896` (teal accent green)
+  - `#16a34a` (darker green) → `#00A67A` (darker teal)
+  - `#4ade80` / `#86efac` → `#33DFB0` / `#66EDCA` (lighter teals)
+  - `#e2e8f0` → `#FFFFFF` (primary text)
+  - `#94a3b8` → `#9CA3AF` (secondary text)
+- Updated CSS variables in `:root` and `.dark` from oklch green-tinted values to new hex values
+- Updated all 14 game component files + layout + hooks + positions.ts
+
+### Header Component (`src/components/layout/Header.tsx`)
+- Removed any "30-0 RPL" text from header
+- Now shows minimal header on home screen with: Home indicator (left), Sound/HowToPlay/Profile buttons (right)
+- Dark background `#0A0A0A/90` with blur, border `#1E1E1E/50`
+- Game screens still show subtle overlay buttons (Home top-left, Profile top-right)
+- Setup/profile screens show full header bar with navigation
+- All colors updated to new scheme
+
+### Home Screen (`src/app/page.tsx` — HomePage component)
+Complete rebuild matching 38-0.app style:
+
+a) **Hero Section**:
+   - "НЕОФИЦИАЛЬНАЯ ФАНТАЗИ-ИГРА" badge with green pulsing dot
+   - Huge "30-0" title (white numbers, `#00C896` dash, 8xl/10rem sizing)
+   - Subtitle: "Собери величайшую сборную РПЛ всех времён"
+   - Full-width green CTA: "Играть 30-0 →" (`#00C896` bg, `#0A0A0A` text)
+   - Dark secondary: "Как это работает" (`#141414` bg)
+   - "Продолжить драфт" button (only shown if `runId` exists)
+   - Smooth Framer Motion staggered animations
+
+b) **Game Modes Section**:
+   - Title: "Игровые режимы" (no "PLAY WITH MATES" etc.)
+   - Only "Классика" mode active/clickable with icon container
+   - Other modes show "СКОРО" badge (teal-tinted, not orange), greyed out
+   - All cards use `#141414` bg, `#1E1E1E` border
+
+c) **How to Play Section**:
+   - 4-step layout with numbered teal circles (#00C896)
+   - Clean cards with proper spacing
+   - Steps: Крути колесо → Выбери игрока → Собери XI → Сыграй сезон
+
+d) **Stats Section**:
+   - Clean display: 16 клубов / 5000+ игроков / 1992-2026 сезонов
+   - Enclosed in `#141414` card
+
+e) **Challenges Section**:
+   - Simplified — no gradient backgrounds, just clean `#141414` cards
+   - Progress bars with `#00C896` fill and animation
+   - Completed challenges get a teal ring indicator
+
+f) **FAQ Section**:
+   - Same FAQ content, updated to new color scheme
+   - Cards with `#141414` bg, `#1E1E1E` border
+
+g) **Leaderboard removed** from home screen (no references)
+
+### Footer Component (`src/components/layout/Footer.tsx`)
+- Already had only Home/Play/Profile tabs (no leaderboard)
+- Updated all colors to new scheme
+- Mobile tab bar: `#0A0A0A/95` bg, `#00C896` active indicators
+- Desktop footer: `#0A0A0A` bg, `#00C896` gradient play button
+
+### Layout (`src/app/layout.tsx`)
+- Body bg: `#0A0A0A`, text: `#FFFFFF`
+- Theme color: `#0A0A0A`
+- Toast colors updated to new scheme
+
+### Files Modified
+- `src/app/globals.css` — Complete color variable overhaul
+- `src/app/layout.tsx` — Body colors, theme color
+- `src/app/page.tsx` — HomePage component rebuild, color updates in all screens
+- `src/components/layout/Header.tsx` — Complete rewrite for 38-0 style
+- `src/components/layout/Footer.tsx` — Color scheme update
+- `src/hooks/use-telegram.ts` — Header/bg color update
+- `src/lib/positions.ts` — Position color update
+- All 14 game components — Color scheme update (bulk replacement)
+
+### Verification
+- ESLint passes with no errors
+- Dev server compiles successfully
+- Homepage returns 200 status code
+
+---
+
+Task ID: 5+6
+Agent: full-stack-developer
+Task: Improve game setup screen and draft screen to match 38-0.app style
+
+Work Log:
+- Added `showRatings`, `enableManagers`, `januaryTransfer` fields to `GameConfig` in `types.ts`
+- **GameSetup.tsx** — Complete rework to match 38-0.app style:
+  - Dark theme: #0A0A0A bg, #141414 cards, accent green #00C896
+  - FORMATION section: horizontal scrollable pills with description text below each formation when selected
+  - DIFFICULTY section: 3 options (Easy/Normal/Hard) with clear descriptions (3 rerolls+visible, 1 reroll+visible, 0 rerolls+hidden)
+  - SHOW RATINGS toggle: separate On/Off switch with "Вкл/Выкл" labels, overrides difficulty default
+  - DRAFT MODE section: Squad First / Position First with pill-style buttons
+  - PLAYER RATINGS section: Season / Prime options
+  - ERA section: 4 quick buttons (Все времена / 2000+ / 2010+ / Современная (2016+))
+  - ADVANCED section (collapsible): Managers (Gaffers) toggle, January Transfer Window toggle
+  - Start Draft button: Green #00C896, full width, larger height
+  - No "Режим клуба" block — removed/never added
+- **SpinWheel.tsx** — Improved slot machine animation:
+  - "КРУТИТЕ КОЛЕСО" header with "N позиций осталось заполнить"
+  - "Крутить колесо или нажмите в любом месте" instruction text
+  - Smoother deceleration: 12 steps with progressive slow down (80ms → ~700ms total)
+  - Dark theme (#0A0A0A bg, #141414 card)
+  - Green #00C896 accent for spin button and status text
+- **PlayerList.tsx** — Improved player cards:
+  - Rating square colors: ≥85 green (#22c55e), 75-84 blue (#3b82f6), <75 gray (#64748b)
+  - Greyed out players who can't fill any open position (opacity 0.35)
+  - Sort toggle: Rating / Фамилия А-Я
+  - Inline position picker with "Поставить [Name] на:" header and green-bordered position buttons
+  - Uses effectiveShowRatings from config (respects override toggle)
+  - Dark theme styling with #0a0a0a and #141414 backgrounds
+- **SquadStats.tsx** — Replaced "OVERALL" with "Рейтинг":
+  - Category emojis: ⚡ Attack, 🌀 Midfield, 🛡️ Defence, 🥅 GK
+  - Category colors: Attack orange, Midfield green, Defence blue, GK yellow
+  - Progress bars with proper colors per category
+  - Shows "—" for unfilled categories
+  - Dark theme (#141414 card backgrounds)
+- **FormationView.tsx** — Improved visual:
+  - Green pitch with white lines (borders, center line, center circle, penalty areas)
+  - Empty slots: gray dashed circle with position abbreviation + label below
+  - Filled slots: colored circle (GK yellow #fbbf24, DEF blue #3b82f6, MID green #22c55e, ATT orange #f97316) with player initials
+  - Player name below circle (surname + flag)
+  - Color legend: ● ВР ● Защита ● Полузащита ● Атака ○ Нельзя поставить
+  - Compatible slots glow with #00C896 green accent
+- Updated DraftProgressTracker.tsx to use effectiveShowRatings instead of just difficulty check
+- Lint passes cleanly with no errors
+- Dev server compiles and runs without errors
+
+Stage Summary:
+- Game Setup screen now matches 38-0.app style with dark theme, proper sections, and green accent
+- All draft screen components updated with consistent dark theme (#0A0A0A / #141414 / #00C896)
+- Formation view uses circle-based layout with player initials and color-coded categories
+- Squad stats show Russian labels with category emojis and proper colors
+- Player list uses rating-tier coloring and improved inline position picker
+- Spin wheel has smoother animation with clear instructions
+
+---
+
+## Session: 2026-03-04 — Season Simulation Algorithm & Result Screen Improvements
+
+---
+Task ID: 9+10
+Agent: Senior Full Stack Engineer
+Task: Improve season simulation algorithm and result screen to match 38-0.app style
+
+Work Log:
+
+### 1. Simulation Algorithm (`src/lib/simulation.ts`)
+- **Balance penalty**: Added `calculateImbalancePenalty()` — weak zones penalize the overall team rating proportionally to the max deviation from the mean of four zone ratings (ATT/MID/DEF/GK)
+- **Updated weightings**: Changed from ATT×0.30 MID×0.30 DEF×0.30 GK×0.10 → ATT×0.30 MID×0.25 DEF×0.30 GK×0.15 (matches 38-0 spec)
+- **Sigmoid-based win probability**: Replaced ratio-based goal lambda calculation with `sigmoid(delta * 0.12)` for home win prob, `max(0.20 - |delta| * 0.003, 0.05)` for draw prob, ensuring more realistic match outcomes
+- **Better goal generation**: Outcomes (win/draw/loss) are determined first via probability roll, then Poisson goals are generated that guarantee the correct outcome
+- **January Transfer Window**: On match 15, if `januaryTransfer` is enabled, a random ±1 to ±3 strength modifier is applied
+- **Trophy calculation**: New `calculateTrophies()` function returning 9 trophies matching the spec
+- **Best win streak tracking**: Now tracked during season simulation and returned in results
+
+### 2. Simulation Result Screen (`src/components/game/SimulationResult.tsx`)
+- **Hero stat**: Large prominent "94 оч · 1-е место" display with position ordinal
+- **W-D-L banner**: "30В · 4Н · 4П" format with color-coded values
+- **Goals banner**: "Забито 81 · Пропущено 31" format
+- **Formation display**: Shows formation used during simulation
+- **Trophy Cabinet**: 3-column grid with all 9 trophies, earned ones highlighted with green border and bounce animation, unearned shown greyed out. Framer Motion staggered spring animations for trophy reveal
+- **Action buttons**: "Награды сезона" → "Играть снова" / "Поделиться" → "Профиль"
+- **Share functionality**: Generates shareable text with results and trophy list
+- **Secondary achievements**: Clean sheets, win streak, biggest win, highest scoring match, transfer window modifier
+- **Live simulation**: Shows match results during simulation with W/D/L color coding
+
+### 3. Season Awards (`src/components/game/SeasonAwards.tsx`)
+- **MVP**: Highest rated player in squad
+- **Best Striker (Лучший нападающий)**: Highest rated forward with simulated goal count stat line
+- **Best Defender (Лучший защитник)**: Highest rated defender with clean sheet stat line
+- **Best Goalkeeper (Лучший вратарь)**: Highest rated goalkeeper with saves stat line
+- **Best Midfielder**: Highest rated midfielder with assists stat line
+- **Season Discovery**: Lowest rated player selected
+- **Manager Award**: Shows coach with special ability
+- Added trophy count display in header
+- Added "Профиль" button
+
+### 4. API Simulate Endpoint (`src/app/api/runs/[runId]/simulate/route.ts`)
+- Accepts `januaryTransfer` parameter from request body
+- Retrieves previous best points from user profile for "Взлёт" trophy calculation
+- Passes `januaryTransfer` and `previousBestPoints` to `simulateSeason()`
+- Returns full result including trophies, bestWinStreak, januaryTransferModifier
+
+### 5. Trophy System Update
+- **ProfileScreen TROPHIES** and **gameStore ALL_ACHIEVEMENTS** updated to match 38-0 spec:
+  - 🏆 30-0 — Win all 30 matches
+  - 🛡️ Непобедимый — 0 losses
+  - 🥇 Чемпион — Finish 1st
+  - ⭐ Топ-4 — Finish in top 4
+  - ⚽ Голевая машина — 60+ goals scored
+  - 🧱 Железная оборона — 20 or fewer goals conceded
+  - 🥅 Железный занавес — 10 or fewer goals conceded
+  - 📈 Взлёт — New personal best points
+  - 🔥 Серия побед — 5+ wins in a row
+- `updateProfileStats` now uses trophy data from simulation when available, with fallback computation
+- `simulate()` function now passes `januaryTransfer` config to API
+
+### 6. Bug Fixes
+- Fixed TypeScript error: `config` variable not in scope in `simulate()` — changed to `const { runId, config } = get()`
+- Fixed TypeScript error: `trophyVariants` type incompatibility — removed unused `bounce` variant, added `as const` for type literal
+- Fixed `ChallengeDef` interface in `page.tsx` to include `achievements?` in stats type
+
+Stage Summary:
+- Simulation algorithm now matches 38-0.app spec with balance penalty, sigmoid probabilities, and transfer window
+- Result screen redesigned with prominent stats, trophy cabinet, and 38-0 style layout
+- 9 trophies implemented matching the specification
+- All lint checks pass
+- Dev server compiles successfully

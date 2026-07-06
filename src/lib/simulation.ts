@@ -1,9 +1,12 @@
 // ============================================================================
-// 30-0 RPL — Season Simulation Engine
+// 30-0 RPL — Season Simulation Engine (v2)
 // ============================================================================
-// Pure logic: no React, no side effects. All randomness is deterministic
-// given the Math.random() calls — wrap in a seeded RNG if reproducibility
-// is needed.
+// Improved algorithm matching 38-0.app spec:
+//   - Balance penalty for weak zones
+//   - Sigmoid-based win probability
+//   - ATT × 0.30 + MID × 0.25 + DEF × 0.30 + GK × 0.15
+//   - January Transfer Window event (match 15)
+//   - Trophy calculation
 // ============================================================================
 
 import type { PositionCategory } from './positions';
@@ -38,6 +41,14 @@ export interface TableEntry {
   points: number;
 }
 
+export interface Trophy {
+  id: string;
+  icon: string;
+  name: string;
+  description: string;
+  earned: boolean;
+}
+
 export interface SeasonResult {
   wins: number;
   draws: number;
@@ -48,6 +59,9 @@ export interface SeasonResult {
   position: number;
   table: TableEntry[];
   matches: MatchDetail[];
+  trophies: Trophy[];
+  bestWinStreak: number;
+  januaryTransferModifier?: number; // strength change from transfer window
 }
 
 export interface MatchDetail {
@@ -92,6 +106,37 @@ const RPL_TEAMS = [
 ] as const;
 
 // ---------------------------------------------------------------------------
+// calculateImbalancePenalty
+// ---------------------------------------------------------------------------
+
+/**
+ * Calculates a penalty for squad imbalance. If one zone is significantly
+ * weaker than the others, the whole team suffers.
+ *
+ * The penalty is proportional to the maximum deviation from the mean of
+ * the four zone ratings.
+ */
+function calculateImbalancePenalty(
+  attack: number,
+  midfield: number,
+  defence: number,
+  gk: number,
+): number {
+  const mean = (attack + midfield + defence + gk) / 4;
+  const deviations = [
+    Math.abs(attack - mean),
+    Math.abs(midfield - mean),
+    Math.abs(defence - mean),
+    Math.abs(gk - mean),
+  ];
+  const maxDeviation = Math.max(...deviations);
+  // Penalty scales with how imbalanced the squad is
+  // A perfectly balanced squad: penalty = 0
+  // A squad with a 20-point deviation: penalty ≈ 3
+  return Math.round(maxDeviation * 0.15 * 10) / 10;
+}
+
+// ---------------------------------------------------------------------------
 // calculateSquadStrength
 // ---------------------------------------------------------------------------
 
@@ -99,7 +144,10 @@ const RPL_TEAMS = [
  * Calculates squad strength by line (ATT / MID / DEF / GK) and a weighted
  * overall rating.
  *
- * Weighting:  ATT × 0.30  +  MID × 0.30  +  DEF × 0.30  +  GK × 0.10
+ * Weighting:  ATT × 0.30  +  MID × 0.25  +  DEF × 0.30  +  GK × 0.15
+ *
+ * Balance penalty: if one zone is much weaker than others, the overall is
+ * reduced proportionally.
  *
  * If a slot has `isCompatible === false` the player's rating is multiplied
  * by 0.8 before averaging.
@@ -134,7 +182,14 @@ export function calculateSquadStrength(
   const mid = Math.round(avg(buckets.mid) * 10) / 10;
   const att = Math.round(avg(buckets.att) * 10) / 10;
 
-  let overall = att * 0.3 + mid * 0.3 + def * 0.3 + gk * 0.1;
+  // Balance penalty — weak zones penalize the whole team
+  const balancePenalty = calculateImbalancePenalty(att, mid, def, gk);
+
+  // Weighted overall with new weights: ATT 0.30, MID 0.25, DEF 0.30, GK 0.15
+  let overall = att * 0.30 + mid * 0.25 + def * 0.30 + gk * 0.15;
+
+  // Apply balance penalty
+  overall -= balancePenalty;
 
   if (managerRating !== undefined && managerRating > 0) {
     overall += 2;
@@ -171,16 +226,16 @@ export function poissonRandom(lambda: number): number {
 }
 
 // ---------------------------------------------------------------------------
-// simulateMatch
+// simulateMatch (v2 — sigmoid-based win probability)
 // ---------------------------------------------------------------------------
 
 /**
- * Simulates a single match between two teams.
+ * Simulates a single match between two teams using the 38-0 algorithm.
  *
  * - Home team receives a +3 strength bonus.
  * - Win probability is derived via sigmoid from the strength difference.
- * - Goals follow a Poisson distribution with λ proportional to relative
- *   strength (baseline ≈ 1.2 goals per team per match).
+ * - Draw probability decreases with strength gap (minimum 5%).
+ * - Goals follow a Poisson distribution.
  *
  * @param teamStrength     Player's team strength (0–100)
  * @param opponentStrength Opponent's strength (0–100)
@@ -196,13 +251,44 @@ export function simulateMatch(
   const homeStr = isHome ? teamStrength + homeAdvantage : opponentStrength + homeAdvantage;
   const awayStr = isHome ? opponentStrength : teamStrength;
 
-  // Expected goals — baseline 1.2, scaled by relative strength
-  const ratio = homeStr / (homeStr + awayStr);
-  const homeLambda = 0.7 + ratio * 1.2;   // range ≈ 0.7 – 1.9
-  const awayLambda = 0.7 + (1 - ratio) * 1.2;
+  // Sigmoid-based win probability
+  const delta = homeStr - awayStr;
+  const homeWinProb = sigmoid(delta * 0.12);
+  const drawProb = Math.max(0.20 - Math.abs(delta) * 0.003, 0.05);
+  const awayWinProb = Math.max(1 - homeWinProb - drawProb, 0.02);
 
-  const homeGoals = poissonRandom(homeLambda);
-  const awayGoals = poissonRandom(awayLambda);
+  // Normalize probabilities
+  const total = homeWinProb + drawProb + awayWinProb;
+  const normHome = homeWinProb / total;
+  const normDraw = drawProb / total;
+
+  // Determine outcome
+  const roll = Math.random();
+  let homeGoals: number;
+  let awayGoals: number;
+
+  if (roll < normHome) {
+    // Home win — generate goals favoring home team
+    const homeLambda = 1.4 + Math.abs(delta) * 0.02;
+    const awayLambda = 0.6 + Math.max(0, 0.3 - Math.abs(delta) * 0.01);
+    homeGoals = poissonRandom(homeLambda);
+    awayGoals = poissonRandom(awayLambda);
+    // Ensure home wins
+    if (homeGoals <= awayGoals) homeGoals = awayGoals + 1 + Math.floor(Math.random() * 2);
+  } else if (roll < normHome + normDraw) {
+    // Draw — similar goals
+    const lambda = 0.8 + Math.random() * 0.4;
+    homeGoals = poissonRandom(lambda);
+    awayGoals = homeGoals; // Force draw
+  } else {
+    // Away win — generate goals favoring away team
+    const homeLambda = 0.6 + Math.max(0, 0.3 - Math.abs(delta) * 0.01);
+    const awayLambda = 1.4 + Math.abs(delta) * 0.02;
+    homeGoals = poissonRandom(homeLambda);
+    awayGoals = poissonRandom(awayLambda);
+    // Ensure away wins
+    if (awayGoals <= homeGoals) awayGoals = homeGoals + 1 + Math.floor(Math.random() * 2);
+  }
 
   return { homeGoals, awayGoals };
 }
@@ -227,6 +313,94 @@ function generateOpponent(): Opponent {
 }
 
 // ---------------------------------------------------------------------------
+// calculateTrophies
+// ---------------------------------------------------------------------------
+
+/**
+ * Calculates which trophies the player earned based on the season result.
+ * Uses previous best points to determine "Взлёт" trophy.
+ */
+export function calculateTrophies(
+  wins: number,
+  draws: number,
+  losses: number,
+  goalsFor: number,
+  goalsAgainst: number,
+  position: number,
+  bestWinStreak: number,
+  previousBestPoints: number,
+  currentPoints: number,
+): Trophy[] {
+  const trophies: Trophy[] = [
+    {
+      id: 'perfect_30_0',
+      icon: '🏆',
+      name: '30-0',
+      description: 'Выиграть все 30 матчей',
+      earned: wins === 30 && draws === 0 && losses === 0,
+    },
+    {
+      id: 'invincible',
+      icon: '🛡️',
+      name: 'Непобедимый',
+      description: '0 поражений за сезон',
+      earned: losses === 0,
+    },
+    {
+      id: 'champion',
+      icon: '🥇',
+      name: 'Чемпион',
+      description: 'Занять 1-е место',
+      earned: position === 1,
+    },
+    {
+      id: 'top4',
+      icon: '⭐',
+      name: 'Топ-4',
+      description: 'Попасть в топ-4',
+      earned: position <= 4,
+    },
+    {
+      id: 'goal_machine',
+      icon: '⚽',
+      name: 'Голевая машина',
+      description: '60+ голов за сезон',
+      earned: goalsFor >= 60,
+    },
+    {
+      id: 'iron_defense',
+      icon: '🧱',
+      name: 'Железная оборона',
+      description: '20 или менее пропущенных',
+      earned: goalsAgainst <= 20,
+    },
+    {
+      id: 'iron_curtain',
+      icon: '🥅',
+      name: 'Железный занавес',
+      description: '10 или менее пропущенных',
+      earned: goalsAgainst <= 10,
+    },
+    {
+      id: 'personal_best',
+      icon: '📈',
+      name: 'Взлёт',
+      description: 'Новый личный рекорд очков',
+      earned: previousBestPoints > 0 && currentPoints > previousBestPoints,
+    },
+    {
+      id: 'win_streak',
+      icon: '🔥',
+      name: 'Серия побед',
+      description: '5+ побед подряд',
+      earned: bestWinStreak >= 5,
+    },
+  ];
+
+  return trophies;
+}
+
+// ---------------------------------------------------------------------------
 // simulateSeason
 // ---------------------------------------------------------------------------
 
@@ -237,15 +411,26 @@ function generateOpponent(): Opponent {
  * The final league table is built from 16 teams: the player + 15 generated
  * "other" teams whose results are derived statistically.
  *
- * @param slots         The player's filled squad slots
- * @param managerRating Optional manager rating (adds +2 overall if given)
+ * January Transfer Window: on match 15, if enabled, a random +/- 2
+ * strength modifier is applied.
+ *
+ * @param slots               The player's filled squad slots
+ * @param managerRating       Optional manager rating (adds +2 overall if given)
+ * @param januaryTransfer     Whether January Transfer Window is enabled
+ * @param previousBestPoints  Player's previous best points (for Взлёт trophy)
  */
 export function simulateSeason(
   slots: SquadSlot[],
   managerRating?: number,
+  januaryTransfer?: boolean,
+  previousBestPoints?: number,
 ): SeasonResult {
   const strength = calculateSquadStrength(slots, managerRating);
   const teamName = 'Моя команда';
+
+  // Track dynamic strength (can change after transfer window)
+  let currentStrength = strength.overall;
+  let januaryTransferModifier: number | undefined;
 
   // --- Simulate player's 30 matches ---
   const matches: MatchDetail[] = [];
@@ -254,20 +439,42 @@ export function simulateSeason(
   let losses = 0;
   let goalsFor = 0;
   let goalsAgainst = 0;
+  let bestWinStreak = 0;
+  let currentWinStreak = 0;
 
   for (let i = 0; i < 30; i++) {
+    // January Transfer Window event on match 15
+    if (i === 14 && januaryTransfer) {
+      const modifier = Math.random() > 0.5
+        ? Math.round((Math.random() * 2 + 1) * 10) / 10  // +1 to +3
+        : -Math.round((Math.random() * 2 + 1) * 10) / 10; // -1 to -3
+      currentStrength = Math.max(40, Math.min(99, currentStrength + modifier));
+      januaryTransferModifier = modifier;
+    }
+
     const opponent = generateOpponent();
     const isHome = i % 2 === 0; // alternate home/away
 
-    const result = simulateMatch(strength.overall, opponent.strength, isHome);
+    const result = simulateMatch(currentStrength, opponent.strength, isHome);
 
     const playerGoals = isHome ? result.homeGoals : result.awayGoals;
     const oppGoals    = isHome ? result.awayGoals : result.homeGoals;
 
     let outcome: 'W' | 'D' | 'L';
-    if (playerGoals > oppGoals) { outcome = 'W'; wins++; }
-    else if (playerGoals < oppGoals) { outcome = 'L'; losses++; }
-    else { outcome = 'D'; draws++; }
+    if (playerGoals > oppGoals) {
+      outcome = 'W';
+      wins++;
+      currentWinStreak++;
+      bestWinStreak = Math.max(bestWinStreak, currentWinStreak);
+    } else if (playerGoals < oppGoals) {
+      outcome = 'L';
+      losses++;
+      currentWinStreak = 0;
+    } else {
+      outcome = 'D';
+      draws++;
+      currentWinStreak = 0;
+    }
 
     goalsFor += playerGoals;
     goalsAgainst += oppGoals;
@@ -280,9 +487,9 @@ export function simulateSeason(
           const cat = getCategoryForPosition(s.position as Parameters<typeof getCategoryForPosition>[0]);
           return cat === 'att' || cat === 'mid';
         })
-        .map(s => s.playerName.split(' ')[0]); // Last name only
+        .map(s => s.playerName.split(' ').pop() || s.playerName); // Last name only
 
-      const allNames = slots.map(s => s.playerName.split(' ')[0]);
+      const allNames = slots.map(s => s.playerName.split(' ').pop() || s.playerName);
 
       for (let g = 0; g < playerGoals; g++) {
         const minute = Math.floor(Math.random() * 90) + 1;
@@ -344,15 +551,10 @@ export function simulateSeason(
 
     for (let j = 0; j < 30; j++) {
       const oppStr = 55 + Math.random() * 30;
-      const isH = j % 2 === 0;
-      const homeStr = isH ? teamStr + 3 : oppStr + 3;
-      const awayStr = isH ? oppStr : teamStr;
-      const ratio = homeStr / (homeStr + awayStr);
-      const hGoals = poissonRandom(0.7 + ratio * 1.2);
-      const aGoals = poissonRandom(0.7 + (1 - ratio) * 1.2);
+      const matchResult = simulateMatch(teamStr, oppStr, j % 2 === 0);
 
-      const myGoals = isH ? hGoals : aGoals;
-      const theirGoals = isH ? aGoals : hGoals;
+      const myGoals = j % 2 === 0 ? matchResult.homeGoals : matchResult.awayGoals;
+      const theirGoals = j % 2 === 0 ? matchResult.awayGoals : matchResult.homeGoals;
 
       if (myGoals > theirGoals) tW++;
       else if (myGoals < theirGoals) tL++;
@@ -379,7 +581,7 @@ export function simulateSeason(
   // --- Build and sort the full table ---
   const fullTable = [playerEntry, ...otherTeams];
 
-  // Sort by: points → goal difference → goals for → name
+  // Sort by: points → goal difference → goals for → head-to-head (name as tiebreaker)
   fullTable.sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points;
     if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
@@ -395,6 +597,19 @@ export function simulateSeason(
   // Find player's position
   const playerFinal = fullTable.find((e) => e.name === teamName)!;
 
+  // --- Calculate trophies ---
+  const trophies = calculateTrophies(
+    wins,
+    draws,
+    losses,
+    goalsFor,
+    goalsAgainst,
+    playerFinal.position,
+    bestWinStreak,
+    previousBestPoints ?? 0,
+    playerPoints,
+  );
+
   return {
     wins,
     draws,
@@ -405,5 +620,8 @@ export function simulateSeason(
     position: playerFinal.position,
     table: fullTable,
     matches,
+    trophies,
+    bestWinStreak,
+    januaryTransferModifier,
   };
 }

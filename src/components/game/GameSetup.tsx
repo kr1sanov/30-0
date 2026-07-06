@@ -14,6 +14,12 @@ import type { Position, PositionCategory } from '@/lib/positions';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
+
+/* ─── Colors ─── */
+const ACCENT = '#00C896';
+const BG_PAGE = '#0A0A0A';
+const BG_CARD = '#141414';
 
 /* ─── Pitch dot layout for formation preview ─── */
 const PITCH_LAYOUTS: Record<string, { row: number; col: number }[]> = {
@@ -87,7 +93,7 @@ function getCategoryColor(pos: string): string {
   switch (cat) {
     case 'gk': return '#f97316';
     case 'def': return '#3b82f6';
-    case 'mid': return '#22c55e';
+    case 'mid': return '#00C896';
     case 'att': return '#ef4444';
   }
 }
@@ -95,25 +101,22 @@ function getCategoryColor(pos: string): string {
 /* ─── Difficulty metadata ─── */
 const DIFFICULTY_META: Record<
   Difficulty,
-  { icon: string; flavor: string; color: string; glow: string }
+  { icon: string; description: string; color: string }
 > = {
   easy: {
     icon: '🌱',
-    flavor: 'Идеально для новичков',
-    color: '#22c55e',
-    glow: 'rgba(34, 197, 94, 0.45)',
+    description: '3 переброса, рейтинги видны',
+    color: '#00C896',
   },
   normal: {
     icon: '⚖️',
-    flavor: 'Баланс риска и награды',
+    description: '1 переброс, рейтинги видны',
     color: '#f59e0b',
-    glow: 'rgba(245, 158, 11, 0.45)',
   },
   hard: {
     icon: '🔥',
-    flavor: 'Только для экспертов',
+    description: '0 перебросов, рейтинги скрыты',
     color: '#ef4444',
-    glow: 'rgba(239, 68, 68, 0.45)',
   },
 };
 
@@ -130,7 +133,7 @@ function FormationPitch({ formationId }: { formationId: string }) {
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.25 }}
       className="relative w-full rounded-xl overflow-hidden"
-      style={{ paddingBottom: '75%' }}
+      style={{ paddingBottom: '65%' }}
     >
       {/* Field gradient base */}
       <div
@@ -148,26 +151,16 @@ function FormationPitch({ formationId }: { formationId: string }) {
             'repeating-linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 7px, rgba(0,0,0,0.12) 7px, rgba(0,0,0,0.12) 14px)',
         }}
       />
-      {/* Subtle vignette */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.25) 100%)',
-        }}
-      />
       {/* Center line */}
       <div className="absolute inset-x-0 top-1/2 h-px bg-white/20" />
       {/* Center circle */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border border-white/25" />
-      {/* Penalty box hint */}
-      <div className="absolute inset-x-[30%] top-0 h-3 border-x border-b border-white/15" />
 
       {/* Player dots with position labels */}
       {layout.map((pos, i) => {
         const slotPosition = formation?.slots[i]?.position;
         const slotLabel = formation?.slots[i]?.label;
-        const color = slotPosition ? getCategoryColor(slotPosition) : '#94a3b8';
+        const color = slotPosition ? getCategoryColor(slotPosition) : '#9CA3AF';
         return (
           <div
             key={i}
@@ -195,17 +188,47 @@ function FormationPitch({ formationId }: { formationId: string }) {
           </div>
         );
       })}
-
-      {/* Formation name + description at bottom */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2">
-        <div className="text-center">
-          <span className="text-xs font-black text-white tracking-wide">{formationId}</span>
-          {formation?.description && (
-            <span className="text-[10px] text-white/70 ml-2">{formation.description}</span>
-          )}
-        </div>
-      </div>
     </motion.div>
+  );
+}
+
+/* ─── Section Header ─── */
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <h3
+      className="text-[11px] uppercase tracking-[0.15em] font-bold text-[#9CA3AF] mb-3"
+    >
+      {children}
+    </h3>
+  );
+}
+
+/* ─── Pill Button ─── */
+function PillButton({
+  label,
+  isSelected,
+  onClick,
+  color = ACCENT,
+}: {
+  label: string;
+  isSelected: boolean;
+  onClick: () => void;
+  color?: string;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.95 }}
+      className="shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 whitespace-nowrap"
+      style={{
+        backgroundColor: isSelected ? `${color}20` : 'transparent',
+        color: isSelected ? color : '#9CA3AF',
+        border: isSelected ? `1.5px solid ${color}` : '1.5px solid #2a2a2a',
+        boxShadow: isSelected ? `0 0 12px ${color}30` : 'none',
+      }}
+    >
+      {label}
+    </motion.button>
   );
 }
 
@@ -222,76 +245,75 @@ export default function GameSetup() {
   };
 
   const selectedFormation = FORMATIONS.find((f) => f.id === config.formation);
-  const selectedDifficultyMeta = DIFFICULTY_META[config.difficulty];
+
+  // Derive effective showRatings: if explicitly set use that, otherwise follow difficulty
+  const effectiveShowRatings =
+    config.showRatings !== undefined
+      ? config.showRatings
+      : DIFFICULTY_CONFIG[config.difficulty].showRatings;
 
   return (
-    <div className="space-y-6 animate-fade-in-up relative">
+    <div className="space-y-6 animate-fade-in-up" style={{ background: BG_PAGE }}>
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl sm:text-3xl font-black text-[#e2e8f0] inline-block">
+        <h2 className="text-2xl sm:text-3xl font-black text-white inline-block">
           Настройка игры
         </h2>
-        <p className="text-sm text-[#94a3b8] mt-1">
-          Выберите схему и сложность
+        <p className="text-sm text-[#9CA3AF] mt-1">
+          Выберите параметры драфта
         </p>
       </div>
 
-      {/* ─── Formation (Схема игры) Selector ─── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-[#e2e8f0] section-accent-line">Схема игры</h3>
-          {/* Legend */}
-          <div className="hidden sm:flex items-center gap-3">
-            <LegendDot color="#f97316" label="ВР" />
-            <LegendDot color="#3b82f6" label="ЗЩ" />
-            <LegendDot color="#22c55e" label="ПЗ" />
-            <LegendDot color="#ef4444" label="НП" />
-          </div>
+      {/* ─── FORMATION ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <SectionHeader>Схема</SectionHeader>
+
+        {/* Horizontal scrollable pills */}
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+          {FORMATIONS.map((f) => (
+            <PillButton
+              key={f.id}
+              label={f.id}
+              isSelected={config.formation === f.id}
+              onClick={() => handleFormationSelect(f.id)}
+            />
+          ))}
         </div>
 
-        {/* Formation buttons grid */}
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-          {FORMATIONS.map((f) => {
-            const isSelected = config.formation === f.id;
-            return (
-              <motion.button
-                key={f.id}
-                onClick={() => handleFormationSelect(f.id)}
-                className={`rounded-xl py-2.5 px-2 text-center transition-all duration-200 border-2 font-bold text-sm ${
-                  isSelected
-                    ? 'border-[#22c55e] bg-[#22c55e]/15 text-[#22c55e]'
-                    : 'border-[#1a3a1a] bg-[#0d2d0d] text-[#e2e8f0] hover:border-[#22c55e]/30 hover:text-[#22c55e]/80'
-                }`}
-                whileTap={{ scale: 0.95 }}
-              >
-                {f.id}
-              </motion.button>
-            );
-          })}
-        </div>
+        {/* Formation description when selected */}
+        {selectedFormation && (
+          <motion.div
+            key={config.formation}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3"
+          >
+            <p className="text-xs text-[#9CA3AF] text-center">
+              {selectedFormation.description}
+            </p>
+          </motion.div>
+        )}
 
-        {/* Mobile legend */}
-        <div className="sm:hidden flex items-center justify-center gap-3 mt-2">
-          <LegendDot color="#f97316" label="ВР" />
-          <LegendDot color="#3b82f6" label="ЗЩ" />
-          <LegendDot color="#22c55e" label="ПЗ" />
-          <LegendDot color="#ef4444" label="НП" />
-        </div>
-
-        {/* Formation preview — shown below the buttons */}
+        {/* Formation preview */}
         <AnimatePresence mode="wait">
           {selectedFormation && (
-            <div className="mt-4">
+            <div className="mt-3">
               <FormationPitch formationId={config.formation} />
             </div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ─── Difficulty Selector ─── */}
-      <div>
-        <h3 className="text-lg font-bold text-[#e2e8f0] mb-4 section-accent-line">Сложность</h3>
-        <div className="grid grid-cols-3 gap-3">
+      {/* ─── DIFFICULTY ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <SectionHeader>Сложность</SectionHeader>
+        <div className="grid grid-cols-3 gap-2">
           {(
             Object.entries(DIFFICULTY_CONFIG) as [
               Difficulty,
@@ -303,87 +325,185 @@ export default function GameSetup() {
             return (
               <motion.button
                 key={key}
-                onClick={() => setConfig({ difficulty: key })}
+                onClick={() => {
+                  setConfig({
+                    difficulty: key,
+                    // Reset showRatings override when changing difficulty
+                    showRatings: undefined,
+                  });
+                }}
                 whileTap={{ scale: 0.97 }}
-                whileHover={{ scale: isSelected ? 1.0 : 1.02 }}
-                className="rounded-2xl p-4 text-center transition-all duration-200 border-2 relative overflow-hidden"
+                className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden"
                 style={{
-                  background: isSelected
-                    ? `linear-gradient(160deg, ${meta.color}22 0%, ${meta.color}08 100%)`
-                    : key === 'easy'
-                    ? 'rgba(34, 197, 94, 0.05)'
-                    : key === 'normal'
-                    ? 'rgba(59, 130, 246, 0.05)'
-                    : 'rgba(239, 68, 68, 0.05)',
-                  borderColor: isSelected ? meta.color : '#0d2d0d',
+                  backgroundColor: isSelected ? `${meta.color}15` : 'transparent',
+                  borderColor: isSelected ? meta.color : '#2a2a2a',
                   boxShadow: isSelected
-                    ? `0 4px 18px ${meta.glow}, inset 0 0 14px ${meta.color}22, inset 0 1px 0 rgba(255,255,255,0.05)`
-                    : 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                    ? `0 0 12px ${meta.color}25`
+                    : 'none',
                 }}
               >
-                {/* Big icon */}
-                <motion.div
-                  className="text-2xl mb-1"
-                  animate={
-                    isSelected
-                      ? { scale: [1, 1.15, 1] }
-                      : { scale: 1 }
-                  }
-                  transition={{ duration: 1.6, repeat: isSelected ? Infinity : 0 }}
-                >
-                  {meta.icon}
-                </motion.div>
+                <div className="text-xl mb-1">{meta.icon}</div>
                 <div
-                  className="text-sm font-black"
-                  style={{ color: isSelected ? meta.color : '#e2e8f0' }}
+                  className="text-sm font-bold"
+                  style={{ color: isSelected ? meta.color : '#FFFFFF' }}
                 >
                   {val.label}
                 </div>
-                <div className="text-[10px] text-[#94a3b8] mt-1 leading-tight">
-                  {meta.flavor}
+                <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
+                  {meta.description}
                 </div>
-                <div
-                  className="text-[10px] mt-1.5 font-semibold"
-                  style={{ color: isSelected ? meta.color : '#94a3b8' }}
-                >
-                  ♻️ {val.rerolls} переброс(ов)
-                </div>
-                <div className="text-[9px] text-[#94a3b8]/70 mt-0.5">
-                  {val.showRatings ? '👁 Рейтинги видны' : '🚫 Рейтинги скрыты'}
-                </div>
-
-                {/* Selected indicator strip */}
-                {isSelected && (
-                  <motion.div
-                    layoutId="difficulty-strip"
-                    className="absolute inset-x-0 bottom-0 h-1"
-                    style={{
-                      background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
-                    }}
-                  />
-                )}
               </motion.button>
             );
           })}
         </div>
       </div>
 
-      {/* ─── Advanced Settings (collapsible) ─── */}
-      <div className="rounded-2xl border border-[#1a3a1a]/60 overflow-hidden">
+      {/* ─── SHOW RATINGS ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <SectionHeader>Показывать рейтинги</SectionHeader>
+            <p className="text-xs text-[#64748b] -mt-1">
+              {effectiveShowRatings ? 'Рейтинги видны' : 'Слепой режим — рейтинги скрыты'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className="text-xs font-bold"
+              style={{ color: effectiveShowRatings ? ACCENT : '#64748b' }}
+            >
+              {effectiveShowRatings ? 'Вкл' : 'Выкл'}
+            </span>
+            <Switch
+              checked={effectiveShowRatings}
+              onCheckedChange={(checked) => {
+                setConfig({ showRatings: checked });
+              }}
+              className="data-[state=checked]:bg-[#00C896]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ─── DRAFT MODE ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <SectionHeader>Режим драфта</SectionHeader>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            Object.entries(DRAFT_MODE_CONFIG) as [
+              string,
+              { label: string; description: string },
+            ][]
+          ).map(([key, val]) => (
+            <button
+              key={key}
+              onClick={() =>
+                setConfig({ draftMode: key as 'squad_first' | 'position_first' })
+              }
+              className="rounded-xl p-3 text-center transition-all duration-200 border-2"
+              style={{
+                backgroundColor:
+                  config.draftMode === key ? `${ACCENT}15` : 'transparent',
+                borderColor: config.draftMode === key ? ACCENT : '#2a2a2a',
+                boxShadow: config.draftMode === key ? `0 0 12px ${ACCENT}25` : 'none',
+              }}
+            >
+              <div
+                className="font-bold text-sm"
+                style={{ color: config.draftMode === key ? ACCENT : '#FFFFFF' }}
+              >
+                {val.label}
+              </div>
+              <div className="text-[10px] text-[#9CA3AF] mt-1 leading-relaxed">
+                {val.description}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── PLAYER RATINGS ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <SectionHeader>Рейтинг игроков</SectionHeader>
+        <div className="grid grid-cols-2 gap-2">
+          {(
+            Object.entries(RATING_MODE_CONFIG) as [
+              string,
+              { label: string; description: string },
+            ][]
+          ).map(([key, val]) => (
+            <button
+              key={key}
+              onClick={() => setConfig({ ratingMode: key as 'season' | 'prime' })}
+              className="rounded-xl p-3 text-center transition-all duration-200 border-2"
+              style={{
+                backgroundColor:
+                  config.ratingMode === key ? `${ACCENT}15` : 'transparent',
+                borderColor: config.ratingMode === key ? ACCENT : '#2a2a2a',
+                boxShadow: config.ratingMode === key ? `0 0 12px ${ACCENT}25` : 'none',
+              }}
+            >
+              <div
+                className="font-bold text-sm"
+                style={{ color: config.ratingMode === key ? ACCENT : '#FFFFFF' }}
+              >
+                {val.label}
+              </div>
+              <div className="text-[10px] text-[#9CA3AF] mt-1 leading-relaxed">
+                {val.description}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── ERA ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <SectionHeader>Эпоха</SectionHeader>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+            ([key, val]) => (
+              <PillButton
+                key={key}
+                label={val.label}
+                isSelected={config.eraFilter === key}
+                onClick={() => setConfig({ eraFilter: key })}
+              />
+            ),
+          )}
+        </div>
+      </div>
+
+      {/* ─── ADVANCED (collapsible) ─── */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-[#0d1a0d] hover:bg-[#0d2d0d]/50 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors"
         >
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-[#94a3b8]">⚙️ Расширенные настройки</span>
+            <Settings className="w-4 h-4 text-[#64748b]" />
+            <span className="text-sm font-bold text-[#9CA3AF]">Дополнительные настройки</span>
           </div>
-          <motion.span
-            animate={{ rotate: showAdvanced ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="text-[#64748b] text-sm"
-          >
-            ▼
-          </motion.span>
+          {showAdvanced ? (
+            <ChevronUp className="w-4 h-4 text-[#64748b]" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-[#64748b]" />
+          )}
         </button>
 
         <AnimatePresence>
@@ -395,126 +515,43 @@ export default function GameSetup() {
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="p-4 space-y-5 bg-[#0a150a]">
-                {/* Show Ratings Toggle */}
+              <div className="px-4 pb-4 space-y-4">
+                {/* Managers (Gaffers) toggle */}
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-bold text-[#e2e8f0]">
-                      Показывать рейтинги
+                    <div className="text-sm font-bold text-[#FFFFFF]">
+                      Менеджеры
                     </div>
-                    <div className="text-xs text-[#94a3b8] mt-0.5">
-                      Скрывает рейтинги игроков для усложнения
+                    <div className="text-xs text-[#64748b] mt-0.5">
+                      Добавить выбор тренера в драфт
                     </div>
                   </div>
                   <Switch
-                    checked={config.difficulty !== 'hard'}
+                    checked={config.enableManagers ?? false}
                     onCheckedChange={(checked) => {
-                      if (!checked) {
-                        setConfig({ difficulty: 'hard' });
-                      } else if (config.difficulty === 'hard') {
-                        setConfig({ difficulty: 'normal' });
-                      }
+                      setConfig({ enableManagers: checked });
                     }}
-                    className="data-[state=checked]:bg-[#22c55e]"
+                    className="data-[state=checked]:bg-[#00C896]"
                   />
                 </div>
 
-                {/* ─── Draft Mode ─── */}
-                <div>
-                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Режим драфта</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      Object.entries(DRAFT_MODE_CONFIG) as [
-                        string,
-                        { label: string; description: string },
-                      ][]
-                    ).map(([key, val]) => (
-                      <button
-                        key={key}
-                        onClick={() =>
-                          setConfig({ draftMode: key as 'squad_first' | 'position_first' })
-                        }
-                        className={`rounded-xl p-3 text-center transition-all duration-200 border-2 ${
-                          config.draftMode === key
-                            ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
-                            : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-                        }`}
-                      >
-                        <div
-                          className={`font-bold text-sm ${
-                            config.draftMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                          }`}
-                        >
-                          {val.label}
-                        </div>
-                        <div className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
-                          {val.description}
-                        </div>
-                      </button>
-                    ))}
+                {/* January Transfer Window toggle */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-[#FFFFFF]">
+                      Январское трансферное окно
+                    </div>
+                    <div className="text-xs text-[#64748b] mt-0.5">
+                      Возможность замены игрока в середине сезона
+                    </div>
                   </div>
-                </div>
-
-                {/* ─── Rating Mode ─── */}
-                <div>
-                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Режим рейтинга</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      Object.entries(RATING_MODE_CONFIG) as [
-                        string,
-                        { label: string; description: string },
-                      ][]
-                    ).map(([key, val]) => (
-                      <button
-                        key={key}
-                        onClick={() => setConfig({ ratingMode: key as 'season' | 'prime' })}
-                        className={`rounded-xl p-3 text-center transition-all duration-200 border-2 ${
-                          config.ratingMode === key
-                            ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
-                            : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-                        }`}
-                      >
-                        <div
-                          className={`font-bold text-sm ${
-                            config.ratingMode === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                          }`}
-                        >
-                          {val.label}
-                        </div>
-                        <div className="text-[10px] text-[#94a3b8] mt-1 leading-relaxed">
-                          {val.description}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ─── Era Filter ─── */}
-                <div>
-                  <h4 className="text-sm font-bold text-[#94a3b8] mb-2">Эпоха</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
-                      ([key, val]) => (
-                        <button
-                          key={key}
-                          onClick={() => setConfig({ eraFilter: key })}
-                          className={`rounded-xl p-2.5 text-center transition-all duration-200 border-2 ${
-                            config.eraFilter === key
-                              ? 'border-[#22c55e] bg-[#22c55e]/10 text-[#22c55e]'
-                              : 'border-[#0d2d0d] bg-[#0d2d0d] hover:border-[#22c55e]/30'
-                          }`}
-                        >
-                          <div
-                            className={`font-bold text-xs ${
-                              config.eraFilter === key ? 'text-[#22c55e]' : 'text-[#e2e8f0]'
-                            }`}
-                          >
-                            {val.label}
-                          </div>
-                        </button>
-                      ),
-                    )}
-                  </div>
+                  <Switch
+                    checked={config.januaryTransfer ?? false}
+                    onCheckedChange={(checked) => {
+                      setConfig({ januaryTransfer: checked });
+                    }}
+                    className="data-[state=checked]:bg-[#00C896]"
+                  />
                 </div>
               </div>
             </motion.div>
@@ -525,30 +562,14 @@ export default function GameSetup() {
       {/* ─── Start Button ─── */}
       <Button
         onClick={handleStart}
-        className="w-full h-11 text-sm font-bold text-white rounded-xl transition-all"
+        className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
         style={{
-          background:
-            'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-          boxShadow:
-            '0 2px 10px rgba(34, 197, 94, 0.3)',
+          backgroundColor: ACCENT,
+          boxShadow: `0 4px 20px ${ACCENT}40`,
         }}
       >
         Начать драфт
       </Button>
-    </div>
-  );
-}
-
-/* ─── Helper sub-components ─── */
-
-function LegendDot({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1">
-      <div
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: color, boxShadow: `0 0 4px ${color}` }}
-      />
-      <span className="text-[9px] text-[#94a3b8]">{label}</span>
     </div>
   );
 }

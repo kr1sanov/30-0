@@ -12,6 +12,9 @@ export interface GameConfig {
   draftMode: 'squad_first' | 'position_first';
   ratingMode: 'season' | 'prime';
   eraFilter: 'all' | '2000s' | '2010s' | 'modern';
+  showRatings?: boolean; // overrides difficulty default; undefined = follow difficulty
+  enableManagers?: boolean; // Gaffers toggle
+  januaryTransfer?: boolean; // January Transfer Window toggle
   teamName?: string; // default: "Моя команда"
 }
 

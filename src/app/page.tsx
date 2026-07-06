@@ -37,7 +37,7 @@ const STEPS = [
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6' },
   { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#3b82f6', badge: 'СКОРО' },
-  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#22c55e', badge: 'СКОРО' },
+  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', badge: 'СКОРО' },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', badge: 'СКОРО' },
 ];
 
@@ -46,8 +46,8 @@ interface ChallengeDef {
   title: string;
   desc: string;
   gradientClass: string;
-  checkFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => boolean;
-  progressFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string }) => number;
+  checkFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string; achievements?: string[] }) => boolean;
+  progressFn: (stats: { perfect: number; totalGoals: number; totalSeasons: number; bestRecord: string; achievements?: string[] }) => number;
 }
 
 const CHALLENGES: ChallengeDef[] = [
@@ -150,7 +150,7 @@ function AnimatedCounter({ target, duration = 1000, delay = 0 }: { target: numbe
 }
 
 /* ─── Stats Counter with useInView ─── */
-function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: string; label: string; color?: string }) {
+function StatsCounter({ value, label, color = 'text-[#00C896]' }: { value: string; label: string; color?: string }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
 
@@ -180,7 +180,7 @@ function StatsCounter({ value, label, color = 'text-[#22c55e]' }: { value: strin
       <div className={`text-2xl sm:text-3xl font-black ${color}`}>
         {canAnimate && isInView ? `${prefix}${displayNum}${suffix}` : value}
       </div>
-      <div className="text-xs text-[#94a3b8] mt-1">{label}</div>
+      <div className="text-xs text-[#9CA3AF] mt-1">{label}</div>
     </div>
   );
 }
@@ -191,7 +191,7 @@ function RecentResults() {
   const recentSeasons = profileStats.history.slice(-3).reverse();
 
   const DIFF_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-    easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]', label: 'Легко' },
+    easy: { bg: 'bg-[#00C896]/15', text: 'text-[#00C896]', label: 'Легко' },
     normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]', label: 'Нормально' },
     hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]', label: 'Сложно' },
   };
@@ -203,18 +203,18 @@ function RecentResults() {
       transition={{ duration: 0.6, delay: 0.55 }}
       className="space-y-4"
     >
-      <h2 className="text-2xl sm:text-3xl font-black text-center text-[#e2e8f0]">
+      <h2 className="text-2xl sm:text-3xl font-black text-center text-[#FFFFFF]">
         📈 Последние результаты
       </h2>
 
       {recentSeasons.length === 0 ? (
-        <div className="rounded-2xl bg-[#0d2d0d] p-8 text-center border border-[#1a3a1a]">
+        <div className="rounded-2xl bg-[#141414] p-8 text-center border border-[#1E1E1E]">
           <div className="text-3xl mb-2">⚽</div>
-          <div className="text-sm text-[#94a3b8]">Сыграйте первый сезон!</div>
+          <div className="text-sm text-[#9CA3AF]">Сыграйте первый сезон!</div>
           <Button
             onClick={() => setScreen('setup')}
             variant="outline"
-            className="mt-3 border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10 hover:text-[#22c55e] rounded-xl"
+            className="mt-3 border-[#00C896]/30 text-[#00C896] hover:bg-[#00C896]/10 hover:text-[#00C896] rounded-xl"
           >
             Начать игру
           </Button>
@@ -230,7 +230,7 @@ function RecentResults() {
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-xl bg-[#0d2d0d] p-3 border border-[#1a3a1a] flex items-center gap-3"
+                className="rounded-xl bg-[#141414] p-3 border border-[#1E1E1E] flex items-center gap-3"
               >
                 {/* Formation badge */}
                 <div className="w-12 h-12 rounded-lg bg-[#3b82f6]/15 flex flex-col items-center justify-center shrink-0">
@@ -240,7 +240,7 @@ function RecentResults() {
                 {/* W-D-L */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">{h.wins}В</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00C896]/15 text-[#00C896] font-bold">{h.wins}В</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316] font-bold">{h.draws}Н</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ef4444]/15 text-[#ef4444] font-bold">{h.losses}П</span>
                   </div>
@@ -249,18 +249,18 @@ function RecentResults() {
                       {diff.label}
                     </span>
                     {h.managerName && (
-                      <span className="text-[9px] text-[#94a3b8]/50 truncate">👨‍💼 {h.managerName}</span>
+                      <span className="text-[9px] text-[#9CA3AF]/50 truncate">👨‍💼 {h.managerName}</span>
                     )}
                     {h.teamName && (
-                      <span className="text-[9px] text-[#94a3b8]/50 truncate">⚽ {h.teamName}</span>
+                      <span className="text-[9px] text-[#9CA3AF]/50 truncate">⚽ {h.teamName}</span>
                     )}
                   </div>
                 </div>
 
                 {/* Points & Position */}
                 <div className="text-right shrink-0">
-                  <div className="text-lg font-black text-[#22c55e]">{h.points}</div>
-                  <div className="text-[10px] text-[#94a3b8]">
+                  <div className="text-lg font-black text-[#00C896]">{h.points}</div>
+                  <div className="text-[10px] text-[#9CA3AF]">
                     {posEmoji} {h.position} место
                   </div>
                 </div>
@@ -273,222 +273,217 @@ function RecentResults() {
   );
 }
 
-/* ─── Home Page ─── */
+/* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
   const { setScreen, profileStats, runId, resumeGame } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
-    <div className="space-y-3 pb-8">
+    <div className="pb-8">
       {/* ── Hero Section ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.15 }}
-        className="flex flex-col items-center justify-center text-center space-y-1.5 pt-1"
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col items-center justify-center text-center px-4 pt-8 sm:pt-16 pb-8"
       >
-        {/* Hero container — simple, clean */}
-        <div className="relative rounded-3xl p-2 sm:p-4 overflow-hidden">
-          {/* Green radial glow behind title */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at center, rgba(34, 197, 94, 0.12) 0%, transparent 60%)',
-            }}
-          />
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="mb-6"
+        >
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#1E1E1E] text-xs font-medium text-[#9CA3AF]">
+            <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse" />
+            НЕОФИЦИАЛЬНАЯ ФАНТАЗИ-ИГРА
+          </span>
+        </motion.div>
 
-          <div className="relative z-10">
-            {/* Animated Score Counter */}
-            <div className="relative inline-block">
-              <h1 className="text-7xl sm:text-9xl font-black leading-none whitespace-nowrap" style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}>
-                <AnimatedCounter target={30} duration={350} delay={0} />
-                <span className="text-[#22c55e]">-</span>
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.05, duration: 0.25, type: 'spring', stiffness: 300 }}
-                  className="inline-block animate-zero-pulse"
-                  style={{ textShadow: '0 0 30px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1)' }}
-                >
-                  0
-                </motion.span>
-              </h1>
-              {/* Framer Motion bouncing football — very subtle */}
-              <motion.div
-                className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 text-2xl sm:text-3xl opacity-[0.12]"
-                animate={{
-                  y: [0, -8, 0],
-                  rotate: [0, 10, -10, 0],
-                }}
-                transition={{
-                  duration: 2.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  times: [0, 0.4, 0.7, 1],
-                }}
-              >
-                ⚽
-              </motion.div>
-            </div>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, duration: 0.2 }}
-              className="text-lg sm:text-2xl font-black text-white mt-1"
+        {/* Huge "30-0" Title */}
+        <div className="relative mb-4">
+          <h1
+            className="text-8xl sm:text-[10rem] font-black leading-none tracking-tighter"
+            style={{ textShadow: '0 0 40px rgba(0,200,150,0.15), 0 0 80px rgba(0,200,150,0.05)' }}
+          >
+            <AnimatedCounter target={30} duration={500} delay={0} />
+            <span className="text-[#00C896]">-</span>
+            <motion.span
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.3, type: 'spring', stiffness: 300 }}
+              className="inline-block"
+              style={{ textShadow: '0 0 40px rgba(0,200,150,0.15)' }}
             >
-              Составьте символическую сборную лучших российских команд всех времен
-            </motion.p>
-          </div>
+              0
+            </motion.span>
+          </h1>
         </div>
 
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="text-lg sm:text-2xl font-bold text-[#FFFFFF] mb-8 max-w-md"
+        >
+          Собери величайшую сборную РПЛ всех времён
+        </motion.p>
+
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-1.5">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.3 }}
+          className="flex flex-col items-center gap-3 w-full max-w-sm"
+        >
+          {/* Primary CTA — full width green */}
           <Button
             onClick={() => setScreen('setup')}
-            className="h-12 sm:h-14 px-8 sm:px-12 text-base sm:text-lg font-bold bg-gradient-to-r from-[#22c55e] to-[#16a34a] hover:from-[#22c55e] hover:to-[#16a34a] text-white rounded-xl transition-colors active:scale-[0.97] btn-inner-shimmer"
+            className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-2xl transition-colors active:scale-[0.97] shadow-lg shadow-[#00C896]/20"
           >
             Играть 30-0 →
           </Button>
+
+          {/* Secondary — dark outline */}
           <button
             onClick={() => setShowHowToPlay(true)}
-            className="h-10 sm:h-12 px-6 sm:px-8 text-sm sm:text-base font-semibold text-white/80 border-2 border-white/20 rounded-xl transition-colors hover:border-[#22c55e]/50 hover:text-[#22c55e] active:scale-[0.97]"
+            className="w-full h-12 text-base font-semibold text-[#9CA3AF] bg-[#141414] border border-[#1E1E1E] rounded-2xl transition-colors hover:bg-[#1E1E1E] hover:text-[#FFFFFF] hover:border-[#2A2A2A] active:scale-[0.97]"
           >
-            Как это работает?
+            Как это работает
           </button>
-        </div>
 
-        {/* Resume draft button */}
-        {runId && (
-          <button
-            onClick={resumeGame}
-            className="btn-inner-shimmer bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 rounded-xl px-6 py-2.5 text-sm font-medium transition-all active:scale-[0.97]"
-          >
-            ▶ Продолжить драфт
-          </button>
-        )}
-      </motion.div>
+          {/* Resume draft button — only if there's an unfinished draft */}
+          {runId && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              onClick={resumeGame}
+              className="w-full h-12 text-base font-semibold text-[#00C896] bg-[#00C896]/10 border border-[#00C896]/20 rounded-2xl transition-colors hover:bg-[#00C896]/20 active:scale-[0.97]"
+            >
+              ▶ Продолжить драфт
+            </motion.button>
+          )}
+        </motion.div>
+      </motion.section>
 
-      {/* ── Game Modes Section (only Классика active) ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+      {/* ── Game Modes Section ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.05 }}
-        className="space-y-2"
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="px-4 py-6"
       >
-        <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-black text-[#e2e8f0]">Игровые режимы</h2>
-        </div>
-        {/* Active mode: Классика */}
-        {GAME_MODES.filter(m => m.active).map((mode, i) => (
-          <motion.button
-            key={mode.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + i * 0.08 }}
-            onClick={() => {
-              if (mode.active) {
-                setScreen('setup');
-              }
-            }}
-            className="relative w-full rounded-2xl p-4 sm:p-6 text-left border transition-all overflow-hidden group bg-[#0d2d0d] border-[#1a3a1a] hover:border-[#22c55e]/30 shadow-[0_0_20px_rgba(34,197,94,0.1)] active:scale-[0.98]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="text-4xl sm:text-5xl">{mode.emoji}</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-lg sm:text-xl font-bold text-[#e2e8f0] mb-1">{mode.title}</div>
-                <div className="text-sm text-[#9ca3af] leading-relaxed">{mode.desc}</div>
-              </div>
-              <div className="text-[#22c55e]/50 group-hover:text-[#22c55e] transition-colors text-2xl">
-                →
-              </div>
-            </div>
-          </motion.button>
-        ))}
-        {/* Inactive modes with "Скоро" badge */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {GAME_MODES.filter(m => !m.active).map((mode, i) => (
-            <motion.div
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
+          Игровые режимы
+        </h2>
+
+        <div className="space-y-3">
+          {/* Active mode: Классика */}
+          {GAME_MODES.filter(m => m.active).map((mode, i) => (
+            <motion.button
               key={mode.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + i * 0.08 }}
-              className="relative rounded-xl p-4 text-left border overflow-hidden bg-[#0d2d0d]/40 border-[#1a3a1a]/30 opacity-60 cursor-not-allowed"
+              transition={{ delay: 0.15 + i * 0.08 }}
+              onClick={() => setScreen('setup')}
+              className="relative w-full rounded-2xl p-5 sm:p-6 text-left transition-all overflow-hidden group bg-[#141414] border border-[#1E1E1E] hover:border-[#00C896]/30 hover:bg-[#1E1E1E] active:scale-[0.98]"
             >
-              <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b] text-[#0a1a0a]">
-                Скоро
-              </span>
-              <div className="text-2xl mb-2 grayscale">
-                {mode.emoji}
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-[#00C896]/10 flex items-center justify-center text-2xl sm:text-3xl">
+                  {mode.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-lg sm:text-xl font-bold text-[#FFFFFF] mb-1">{mode.title}</div>
+                  <div className="text-sm text-[#9CA3AF] leading-relaxed">{mode.desc}</div>
+                </div>
+                <div className="text-[#00C896]/50 group-hover:text-[#00C896] transition-colors text-2xl">
+                  →
+                </div>
               </div>
-              <div className="text-sm font-semibold text-[#e2e8f0]/70 mb-1">{mode.title}</div>
-              <div className="text-xs text-[#9ca3af]/50 leading-relaxed">{mode.desc}</div>
-            </motion.div>
+            </motion.button>
           ))}
+
+          {/* Inactive modes with "СКОРО" badge */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {GAME_MODES.filter(m => !m.active).map((mode, i) => (
+              <motion.div
+                key={mode.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 + i * 0.08 }}
+                className="relative rounded-xl p-4 text-left overflow-hidden bg-[#141414]/50 border border-[#1E1E1E]/50 cursor-not-allowed"
+              >
+                <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
+                  СКОРО
+                </span>
+                <div className="text-2xl mb-2 grayscale opacity-50">
+                  {mode.emoji}
+                </div>
+                <div className="text-sm font-semibold text-[#FFFFFF]/40 mb-1">{mode.title}</div>
+                <div className="text-xs text-[#9CA3AF]/40 leading-relaxed">{mode.desc}</div>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </motion.div>
+      </motion.section>
 
       {/* ── How to Play Section ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.08 }}
-        className="space-y-2"
+        transition={{ duration: 0.4, delay: 0.15 }}
+        className="px-4 py-6"
       >
-        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0]">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
           Как играть
         </h2>
-        <div className="space-y-1.5">
+        <div className="space-y-3">
           {STEPS.map((step, i) => (
             <motion.div
               key={step.title}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + i * 0.08 }}
-              className="flex items-center gap-2.5 rounded-xl bg-[#0d2d0d] p-2 border border-[#1a3a1a]"
+              transition={{ delay: 0.2 + i * 0.1 }}
+              className="flex items-start gap-4 rounded-2xl bg-[#141414] p-4 border border-[#1E1E1E]"
             >
               {/* Green numbered circle */}
-              <div className="w-8 h-8 rounded-full bg-[#22c55e] flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-white">{i + 1}</span>
+              <div className="w-10 h-10 rounded-full bg-[#00C896] flex items-center justify-center shrink-0 shadow-md shadow-[#00C896]/20">
+                <span className="text-base font-bold text-[#0A0A0A]">{i + 1}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-[#e2e8f0]">{step.title}</div>
-                <div className="text-xs text-[#9ca3af] leading-relaxed">{step.desc}</div>
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="text-base font-bold text-[#FFFFFF] mb-1">{step.title}</div>
+                <div className="text-sm text-[#9CA3AF] leading-relaxed">{step.desc}</div>
               </div>
             </motion.div>
           ))}
         </div>
-      </motion.div>
-
-      {/* Section divider */}
-      <div className="section-divider" />
+      </motion.section>
 
       {/* ── Stats Section ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="glass-stats-card rounded-2xl p-4"
+        transition={{ duration: 0.4, delay: 0.2 }}
+        className="px-4 py-6"
       >
-        <div className="grid grid-cols-3 gap-4">
-          <StatsCounter value="16" label="клубов" color="text-[#22c55e]" />
-          <StatsCounter value="5000+" label="игроков" color="text-[#e2e8f0]" />
-          <StatsCounter value="1992-2026" label="сезонов" color="text-[#22c55e]" />
+        <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E] p-6">
+          <div className="grid grid-cols-3 gap-6">
+            <StatsCounter value="16" label="клубов" color="text-[#00C896]" />
+            <StatsCounter value="5000+" label="игроков" color="text-[#FFFFFF]" />
+            <StatsCounter value="1992-2026" label="сезонов" color="text-[#00C896]" />
+          </div>
         </div>
-      </motion.div>
+      </motion.section>
 
-      {/* Section divider */}
-      <div className="section-divider" />
-
-      {/* ── Popular Challenges ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+      {/* ── Challenges Section ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.12 }}
-        className="space-y-2"
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className="px-4 py-6"
       >
-        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0] mb-1">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
           Челленджи
         </h2>
         <div className="grid grid-cols-2 gap-3">
@@ -501,50 +496,41 @@ function HomePage() {
                 key={ch.title}
                 onClick={() => setScreen('setup')}
                 whileTap={{ scale: 0.97 }}
-                className={`relative rounded-xl p-4 text-left border-l-4 border-r border-t border-b border-[#1a3a1a] card-glow transition-all hover:scale-[1.02] overflow-hidden ${ch.gradientClass} ${isCompleted ? 'challenge-completed' : ''}`}
-                style={{ borderLeftColor: ch.emoji === '🔥' ? '#ef4444' : ch.emoji === '🛡️' ? '#3b82f6' : ch.emoji === '⚡' ? '#fbbf24' : '#22c55e' }}
+                className={`relative rounded-2xl p-4 text-left border transition-all hover:border-[#2A2A2A] overflow-hidden bg-[#141414] border-[#1E1E1E] ${isCompleted ? 'ring-1 ring-[#00C896]/30' : ''}`}
               >
-                {/* Emoji with bounce on hover */}
-                <motion.div
-                  className="text-xl mb-2 inline-block"
-                  whileHover={{ scale: 1.3, rotate: 10 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
-                >
-                  {ch.emoji}
-                </motion.div>
-                <div className="text-sm font-bold text-[#e2e8f0] mb-1">{ch.title}</div>
-                <div className="text-xs text-[#9ca3af]">{ch.desc}</div>
+                {/* Emoji */}
+                <div className="text-2xl mb-2">{ch.emoji}</div>
+                <div className="text-sm font-bold text-[#FFFFFF] mb-1">{ch.title}</div>
+                <div className="text-xs text-[#9CA3AF] mb-3">{ch.desc}</div>
 
                 {/* Progress bar */}
-                <div className="challenge-progress-bar">
-                  <div
-                    className="challenge-progress-fill"
-                    style={{ width: `${progress}%` }}
+                <div className="h-1.5 rounded-full bg-[#1E1E1E] overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className="h-full rounded-full bg-[#00C896]"
                   />
                 </div>
 
-                {/* Completed green tint overlay */}
+                {/* Completed overlay */}
                 {isCompleted && (
-                  <div className="absolute inset-0 bg-[#22c55e]/5 pointer-events-none" />
+                  <div className="absolute inset-0 bg-[#00C896]/5 pointer-events-none rounded-2xl" />
                 )}
               </motion.button>
             );
           })}
         </div>
-      </motion.div>
-
-      {/* ── Recent Results (hidden) ── */}
-      {/* <div className="section-divider" />
-      <RecentResults /> */}
+      </motion.section>
 
       {/* ── FAQ Section ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.15 }}
-        className="space-y-3"
+        transition={{ duration: 0.4, delay: 0.3 }}
+        className="px-4 py-6"
       >
-        <h2 className="text-xl sm:text-2xl font-black text-center text-[#e2e8f0] mb-1">
+        <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
           Частые вопросы
         </h2>
         <Accordion type="single" collapsible className="space-y-3">
@@ -552,18 +538,18 @@ function HomePage() {
             <AccordionItem
               key={i}
               value={`faq-${i}`}
-              className="rounded-xl bg-[#0d2d0d] border border-[#1a3a1a] overflow-hidden px-5 card-glow"
+              className="rounded-2xl bg-[#141414] border border-[#1E1E1E] overflow-hidden px-5"
             >
-              <AccordionTrigger className="text-sm font-bold text-[#e2e8f0] hover:text-[#22c55e] hover:no-underline py-4">
+              <AccordionTrigger className="text-sm font-bold text-[#FFFFFF] hover:text-[#00C896] hover:no-underline py-4">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="text-sm text-[#94a3b8] leading-relaxed pb-4">
+              <AccordionContent className="text-sm text-[#9CA3AF] leading-relaxed pb-4">
                 {item.a}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
-      </motion.div>
+      </motion.section>
 
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
     </div>
@@ -590,7 +576,7 @@ function DraftScreen() {
 
   // Compute category ratings (like 38-0)
   const CATEGORY_LABELS_LOCAL: Record<string, string> = { gk: 'ВР', def: 'Защита', mid: 'Полузащита', att: 'Атака' };
-  const CATEGORY_COLORS_LOCAL: Record<string, string> = { gk: '#f97316', def: '#3b82f6', mid: '#22c55e', att: '#ef4444' };
+  const CATEGORY_COLORS_LOCAL: Record<string, string> = { gk: '#f97316', def: '#3b82f6', mid: '#00C896', att: '#ef4444' };
 
   const categoryRatings: Record<string, { total: number; count: number }> = { gk: { total: 0, count: 0 }, def: { total: 0, count: 0 }, mid: { total: 0, count: 0 }, att: { total: 0, count: 0 } };
   const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
@@ -652,7 +638,7 @@ function DraftScreen() {
 
   function getRatingColor(rating: number): string {
     if (rating >= 78) return '#fbbf24';
-    if (rating >= 73) return '#22c55e';
+    if (rating >= 73) return '#00C896';
     if (rating >= 68) return '#f97316';
     return '#ef4444';
   }
@@ -662,7 +648,7 @@ function DraftScreen() {
       {/* ── Header: Formation + Rerolls + Restart ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-black text-[#e2e8f0] tracking-wide bg-[#1a3a1a] px-2 py-1 rounded-lg">{config.formation}</span>
+          <span className="text-xs font-black text-[#FFFFFF] tracking-wide bg-[#1E1E1E] px-2 py-1 rounded-lg">{config.formation}</span>
           <span className="text-[10px] text-[#64748b]">{openCount} поз. осталось</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -680,7 +666,7 @@ function DraftScreen() {
           )}
           <button
             onClick={() => setShowRestartModal(true)}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-[#94a3b8] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-[#9CA3AF] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors shrink-0"
             title="Начать заново"
           >
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -698,10 +684,10 @@ function DraftScreen() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="rounded-xl bg-[#22c55e]/10 border border-[#22c55e]/30 px-3 py-2 flex items-center gap-2"
+            className="rounded-xl bg-[#00C896]/10 border border-[#00C896]/30 px-3 py-2 flex items-center gap-2"
           >
-            <span className="text-[#22c55e] text-xs font-bold">👉</span>
-            <span className="text-xs text-[#22c55e] font-medium">
+            <span className="text-[#00C896] text-xs font-bold">👉</span>
+            <span className="text-xs text-[#00C896] font-medium">
               Выберите позицию для <strong>{selectedPlayer.fullName}</strong> в списке ниже
             </span>
           </motion.div>
@@ -716,13 +702,13 @@ function DraftScreen() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="rounded-xl bg-[#22c55e]/15 border border-[#22c55e]/40 px-3 py-2 flex items-center gap-2"
+            className="rounded-xl bg-[#00C896]/15 border border-[#00C896]/40 px-3 py-2 flex items-center gap-2"
           >
-            <span className="text-[#22c55e] text-xs font-bold">✅</span>
-            <span className="text-xs text-[#22c55e] font-medium">
+            <span className="text-[#00C896] text-xs font-bold">✅</span>
+            <span className="text-xs text-[#00C896] font-medium">
               <strong>{lastPlacedInfo.name}</strong> → {lastPlacedInfo.position}
             </span>
-            <span className="text-[10px] text-[#94a3b8] ml-auto">
+            <span className="text-[10px] text-[#9CA3AF] ml-auto">
               {openCount} поз. осталось
             </span>
           </motion.div>
@@ -748,8 +734,8 @@ function DraftScreen() {
             }}
             className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
               isMoving
-                ? 'bg-[#22c55e] text-white shadow-lg shadow-[#22c55e]/20'
-                : 'bg-[#0d2d0d] border border-[#22c55e]/30 text-[#22c55e] hover:bg-[#22c55e]/10'
+                ? 'bg-[#00C896] text-white shadow-lg shadow-[#00C896]/20'
+                : 'bg-[#141414] border border-[#00C896]/30 text-[#00C896] hover:bg-[#00C896]/10'
             }`}
           >
             {isMoving ? '✓ Завершить' : '↔ Переместить игрока'}
@@ -760,7 +746,7 @@ function DraftScreen() {
             </p>
           )}
           {isMoving && (
-            <p className="text-[10px] text-[#94a3b8] text-center">
+            <p className="text-[10px] text-[#9CA3AF] text-center">
               Нажмите на занятую позицию, затем на другую для обмена
             </p>
           )}
@@ -768,14 +754,14 @@ function DraftScreen() {
       )}
 
       {/* ── Squad Stats Panel ── */}
-      <div className="rounded-xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-3">
+      <div className="rounded-xl bg-[#141414] border border-[#1E1E1E]/60 p-3">
         <div className="flex items-center gap-3 mb-3">
           {/* Big rating number */}
           <div className="text-center">
             <div className="text-3xl sm:text-4xl font-black leading-none" style={{ color: avgRating ? getRatingColor(avgRating) : '#64748b' }}>
               {avgRating ?? '—'}
             </div>
-            <div className="text-[10px] tracking-wide text-[#94a3b8] font-bold mt-1">Рейтинг</div>
+            <div className="text-[10px] tracking-wide text-[#9CA3AF] font-bold mt-1">Рейтинг</div>
           </div>
           {/* Category bars */}
           <div className="flex-1 space-y-1.5">
@@ -784,7 +770,7 @@ function DraftScreen() {
               const avg = r.count > 0 ? Math.round(r.total / r.count) : 0;
               return (
                 <div key={cat} className="flex items-center gap-2">
-                  <span className="text-[9px] text-[#94a3b8] w-14 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
+                  <span className="text-[9px] text-[#9CA3AF] w-14 shrink-0">{CATEGORY_LABELS_LOCAL[cat]}</span>
                   <div className="flex-1 h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
@@ -794,7 +780,7 @@ function DraftScreen() {
                       style={{ backgroundColor: CATEGORY_COLORS_LOCAL[cat] }}
                     />
                   </div>
-                  <span className="text-[9px] font-bold text-[#e2e8f0] w-5 text-right">
+                  <span className="text-[9px] font-bold text-[#FFFFFF] w-5 text-right">
                     {r.count > 0 ? avg : '—'}
                   </span>
                 </div>
@@ -811,7 +797,7 @@ function DraftScreen() {
         <div className="text-center">
           <button
             onClick={() => setShowRestartModal(true)}
-            className="text-[10px] text-[#64748b] hover:text-[#94a3b8] transition-colors"
+            className="text-[10px] text-[#64748b] hover:text-[#9CA3AF] transition-colors"
           >
             Начать заново
           </button>
@@ -840,23 +826,23 @@ function DraftScreen() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-sm rounded-2xl bg-[#0d2d0d] border border-[#1a3a1a] p-6 shadow-2xl"
+              className="relative w-full max-w-sm rounded-2xl bg-[#141414] border border-[#1E1E1E] p-6 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-black text-[#e2e8f0] mb-2">Начать новый драфт?</h3>
-              <p className="text-sm text-[#94a3b8] mb-6">
+              <h3 className="text-lg font-black text-[#FFFFFF] mb-2">Начать новый драфт?</h3>
+              <p className="text-sm text-[#9CA3AF] mb-6">
                 Перезапуск происходит немедленно с теми же настройками. Ваш текущий черновик будет потерян.
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowRestartModal(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-[#94a3b8] bg-[#0a1a0a] border border-[#1a3a1a] hover:bg-[#0d2d0d] transition-colors"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-[#9CA3AF] bg-[#0A0A0A] border border-[#1E1E1E] hover:bg-[#141414] transition-colors"
                 >
                   Отмена
                 </button>
                 <button
                   onClick={handleRestart}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-[#22c55e] hover:bg-[#16a34a] transition-colors shadow-lg shadow-[#22c55e]/20"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-[#00C896] hover:bg-[#00A67A] transition-colors shadow-lg shadow-[#00C896]/20"
                 >
                   Перезапуск
                 </button>
@@ -909,15 +895,15 @@ function SquadCompleteScreen() {
         >
           🏆
         </motion.div>
-        <h2 className="text-2xl font-black text-[#e2e8f0]">Состав готов!</h2>
-        <p className="text-sm text-[#94a3b8] mt-1">Все 11 позиций заполнены</p>
+        <h2 className="text-2xl font-black text-[#FFFFFF]">Состав готов!</h2>
+        <p className="text-sm text-[#9CA3AF] mt-1">Все 11 позиций заполнены</p>
       </div>
 
       <FormationView />
 
       {/* Pre-season odds — 38-0 style */}
-      <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 p-4 space-y-4">
-        <h3 className="text-sm font-bold text-[#e2e8f0]">📊 Предсезонные шансы</h3>
+      <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 space-y-4">
+        <h3 className="text-sm font-bold text-[#FFFFFF]">📊 Предсезонные шансы</h3>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
@@ -926,21 +912,21 @@ function SquadCompleteScreen() {
           </div>
           <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
             <div className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold mb-1">Ожидаемые очки</div>
-            <div className="text-2xl font-black text-[#22c55e]">{expectedPoints}</div>
+            <div className="text-2xl font-black text-[#00C896]">{expectedPoints}</div>
           </div>
         </div>
 
         <div className="space-y-2.5">
           {[
             { label: 'Выиграть чемпионат', pct: winLeaguePct, color: '#fbbf24' },
-            { label: 'Топ-4', pct: top4Pct, color: '#22c55e' },
+            { label: 'Топ-4', pct: top4Pct, color: '#00C896' },
             { label: 'Топ-6', pct: top6Pct, color: '#3b82f6' },
-            { label: 'Топ-10', pct: top10Pct, color: '#94a3b8' },
+            { label: 'Топ-10', pct: top10Pct, color: '#9CA3AF' },
             { label: 'Вылет', pct: relegationPct, color: '#ef4444' },
           ].map(({ label, pct, color }) => (
             <div key={label}>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-[#94a3b8]">{label}</span>
+                <span className="text-xs text-[#9CA3AF]">{label}</span>
                 <span className="text-xs font-bold" style={{ color }}>{pct}%</span>
               </div>
               <div className="h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
@@ -989,16 +975,16 @@ function SimulationScreen() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="text-2xl font-bold text-[#e2e8f0]"
+        className="text-2xl font-bold text-[#FFFFFF]"
       >
         Симуляция сезона...
       </motion.div>
-      <div className="text-sm text-[#94a3b8]">30 туров, 16 команд, 1 чемпион</div>
+      <div className="text-sm text-[#9CA3AF]">30 туров, 16 команд, 1 чемпион</div>
       <div className="flex gap-1.5">
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="w-2.5 h-2.5 rounded-full bg-[#22c55e]"
+            className="w-2.5 h-2.5 rounded-full bg-[#00C896]"
             animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.2 }}
           />
@@ -1031,7 +1017,7 @@ function getRelativeTime(dateStr: string): string {
 }
 
 const DIFFICULTY_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
-  easy: { bg: 'bg-[#22c55e]/15', text: 'text-[#22c55e]' },
+  easy: { bg: 'bg-[#00C896]/15', text: 'text-[#00C896]' },
   normal: { bg: 'bg-[#f97316]/15', text: 'text-[#f97316]' },
   hard: { bg: 'bg-[#ef4444]/15', text: 'text-[#ef4444]' },
 };
@@ -1048,22 +1034,22 @@ function LeaderboardScreen() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="text-center">
-        <h2 className="text-xl font-bold text-[#e2e8f0]">🏆 Лидерборд</h2>
-        <p className="text-sm text-[#94a3b8] mt-1">Лучшие результаты</p>
+        <h2 className="text-xl font-bold text-[#FFFFFF]">🏆 Лидерборд</h2>
+        <p className="text-sm text-[#9CA3AF] mt-1">Лучшие результаты</p>
       </div>
 
       {leaderboard.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-[#0d2d0d] p-10 text-center border border-[#1a3a1a]"
+          className="rounded-2xl bg-[#141414] p-10 text-center border border-[#1E1E1E]"
         >
           <div className="text-6xl mb-4">🏆</div>
-          <div className="text-lg font-bold text-[#e2e8f0] mb-2">Пока нет результатов</div>
-          <div className="text-sm text-[#94a3b8] mb-6">Сыграйте первый сезон и попадите в таблицу лидеров!</div>
+          <div className="text-lg font-bold text-[#FFFFFF] mb-2">Пока нет результатов</div>
+          <div className="text-sm text-[#9CA3AF] mb-6">Сыграйте первый сезон и попадите в таблицу лидеров!</div>
           <Button
             onClick={() => { resetGame(); setScreen('setup'); }}
-            className="h-12 px-8 text-base font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
+            className="h-12 px-8 text-base font-bold bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/20"
           >
             ⚽ Сыграть сезон
           </Button>
@@ -1089,13 +1075,13 @@ function LeaderboardScreen() {
                     ? 'bg-gradient-to-r from-gray-400/10 to-gray-400/5 border-gray-400/20'
                     : idx === 2
                     ? 'bg-gradient-to-r from-amber-700/10 to-amber-700/5 border-amber-700/20'
-                    : 'bg-[#0d2d0d] border-[#1a3a1a]'
+                    : 'bg-[#141414] border-[#1E1E1E]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   {/* Rank */}
-                  <div className="w-10 h-10 rounded-xl bg-[#0a1a0a]/50 flex items-center justify-center shrink-0">
-                    <span className="text-lg">{rankEmoji || <span className="text-sm font-bold text-[#94a3b8]">{idx + 1}</span>}</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#0A0A0A]/50 flex items-center justify-center shrink-0">
+                    <span className="text-lg">{rankEmoji || <span className="text-sm font-bold text-[#9CA3AF]">{idx + 1}</span>}</span>
                   </div>
 
                   {/* Info */}
@@ -1110,15 +1096,15 @@ function LeaderboardScreen() {
                         {diffLabel}
                       </span>
                     </div>
-                    <div className="text-[10px] text-[#94a3b8]/60 mt-1">
+                    <div className="text-[10px] text-[#9CA3AF]/60 mt-1">
                       {getRelativeTime(entry.createdAt)} · Рейтинг: {entry.squadRating || '-'}
                     </div>
                   </div>
 
                   {/* Points & Position */}
                   <div className="text-right shrink-0">
-                    <div className="text-2xl font-black text-[#22c55e]">{entry.seasonPoints}</div>
-                    <div className="text-xs text-[#94a3b8]">
+                    <div className="text-2xl font-black text-[#00C896]">{entry.seasonPoints}</div>
+                    <div className="text-xs text-[#9CA3AF]">
                       {posEmoji} {entry.seasonPosition} место
                     </div>
                   </div>
@@ -1131,7 +1117,7 @@ function LeaderboardScreen() {
 
       <Button
         onClick={() => { resetGame(); setScreen('setup'); }}
-        className="w-full h-14 text-lg font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20"
+        className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/20"
       >
         ⚽ Сыграть сезон
       </Button>
@@ -1266,7 +1252,7 @@ export default function Home() {
   }, [screen]);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#0a1a0a]">
+    <div className="min-h-[100dvh] flex flex-col bg-[#0A0A0A]">
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />

@@ -9,11 +9,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
 
+/* ─── Colors ─── */
+const ACCENT = '#00C896';
+const BG_CARD = '#141414';
+
+/** Rating color tiers — ≥85 green, 75-84 blue, <75 gray */
+function getRatingBgColor(rating: number): string {
+  if (rating >= 85) return '#00C896';
+  if (rating >= 75) return '#3b82f6';
+  return '#64748b';
+}
+
 /** Position category colors — matching 38-0 style */
 const CATEGORY_BG: Record<PositionCategory, string> = {
   gk: '#f97316',
   def: '#3b82f6',
-  mid: '#22c55e',
+  mid: '#00C896',
   att: '#ef4444',
 };
 
@@ -53,7 +64,10 @@ export default function PlayerList() {
   const { currentSpin, slots, config, assignToSlot, selectedPlayer, selectPlayer, deselectPlayer, skipSpin, lastDraftError } = useGameStore();
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
-  const isHard = config.difficulty === 'hard';
+  // Effective showRatings
+  const effectiveShowRatings = config.showRatings !== undefined
+    ? config.showRatings
+    : config.difficulty !== 'hard';
 
   // Process players: add compatibility info and compute compatible slots
   const processedPlayers = useMemo(() => {
@@ -140,17 +154,19 @@ export default function PlayerList() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#2a1010] border-2 border-[#ef4444]/40 rounded-xl p-4 text-center space-y-2"
+          className="rounded-xl p-4 text-center space-y-2"
+          style={{ backgroundColor: '#1a0a0a', border: '2px solid #ef4444/40' }}
         >
           <p className="text-sm font-bold text-[#ef4444]">
             Нет подходящих игроков
           </p>
-          <p className="text-xs text-[#94a3b8]">
+          <p className="text-xs text-[#9CA3AF]">
             Ни один игрок не подходит на оставшиеся позиции
           </p>
           <button
             onClick={skipSpin}
-            className="mt-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#22c55e] hover:bg-[#16a34a] text-white active:scale-95 transition-all"
+            className="mt-2 px-4 py-2 rounded-lg text-sm font-bold text-white active:scale-95 transition-all"
+            style={{ backgroundColor: ACCENT }}
           >
             Пропустить и крутить снова
           </button>
@@ -162,24 +178,27 @@ export default function PlayerList() {
         <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">
           Сортировка
         </span>
-        <div className="flex rounded-lg overflow-hidden border border-[#1a3a1a]/60">
+        <div
+          className="flex rounded-lg overflow-hidden"
+          style={{ border: '1px solid #1f1f1f' }}
+        >
           <button
             onClick={() => setSortMode('rating')}
-            className={`px-3 py-1 text-xs font-bold transition-all ${
-              sortMode === 'rating'
-                ? 'bg-[#22c55e]/20 text-[#22c55e]'
-                : 'bg-[#0d1a0d] text-[#64748b] hover:text-[#94a3b8]'
-            }`}
+            className="px-3 py-1 text-xs font-bold transition-all"
+            style={{
+              backgroundColor: sortMode === 'rating' ? `${ACCENT}20` : 'transparent',
+              color: sortMode === 'rating' ? ACCENT : '#64748b',
+            }}
           >
             Рейтинг
           </button>
           <button
             onClick={() => setSortMode('name')}
-            className={`px-3 py-1 text-xs font-bold transition-all ${
-              sortMode === 'name'
-                ? 'bg-[#22c55e]/20 text-[#22c55e]'
-                : 'bg-[#0d1a0d] text-[#64748b] hover:text-[#94a3b8]'
-            }`}
+            className="px-3 py-1 text-xs font-bold transition-all"
+            style={{
+              backgroundColor: sortMode === 'name' ? `${ACCENT}20` : 'transparent',
+              color: sortMode === 'name' ? ACCENT : '#64748b',
+            }}
           >
             Фамилия А-Я
           </button>
@@ -193,6 +212,7 @@ export default function PlayerList() {
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
           const flagEmoji = getNationalityFlag(player.nationality);
+          const ratingBg = getRatingBgColor(player.rating);
 
           return (
             <div key={player.playerSeasonId}>
@@ -202,28 +222,37 @@ export default function PlayerList() {
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
-                className={`w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left ${
-                  isExpanded
-                    ? 'bg-[#22c55e]/15 border-2 border-[#22c55e] shadow-[0_0_12px_rgba(34,197,94,0.3)]'
+                className="w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left"
+                style={{
+                  backgroundColor: isExpanded
+                    ? `${ACCENT}15`
                     : !player.canFillAny
-                    ? 'opacity-35 cursor-not-allowed border-2 border-transparent'
-                    : 'bg-[#0d1a0d]/80 border-2 border-transparent hover:border-[#22c55e]/30 hover:bg-[#0d2d0d]/50'
-                }`}
+                    ? 'transparent'
+                    : BG_CARD,
+                  border: isExpanded
+                    ? `2px solid ${ACCENT}`
+                    : '2px solid transparent',
+                  boxShadow: isExpanded
+                    ? `0 0 12px ${ACCENT}30`
+                    : 'none',
+                  opacity: !player.canFillAny ? 0.35 : 1,
+                  cursor: !player.canFillAny ? 'not-allowed' : 'pointer',
+                }}
               >
-                {/* Rating square — color-coded by position category */}
+                {/* Rating square — color-coded by rating tier */}
                 <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
-                  style={{ backgroundColor: posColor }}
+                  style={{ backgroundColor: effectiveShowRatings ? ratingBg : '#64748b' }}
                 >
-                  {isHard ? '?' : player.rating}
+                  {effectiveShowRatings ? player.rating : '?'}
                 </div>
 
                 {/* Name, flag, positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm leading-tight truncate">
-                    <span className="font-bold text-[#e2e8f0]">{getLastName(player.fullName)}</span>{' '}
-                    <span className="font-normal text-[#94a3b8]">{getFirstName(player.fullName)}</span>
-                    {flagEmoji && <span className="ml-1">{flagEmoji}</span>}
+                    <span className="font-bold text-[#FFFFFF]">{getLastName(player.fullName)}</span>{' '}
+                    <span className="font-normal text-[#9CA3AF]">{getFirstName(player.fullName)}</span>
+                    {flagEmoji && <span className="ml-1 text-[#64748b]">{flagEmoji}</span>}
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -242,13 +271,14 @@ export default function PlayerList() {
                   </div>
                 </div>
 
-                {/* Expanded indicator — checkmark or arrow */}
+                {/* Expanded indicator — checkmark */}
                 {isExpanded && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                    className="shrink-0 w-6 h-6 rounded-full bg-[#22c55e] flex items-center justify-center"
+                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: ACCENT }}
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <path d="M3 7.5L5.5 10L11 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -272,10 +302,17 @@ export default function PlayerList() {
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-[#0d1a0d] border-2 border-[#22c55e]/40 rounded-xl p-3 space-y-2.5 shadow-[0_0_20px_rgba(34,197,94,0.15)]">
-                      {/* Instruction */}
-                      <p className="text-[11px] text-[#94a3b8] font-medium">
-                        Выберите позицию для <span className="text-[#e2e8f0] font-bold">{getLastName(player.fullName)}</span>:
+                    <div
+                      className="p-3 space-y-2.5 rounded-xl"
+                      style={{
+                        backgroundColor: '#0a0a0a',
+                        border: `2px solid ${ACCENT}40`,
+                        boxShadow: `0 0 20px ${ACCENT}15`,
+                      }}
+                    >
+                      {/* PLACE IN section header */}
+                      <p className="text-[11px] text-[#9CA3AF] font-medium">
+                        Поставить <span className="text-[#FFFFFF] font-bold">{getLastName(player.fullName)}</span> на:
                       </p>
 
                       {/* Position buttons grid */}
@@ -291,10 +328,12 @@ export default function PlayerList() {
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                               className="relative min-h-[44px] min-w-[56px] px-4 py-2.5 rounded-lg font-bold text-white text-sm
-                                border-2 border-[#22c55e]/60 shadow-[0_0_10px_rgba(34,197,94,0.25)]
-                                hover:border-[#22c55e] hover:shadow-[0_0_16px_rgba(34,197,94,0.4)]
                                 active:scale-95 transition-all duration-150"
-                              style={{ backgroundColor: catColor }}
+                              style={{
+                                backgroundColor: catColor,
+                                border: `2px solid ${ACCENT}60`,
+                                boxShadow: `0 0 10px ${ACCENT}25`,
+                              }}
                             >
                               <span className="relative z-10">{slot.label}</span>
                             </motion.button>
@@ -305,10 +344,10 @@ export default function PlayerList() {
                       {/* Cancel button */}
                       <button
                         onClick={handleCancel}
-                        className="w-full py-2 rounded-lg text-xs font-medium text-[#94a3b8]
-                          bg-[#1a1a1a] border border-[#2a2a2a]
-                          hover:bg-[#222222] hover:text-[#e2e8f0] hover:border-[#3a3a3a]
+                        className="w-full py-2 rounded-lg text-xs font-medium text-[#9CA3AF]
+                          hover:bg-white/[0.03] hover:text-[#FFFFFF]
                           active:scale-[0.98] transition-all duration-150"
+                        style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
                       >
                         Отменить
                       </button>

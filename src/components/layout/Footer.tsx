@@ -97,7 +97,7 @@ export default function Footer() {
         className="fixed bottom-0 left-0 right-0 z-50 sm:hidden footer-gradient-border"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
-        <div className="bg-[#0a1a0a]/95 backdrop-blur-md">
+        <div className="bg-[#0A0A0A]/95 backdrop-blur-md">
           <div className="flex items-center justify-around h-14 px-2">
             {/* Home tab */}
             <motion.button
@@ -105,10 +105,10 @@ export default function Footer() {
               whileTap={{ scale: 0.9 }}
               className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
             >
-              <span className={activeTab === 'home' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}>
+              <span className={activeTab === 'home' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}>
                 {activeTab === 'home' ? tabs[0].activeIcon : tabs[0].icon}
               </span>
-              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'home' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'home' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
                 Главная
               </span>
             </motion.button>
@@ -122,13 +122,13 @@ export default function Footer() {
               <div
                 className={`flex items-center justify-center rounded-full transition-all duration-200 ${
                   activeTab === 'play'
-                    ? 'bg-gradient-to-br from-[#22c55e] to-[#16a34a] text-white shadow-md shadow-[#22c55e]/40 w-12 h-12'
-                    : 'bg-gradient-to-br from-[#22c55e]/70 to-[#16a34a]/70 text-white shadow-sm shadow-[#22c55e]/20 w-11 h-11'
+                    ? 'bg-gradient-to-br from-[#00C896] to-[#00A67A] text-white shadow-md shadow-[#00C896]/40 w-12 h-12'
+                    : 'bg-gradient-to-br from-[#00C896]/70 to-[#00A67A]/70 text-white shadow-sm shadow-[#00C896]/20 w-11 h-11'
                 }`}
               >
                 {tabs[1].icon}
               </div>
-              <span className={`text-[10px] font-medium leading-tight mt-0.5 ${activeTab === 'play' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              <span className={`text-[10px] font-medium leading-tight mt-0.5 ${activeTab === 'play' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
                 Играть
               </span>
             </motion.button>
@@ -139,10 +139,10 @@ export default function Footer() {
               whileTap={{ scale: 0.9 }}
               className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
             >
-              <span className={activeTab === 'profile' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}>
+              <span className={activeTab === 'profile' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}>
                 {activeTab === 'profile' ? tabs[2].activeIcon : tabs[2].icon}
               </span>
-              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'profile' ? 'text-[#22c55e]' : 'text-[#94a3b8]'}`}>
+              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'profile' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
                 Профиль
               </span>
             </motion.button>
@@ -159,7 +159,7 @@ export default function Footer() {
       />
 
       {/* Desktop Footer — normal flow, sticks to bottom via flex mt-auto */}
-      <footer className="hidden sm:flex w-full bg-[#0a1a0a] mt-auto footer-gradient-border">
+      <footer className="hidden sm:flex w-full bg-[#0A0A0A] mt-auto footer-gradient-border">
         <div className="max-w-4xl mx-auto px-4 py-4 w-full">
           <div className="flex items-center justify-between">
             {/* Desktop nav links */}
@@ -175,10 +175,10 @@ export default function Footer() {
                     whileTap={{ scale: 0.92 }}
                     className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
                       isPlay
-                        ? 'px-4 py-2 rounded-full bg-gradient-to-r from-[#22c55e] to-[#16a34a] text-white shadow-md shadow-[#22c55e]/20'
+                        ? 'px-4 py-2 rounded-full bg-gradient-to-r from-[#00C896] to-[#00A67A] text-white shadow-md shadow-[#00C896]/20'
                         : isActive
-                        ? 'text-[#22c55e]'
-                        : 'text-[#94a3b8] hover:text-[#e2e8f0]'
+                        ? 'text-[#00C896]'
+                        : 'text-[#9CA3AF] hover:text-[#FFFFFF]'
                     }`}
                   >
                     <span className={isPlay ? 'w-5 h-5' : 'w-4 h-4'}>{tab.icon}</span>
@@ -186,7 +186,7 @@ export default function Footer() {
                     {isActive && !isPlay && (
                       <motion.div
                         layoutId="desktopActiveTab"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#22c55e] rounded-full"
+                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#00C896] rounded-full"
                         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                       />
                     )}
@@ -196,7 +196,7 @@ export default function Footer() {
             </div>
 
             {/* Copyright */}
-            <div className="text-xs text-[#94a3b8]/40">
+            <div className="text-xs text-[#9CA3AF]/40">
               © 2025 Футбольный драфт
             </div>
           </div>

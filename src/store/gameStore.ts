@@ -29,14 +29,15 @@ import type { Manager } from '@/lib/managers';
 
 // All available achievements (must match ProfileScreen TROPHIES)
 const ALL_ACHIEVEMENTS: Achievement[] = [
-  { id: 'champion', name: 'Чемпион', description: 'Выиграть чемпионат', icon: '🏆', condition: 'position === 1' },
-  { id: 'perfect', name: '30-0', description: 'Идеальный сезон', icon: '✨', condition: 'wins === 30 && draws === 0 && losses === 0' },
-  { id: 'goal_machine', name: 'Голевая машина', description: '60+ голов за сезон', icon: '⚡', condition: 'goalsFor >= 60' },
-  { id: 'iron_defense', name: 'Железная оборона', description: 'Разница +50', icon: '🧱', condition: 'goalsFor - goalsAgainst > 50' },
+  { id: 'perfect_30_0', name: '30-0', description: 'Выиграть все 30 матчей', icon: '🏆', condition: 'wins === 30 && draws === 0 && losses === 0' },
+  { id: 'invincible', name: 'Непобедимый', description: '0 поражений за сезон', icon: '🛡️', condition: 'losses === 0' },
+  { id: 'champion', name: 'Чемпион', description: 'Занять 1-е место', icon: '🥇', condition: 'position === 1' },
+  { id: 'top4', name: 'Топ-4', description: 'Попасть в топ-4', icon: '⭐', condition: 'position <= 4' },
+  { id: 'goal_machine', name: 'Голевая машина', description: '60+ голов за сезон', icon: '⚽', condition: 'goalsFor >= 60' },
+  { id: 'iron_defense', name: 'Железная оборона', description: '20 или менее пропущенных', icon: '🧱', condition: 'goalsAgainst <= 20' },
+  { id: 'iron_curtain', name: 'Железный занавес', description: '10 или менее пропущенных', icon: '🥅', condition: 'goalsAgainst <= 10' },
+  { id: 'personal_best', name: 'Взлёт', description: 'Новый личный рекорд очков', icon: '📈', condition: 'points > previousBestPoints' },
   { id: 'win_streak', name: 'Серия побед', description: '5+ побед подряд', icon: '🔥', condition: 'maxStreak >= 5' },
-  { id: 'sniper', name: 'Снайпер', description: '2+ гола за матч', icon: '🎯', condition: 'goalsFor / 30 >= 2' },
-  { id: 'fortress', name: 'Дом-крепость', description: '0 домашних поражений', icon: '🏟️', condition: 'homeLosses === 0' },
-  { id: 'elite', name: 'Элита', description: 'Средний рейтинг 80+', icon: '💎', condition: 'squadRating >= 80' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -788,7 +789,7 @@ export const useGameStore = create<GameState>()(
       // simulate — Run the season simulation
       // -------------------------------------------------------------------
       simulate: async (manager?: Manager | null) => {
-        const { runId } = get();
+        const { runId, config } = get();
         if (!runId) return;
 
         set({ screen: 'simulation' });
@@ -800,6 +801,7 @@ export const useGameStore = create<GameState>()(
             body: JSON.stringify({
               managerName: manager?.name ?? null,
               managerRating: manager?.rating ?? null,
+              januaryTransfer: config.januaryTransfer ?? false,
             }),
           });
 
@@ -840,6 +842,8 @@ export const useGameStore = create<GameState>()(
           runId: string;
           squadRating?: number;
           matches?: Array<{ matchday: number; isHome: boolean; result: 'W' | 'D' | 'L' }>;
+          trophies?: Array<{ id: string; earned: boolean }>;
+          bestWinStreak?: number;
         };
 
         const { config } = get();
@@ -884,39 +888,42 @@ export const useGameStore = create<GameState>()(
           }
           stats.favoriteFormation = Object.entries(formationCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || stats.favoriteFormation;
 
-          // Add achievements
+          // Add achievements — use trophies from simulation if available
           const newAchievementIds = [...stats.achievements];
           const addAch = (id: string) => {
             if (!newAchievementIds.includes(id)) newAchievementIds.push(id);
           };
-          if (r.position === 1) addAch('champion');
-          if (r.wins === 30 && r.draws === 0 && r.losses === 0) addAch('perfect');
-          if (r.goalsFor >= 60) addAch('goal_machine');
-          if (r.goalsFor - r.goalsAgainst > 50) addAch('iron_defense');
 
-          // Win streak: 5+ wins in a row
-          const matches = r.matches || [];
-          let maxStreak = 0;
-          let currentStreak = 0;
-          for (const m of matches) {
-            if (m.result === 'W') {
-              currentStreak++;
-              maxStreak = Math.max(maxStreak, currentStreak);
-            } else {
-              currentStreak = 0;
+          if (r.trophies && Array.isArray(r.trophies)) {
+            // Use trophy data directly from simulation
+            for (const trophy of r.trophies) {
+              if (trophy.earned) addAch(trophy.id);
             }
+          } else {
+            // Fallback: compute from raw stats
+            if (r.wins === 30 && r.draws === 0 && r.losses === 0) addAch('perfect_30_0');
+            if (r.losses === 0) addAch('invincible');
+            if (r.position === 1) addAch('champion');
+            if (r.position <= 4) addAch('top4');
+            if (r.goalsFor >= 60) addAch('goal_machine');
+            if (r.goalsAgainst <= 20) addAch('iron_defense');
+            if (r.goalsAgainst <= 10) addAch('iron_curtain');
+            if (stats.bestPoints > 0 && r.points > stats.bestPoints) addAch('personal_best');
+
+            // Win streak: 5+ wins in a row
+            const matches = r.matches || [];
+            let maxStreak = 0;
+            let currentStreak = 0;
+            for (const m of matches) {
+              if (m.result === 'W') {
+                currentStreak++;
+                maxStreak = Math.max(maxStreak, currentStreak);
+              } else {
+                currentStreak = 0;
+              }
+            }
+            if (maxStreak >= 5) addAch('win_streak');
           }
-          if (maxStreak >= 5) addAch('win_streak');
-
-          // Sniper: 2+ goals per match average
-          if (r.goalsFor / 30 >= 2) addAch('sniper');
-
-          // Fortress: 0 home losses
-          const homeLosses = matches.filter((m) => m.isHome && m.result === 'L').length;
-          if (homeLosses === 0 && matches.length > 0) addAch('fortress');
-
-          // Elite: squad rating 80+
-          if (r.squadRating && r.squadRating >= 80) addAch('elite');
 
           stats.achievements = newAchievementIds;
           stats.history = allHistory.slice(-50); // Keep last 50

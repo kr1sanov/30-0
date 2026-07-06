@@ -8,14 +8,15 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 
 const TROPHIES = [
-  { id: 'champion', icon: '🏆', name: 'Чемпион', desc: 'Выиграть чемпионат' },
-  { id: 'perfect', icon: '✨', name: '30-0', desc: 'Идеальный сезон' },
-  { id: 'goal_machine', icon: '⚡', name: 'Голевая машина', desc: '60+ голов за сезон' },
-  { id: 'iron_defense', icon: '🧱', name: 'Железная оборона', desc: 'Разница +50' },
+  { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
+  { id: 'invincible', icon: '🛡️', name: 'Непобедимый', desc: '0 поражений за сезон' },
+  { id: 'champion', icon: '🥇', name: 'Чемпион', desc: 'Занять 1-е место' },
+  { id: 'top4', icon: '⭐', name: 'Топ-4', desc: 'Попасть в топ-4' },
+  { id: 'goal_machine', icon: '⚽', name: 'Голевая машина', desc: '60+ голов за сезон' },
+  { id: 'iron_defense', icon: '🧱', name: 'Железная оборона', desc: '20 или менее пропущенных' },
+  { id: 'iron_curtain', icon: '🥅', name: 'Железный занавес', desc: '10 или менее пропущенных' },
+  { id: 'personal_best', icon: '📈', name: 'Взлёт', desc: 'Новый личный рекорд очков' },
   { id: 'win_streak', icon: '🔥', name: 'Серия побед', desc: '5+ побед подряд' },
-  { id: 'sniper', icon: '🎯', name: 'Снайпер', desc: '2+ гола за матч' },
-  { id: 'fortress', icon: '🏟️', name: 'Дом-крепость', desc: '0 домашних поражений' },
-  { id: 'elite', icon: '💎', name: 'Элита', desc: 'Средний рейтинг 80+' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -25,7 +26,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
 };
 
 const DIFFICULTY_COLORS: Record<string, string> = {
-  easy: '#22c55e',
+  easy: '#00C896',
   normal: '#3b82f6',
   hard: '#ef4444',
 };
@@ -113,7 +114,7 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#22c55e] to-[#16a34a] flex items-center justify-center text-3xl shadow-lg shadow-[#22c55e]/20 avatar-conic-ring overflow-hidden">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -141,13 +142,13 @@ export default function ProfileScreen() {
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                className="bg-[#0d2d0d] border border-[#22c55e]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#e2e8f0] focus:outline-none focus:border-[#22c55e] w-40"
+                className="bg-[#141414] border border-[#00C896]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#FFFFFF] focus:outline-none focus:border-[#00C896] w-40"
                 autoFocus
                 maxLength={20}
               />
               <button
                 onClick={handleSaveName}
-                className="text-xs font-bold text-[#22c55e] hover:text-[#16a34a]"
+                className="text-xs font-bold text-[#00C896] hover:text-[#00A67A]"
               >
                 ✓
               </button>
@@ -160,10 +161,10 @@ export default function ProfileScreen() {
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-bold text-[#e2e8f0]">{displayName}</h2>
+              <h2 className="text-xl font-bold text-[#FFFFFF]">{displayName}</h2>
               <button
                 onClick={() => { setIsEditingName(true); setEditName(displayName); }}
-                className="text-[10px] text-[#64748b] hover:text-[#94a3b8] transition-colors"
+                className="text-[10px] text-[#64748b] hover:text-[#9CA3AF] transition-colors"
                 title="Изменить никнейм"
               >
                 ✏️
@@ -172,7 +173,7 @@ export default function ProfileScreen() {
           )}
         </div>
 
-        <p className="text-sm text-[#94a3b8] mt-1">
+        <p className="text-sm text-[#9CA3AF] mt-1">
           {profileStats.totalSeasons > 0
             ? `${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'} · ${winRate}% побед`
             : 'Сыграйте первый сезон!'
@@ -185,21 +186,21 @@ export default function ProfileScreen() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-gradient-to-r from-[#22c55e]/10 to-[#3b82f6]/10 p-5 border border-[#22c55e]/20 flex items-center justify-between"
+          className="rounded-2xl bg-gradient-to-r from-[#00C896]/10 to-[#3b82f6]/10 p-5 border border-[#00C896]/20 flex items-center justify-between"
         >
           <div className="text-center flex-1">
-            <div className="text-3xl font-black text-[#22c55e]">{profileStats.totalSeasons}</div>
-            <div className="text-xs text-[#94a3b8]">Сезонов</div>
+            <div className="text-3xl font-black text-[#00C896]">{profileStats.totalSeasons}</div>
+            <div className="text-xs text-[#9CA3AF]">Сезонов</div>
           </div>
-          <div className="w-px h-10 bg-[#0d2d0d]" />
+          <div className="w-px h-10 bg-[#141414]" />
           <div className="text-center flex-1">
-            <div className="text-3xl font-black text-[#e2e8f0]">{profileStats.bestPoints}</div>
-            <div className="text-xs text-[#94a3b8]">Лучший результат</div>
+            <div className="text-3xl font-black text-[#FFFFFF]">{profileStats.bestPoints}</div>
+            <div className="text-xs text-[#9CA3AF]">Лучший результат</div>
           </div>
-          <div className="w-px h-10 bg-[#0d2d0d]" />
+          <div className="w-px h-10 bg-[#141414]" />
           <div className="text-center flex-1">
             <div className="text-3xl font-black text-[#f97316]">{profileStats.titles}</div>
-            <div className="text-xs text-[#94a3b8]">Титулов</div>
+            <div className="text-xs text-[#9CA3AF]">Титулов</div>
           </div>
         </motion.div>
       )}
@@ -207,8 +208,8 @@ export default function ProfileScreen() {
       {/* Main Stats Grid */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { value: profileStats.totalSeasons, label: 'Сезоны', color: '#22c55e' },
-          { value: profileStats.bestPoints, label: 'Очки', color: '#e2e8f0' },
+          { value: profileStats.totalSeasons, label: 'Сезоны', color: '#00C896' },
+          { value: profileStats.bestPoints, label: 'Очки', color: '#FFFFFF' },
           { value: profileStats.titles, label: 'Титулы', color: '#f97316' },
           { value: profileStats.perfect, label: '30-0', color: '#fbbf24' },
         ].map((stat, i) => (
@@ -217,10 +218,10 @@ export default function ProfileScreen() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="rounded-2xl bg-[#0d2d0d] p-3 text-center border border-[#0d2d0d] card-glow stat-card-hover"
+            className="rounded-2xl bg-[#141414] p-3 text-center border border-[#141414] card-glow stat-card-hover"
           >
             <div className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</div>
-            <div className="text-[10px] text-[#94a3b8]">{stat.label}</div>
+            <div className="text-[10px] text-[#9CA3AF]">{stat.label}</div>
           </motion.div>
         ))}
       </div>
@@ -228,14 +229,14 @@ export default function ProfileScreen() {
       {/* Win Rate Ring + Stats */}
       <div className="grid grid-cols-2 gap-3">
         {/* Win rate ring */}
-        <div className="rounded-2xl bg-[#0d2d0d] p-4 flex flex-col items-center justify-center border border-[#0d2d0d]">
+        <div className="rounded-2xl bg-[#141414] p-4 flex flex-col items-center justify-center border border-[#141414]">
           <div className="relative w-20 h-20">
             <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#0d2d0d" strokeWidth="3" />
+              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#141414" strokeWidth="3" />
               <path
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 fill="none"
-                stroke="#22c55e"
+                stroke="#00C896"
                 strokeWidth="3"
                 strokeDasharray={`${winRate}, 100`}
                 strokeLinecap="round"
@@ -243,37 +244,37 @@ export default function ProfileScreen() {
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-black text-[#22c55e]">{winRate}%</span>
+              <span className="text-lg font-black text-[#00C896]">{winRate}%</span>
             </div>
           </div>
-          <div className="text-xs text-[#94a3b8] mt-2">Процент побед</div>
+          <div className="text-xs text-[#9CA3AF] mt-2">Процент побед</div>
         </div>
 
         {/* Extra stats */}
-        <div className="rounded-2xl bg-[#0d2d0d] p-4 space-y-3 border border-[#0d2d0d]">
+        <div className="rounded-2xl bg-[#141414] p-4 space-y-3 border border-[#141414]">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#94a3b8]">Всего побед</span>
+            <span className="text-xs text-[#9CA3AF]">Всего побед</span>
             <span className="text-sm font-bold text-[#3b82f6]">{profileStats.totalWins}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#94a3b8]">Всего голов</span>
+            <span className="text-xs text-[#9CA3AF]">Всего голов</span>
             <span className="text-sm font-bold text-[#8b5cf6]">{profileStats.totalGoals}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#94a3b8]">Ср. голов/сезон</span>
+            <span className="text-xs text-[#9CA3AF]">Ср. голов/сезон</span>
             <span className="text-sm font-bold text-[#f97316]">{avgGoals}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-[#94a3b8]">Формация</span>
-            <span className="text-sm font-bold text-[#e2e8f0]">{profileStats.favoriteFormation}</span>
+            <span className="text-xs text-[#9CA3AF]">Формация</span>
+            <span className="text-sm font-bold text-[#FFFFFF]">{profileStats.favoriteFormation}</span>
           </div>
         </div>
       </div>
 
       {/* Points per Season Chart (last 10) */}
       {recentHistory.length > 0 && (
-        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
-          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-3">Очки за сезон</h4>
+        <div className="rounded-2xl bg-[#141414] p-4 border border-[#141414]">
+          <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider mb-3">Очки за сезон</h4>
           <div className="flex items-end gap-1.5 h-24">
             {recentHistory.map((h, i) => {
               const height = Math.max((h.points / maxPoints) * 100, 5);
@@ -285,9 +286,9 @@ export default function ProfileScreen() {
                   animate={{ height: `${height}%` }}
                   transition={{ delay: i * 0.05, duration: 0.5 }}
                   className="flex-1 rounded-t-sm relative group cursor-default"
-                  style={{ backgroundColor: isChampion ? '#22c55e' : '#3b82f6' }}
+                  style={{ backgroundColor: isChampion ? '#00C896' : '#3b82f6' }}
                 >
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#e2e8f0] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#FFFFFF] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                     {h.points}
                   </div>
                 </motion.div>
@@ -296,7 +297,7 @@ export default function ProfileScreen() {
           </div>
           <div className="flex gap-1.5 mt-1">
             {recentHistory.map((h, i) => (
-              <div key={h.id} className="flex-1 text-center text-[8px] text-[#94a3b8]/50">
+              <div key={h.id} className="flex-1 text-center text-[8px] text-[#9CA3AF]/50">
                 {i + 1}
               </div>
             ))}
@@ -306,8 +307,8 @@ export default function ProfileScreen() {
 
       {/* Season Form Indicator (last season) */}
       {profileStats.history.length > 0 && (
-        <div className="rounded-2xl bg-[#0d2d0d] p-4 border border-[#0d2d0d]">
-          <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2">Форма (последний сезон)</h4>
+        <div className="rounded-2xl bg-[#141414] p-4 border border-[#141414]">
+          <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider mb-2">Форма (последний сезон)</h4>
           {(() => {
             const lastSeason = profileStats.history[profileStats.history.length - 1];
             const total = lastSeason.wins + lastSeason.draws + lastSeason.losses;
@@ -351,7 +352,7 @@ export default function ProfileScreen() {
                       transition={{ delay: i * 0.05 }}
                       className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
                       style={{
-                        backgroundColor: dot === 'W' ? '#22c55e' : dot === 'D' ? '#f97316' : '#ef4444',
+                        backgroundColor: dot === 'W' ? '#00C896' : dot === 'D' ? '#f97316' : '#ef4444',
                       }}
                       title={dot === 'W' ? 'Победа' : dot === 'D' ? 'Ничья' : 'Поражение'}
                     >
@@ -359,8 +360,8 @@ export default function ProfileScreen() {
                     </motion.div>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#94a3b8]">
-                  <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#22c55e]" />В</span>
+                <div className="flex items-center gap-2 text-[10px] text-[#9CA3AF]">
+                  <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#00C896]" />В</span>
                   <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#f97316]" />Н</span>
                   <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#ef4444]" />П</span>
                 </div>
@@ -373,8 +374,8 @@ export default function ProfileScreen() {
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-[#e2e8f0]">🏆 Витрина трофеев</h3>
-          <span className="text-xs text-[#94a3b8]">{earnedTrophies}/{TROPHIES.length}</span>
+          <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Витрина трофеев</h3>
+          <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length}</span>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {TROPHIES.map((trophy) => {
@@ -397,10 +398,10 @@ export default function ProfileScreen() {
                     <span className="absolute inset-0 flex items-center justify-center text-xs">🔒</span>
                   </div>
                 )}
-                <div className={`text-[9px] font-bold leading-tight ${earned ? 'text-yellow-400' : 'text-[#94a3b8]/40'}`}>
+                <div className={`text-[9px] font-bold leading-tight ${earned ? 'text-yellow-400' : 'text-[#9CA3AF]/40'}`}>
                   {trophy.name}
                 </div>
-                <div className={`text-[8px] leading-tight mt-0.5 ${earned ? 'text-[#94a3b8]/60' : 'text-[#94a3b8]/20'}`}>
+                <div className={`text-[8px] leading-tight mt-0.5 ${earned ? 'text-[#9CA3AF]/60' : 'text-[#9CA3AF]/20'}`}>
                   {trophy.desc}
                 </div>
               </motion.div>
@@ -411,13 +412,13 @@ export default function ProfileScreen() {
 
       {/* History */}
       {profileStats.history.length > 0 && (
-        <div className="rounded-2xl bg-[#0d2d0d] border border-[#0d2d0d] overflow-hidden">
+        <div className="rounded-2xl bg-[#141414] border border-[#141414] overflow-hidden">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0a1a0a]/30 transition-colors"
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0A0A0A]/30 transition-colors"
           >
-            <span className="text-sm font-bold text-[#e2e8f0]">📜 История ({profileStats.history.length})</span>
-            <motion.span animate={{ rotate: showHistory ? 180 : 0 }} className="text-[#94a3b8]">
+            <span className="text-sm font-bold text-[#FFFFFF]">📜 История ({profileStats.history.length})</span>
+            <motion.span animate={{ rotate: showHistory ? 180 : 0 }} className="text-[#9CA3AF]">
               ▼
             </motion.span>
           </button>
@@ -434,51 +435,51 @@ export default function ProfileScreen() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`rounded-xl bg-[#0a1a0a]/30 p-3 border ${
+                    className={`rounded-xl bg-[#0A0A0A]/30 p-3 border ${
                       h.position === 1
-                        ? 'history-border-gold border-[#0d2d0d]'
+                        ? 'history-border-gold border-[#141414]'
                         : h.position === 2
-                        ? 'history-border-silver border-[#0d2d0d]'
+                        ? 'history-border-silver border-[#141414]'
                         : h.position === 3
-                        ? 'history-border-bronze border-[#0d2d0d]'
-                        : 'history-border-gray border-[#0d2d0d]'
+                        ? 'history-border-bronze border-[#141414]'
+                        : 'history-border-gray border-[#141414]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#e2e8f0]">{h.formation}</span>
+                        <span className="text-xs font-bold text-[#FFFFFF]">{h.formation}</span>
                         <span
                           className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                           style={{
-                            color: DIFFICULTY_COLORS[h.difficulty] || '#94a3b8',
-                            backgroundColor: `${DIFFICULTY_COLORS[h.difficulty] || '#94a3b8'}20`,
+                            color: DIFFICULTY_COLORS[h.difficulty] || '#9CA3AF',
+                            backgroundColor: `${DIFFICULTY_COLORS[h.difficulty] || '#9CA3AF'}20`,
                           }}
                         >
                           {DIFFICULTY_LABELS[h.difficulty] || h.difficulty}
                         </span>
                       </div>
                       <span className={`text-xs font-bold ${
-                        h.position === 1 ? 'text-[#22c55e]' :
-                        h.position <= 3 ? 'text-[#3b82f6]' : 'text-[#94a3b8]'
+                        h.position === 1 ? 'text-[#00C896]' :
+                        h.position <= 3 ? 'text-[#3b82f6]' : 'text-[#9CA3AF]'
                       }`}>
                         {h.position === 1 ? '🥇' : h.position === 2 ? '🥈' : h.position === 3 ? '🥉' : ''} {h.position} место
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#22c55e]/15 text-[#22c55e] font-bold">{h.wins}В</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00C896]/15 text-[#00C896] font-bold">{h.wins}В</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316] font-bold">{h.draws}Н</span>
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ef4444]/15 text-[#ef4444] font-bold">{h.losses}П</span>
                       </div>
-                      <span className="text-sm font-black text-[#e2e8f0]">{h.points} очков</span>
+                      <span className="text-sm font-black text-[#FFFFFF]">{h.points} очков</span>
                     </div>
                     {h.managerName && (
-                      <div className="text-[10px] text-[#94a3b8]/60 mt-1">
+                      <div className="text-[10px] text-[#9CA3AF]/60 mt-1">
                         👨‍💼 {h.managerName}
                       </div>
                     )}
                     {h.teamName && (
-                      <div className="text-[10px] text-[#94a3b8]/60 mt-0.5">
+                      <div className="text-[10px] text-[#9CA3AF]/60 mt-0.5">
                         ⚽ {h.teamName}
                       </div>
                     )}

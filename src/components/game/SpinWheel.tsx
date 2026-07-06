@@ -6,6 +6,10 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Loader2 } from 'lucide-react';
 
+/* ─── Colors ─── */
+const ACCENT = '#00C896';
+const BG_CARD = '#141414';
+
 /* ─── RPL data for slot reels ─── */
 const RPL_CLUBS = [
   'Зенит', 'Спартак', 'ЦСКА', 'Локомотив', 'Краснодар', 'Рубин',
@@ -50,7 +54,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
     }
   }, [isSpinning, hasResult, phase]);
 
-  // Spinning: cycle through items rapidly
+  // Spinning: cycle through items rapidly (60-80ms intervals)
   useEffect(() => {
     if (phase !== 'spinning') return;
 
@@ -71,7 +75,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
     };
   }, [phase, items]);
 
-  // Deceleration: slow down and land on target
+  // Deceleration: slow down and land on target with smooth 600-1200ms roll
   useEffect(() => {
     if (hasResult && targetItem && phase === 'spinning') {
       setPhase('decelerating');
@@ -84,7 +88,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 
       let interval = 80;
       let steps = 0;
-      const maxSteps = 10;
+      const maxSteps = 12;
 
       const decelerate = () => {
         if (steps >= maxSteps) {
@@ -94,8 +98,8 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
           setTimeout(() => setShowGlow(true), 100);
           return;
         }
-        // Last 2 steps: show items near the target for drama
-        if (steps >= maxSteps - 2) {
+        // Last 3 steps: show items near the target for drama
+        if (steps >= maxSteps - 3) {
           const targetIdx = items.indexOf(targetItem);
           const offset = maxSteps - steps;
           const idx = (targetIdx + offset) % items.length;
@@ -105,7 +109,8 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
           setDisplayItems([items[randomIdx]]);
         }
         steps++;
-        interval += 50; // Slow down progressively
+        // Progressive slow down: 80 → 130 → 190 → 260 → 340 → ... → ~700ms total
+        interval += 40 + steps * 10;
         timerRef.current = setTimeout(decelerate, interval);
       };
       decelerate();
@@ -131,10 +136,13 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
   const isAnimating = phase === 'spinning' || phase === 'decelerating';
 
   return (
-    <div className="flex-1 relative rounded-xl bg-[#0a1628] border border-white/10 overflow-hidden">
+    <div
+      className="flex-1 relative rounded-xl overflow-hidden"
+      style={{ backgroundColor: '#0a0a0a', border: '1px solid #1f1f1f' }}
+    >
       {/* Gradient overlays at top and bottom for depth effect */}
-      <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a1628] to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#0a1628] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-5 bg-gradient-to-b from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
 
       {/* Accent line in the middle (selection indicator) */}
       <div
@@ -152,30 +160,30 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
       </div>
 
       {/* Reel content area */}
-      <div className="relative h-10 flex items-center justify-center overflow-hidden">
+      <div className="relative h-12 flex items-center justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           {isAnimating ? (
             <motion.div
               key={displayItems[0] + '-anim'}
-              initial={{ y: -20, opacity: 0 }}
+              initial={{ y: -24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ duration: 0.05, ease: 'linear' }}
+              exit={{ y: 24, opacity: 0 }}
+              transition={{ duration: 0.06, ease: 'linear' }}
               className="text-sm font-black text-center truncate px-2"
-              style={{ color: '#94a3b8' }}
+              style={{ color: '#9CA3AF' }}
             >
               {displayItems[0]}
             </motion.div>
           ) : isStopped ? (
             <motion.div
               key={displayItems[0] + '-stopped'}
-              initial={{ scale: 1.1 }}
+              initial={{ scale: 1.15 }}
               animate={{ scale: [1, 1.08, 1] }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
-              className="text-sm font-black text-center truncate px-2"
+              className="text-base font-black text-center truncate px-2"
               style={{
                 color: resultColor,
-                textShadow: showGlow ? `0 0 12px ${accentColor}60` : 'none',
+                textShadow: showGlow ? `0 0 14px ${accentColor}60` : 'none',
               }}
             >
               {displayItems[0]}
@@ -195,7 +203,10 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 /* ─── Empty Field Display (idle state) ─── */
 function EmptyField({ label, value, onClear }: { label: string; value: string | null; onClear?: () => void }) {
   return (
-    <div className="flex-1 rounded-xl bg-[#0a1628] border border-white/10 px-3 py-2 text-center relative">
+    <div
+      className="flex-1 rounded-xl px-3 py-2.5 text-center relative"
+      style={{ backgroundColor: '#0a0a0a', border: '1px solid #1f1f1f' }}
+    >
       <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
         {label}
       </div>
@@ -205,7 +216,7 @@ function EmptyField({ label, value, onClear }: { label: string; value: string | 
           {onClear && (
             <button
               onClick={onClear}
-              className="text-[#64748b] hover:text-[#e2e8f0] transition-colors text-xs ml-1"
+              className="text-[#64748b] hover:text-[#FFFFFF] transition-colors text-xs ml-1"
               aria-label="Очистить"
             >
               ✕
@@ -229,6 +240,11 @@ export default function SpinWheel() {
   const openCount = slots.filter((s) => !s.playerId).length;
   const hasResult = !!currentSpin;
 
+  // Effective showRatings
+  const effectiveShowRatings = config.showRatings !== undefined
+    ? config.showRatings
+    : config.difficulty !== 'hard';
+
   /* ── User actions ── */
   const handleSpin = useCallback(async () => {
     if (isSpinning) return;
@@ -240,7 +256,7 @@ export default function SpinWheel() {
     await reroll();
   }, [isSpinning, rerollsLeft, reroll]);
 
-  // Spacebar support
+  // Spacebar support & tap-to-spin
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !hasResult && !isSpinning) {
@@ -255,9 +271,12 @@ export default function SpinWheel() {
   return (
     <div className="space-y-3">
       {/* ── Spin Section ── */}
-      <div className="rounded-2xl bg-[#0d1a0d] border border-[#1a3a1a]/60 overflow-hidden">
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
         <AnimatePresence mode="wait">
-          {/* ── Idle / No spin yet — 38-0 style with header ── */}
+          {/* ── Idle / No spin yet — with header ── */}
           {!hasResult && !isSpinning && (
             <motion.div
               key="idle"
@@ -266,13 +285,14 @@ export default function SpinWheel() {
               exit={{ opacity: 0 }}
               className="p-4"
             >
-              {/* Positions remaining counter */}
+              {/* SPIN FOR A SQUAD header */}
               <div className="text-center mb-3">
-                <div className="text-2xl font-black text-white mb-0.5">
-                  {openCount}{' '}
-                  <span className="text-sm font-bold text-[#94a3b8]">
-                    позиций осталось
-                  </span>
+                <div className="text-lg font-black text-white mb-0.5">
+                  КРУТИТЕ КОЛЕСО
+                </div>
+                <div className="text-sm text-[#9CA3AF]">
+                  <span className="font-bold" style={{ color: ACCENT }}>{openCount}</span>{' '}
+                  позиций осталось заполнить
                 </div>
               </div>
 
@@ -283,18 +303,22 @@ export default function SpinWheel() {
                 <EmptyField label="Сезон" value={null} />
               </div>
 
-              {/* Spin Button — big green with wheel icon */}
+              {/* Spin Button */}
               <motion.div whileTap={{ scale: 0.97 }}>
                 <Button
                   onClick={handleSpin}
                   disabled={isSpinning}
-                  className="w-full h-12 text-base font-black bg-[#22c55e] hover:bg-[#16a34a] text-white rounded-xl shadow-lg shadow-[#22c55e]/20 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  className="w-full h-12 text-base font-black text-white rounded-xl transition-all flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: ACCENT,
+                    boxShadow: `0 4px 20px ${ACCENT}40`,
+                  }}
                 >
                   Крутить
                 </Button>
               </motion.div>
-              <p className="text-[10px] text-[#64748b] text-center mt-1.5">
-                или нажмите Пробел
+              <p className="text-[11px] text-[#64748b] text-center mt-2">
+                Крутить колесо или нажмите в любом месте
               </p>
             </motion.div>
           )}
@@ -333,8 +357,8 @@ export default function SpinWheel() {
                 />
               </div>
               <div className="flex items-center justify-center mt-3 gap-1.5">
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#22c55e]" />
-                <span className="text-xs text-[#94a3b8]">Крутим...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: ACCENT }} />
+                <span className="text-xs text-[#9CA3AF]">Крутим...</span>
               </div>
             </motion.div>
           )}
@@ -349,13 +373,19 @@ export default function SpinWheel() {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="p-4"
             >
-              <div className="text-[10px] uppercase tracking-[0.2em] text-[#22c55e] font-bold text-center mb-2">
+              <div
+                className="text-[10px] uppercase tracking-[0.2em] font-bold text-center mb-2"
+                style={{ color: ACCENT }}
+              >
                 СОСТАВ ВЫПАЛ
               </div>
 
               {/* Club × Season banner */}
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex-1 rounded-xl bg-[#0a1628] border border-[#3b82f6]/20 px-3 py-2.5 text-center">
+                <div
+                  className="flex-1 rounded-xl px-3 py-2.5 text-center"
+                  style={{ backgroundColor: '#0a0a0a', border: '1px solid #3b82f6/20' }}
+                >
                   <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
                     Клуб
                   </div>
@@ -366,7 +396,10 @@ export default function SpinWheel() {
 
                 <span className="text-[#64748b]/40 font-bold text-lg">×</span>
 
-                <div className="flex-1 rounded-xl bg-[#0a1628] border border-[#fbbf24]/20 px-3 py-2.5 text-center">
+                <div
+                  className="flex-1 rounded-xl px-3 py-2.5 text-center"
+                  style={{ backgroundColor: '#0a0a0a', border: '1px solid #fbbf24/20' }}
+                >
                   <div className="text-[8px] uppercase tracking-widest text-[#64748b] font-bold mb-0.5">
                     Сезон
                   </div>
@@ -377,7 +410,7 @@ export default function SpinWheel() {
               </div>
 
               {/* Instruction */}
-              <p className="text-xs text-[#94a3b8] text-center mb-3">
+              <p className="text-xs text-[#9CA3AF] text-center mb-3">
                 Выберите игрока и позицию, куда его поставить
               </p>
 
@@ -393,11 +426,11 @@ export default function SpinWheel() {
                 </motion.button>
               )}
 
-              {/* Skip / Spin again button — always visible when result is showing */}
+              {/* Skip / Spin again button */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => { skipSpin(); }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#64748b]/40 text-[#94a3b8] rounded-xl hover:bg-[#64748b]/10 hover:text-[#e2e8f0] transition-all"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#2a2a2a] text-[#9CA3AF] rounded-xl hover:bg-white/[0.03] hover:text-[#FFFFFF] transition-all"
               >
                 Крутить снова
               </motion.button>
