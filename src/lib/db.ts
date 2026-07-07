@@ -4,9 +4,9 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Configure for both SQLite (dev) and PostgreSQL (Supabase prod)
-const isPostgres = process.env.DATABASE_URL?.startsWith('postgresql://')
-
+// Prisma reads DATABASE_URL and DIRECT_URL from env automatically
+// (defined in schema.prisma). We only need to override the URL
+// at runtime if the env var is set in the shell (takes precedence).
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
@@ -14,9 +14,6 @@ export const db =
     datasources: {
       db: {
         url: process.env.DATABASE_URL,
-        ...(isPostgres && process.env.DIRECT_URL
-          ? { directUrl: process.env.DIRECT_URL }
-          : {}),
       },
     },
   })
