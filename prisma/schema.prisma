@@ -14,38 +14,38 @@ model Club {
   city      String?
   logoUrl   String?
   seasons   ClubSeason[]
-  
+
   @@unique([nameRu])
 }
 
 model Season {
-  id              String   @id @default(cuid())
-  startYear       Int
-  endYear         Int
-  label           String
-  matchesPerTeam  Int      @default(30)
-  clubSeasons     ClubSeason[]
-  
+  id             String   @id @default(cuid())
+  startYear      Int
+  endYear        Int
+  label          String
+  matchesPerTeam Int      @default(30)
+  clubSeasons    ClubSeason[]
+
   @@unique([startYear, endYear])
 }
 
 model ClubSeason {
-  id            String   @id @default(cuid())
-  clubId        String
-  seasonId      String
-  position      Int?
-  points        Int?
-  played        Int?
-  won           Int?
-  drawn         Int?
-  lost          Int?
-  goalsFor      Int?
-  goalsAgainst  Int?
-  
-  club          Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  season        Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  players       PlayerSeason[]
-  
+  id           String   @id @default(cuid())
+  clubId       String
+  seasonId     String
+  position     Int?
+  points       Int?
+  played       Int?
+  won          Int?
+  drawn        Int?
+  lost         Int?
+  goalsFor     Int?
+  goalsAgainst Int?
+
+  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season       Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  players      PlayerSeason[]
+
   @@unique([clubId, seasonId])
 }
 
@@ -56,27 +56,29 @@ model Player {
   fullName    String
   nationality String?
   birthYear   Int?
-  
+
   seasons     PlayerSeason[]
-  
+
   @@unique([fullName])
 }
 
 model PlayerSeason {
-  id              String   @id @default(cuid())
-  playerId        String
-  clubSeasonId    String
-  rating          Int
-  mainPosition    String
-  otherPositions  String?
-  age             Int?
-  matches         Int?
-  goals           Int?
-  assists         Int?
-  
-  player          Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  clubSeason      ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
-  
+  id             String   @id @default(cuid())
+  playerId       String
+  clubSeasonId   String
+  rating         Int
+  primeRating    Int      @default(0)
+  primeSeason    String?
+  mainPosition   String
+  otherPositions String?
+  age            Int?
+  matches        Int?
+  goals          Int?
+  assists        Int?
+
+  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  clubSeason     ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
+
   @@unique([playerId, clubSeasonId])
 }
 
@@ -97,51 +99,52 @@ model User {
 }
 
 model GameRun {
-  id            String   @id @default(cuid())
-  formation     String   @default("4-3-3")
-  difficulty    String   @default("normal")
-  draftMode     String   @default("squad_first")
-  ratingMode    String   @default("season")
-  eraFilter     String   @default("all")
-  rerollsTotal  Int      @default(1)
-  rerollsUsed   Int      @default(0)
-  
-  completed     Boolean  @default(false)
-  wins          Int?
-  draws         Int?
-  losses        Int?
-  points        Int?
-  position      Int?
-  goalsFor      Int?
-  goalsAgainst  Int?
+  id           String   @id @default(cuid())
+  formation    String   @default("4-3-3")
+  difficulty   String   @default("normal")
+  draftMode    String   @default("squad_first")
+  ratingMode   String   @default("season")
+  eraFilter    String   @default("all")
+  rerollsTotal Int      @default(1)
+  rerollsUsed  Int      @default(0)
+
+  completed    Boolean  @default(false)
+  wins         Int?
+  draws        Int?
+  losses       Int?
+  points       Int?
+  position     Int?
+  goalsFor     Int?
+  goalsAgainst Int?
   overallRating Int?
-  
+
   managerName   String?
   managerRating Int?
   teamName      String?
 
-  userId        String?
-  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
-  createdAt     DateTime @default(now())
-  
-  slots         GameSlot[]
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+
+  slots        GameSlot[]
 }
 
 model GameSlot {
-  id                  String   @id @default(cuid())
-  runId               String
-  slotPosition        String
-  playerSeasonId      String?
-  playerName          String?
-  playerLastName      String?
-  playerRating        Int?
-  playerPosition      String?
-  playerOtherPositions String?  // Comma-separated list of secondary positions
-  playerNationality   String?   // Player's nationality for flag display
-  isCompatible        Boolean  @default(true)
-  
-  run                 GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
-  
+  id                   String   @id @default(cuid())
+  runId                String
+  slotPosition         String
+  playerSeasonId       String?
+  playerName           String?
+  playerLastName       String?
+  playerRating         Int?
+  playerPrimeRating    Int?
+  playerPosition       String?
+  playerOtherPositions String?
+  playerNationality    String?
+  isCompatible         Boolean  @default(true)
+
+  run                  GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+
   @@unique([runId, slotPosition])
 }

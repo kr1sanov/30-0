@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { canFillSlotStrict } from '@/lib/positions';
+import { canFillSlot } from '@/lib/positions';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -84,27 +84,30 @@ export async function POST(
       );
     }
 
-    // Check position compatibility — STRICT matching only
-    // Player can only be placed on positions explicitly listed on their card
+    // Check position compatibility using the compatibility matrix
+    // Players can fill slots based on their positions + matrix rules
+    // 'full' = no penalty, 'partial' = 0.8x rating penalty
     const slotPos = slotPosition.split('_')[0];
     const otherPositions = playerSeason.otherPositions
       ? playerSeason.otherPositions.split(',').map((p) => p.trim())
       : [];
 
-    const canFill = canFillSlotStrict(
-      playerSeason.mainPosition as Parameters<typeof canFillSlotStrict>[0],
-      otherPositions as Parameters<typeof canFillSlotStrict>[1],
-      slotPos as Parameters<typeof canFillSlotStrict>[2],
+    const { canFill, penalty } = canFillSlot(
+      playerSeason.mainPosition as Parameters<typeof canFillSlot>[0],
+      otherPositions as Parameters<typeof canFillSlot>[1],
+      slotPos as Parameters<typeof canFillSlot>[2],
     );
 
     if (!canFill) {
       return NextResponse.json(
-        { error: 'Player cannot fill this position (strict matching)' },
+        { error: 'Player cannot fill this position' },
         { status: 400 },
       );
     }
 
-    // Update the game slot with player info — including otherPositions and nationality
+    const isCompatible = penalty === 1; // full = compatible, partial = not fully compatible
+
+    // Update the game slot with player info — including otherPositions, nationality and primeRating
     await db.gameSlot.update({
       where: { id: slot.id },
       data: {
@@ -112,10 +115,11 @@ export async function POST(
         playerName: playerSeason.player.fullName,
         playerLastName: playerSeason.player.lastName,
         playerRating: playerSeason.rating,
+        playerPrimeRating: playerSeason.primeRating || playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
         playerOtherPositions: playerSeason.otherPositions ?? null,
         playerNationality: playerSeason.player.nationality ?? null,
-        isCompatible: true, // Strict matching — always full compatibility
+        isCompatible,
       },
     });
 

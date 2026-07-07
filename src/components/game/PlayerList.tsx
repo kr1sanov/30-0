@@ -62,6 +62,8 @@ type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
   const { currentSpin, slots, config, assignToSlot, selectedPlayer, selectPlayer, deselectPlayer, skipSpin, lastDraftError } = useGameStore();
+
+  const isPrimeMode = config.ratingMode === 'prime';
   const [sortMode, setSortMode] = useState<SortMode>('rating');
 
   // Effective showRatings
@@ -212,7 +214,8 @@ export default function PlayerList() {
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
           const flagEmoji = getNationalityFlag(player.nationality);
-          const ratingBg = getRatingBgColor(player.rating);
+          const displayRating = isPrimeMode && player.primeRating ? player.primeRating : player.rating;
+          const ratingBg = getRatingBgColor(displayRating);
 
           return (
             <div key={player.playerSeasonId}>
@@ -244,7 +247,7 @@ export default function PlayerList() {
                   className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-sm font-black text-white shadow-sm"
                   style={{ backgroundColor: effectiveShowRatings ? ratingBg : '#64748b' }}
                 >
-                  {effectiveShowRatings ? player.rating : '?'}
+                  {effectiveShowRatings ? displayRating : '?'}
                 </div>
 
                 {/* Name, flag, positions */}
@@ -268,6 +271,14 @@ export default function PlayerList() {
                         </span>
                       );
                     })}
+                    {isPrimeMode && player.primeSeason && (
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded text-[#fbbf24]"
+                        style={{ backgroundColor: '#fbbf2415' }}
+                      >
+                        ⭐ {player.primeSeason}
+                      </span>
+                    )}
                   </div>
                 </div>
 

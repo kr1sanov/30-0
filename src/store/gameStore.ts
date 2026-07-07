@@ -464,6 +464,7 @@ export const useGameStore = create<GameState>()(
           playerName: selectedPlayer.fullName,
           playerLastName: selectedPlayer.lastName,
           playerRating: selectedPlayer.rating,
+          playerPrimeRating: selectedPlayer.primeRating,
           playerPosition: selectedPlayer.mainPosition,
           playerOtherPositions: selectedPlayer.otherPositions,
           playerNationality: selectedPlayer.nationality,
@@ -613,6 +614,7 @@ export const useGameStore = create<GameState>()(
           playerName: player.fullName,
           playerLastName: player.lastName,
           playerRating: player.rating,
+          playerPrimeRating: player.primeRating,
           playerPosition: player.mainPosition,
           playerOtherPositions: player.otherPositions,
           playerNationality: player.nationality,
@@ -821,7 +823,7 @@ export const useGameStore = create<GameState>()(
           }
 
           const run = await res.json();
-          const dbSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = run.slots || [];
+          const dbSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = run.slots || [];
 
           // Check which slots are missing from DB but present locally
           const missingSlots: Array<{ slotIndex: number; slot: DraftSlot }> = [];
@@ -873,7 +875,7 @@ export const useGameStore = create<GameState>()(
             const refreshRes = await fetch(`/api/runs/${runId}`);
             if (refreshRes.ok) {
               const refreshedRun = await refreshRes.json();
-              const refreshedSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = refreshedRun.slots || [];
+              const refreshedSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = refreshedRun.slots || [];
 
               const formation = FORMATIONS.find((f) => f.id === get().config.formation);
               if (formation) {
@@ -889,6 +891,7 @@ export const useGameStore = create<GameState>()(
                       playerName: dbSlot.playerName ?? undefined,
                       playerLastName: dbSlot.playerLastName ?? undefined,
                       playerRating: dbSlot.playerRating ?? undefined,
+                      playerPrimeRating: dbSlot.playerPrimeRating ?? undefined,
                       playerPosition: dbSlot.playerPosition ?? undefined,
                       playerOtherPositions: dbSlot.playerOtherPositions
                         ? dbSlot.playerOtherPositions.split(',').map((p: string) => p.trim())

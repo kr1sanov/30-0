@@ -20,6 +20,17 @@ const NATIONALITY_FLAGS: Record<string, string> = {
   'Германия': '🇩🇪',
   'Туркменистан': '🇹🇲',
   'Нидерланды': '🇳🇱',
+  'Португалия': '🇵🇹',
+  'Беларусь': '🇧🇾',
+  'Украина': '🇺🇦',
+  'Черногория': '🇲🇪',
+  'Чехия': '🇨🇿',
+  'Бразилия': '🇧🇷',
+  'Хорватия': '🇭🇷',
+  'Дания': '🇩🇰',
+  'Бельгия': '🇧🇪',
+  'Венгрия': '🇭🇺',
+  'Литва': '🇱🇹',
 };
 
 function getFlag(nationality: string): string {
@@ -36,8 +47,8 @@ function getInitial(name: string): string {
 type Tier = 'gold' | 'silver' | 'bronze';
 
 function getRatingTier(rating: number): Tier {
-  if (rating >= 87) return 'gold';
-  if (rating >= 83) return 'silver';
+  if (rating >= 9) return 'gold';
+  if (rating >= 7) return 'silver';
   return 'bronze';
 }
 

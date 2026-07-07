@@ -218,6 +218,8 @@ export default function FormationView() {
     justAssignedSlotIndex,
   } = useGameStore();
 
+  const isPrimeMode = config.ratingMode === 'prime';
+
   const [shakingSlot, setShakingSlot] = useState<number | null>(null);
 
   const layout = FORMATION_LAYOUTS[config.formation] ?? FORMATION_LAYOUTS['4-3-3'];
@@ -229,12 +231,16 @@ export default function FormationView() {
   const canMove = screen === 'squad-complete' || screen === 'position-assign' || screen === 'draft';
 
   // Average rating (strict matching — no partial penalty)
+  // Uses primeRating in prime mode, season rating otherwise
   const avgRating = useMemo(() => {
     const filled = slots.filter((s) => s.playerId && s.playerRating);
     if (filled.length === 0) return null;
-    const sum = filled.reduce((acc, s) => acc + (s.playerRating ?? 0), 0);
+    const sum = filled.reduce((acc, s) => {
+      const rating = isPrimeMode && s.playerPrimeRating ? s.playerPrimeRating : (s.playerRating ?? 0);
+      return acc + rating;
+    }, 0);
     return Math.round(sum / filled.length);
-  }, [slots]);
+  }, [slots, isPrimeMode]);
 
   const triggerShake = useCallback((index: number) => {
     setShakingSlot(index);
@@ -359,7 +365,7 @@ export default function FormationView() {
             <span className="text-[10px] font-bold text-white">
               {selectedPlayer.fullName}
             </span>
-            <span className="text-[10px] text-[#94a3b8]">({selectedPlayer.rating})</span>
+            <span className="text-[10px] text-[#94a3b8]">({isPrimeMode && selectedPlayer.primeRating ? selectedPlayer.primeRating : selectedPlayer.rating})</span>
           </motion.div>
         )}
       </AnimatePresence>

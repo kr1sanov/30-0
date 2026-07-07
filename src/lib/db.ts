@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // Configure for both SQLite (dev) and PostgreSQL (Supabase prod)
-const isProd = process.env.NODE_ENV === 'production'
+const isPostgres = process.env.DATABASE_URL?.startsWith('postgresql://')
 
 export const db =
   globalForPrisma.prisma ??
@@ -14,6 +14,9 @@ export const db =
     datasources: {
       db: {
         url: process.env.DATABASE_URL,
+        ...(isPostgres && process.env.DIRECT_URL
+          ? { directUrl: process.env.DIRECT_URL }
+          : {}),
       },
     },
   })

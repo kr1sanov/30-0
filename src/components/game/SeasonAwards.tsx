@@ -70,13 +70,19 @@ const POSITION_LABELS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export default function SeasonAwards() {
-  const { slots, currentManager, seasonResult, resetGame, setScreen } = useGameStore();
+  const { slots, currentManager, seasonResult, resetGame, setScreen, config } = useGameStore();
+
+  const isPrimeMode = config.ratingMode === 'prime';
 
   // Compute awards from squad data and season result
   const awards = useMemo<Award[]>(() => {
     const filledSlots = slots.filter((s) => s.playerId && s.playerRating !== undefined);
 
     if (filledSlots.length === 0) return [];
+
+    // Helper to get effective rating based on ratingMode
+    const getEffectiveRating = (s: typeof filledSlots[number]) =>
+      isPrimeMode && s.playerPrimeRating ? s.playerPrimeRating : (s.playerRating ?? 0);
 
     // Categorize players
     const byCategory: Record<PositionCategory, typeof filledSlots> = {
@@ -94,30 +100,30 @@ export default function SeasonAwards() {
     const result: Award[] = [];
 
     // MVP — highest rated player in squad
-    const mvp = [...filledSlots].sort((a, b) => (b.playerRating ?? 0) - (a.playerRating ?? 0))[0];
+    const mvp = [...filledSlots].sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))[0];
     if (mvp) {
       result.push({
         emoji: '🏆',
         title: 'MVP сезона',
         playerName: mvp.playerName ?? '—',
         position: mvp.position,
-        rating: mvp.playerRating ?? 0,
+        rating: getEffectiveRating(mvp),
         category: POSITION_CATEGORY[mvp.position as Position] ?? 'mid',
         subtitle: 'Лучший игрок состава',
       });
     }
 
     // Best Striker — highest rated forward (with simulated goal attribution)
-    const bestAtt = [...byCategory.att].sort((a, b) => (b.playerRating ?? 0) - (a.playerRating ?? 0))[0];
+    const bestAtt = [...byCategory.att].sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))[0];
     if (bestAtt) {
       // Simulate goals based on rating
-      const simulatedGoals = Math.round((bestAtt.playerRating ?? 0) * 0.25 + Math.random() * 5);
+      const simulatedGoals = Math.round(getEffectiveRating(bestAtt) * 0.25 + Math.random() * 5);
       result.push({
         emoji: '⚽',
         title: 'Лучший нападающий',
         playerName: bestAtt.playerName ?? '—',
         position: bestAtt.position,
-        rating: bestAtt.playerRating ?? 0,
+        rating: getEffectiveRating(bestAtt),
         category: 'att',
         subtitle: 'Голевая угроза',
         statLine: `${simulatedGoals} голов`,
@@ -125,15 +131,15 @@ export default function SeasonAwards() {
     }
 
     // Best Defender — highest rated defender
-    const bestDef = [...byCategory.def].sort((a, b) => (b.playerRating ?? 0) - (a.playerRating ?? 0))[0];
+    const bestDef = [...byCategory.def].sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))[0];
     if (bestDef) {
-      const cleanSheets = Math.round((bestDef.playerRating ?? 0) * 0.15 + Math.random() * 3);
+      const cleanSheets = Math.round(getEffectiveRating(bestDef) * 0.15 + Math.random() * 3);
       result.push({
         emoji: '🛡️',
         title: 'Лучший защитник',
         playerName: bestDef.playerName ?? '—',
         position: bestDef.position,
-        rating: bestDef.playerRating ?? 0,
+        rating: getEffectiveRating(bestDef),
         category: 'def',
         subtitle: 'Стена на пути атаки',
         statLine: `${cleanSheets} сухих`,
@@ -141,15 +147,15 @@ export default function SeasonAwards() {
     }
 
     // Best Goalkeeper — highest rated goalkeeper
-    const bestGk = [...byCategory.gk].sort((a, b) => (b.playerRating ?? 0) - (a.playerRating ?? 0))[0];
+    const bestGk = [...byCategory.gk].sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))[0];
     if (bestGk) {
-      const saves = Math.round((bestGk.playerRating ?? 0) * 0.4 + Math.random() * 10);
+      const saves = Math.round(getEffectiveRating(bestGk) * 0.4 + Math.random() * 10);
       result.push({
         emoji: '🧤',
         title: 'Лучший вратарь',
         playerName: bestGk.playerName ?? '—',
         position: bestGk.position,
-        rating: bestGk.playerRating ?? 0,
+        rating: getEffectiveRating(bestGk),
         category: 'gk',
         subtitle: 'Надёжный страж ворот',
         statLine: `${saves} сэйвов`,
@@ -157,15 +163,15 @@ export default function SeasonAwards() {
     }
 
     // Best Midfielder — highest rated midfielder
-    const bestMid = [...byCategory.mid].sort((a, b) => (b.playerRating ?? 0) - (a.playerRating ?? 0))[0];
+    const bestMid = [...byCategory.mid].sort((a, b) => getEffectiveRating(b) - getEffectiveRating(a))[0];
     if (bestMid) {
-      const assists = Math.round((bestMid.playerRating ?? 0) * 0.2 + Math.random() * 4);
+      const assists = Math.round(getEffectiveRating(bestMid) * 0.2 + Math.random() * 4);
       result.push({
         emoji: '🎯',
         title: 'Лучший полузащитник',
         playerName: bestMid.playerName ?? '—',
         position: bestMid.position,
-        rating: bestMid.playerRating ?? 0,
+        rating: getEffectiveRating(bestMid),
         category: 'mid',
         subtitle: 'Мотор команды',
         statLine: `${assists} передач`,
@@ -173,21 +179,21 @@ export default function SeasonAwards() {
     }
 
     // Season Discovery — lowest rated player who was selected
-    const discovery = [...filledSlots].sort((a, b) => (a.playerRating ?? 0) - (b.playerRating ?? 0))[0];
+    const discovery = [...filledSlots].sort((a, b) => getEffectiveRating(a) - getEffectiveRating(b))[0];
     if (discovery) {
       result.push({
         emoji: '💎',
         title: 'Открытие сезона',
         playerName: discovery.playerName ?? '—',
         position: discovery.position,
-        rating: discovery.playerRating ?? 0,
+        rating: getEffectiveRating(discovery),
         category: POSITION_CATEGORY[discovery.position as Position] ?? 'mid',
         subtitle: 'Самый недооценённый',
       });
     }
 
     return result;
-  }, [slots]);
+  }, [slots, isPrimeMode]);
 
   // Manager bonus award
   const managerAward = useMemo(() => {

@@ -178,6 +178,8 @@ export default function PreMatchAnalysis() {
   const { slots, currentManager, config, simulate } = useGameStore();
   const [isSimulating, setIsSimulating] = useState(false);
 
+  const isPrimeMode = config.ratingMode === 'prime';
+
   // Calculate category averages
   const stats = useMemo(() => {
     const filledSlots = slots.filter((s) => s.playerId && s.playerRating !== undefined);
@@ -192,7 +194,8 @@ export default function PreMatchAnalysis() {
     let totalRating = 0;
     for (const slot of filledSlots) {
       const cat = POSITION_CATEGORY[slot.position as Position] ?? ('mid' as PositionCategory);
-      const rating = slot.isCompatible ? (slot.playerRating ?? 0) : Math.round((slot.playerRating ?? 0) * 0.8);
+      const effectiveRating = isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : (slot.playerRating ?? 0);
+      const rating = slot.isCompatible ? effectiveRating : Math.round(effectiveRating * 0.8);
       categoryRatings[cat].avg += rating;
       categoryRatings[cat].count++;
       totalRating += rating;
@@ -252,7 +255,7 @@ export default function PreMatchAnalysis() {
       weaknesses,
       filledCount,
     };
-  }, [slots]);
+  }, [slots, isPrimeMode]);
 
   const prediction = getPrediction(stats.overall);
 
@@ -359,7 +362,7 @@ export default function PreMatchAnalysis() {
                     className="text-[7px] font-bold mt-0.5"
                     style={{ color }}
                   >
-                    {slot.playerRating}
+                    {isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating}
                   </div>
                 )}
               </div>

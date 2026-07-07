@@ -40,10 +40,14 @@ export async function POST(
     }
 
     // Build squad slots for simulation
+    // When ratingMode is "prime", use playerPrimeRating instead of season rating
+    const ratingMode = run.ratingMode || 'season';
     const squadSlots: SquadSlot[] = filledSlots.map((slot) => ({
       position: slot.slotPosition.split('_')[0],
       playerName: slot.playerName || 'Unknown',
-      playerRating: slot.playerRating || 0,
+      playerRating: (ratingMode === 'prime' && slot.playerPrimeRating)
+        ? slot.playerPrimeRating
+        : (slot.playerRating || 0),
       isCompatible: slot.isCompatible,
     }));
 
@@ -97,7 +101,9 @@ export async function POST(
     const players = filledSlots.map((slot) => ({
       name: slot.playerName || 'Unknown',
       position: slot.slotPosition.split('_')[0],
-      rating: slot.playerRating || 0,
+      rating: (ratingMode === 'prime' && slot.playerPrimeRating)
+        ? slot.playerPrimeRating
+        : (slot.playerRating || 0),
       isCompatible: slot.isCompatible,
     }));
 

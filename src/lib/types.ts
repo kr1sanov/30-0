@@ -29,6 +29,7 @@ export interface DraftSlot {
   playerName?: string;
   playerLastName?: string;
   playerRating?: number;
+  playerPrimeRating?: number;
   playerPosition?: string;
   playerOtherPositions?: string[];
   playerNationality?: string;
@@ -52,6 +53,8 @@ export interface PlayerOption {
   fullName: string;
   lastName: string;
   rating: number;
+  primeRating?: number;
+  primeSeason?: string;
   mainPosition: string;
   otherPositions: string[];
   nationality?: string;

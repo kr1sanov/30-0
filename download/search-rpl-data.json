@@ -1,0 +1,92 @@
+[
+  {
+    "url": "https://www.kaggle.com/datasets/samoilovmikhail/all-premier-league-team-and-players-1992-2024/versions/2",
+    "name": "All Premier League team and players (1992-2024)",
+    "snippet": "This dataset covers all Premier League teams and players from 1992 to 2024. It includes detailed information about the lineups, match results and statistics ...",
+    "host_name": "www.kaggle.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://en.wikipedia.org/wiki/Russian_Premier_League",
+    "name": "Russian Premier League - Wikipedia",
+    "snippet": "There are 16 teams in the competition. As of the 2021/22 season, the league had two Champions League qualifying spots for the league winners and league runners- ...",
+    "host_name": "en.wikipedia.org",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://fbref.com/en/comps/30/Russian-Premier-League-Stats",
+    "name": "Russian Premier League Stats - FBref.com",
+    "snippet": "Squad Playing Time 2025-2026 Russian Premier League. View Player Stats. Squad Playing Time 2025-2026 Russian Premier League. View Player Stats. Squad Stats.",
+    "host_name": "fbref.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.kaggle.com/datasets/furkanark/premier-league-2024-2025-data/data",
+    "name": "Premier League 2024-2025 Data - Kaggle",
+    "snippet": "This dataset contains cleaned Premier League 2024–2025 season data scraped from FBref match and stats pages. It includes match results with xG, ...",
+    "host_name": "www.kaggle.com",
+    "rank": 3,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/datasets/football-datasets",
+    "name": "Football related datasets on datahub.io - GitHub",
+    "snippet": "Each league has data for all the seasons. The data is updated on a daily basis via GitHub Actions. Data. The data is sourced from the https ...",
+    "host_name": "github.com",
+    "rank": 4,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://openfootball.github.io/news",
+    "name": "News and Updates - football.db",
+    "snippet": "The plain text football fixtures for leagues, teams, match schedules, stadiums, and more that you can read with the sportdb command line tool into your SQL ...",
+    "host_name": "openfootball.github.io",
+    "rank": 5,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://datamb.football/guide/?lang=en",
+    "name": "Guide - DataMB",
+    "snippet": "The radar comparison tool visually represents player percentile rankings, allowing for the comparison of multiple players' profiles and output.",
+    "host_name": "datamb.football",
+    "rank": 6,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.footballkitarchive.com/russian-premier-league-kits-l245",
+    "name": "Russian Premier League Football Kit History",
+    "snippet": "The kit database on Football Kit Archive includes 477,632 kits from 30,291 teams in 3,525 leagues, made by 5,269 brands and submitted by 3,106 users.",
+    "host_name": "www.footballkitarchive.com",
+    "rank": 7,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://footystats.org/download-stats-csv",
+    "name": "Download Soccer / Football Stats Database to CSV | FootyStats",
+    "snippet": "Download Football / Soccer data to CSV and use it in Microsoft Excel. Team, league, and player data for 1500 leagues.",
+    "host_name": "footystats.org",
+    "rank": 8,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://www.espn.com/soccer/stats/_/league/rus.1",
+    "name": "Russian Premier League Stats, 2026-27 Season - ESPN",
+    "snippet": "Get the full Russian Premier League stats for the 2026-27 season on ESPN. Includes leaders in goals, assists, yellow and red cards, and longest winning ...",
+    "host_name": "www.espn.com",
+    "rank": 9,
+    "date": "",
+    "favicon": ""
+  }
+]

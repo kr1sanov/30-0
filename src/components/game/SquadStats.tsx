@@ -39,7 +39,9 @@ function getChemistryLabel(score: number): { text: string; color: string } {
 }
 
 export default function SquadStats() {
-  const { slots, currentSpin } = useGameStore();
+  const { slots, currentSpin, config } = useGameStore();
+
+  const isPrimeMode = config.ratingMode === 'prime';
 
   // Calculate ratings by category
   const categories: PositionCategory[] = ['gk', 'def', 'mid', 'att'];
@@ -56,7 +58,8 @@ export default function SquadStats() {
   slots.forEach((slot) => {
     const cat = POSITION_CATEGORY[slot.position as Position] ?? 'mid' as PositionCategory;
     if (slot.playerRating !== undefined) {
-      const rating = slot.isCompatible ? slot.playerRating : Math.round(slot.playerRating * 0.8);
+      const effectiveRating = isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating;
+      const rating = slot.isCompatible ? effectiveRating : Math.round(effectiveRating * 0.8);
       categoryRatings[cat].avg += rating;
       categoryRatings[cat].count++;
       totalRating += rating;
@@ -223,7 +226,7 @@ export default function SquadStats() {
                 </span>
               </div>
               <span className="text-xs font-bold text-[#9CA3AF]">
-                {slot.playerRating}
+                {isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating}
               </span>
             </motion.div>
           ))}

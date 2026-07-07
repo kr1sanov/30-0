@@ -26,15 +26,20 @@ function getInitials(fullName: string): string {
 export default function DraftProgressTracker() {
   const { slots, config, lastDraftState, undoLastPick } = useGameStore();
 
+  const isPrimeMode = config.ratingMode === 'prime';
+
   const teamName = config.teamName || 'Моя команда';
 
   // Calculate squad overall rating
   const squadRating = useMemo(() => {
     const filled = slots.filter((s) => s.playerRating);
     if (filled.length === 0) return 0;
-    const sum = filled.reduce((acc, s) => acc + (s.playerRating ?? 0), 0);
+    const sum = filled.reduce((acc, s) => {
+      const rating = isPrimeMode && s.playerPrimeRating ? s.playerPrimeRating : (s.playerRating ?? 0);
+      return acc + rating;
+    }, 0);
     return Math.round(sum / filled.length);
-  }, [slots]);
+  }, [slots, isPrimeMode]);
 
   // Count filled slots
   const filledCount = useMemo(() => slots.filter((s) => s.playerId).length, [slots]);
@@ -164,12 +169,12 @@ export default function DraftProgressTracker() {
                     className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-black text-white border border-[#0A0A0A] shadow-sm px-0.5"
                     style={{
                       backgroundColor:
-                        slot.playerRating >= 78 ? '#00C896' :
-                        slot.playerRating >= 73 ? '#3b82f6' :
-                        slot.playerRating >= 68 ? '#f97316' : '#ef4444',
+                        (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating) >= 78 ? '#00C896' :
+                        (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating) >= 73 ? '#3b82f6' :
+                        (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating) >= 68 ? '#f97316' : '#ef4444',
                     }}
                   >
-                    {(config.showRatings !== undefined ? !config.showRatings : config.difficulty === 'hard') ? '?' : slot.playerRating}
+                    {(config.showRatings !== undefined ? !config.showRatings : config.difficulty === 'hard') ? '?' : (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating)}
                   </div>
                 )}
               </motion.div>
