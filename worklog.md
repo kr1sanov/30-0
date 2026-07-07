@@ -256,3 +256,63 @@ Stage Summary:
 - When `ratingMode === 'prime'`, all components and APIs use `playerPrimeRating` instead of season rating
 - Prime rating mode shows ⭐ badge with the prime season year on player cards
 - Health API now returns more comprehensive stats
+
+---
+Task ID: 5
+Agent: main
+Task: Migrate from SQLite to Supabase PostgreSQL, import RPL data, deploy to Vercel
+
+Work Log:
+- Analyzed current project state: SQLite with 613 players, 15 clubs, 33 seasons
+- Switched prisma/schema.prisma from SQLite to PostgreSQL with directUrl support
+- Updated .env with Supabase connection strings (pooler + direct)
+- Created optimized import script (import-rpl-fast.ts) with bulk SQL inserts
+- Fixed import script: added explicit id generation (randomUUID), deduplication of player-seasons
+- Ran `prisma db push` to sync schema with Supabase
+- Successfully imported 9900 player-seasons, 1604 players, 41 clubs, 26 seasons into Supabase
+- Simplified db.ts: removed manual directUrl handling (Prisma reads it from schema)
+- Updated vercel.json build command
+- Tested locally: health API, create run, spin all working with Supabase
+- Committed (77c1e64) and pushed to GitHub
+- Vercel deployment requires authentication token (pending user input)
+
+Stage Summary:
+- ✅ Supabase PostgreSQL is fully operational
+- ✅ Data: 41 clubs, 26 seasons, 432 club-seasons, 1604 players, 9900 player-seasons
+- ✅ All API endpoints working with Supabase (health, clubs, seasons, runs, spin)
+- ✅ Code pushed to GitHub (commit 77c1e64)
+- ⏳ Vercel deployment pending — needs VERCEL_TOKEN from user
+
+---
+Task ID: 5b
+Agent: main
+Task: Vercel deployment instructions
+
+Work Log:
+- Vercel CLI installed (v54.21.1) but no authentication credentials
+- Device login URL generated: https://vercel.com/oauth/device
+- Created .env.example with Supabase connection template
+- Vercel project needs env vars: DATABASE_URL and DIRECT_URL
+
+Stage Summary:
+- User needs to provide Vercel token OR complete device login
+- After auth, deploy with: `vercel --prod`
+- Set env vars on Vercel dashboard: DATABASE_URL, DIRECT_URL
+
+## Current Status (2026-07-07)
+
+### Database
+- **Provider**: Supabase PostgreSQL (eu-central-1)
+- **Project ref**: lukxzfkmlajotcruxrgx
+- **Data**: 41 clubs, 26 seasons (2000-2025), 1604 players, 9900 player-seasons
+- **Connection**: Pooler (port 6543) for app, Direct (port 5432) for migrations
+
+### Local Dev
+- Schema: PostgreSQL (prisma/schema.prisma)
+- .env: DATABASE_URL=pooler, DIRECT_URL=direct
+- Start with: `DATABASE_URL=... DIRECT_URL=... bun run dev`
+
+### Deployment
+- GitHub: kr1sanov/30-0 (main branch, commit 77c1e64)
+- Vercel: Not yet deployed (needs auth token)
+- Required env vars: DATABASE_URL, DIRECT_URL
