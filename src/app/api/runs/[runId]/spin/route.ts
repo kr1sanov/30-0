@@ -55,7 +55,7 @@ export async function POST(
 
     // Determine era filter
     const eraKey = (run.eraFilter || 'all') as keyof typeof ERA_CONFIG;
-    const minYear = ERA_CONFIG[eraKey]?.minYear ?? 1992;
+    const minYear = ERA_CONFIG[eraKey]?.minYear ?? 2000;
 
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({

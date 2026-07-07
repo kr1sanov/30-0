@@ -296,7 +296,7 @@ function HomePage() {
         >
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#1E1E1E] text-xs font-medium text-[#9CA3AF]">
             <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse" />
-            НЕОФИЦИАЛЬНАЯ ФАНТАЗИ-ИГРА
+            НЕОФИЦИАЛЬНАЯ ДРАФТ-ИГРА ДЛЯ ФАНАТОВ
           </span>
         </motion.div>
 
@@ -469,9 +469,9 @@ function HomePage() {
       >
         <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E] p-6">
           <div className="grid grid-cols-3 gap-6">
-            <StatsCounter value="16" label="клубов" color="text-[#00C896]" />
-            <StatsCounter value="5000+" label="игроков" color="text-[#FFFFFF]" />
-            <StatsCounter value="1992-2026" label="сезонов" color="text-[#00C896]" />
+            <StatsCounter value="15" label="клубов" color="text-[#00C896]" />
+            <StatsCounter value="4000+" label="игроков" color="text-[#FFFFFF]" />
+            <StatsCounter value="2000-2026" label="сезонов" color="text-[#00C896]" />
           </div>
         </div>
       </motion.section>

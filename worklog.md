@@ -128,3 +128,31 @@ Stage Summary:
 2. **Скрапинг данных** — Добавить больше клубов и игроков (цель: 5000+ игроков, 16+ клубов)
 3. **Деплой** — Настроить Vercel деплой с Supabase
 4. **Полный E2E тест** — Протестировать весь игровой цикл вручную
+
+---
+Task ID: 2-a
+Agent: full-stack-developer
+Task: Apply all UI changes per user requirements
+
+Work Log:
+- Changed banner text from "НЕОФИЦИАЛЬНАЯ ФАНТАЗИ-ИГРА" to "НЕОФИЦИАЛЬНАЯ ДРАФТ-ИГРА ДЛЯ ФАНАТОВ" in page.tsx
+- Updated analytics stats: 16→15 клубов, 5000+→4000+ игроков, 1992-2026→2000-2026 сезонов in page.tsx
+- Removed sound toggle button (Volume2/VolumeX) from Header.tsx across all three header modes (home, game screens, setup/profile)
+- Removed useSound hook import and all sound-related state (soundOn, handleToggleSound) from Header.tsx
+- Removed Volume2/VolumeX icon imports from Header.tsx
+- Made header buttons larger: icon size w-4 h-4 → w-6 h-6, padding p-2 → p-2.5, header height h-12 → h-14
+- Made game screen overlay buttons larger: w-9 h-9 → w-11 h-11, icon size w-[18px] → w-6 h-6, position top-3 → top-4
+- Changed "Современная (2016+)" → "2016+" in types.ts ERA_CONFIG
+- Changed "Все времена" → "Все" and minYear 1992 → 2000 in types.ts ERA_CONFIG
+- Changed "Современная с опорной" → "С опорной" in positions.ts formation description
+- Removed entire "Дополнительные настройки" collapsible section from GameSetup.tsx (Settings icon, ChevronDown/Up, toggle switches for Менеджеры and Январское трансферное окно)
+- Removed unused imports (useState, useCallback, Settings, ChevronDown, ChevronUp) from GameSetup.tsx
+- Removed showAdvanced state variable from GameSetup.tsx
+- Updated spin route fallback minYear from 1992 to 2000 in route.ts
+- Verified no other files import useSound hook after removal
+- Ran bun run lint — no errors
+
+Stage Summary:
+- All 7 requested changes applied successfully
+- Banner text, analytics stats, sound removal, header sizing, word removals, advanced settings removal, era restriction — all complete
+- Lint passes cleanly with no errors

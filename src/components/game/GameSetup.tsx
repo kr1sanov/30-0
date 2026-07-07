@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
 import {
@@ -14,7 +13,6 @@ import type { Position, PositionCategory } from '@/lib/positions';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -234,7 +232,6 @@ function PillButton({
 
 export default function GameSetup() {
   const { config, setConfig, startRun } = useGameStore();
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleStart = async () => {
     await startRun();
@@ -484,79 +481,6 @@ export default function GameSetup() {
             ),
           )}
         </div>
-      </div>
-
-      {/* ─── ADVANCED (collapsible) ─── */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
-      >
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Settings className="w-4 h-4 text-[#64748b]" />
-            <span className="text-sm font-bold text-[#9CA3AF]">Дополнительные настройки</span>
-          </div>
-          {showAdvanced ? (
-            <ChevronUp className="w-4 h-4 text-[#64748b]" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-[#64748b]" />
-          )}
-        </button>
-
-        <AnimatePresence>
-          {showAdvanced && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="px-4 pb-4 space-y-4">
-                {/* Managers (Gaffers) toggle */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-[#FFFFFF]">
-                      Менеджеры
-                    </div>
-                    <div className="text-xs text-[#64748b] mt-0.5">
-                      Добавить выбор тренера в драфт
-                    </div>
-                  </div>
-                  <Switch
-                    checked={config.enableManagers ?? false}
-                    onCheckedChange={(checked) => {
-                      setConfig({ enableManagers: checked });
-                    }}
-                    className="data-[state=checked]:bg-[#00C896]"
-                  />
-                </div>
-
-                {/* January Transfer Window toggle */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-bold text-[#FFFFFF]">
-                      Январское трансферное окно
-                    </div>
-                    <div className="text-xs text-[#64748b] mt-0.5">
-                      Возможность замены игрока в середине сезона
-                    </div>
-                  </div>
-                  <Switch
-                    checked={config.januaryTransfer ?? false}
-                    onCheckedChange={(checked) => {
-                      setConfig({ januaryTransfer: checked });
-                    }}
-                    className="data-[state=checked]:bg-[#00C896]"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* ─── Start Button ─── */}

@@ -100,10 +100,10 @@ export const DIFFICULTY_CONFIG = {
 export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
 export const ERA_CONFIG = {
-  all: { label: 'Все времена', minYear: 1992 },
+  all: { label: 'Все', minYear: 2000 },
   '2000s': { label: '2000+', minYear: 2000 },
   '2010s': { label: '2010+', minYear: 2010 },
-  modern: { label: 'Современная (2016+)', minYear: 2016 },
+  modern: { label: '2016+', minYear: 2016 },
 } as const;
 
 export type EraFilter = keyof typeof ERA_CONFIG;

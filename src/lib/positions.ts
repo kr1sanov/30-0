@@ -327,7 +327,7 @@ export const FORMATIONS: Formation[] = [
   {
     id: '4-2-3-1',
     name: '4-2-3-1',
-    description: 'Современная с опорной',
+    description: 'С опорной',
     slots: [
       { position: 'ВР', label: 'ВР' },
       { position: 'ПЗ', label: 'ПЗ' },
