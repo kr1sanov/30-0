@@ -299,20 +299,56 @@ Stage Summary:
 - After auth, deploy with: `vercel --prod`
 - Set env vars on Vercel dashboard: DATABASE_URL, DIRECT_URL
 
-## Current Status (2026-07-07)
+---
+Task ID: 6
+Agent: main
+Task: Verify Supabase + Vercel integration end-to-end
+
+Work Log:
+- Restored .env with Supabase pooler connection strings (user provided credentials)
+- Fixed issue: shell env var DATABASE_URL=file:... was overriding .env file
+- Added loadEnvFromFile() to src/lib/db.ts to handle shell env overrides gracefully
+- Ran prisma db push — schema already in sync with Supabase PostgreSQL
+- Verified data: 41 clubs, 26 seasons, 432 club-seasons, 1604 players, 9900 player-seasons, 9 game runs
+- Started dev server with Supabase — all API endpoints working:
+  - GET /api/health → connected, all counts correct
+  - GET /api/clubs → 41 clubs
+  - GET /api/seasons → 26 seasons
+  - POST /api/runs → game creation works
+  - POST /api/runs/[id]/spin → wheel spin works (e.g. Зенит 2013 with 25 players)
+  - POST /api/runs/[id]/draft → player assignment works (Халк → ПВ, rating 84)
+- Tested full game flow via agent-browser: home → setup → draft → spin → select player → assign position
+- Updated .env.example with correct Supabase connection templates (session mode pooler + direct)
+- Updated .gitignore to exclude start-dev.sh, .dev-server-pid, screenshots
+- Committed (1e3d6f4) and pushed to GitHub
+- Vercel auto-deploy triggered
+
+Stage Summary:
+- ✅ Supabase PostgreSQL fully operational and tested
+- ✅ Full game flow verified via agent-browser
+- ✅ Code pushed to GitHub (commit 1e3d6f4)
+- ⏳ Vercel needs env vars: DATABASE_URL + DIRECT_URL (set via Vercel Dashboard)
+
+## Current Status (2026-07-08)
 
 ### Database
 - **Provider**: Supabase PostgreSQL (eu-central-1)
 - **Project ref**: lukxzfkmlajotcruxrgx
 - **Data**: 41 clubs, 26 seasons (2000-2025), 1604 players, 9900 player-seasons
-- **Connection**: Pooler (port 6543) for app, Direct (port 5432) for migrations
+- **Connection**: Pooler (port 5432, session mode) for app + migrations
 
 ### Local Dev
 - Schema: PostgreSQL (prisma/schema.prisma)
-- .env: DATABASE_URL=pooler, DIRECT_URL=direct
-- Start with: `DATABASE_URL=... DIRECT_URL=... bun run dev`
+- .env: DATABASE_URL=pooler, DIRECT_URL=pooler (direct db.xxx not reachable from sandbox)
+- Start with: `DATABASE_URL=... DIRECT_URL=... npx next dev -p 3000`
 
 ### Deployment
-- GitHub: kr1sanov/30-0 (main branch, commit 77c1e64)
-- Vercel: Not yet deployed (needs auth token)
-- Required env vars: DATABASE_URL, DIRECT_URL
+- GitHub: kr1sanov/30-0 (main branch, commit 1e3d6f4)
+- Vercel: Auto-deploy from GitHub main branch
+- **Action needed**: Set env vars on Vercel Dashboard:
+  - DATABASE_URL = postgresql://postgres.lukxzfkmlajotcruxrgx:[PASSWORD]@aws-1-eu-central-1.pooler.supabase.com:5432/postgres?pgbouncer=true
+  - DIRECT_URL = postgresql://postgres:[PASSWORD]@db.lukxzfkmlajotcruxrgx.supabase.co:5432/postgres
+
+### Known Issues
+- Spin API takes ~9.5s due to fetching all ClubSeason+Players from Supabase over network (was instant with SQLite)
+- Dev server process management in sandbox is fragile (processes killed when bash session ends)
