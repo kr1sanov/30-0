@@ -387,3 +387,26 @@ Stage Summary:
 - ✅ Fixed expected points, rating rounding, simulation pacing
 - ✅ Fixed "Продолжить драфт" bug after season completion
 - ✅ Code pushed to GitHub (commit a61cc70), Vercel auto-deploy triggered
+---
+Task ID: 7
+Agent: main
+Task: Fix Vercel build error (ERA_CONFIG missing) and deploy
+
+Work Log:
+- Diagnosed root cause: ERA_CONFIG export was removed from types.ts during era refactoring, but reroll/route.ts still imported it
+- spin/route.ts was already fixed (used run.eraStartYear/eraEndYear), but still had stale ERA_CONFIG import
+- reroll/route.ts still imported ERA_CONFIG and used it for era filtering via eraFilter key lookup
+- Fixed spin/route.ts: removed unused ERA_CONFIG import
+- Fixed reroll/route.ts: removed ERA_CONFIG import, replaced with run.eraStartYear/run.eraEndYear from schema
+- Added eraStartYear (Int, default 2000) and eraEndYear (Int, default 2025) columns to GameRun schema
+- Added clubFilter (String?) column to GameRun schema
+- Updated runs/route.ts (POST create) to accept and store eraStartYear/eraEndYear
+- Ran prisma db push — schema synced with Supabase
+- Ran next build — compiles successfully with zero errors (all 27 routes OK)
+- Committed and pushed to GitHub: a5765db
+
+Stage Summary:
+- Build error fixed: ERA_CONFIG is no longer imported anywhere in src/
+- eraStartYear/eraEndYear now properly stored in DB and used by spin/reroll APIs
+- next build passes cleanly → Vercel deploy should succeed
+- Pushed to main branch, Vercel auto-deploy triggered
