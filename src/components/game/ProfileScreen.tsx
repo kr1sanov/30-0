@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
+import ShareModal from '@/components/share/ShareModal';
+import ProfileShareCard from '@/components/share/ProfileShareCard';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -34,6 +36,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
   const { user, updateDisplayName } = useAuthStore();
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -53,43 +56,16 @@ export default function ProfileScreen() {
   // Total earned trophies
   const earnedTrophies = TROPHIES.filter(t => profileStats.achievements.includes(t.id)).length;
 
-  const handleShareProfile = () => {
-    const lines = [
-      '👤 Профиль 30-0 RPL',
-      `📊 ${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'}`,
-      `🏆 Титулов: ${profileStats.titles}`,
-      `✨ Идеальных 30-0: ${profileStats.perfect}`,
-      `⭐ Лучший результат: ${profileStats.bestPoints} очков`,
-      `🎯 Побед: ${profileStats.totalWins} · Голов: ${profileStats.totalGoals}`,
-      `🏅 Достижений: ${earnedTrophies}/${TROPHIES.length}`,
-    ];
-    if (profileStats.favoriteFormation) {
-      lines.push(`📐 Любимая формация: ${profileStats.favoriteFormation}`);
-    }
-    lines.push('#30п0 #РПЛ');
-
-    const text = lines.join('\n');
-
-    // Try Telegram WebApp share first
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      try {
-        window.Telegram.WebApp.openTelegramLink(
-          `https://t.me/share/url?url=${encodeURIComponent('https://30-0.app')}&text=${encodeURIComponent(text)}`,
-        );
-        return;
-      } catch {
-        // fall through
-      }
-    }
-
-    if (navigator.share) {
-      navigator.share({ title: '30-0 RPL — Профиль', text }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text).then(() => {
-        toast.success('📋 Профиль скопирован!');
-      }).catch(() => {});
-    }
-  };
+  const shareText = [
+    '👤 Профиль 30-0 RPL',
+    `📊 ${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'}`,
+    `🏆 Титулов: ${profileStats.titles}`,
+    `✨ Идеальных 30-0: ${profileStats.perfect}`,
+    `⭐ Лучший результат: ${profileStats.bestPoints} очков`,
+    `🎯 Побед: ${profileStats.totalWins} · Голов: ${profileStats.totalGoals}`,
+    `🏅 Достижений: ${earnedTrophies}/${TROPHIES.length}`,
+    '#30п0 #РПЛ',
+  ].join('\n');
 
   const handleSaveName = () => {
     if (editName.trim().length >= 2) {
@@ -491,16 +467,24 @@ export default function ProfileScreen() {
         </div>
       )}
 
-      {/* Share Profile — NO Reset Stats, NO New Season buttons */}
+      {/* Share Profile */}
       <div className="space-y-3">
         <Button
-          onClick={handleShareProfile}
+          onClick={() => setIsShareOpen(true)}
           variant="outline"
           className="w-full h-12 text-sm font-bold border-[#3b82f6]/30 text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-xl btn-rainbow-hover"
         >
           📤 Поделиться профилем
         </Button>
       </div>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        shareText={shareText}
+        cardContent={<ProfileShareCard stats={profileStats} />}
+      />
     </div>
   );
 }

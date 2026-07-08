@@ -9,6 +9,7 @@ interface TelegramUser {
   lastName: string | null;
   photoUrl: string | null;
   displayName: string;
+  referralCode?: string;
 }
 
 interface AuthState {
@@ -16,7 +17,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isAuthenticating: boolean;
 
-  loginWithTelegram: (initData: string) => Promise<void>;
+  loginWithTelegram: (initData: string, startParam?: string | null) => Promise<void>;
   loginAsGuest: () => void;
   updateDisplayName: (name: string) => void;
   logout: () => void;
@@ -29,9 +30,10 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isAuthenticating: false,
 
-      loginWithTelegram: async (initData: string) => {
+      loginWithTelegram: async (initData: string, _startParam?: string | null) => {
         set({ isAuthenticating: true });
         try {
+          // Include start_param in initData for server-side referral tracking
           const res = await fetch('/api/auth/telegram', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -4,6 +4,8 @@ import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import ShareModal from '@/components/share/ShareModal';
+import ResultShareCard from '@/components/share/ResultShareCard';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -228,9 +230,11 @@ export default function SimulationResult() {
     return matches.slice(Math.max(0, upTo - 5), upTo).reverse();
   }, [matches, currentMatchweek]);
 
-  // Share handler
-  const handleShare = useCallback(() => {
-    if (!data) return;
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // Share text
+  const shareText = useMemo(() => {
+    if (!data) return '';
     const pos = getPositionOrdinal(data.position);
     const lines = [
       `⚽ 30-0 RPL`,
@@ -248,14 +252,8 @@ export default function SimulationResult() {
     if (data.formation) {
       lines.push(`📐 ${data.formation}`);
     }
-    const text = lines.join('\n');
-    if (navigator.share) {
-      navigator.share({ text }).catch(() => {
-        navigator.clipboard.writeText(text);
-      });
-    } else {
-      navigator.clipboard.writeText(text);
-    }
+    lines.push('#30п0 #РПЛ');
+    return lines.join('\n');
   }, [data, earnedTrophies]);
 
   if (!data) return null;
@@ -607,7 +605,7 @@ export default function SimulationResult() {
                   🔄 Играть снова
                 </Button>
                 <Button
-                  onClick={handleShare}
+                  onClick={() => setIsShareOpen(true)}
                   variant="outline"
                   className="flex-1 h-11 rounded-xl border-[#1E1E1E] text-[#9CA3AF] hover:bg-[#141414] hover:text-[#FFFFFF]"
                 >
@@ -625,6 +623,32 @@ export default function SimulationResult() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Share Modal */}
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        shareText={shareText}
+        cardContent={
+          data ? (
+            <ResultShareCard
+              data={{
+                points: data.points,
+                wins: data.wins,
+                draws: data.draws,
+                losses: data.losses,
+                goalsFor: data.goalsFor,
+                goalsAgainst: data.goalsAgainst,
+                position: data.position,
+                formation: data.formation,
+              }}
+              trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
+              teamName={config.teamName}
+              managerName={null}
+            />
+          ) : null
+        }
+      />
     </div>
   );
 }

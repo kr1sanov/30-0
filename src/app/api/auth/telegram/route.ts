@@ -26,6 +26,16 @@ function validateTelegramInitData(initData: string, botToken: string): Map<strin
   return null;
 }
 
+// Generate a short unique referral code
+function generateReferralCode(): string {
+  const chars = 'abcdefghijkmnpqrstuvwxyz23456789'; // no confusing 0/O/1/l
+  let code = 'rpl';
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -50,6 +60,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No user data' }, { status: 400 });
     }
 
+    // Extract start_param for referral tracking
+    const startParam = validatedData.get('start_param') || null;
+
     const tgUser = JSON.parse(userJson);
     const telegramId = String(tgUser.id);
     const username = tgUser.username || null;
@@ -67,6 +80,8 @@ export async function POST(request: Request) {
         lastName,
         photoUrl,
         displayName: firstName || username || 'Игрок',
+        referralCode: generateReferralCode(),
+        ...(startParam ? { referredBy: startParam } : {}),
       },
       update: {
         username,
@@ -75,6 +90,31 @@ export async function POST(request: Request) {
         photoUrl,
       },
     });
+
+    // If this is a new user with a referral code, increment the referrer's count
+    if (startParam) {
+      try {
+        const referrer = await db.user.findUnique({
+          where: { referralCode: startParam },
+        });
+        if (referrer && referrer.telegramId !== telegramId) {
+          // Only count if the referral hasn't already been tracked
+          const existingUser = await db.user.findUnique({ where: { telegramId } });
+          if (existingUser && !existingUser.referredBy) {
+            await db.user.update({
+              where: { id: referrer.id },
+              data: { referralCount: { increment: 1 } },
+            });
+            await db.user.update({
+              where: { id: existingUser.id },
+              data: { referredBy: startParam },
+            });
+          }
+        }
+      } catch (refError) {
+        console.error('Referral tracking error (non-fatal):', refError);
+      }
+    }
 
     return NextResponse.json({
       user: {
@@ -85,6 +125,7 @@ export async function POST(request: Request) {
         lastName: user.lastName,
         photoUrl: user.photoUrl,
         displayName: user.displayName,
+        referralCode: user.referralCode,
       },
     });
   } catch (error) {

@@ -16,6 +16,7 @@ declare global {
             username?: string;
             photo_url?: string;
           };
+          start_param?: string;
         };
         colorScheme: 'light' | 'dark';
         themeParams: Record<string, string>;
@@ -132,10 +133,15 @@ export function useTelegram() {
     window.Telegram?.WebApp?.openTelegramLink(shareUrl);
   }, []);
 
+  const startParam = typeof window !== 'undefined'
+    ? window.Telegram?.WebApp?.initDataUnsafe?.start_param
+    : undefined;
+
   return {
     isReady,
     user,
     isTelegram,
+    startParam,
     haptic,
     notify,
     showMainButton,
