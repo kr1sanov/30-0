@@ -1,0 +1,51 @@
+# ──────────────────────────────────────────────
+# 30-0 RPL — Docker Compose for VK Cloud / External PostgreSQL
+# ──────────────────────────────────────────────
+# Используется когда PostgreSQL запущен как управляемый сервис (VK Cloud, Supabase, и т.д.)
+#
+# Usage:
+#   docker compose -f docker-compose.cloud.yml up -d
+#   docker compose -f docker-compose.cloud.yml logs -f app
+
+services:
+  # ─── Next.js App ───
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 30-0-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ─── Database Migration & Seed (run once) ───
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 30-0-migrate
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        echo 'Migration complete. Now seeding...' &&
+        npx tsx prisma/seed.ts &&
+        echo 'Seed complete!'
+      "
+    profiles:
+      - migrate

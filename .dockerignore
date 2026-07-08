@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+db/*.db
+upload/
+skills/
+*.log
+.env
+.env.local
+.env.development
+.env.production
+tool-results/

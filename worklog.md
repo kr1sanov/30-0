@@ -352,3 +352,38 @@ Stage Summary:
 ### Known Issues
 - Spin API takes ~9.5s due to fetching all ClubSeason+Players from Supabase over network (was instant with SQLite)
 - Dev server process management in sandbox is fragile (processes killed when bash session ends)
+
+---
+Task ID: 7
+Agent: main
+Task: Implement UI improvements per user feedback (08.07.2026)
+
+Work Log:
+- Updated GameConfig type: replaced eraFilter with eraStartYear/eraEndYear (number range)
+- Added ERA_MIN_YEAR/ERA_MAX_YEAR constants (2000-2025) in types.ts
+- Updated gameStore.ts defaultConfig: eraStartYear: 2000, eraEndYear: 2025
+- Updated GameSetup.tsx: replaced era pill buttons with dual-thumb Slider component
+- Updated spin API: filters by eraStartYear/eraEndYear year range instead of eraFilter
+- Removed "Крутить снова" button from SpinWheel.tsx (reroll button serves this purpose)
+- Removed "Отмена" button from PlayerList.tsx after player assignment
+- Removed "Переставить игрока" button from FormationView.tsx and page.tsx
+- Removed prime season ⭐ badge from PlayerList.tsx
+- Removed duplicate "поз. осталось" text from success banner in page.tsx (kept in header)
+- Removed emoji 🎰 from "Крутить тренера" button in ManagerChoice.tsx
+- Rounded overall rating to integer in SquadStats.tsx (was showing decimals)
+- Fixed expected points calculation: realistic for 30-match RPL season (capped at 85)
+- Slowed simulation card animation: 500ms per match (was 150ms)
+- Show 5 match result cards during simulation (was 3)
+- Moved live stats box below match results during simulation
+- Added "Завершить сезон" button after simulation completes
+- Fixed goHome() bug: now clears runId when seasonResult exists, preventing "Продолжить драфт" from appearing after season completion
+- Lint passes cleanly (src/ only)
+- Committed (a61cc70) and pushed to GitHub
+
+Stage Summary:
+- ✅ All 14 user-requested UI changes implemented
+- ✅ Era slider with dual thumb (2000-2025)
+- ✅ Removed redundant buttons and duplicate text
+- ✅ Fixed expected points, rating rounding, simulation pacing
+- ✅ Fixed "Продолжить драфт" bug after season completion
+- ✅ Code pushed to GitHub (commit a61cc70), Vercel auto-deploy triggered
