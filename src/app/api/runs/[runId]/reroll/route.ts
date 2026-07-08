@@ -63,10 +63,8 @@ export async function POST(
     );
 
     // Determine era range from run config
-    const eraStartYear = (run as Record<string, unknown>).eraStartYear as number | undefined;
-    const eraEndYear = (run as Record<string, unknown>).eraEndYear as number | undefined;
-    const startYear = eraStartYear ?? 2000;
-    const endYear = eraEndYear ?? 2025;
+    const startYear = run.eraStartYear ?? 2000;
+    const endYear = run.eraEndYear ?? 2025;
 
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({
