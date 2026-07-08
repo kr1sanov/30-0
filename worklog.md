@@ -410,3 +410,31 @@ Stage Summary:
 - eraStartYear/eraEndYear now properly stored in DB and used by spin/reroll APIs
 - next build passes cleanly → Vercel deploy should succeed
 - Pushed to main branch, Vercel auto-deploy triggered
+
+---
+Task ID: 8
+Agent: main
+Task: Implement referral system + share with visual cards for Telegram
+
+Work Log:
+- Added referralCode (String @unique), referredBy (String?), referralCount (Int @default(0)) to User model in Prisma schema
+- Pushed schema to Supabase, backfilled existing user with referral code rplf42a0e
+- Updated /api/auth/telegram/route.ts: generates referral code on user creation, tracks referrals via start_param
+- Created /api/referrals/route.ts: GET endpoint for referral stats + invite URL
+- Added start_param to Telegram WebApp types in use-telegram.ts
+- Updated authStore TelegramUser interface with referralCode
+- Installed html2canvas-pro for client-side card screenshots
+- Created ResultShareCard.tsx: visual card with points, W-D-L, goals, trophies, bot link
+- Created ProfileShareCard.tsx: visual card with avatar, stats, trophies, formation, bot link
+- Created ShareModal.tsx: bottom sheet with card preview, Telegram share button, save image, copy text, referral link display
+- Updated ProfileScreen.tsx: replaced inline share handler with ShareModal + ProfileShareCard
+- Updated SimulationResult.tsx: replaced handleShare with ShareModal + ResultShareCard
+- All share links use referral deep link: https://t.me/RPL30_bot/app?startapp=REFERRAL_CODE
+- Build passes, lint clean (only script errors), pushed to GitHub: 9691971
+
+Stage Summary:
+- Full referral system: generate codes, track referrals via start_param, API for stats
+- Visual share cards: both result and profile cards with dark theme, branded design
+- ShareModal: preview + multiple share methods (Telegram, save image, copy text)
+- Referral deep links embedded in all shares
+- Pushed to main, Vercel auto-deploy triggered
