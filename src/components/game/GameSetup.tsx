@@ -4,16 +4,14 @@ import { useGameStore } from '@/store/gameStore';
 import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
 import {
   DIFFICULTY_CONFIG,
-  ERA_MIN_YEAR,
-  ERA_MAX_YEAR,
+  ERA_CONFIG,
   DRAFT_MODE_CONFIG,
   RATING_MODE_CONFIG,
 } from '@/lib/types';
-import type { Difficulty } from '@/lib/types';
+import type { Difficulty, EraFilter } from '@/lib/types';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { motion, AnimatePresence } from 'framer-motion';
 
 /* ─── Colors ─── */
@@ -471,24 +469,21 @@ export default function GameSetup() {
         style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
       >
         <SectionHeader>Эпоха</SectionHeader>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-2xl font-black text-white">{config.eraStartYear}</span>
-          <span className="text-sm text-[#64748b]">—</span>
-          <span className="text-2xl font-black text-white">{config.eraEndYear}</span>
-        </div>
-        <Slider
-          value={[config.eraStartYear, config.eraEndYear]}
-          min={ERA_MIN_YEAR}
-          max={ERA_MAX_YEAR}
-          step={1}
-          onValueChange={(vals) => {
-            setConfig({ eraStartYear: vals[0], eraEndYear: vals[1] });
-          }}
-          className="w-full"
-        />
-        <div className="flex justify-between mt-1">
-          <span className="text-[10px] text-[#64748b]">{ERA_MIN_YEAR}</span>
-          <span className="text-[10px] text-[#64748b]">{ERA_MAX_YEAR}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+            ([key, val]) => (
+              <PillButton
+                key={key}
+                label={val.label}
+                isSelected={config.eraFilter === key}
+                onClick={() => setConfig({
+                  eraFilter: key,
+                  eraStartYear: ERA_CONFIG[key].minYear,
+                  eraEndYear: ERA_CONFIG[key].maxYear,
+                })}
+              />
+            ),
+          )}
         </div>
       </div>
 

@@ -176,6 +176,7 @@ const defaultConfig: GameConfig = {
   difficulty: 'normal',
   draftMode: 'squad_first',
   ratingMode: 'season',
+  eraFilter: 'all',
   eraStartYear: 2000,
   eraEndYear: 2025,
 };
