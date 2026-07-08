@@ -670,13 +670,6 @@ export default function ManagerChoice() {
             onClick={handleSpinManager}
             className="w-full h-14 text-base font-black bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/30 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
           >
-            <motion.span
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'linear' }}
-              className="inline-block mr-2"
-            >
-              🎰
-            </motion.span>
             Крутить тренера
           </Button>
         )}

@@ -426,14 +426,7 @@ export default function SpinWheel() {
                 </motion.button>
               )}
 
-              {/* Skip / Spin again button */}
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => { skipSpin(); }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#2a2a2a] text-[#9CA3AF] rounded-xl hover:bg-white/[0.03] hover:text-[#FFFFFF] transition-all"
-              >
-                Крутить снова
-              </motion.button>
+              {/* "Крутить снова" removed — use the reroll button instead */}
             </motion.div>
           )}
         </AnimatePresence>

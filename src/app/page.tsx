@@ -469,8 +469,8 @@ function HomePage() {
       >
         <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E] p-6">
           <div className="grid grid-cols-3 gap-6">
-            <StatsCounter value="15" label="клубов" color="text-[#00C896]" />
-            <StatsCounter value="4000+" label="игроков" color="text-[#FFFFFF]" />
+            <StatsCounter value="41" label="клубов" color="text-[#00C896]" />
+            <StatsCounter value="1604" label="игроков" color="text-[#FFFFFF]" />
             <StatsCounter value="2000-2026" label="сезонов" color="text-[#00C896]" />
           </div>
         </div>
@@ -708,9 +708,6 @@ function DraftScreen() {
             <span className="text-xs text-[#00C896] font-medium">
               <strong>{lastPlacedInfo.name}</strong> → {lastPlacedInfo.position}
             </span>
-            <span className="text-[10px] text-[#9CA3AF] ml-auto">
-              {openCount} поз. осталось
-            </span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -720,38 +717,7 @@ function DraftScreen() {
         <FormationView />
       </div>
 
-      {/* ── Move a Player Button ── */}
-      {filledSlots.length >= 2 && !selectedPlayer && (
-        <div className="space-y-1">
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              if (isMoving) {
-                finishMoving();
-              } else {
-                useGameStore.setState({ movingPlayerSlotIndex: -1 });
-              }
-            }}
-            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold transition-all ${
-              isMoving
-                ? 'bg-[#00C896] text-white shadow-lg shadow-[#00C896]/20'
-                : 'bg-[#141414] border border-[#00C896]/30 text-[#00C896] hover:bg-[#00C896]/10'
-            }`}
-          >
-            {isMoving ? '✓ Завершить' : '↔ Переместить игрока'}
-          </motion.button>
-          {!isMoving && (
-            <p className="text-[9px] text-[#64748b] text-center">
-              Переместите задрафтованного игрока, чтобы освободить слот
-            </p>
-          )}
-          {isMoving && (
-            <p className="text-[10px] text-[#9CA3AF] text-center">
-              Нажмите на занятую позицию, затем на другую для обмена
-            </p>
-          )}
-        </div>
-      )}
+      {/* Move player button removed - players can tap positions to rearrange directly */}
 
       {/* ── Squad Stats Panel ── */}
       <div className="rounded-xl bg-[#141414] border border-[#1E1E1E]/60 p-3">
@@ -875,9 +841,15 @@ function SquadCompleteScreen() {
   const managerBonus = currentManager?.rating ? 2 : 0;
   const effectiveRating = overallRating + managerBonus;
 
-  // Pre-season odds calculation (simplified based on rating)
+  // Pre-season odds calculation (realistic for 30-match RPL season)
   const projectedPosition = effectiveRating >= 80 ? 1 : effectiveRating >= 76 ? 2 : effectiveRating >= 72 ? 3 : effectiveRating >= 68 ? 5 : effectiveRating >= 64 ? 8 : 12;
-  const expectedPoints = Math.round(effectiveRating * 1.8 + Math.random() * 10);
+  // Realistic RPL points: max ~85 (30W), avg team ~40pts, top team ~60-70
+  // Formula: base points from rating with diminishing returns, capped at 85
+  const expectedPoints = Math.min(85, Math.round(
+    effectiveRating >= 78 ? (effectiveRating - 50) * 2.2 + Math.random() * 8 :
+    effectiveRating >= 70 ? (effectiveRating - 55) * 2.0 + Math.random() * 10 :
+    (effectiveRating - 50) * 1.5 + Math.random() * 12
+  ));
   const winLeaguePct = Math.min(99, Math.max(1, Math.round((effectiveRating - 55) * 3)));
   const top4Pct = Math.min(99, Math.max(winLeaguePct + 20, 30));
   const top6Pct = Math.min(99, Math.max(top4Pct + 15, 50));

@@ -53,15 +53,20 @@ export async function POST(
       draftedSlots.map((s) => s.playerSeasonId).filter(Boolean) as string[],
     );
 
-    // Determine era filter
-    const eraKey = (run.eraFilter || 'all') as keyof typeof ERA_CONFIG;
-    const minYear = ERA_CONFIG[eraKey]?.minYear ?? 2000;
+    const minYear = 2000;
+    const maxYear = 2025;
+
+    // Determine era range from run config
+    const eraStartYear = (run as Record<string, unknown>).eraStartYear as number | undefined;
+    const eraEndYear = (run as Record<string, unknown>).eraEndYear as number | undefined;
+    const startYear = eraStartYear ?? minYear;
+    const endYear = eraEndYear ?? maxYear;
 
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({
       where: {
         season: {
-          startYear: { gte: minYear },
+          startYear: { gte: startYear, lte: endYear },
         },
       },
       include: {

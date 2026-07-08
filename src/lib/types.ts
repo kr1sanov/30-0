@@ -11,7 +11,8 @@ export interface GameConfig {
   difficulty: 'easy' | 'normal' | 'hard';
   draftMode: 'squad_first' | 'position_first';
   ratingMode: 'season' | 'prime';
-  eraFilter: 'all' | '2000s' | '2010s' | 'modern';
+  eraStartYear: number;
+  eraEndYear: number;
   showRatings?: boolean; // overrides difficulty default; undefined = follow difficulty
   enableManagers?: boolean; // Gaffers toggle
   januaryTransfer?: boolean; // January Transfer Window toggle
@@ -102,14 +103,12 @@ export const DIFFICULTY_CONFIG = {
 
 export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
-export const ERA_CONFIG = {
-  all: { label: 'Все', minYear: 2000 },
-  '2000s': { label: '2000+', minYear: 2000 },
-  '2010s': { label: '2010+', minYear: 2010 },
-  modern: { label: '2016+', minYear: 2016 },
-} as const;
+// Era is now configured via eraStartYear / eraEndYear (dual slider)
+// Range: 2000–2025
+export const ERA_MIN_YEAR = 2000;
+export const ERA_MAX_YEAR = 2025;
 
-export type EraFilter = keyof typeof ERA_CONFIG;
+export type EraFilter = 'all' | '2000s' | '2010s' | 'modern'; // kept for API compat
 
 // ---------------------------------------------------------------------------
 // Draft Mode & Rating Mode

@@ -271,14 +271,7 @@ export default function PlayerList() {
                         </span>
                       );
                     })}
-                    {isPrimeMode && player.primeSeason && (
-                      <span
-                        className="text-[9px] font-bold px-1.5 py-0.5 rounded text-[#fbbf24]"
-                        style={{ backgroundColor: '#fbbf2415' }}
-                      >
-                        ⭐ {player.primeSeason}
-                      </span>
-                    )}
+                    {/* No prime season badge */}
                   </div>
                 </div>
 
@@ -352,16 +345,7 @@ export default function PlayerList() {
                         })}
                       </div>
 
-                      {/* Cancel button */}
-                      <button
-                        onClick={handleCancel}
-                        className="w-full py-2 rounded-lg text-xs font-medium text-[#9CA3AF]
-                          hover:bg-white/[0.03] hover:text-[#FFFFFF]
-                          active:scale-[0.98] transition-all duration-150"
-                        style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                      >
-                        Отменить
-                      </button>
+                      {/* No cancel button - user can just select a different player */}
                     </div>
                   </motion.div>
                 )}

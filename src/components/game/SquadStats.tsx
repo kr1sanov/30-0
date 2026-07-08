@@ -68,10 +68,10 @@ export default function SquadStats() {
   });
 
   // Calculate averages
-  const overall = filledCount > 0 ? Math.round((totalRating / filledCount) * 10) / 10 : 0;
+  const overall = filledCount > 0 ? Math.round(totalRating / filledCount) : 0;
   for (const cat of categories) {
     if (categoryRatings[cat].count > 0) {
-      categoryRatings[cat].avg = Math.round((categoryRatings[cat].avg / categoryRatings[cat].count) * 10) / 10;
+      categoryRatings[cat].avg = Math.round(categoryRatings[cat].avg / categoryRatings[cat].count);
     }
   }
 

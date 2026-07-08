@@ -176,7 +176,8 @@ const defaultConfig: GameConfig = {
   difficulty: 'normal',
   draftMode: 'squad_first',
   ratingMode: 'season',
-  eraFilter: 'all',
+  eraStartYear: 2000,
+  eraEndYear: 2025,
 };
 
 const defaultProfileStats: ProfileStats = {
@@ -1164,7 +1165,13 @@ export const useGameStore = create<GameState>()(
       },
 
       goHome: () => {
-        set({ screen: 'home' });
+        const { seasonResult } = get();
+        // If season is complete, clear the run so "Продолжить драфт" doesn't appear
+        if (seasonResult) {
+          set({ screen: 'home', runId: null, seasonResult: null });
+        } else {
+          set({ screen: 'home' });
+        }
       },
 
       resumeGame: () => {

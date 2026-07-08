@@ -646,27 +646,7 @@ export default function FormationView() {
           )}
         </div>
 
-        {/* Move player button */}
-        {canMove && filledCount > 0 && movingPlayerSlotIndex === null && (
-          <button
-            onClick={() => useGameStore.setState({ movingPlayerSlotIndex: -1 })}
-            className="text-[10px] font-medium px-2.5 py-1 rounded-md text-white/60 hover:bg-white/10 hover:text-white/80 transition-colors active:scale-95"
-            style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-          >
-            Переставить игрока
-          </button>
-        )}
-
-        {/* Cancel moving */}
-        {movingPlayerSlotIndex !== null && (
-          <button
-            onClick={() => finishMoving()}
-            className="text-[10px] font-medium px-2.5 py-1 rounded-md text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors active:scale-95"
-            style={{ backgroundColor: '#ef444410', border: '1px solid #ef444420' }}
-          >
-            Отмена
-          </button>
-        )}
+        {/* Move player button removed - players can tap on positions to rearrange */}
       </div>
 
       {/* Position Legend — matching 38-0 style */}

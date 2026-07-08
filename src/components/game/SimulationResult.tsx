@@ -133,7 +133,7 @@ export default function SimulationResult() {
         }
         return prev + 1;
       });
-    }, 150);
+    }, 500);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -225,7 +225,7 @@ export default function SimulationResult() {
   // Visible matches (show last 3 up to current matchweek)
   const visibleMatches = useMemo(() => {
     const upTo = Math.min(currentMatchweek, matches.length);
-    return matches.slice(Math.max(0, upTo - 3), upTo).reverse();
+    return matches.slice(Math.max(0, upTo - 5), upTo).reverse();
   }, [matches, currentMatchweek]);
 
   // Share handler
@@ -339,7 +339,7 @@ export default function SimulationResult() {
         </div>
       )}
 
-      {/* ── LIVE Stats (during simulation) ── */}
+      {/* ── LIVE Stats (during simulation) — moved below match results ── */}
       {!isComplete && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -586,6 +586,13 @@ export default function SimulationResult() {
               transition={{ delay: 2.0 }}
               className="space-y-3"
             >
+              <Button
+                onClick={() => goHome()}
+                className="w-full h-12 text-base font-black text-white rounded-xl"
+                style={{ backgroundColor: '#00C896' }}
+              >
+                Завершить сезон
+              </Button>
               <Button
                 onClick={() => setScreen('awards')}
                 className="w-full h-14 text-base font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-xl shadow-lg shadow-[#00C896]/25 transition-all hover:shadow-[#00C896]/40"
