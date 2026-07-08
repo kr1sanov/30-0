@@ -106,6 +106,9 @@ model GameRun {
   draftMode    String   @default("squad_first")
   ratingMode   String   @default("season")
   eraFilter    String   @default("all")
+  eraStartYear Int      @default(2000)
+  eraEndYear   Int      @default(2025)
+  clubFilter   String?
   rerollsTotal Int      @default(1)
   rerollsUsed  Int      @default(0)
 

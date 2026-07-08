@@ -2,7 +2,6 @@ import { db } from '@/lib/db';
 import { canFillSlot } from '@/lib/positions';
 import { filterCompatibleClubSeasons, spinWheel } from '@/lib/wheel';
 import type { ClubSeasonWithPlayers } from '@/lib/wheel';
-import { ERA_CONFIG } from '@/lib/types';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -53,14 +52,8 @@ export async function POST(
       draftedSlots.map((s) => s.playerSeasonId).filter(Boolean) as string[],
     );
 
-    const minYear = 2000;
-    const maxYear = 2025;
-
-    // Determine era range from run config
-    const eraStartYear = (run as Record<string, unknown>).eraStartYear as number | undefined;
-    const eraEndYear = (run as Record<string, unknown>).eraEndYear as number | undefined;
-    const startYear = eraStartYear ?? minYear;
-    const endYear = eraEndYear ?? maxYear;
+    const startYear = run.eraStartYear ?? 2000;
+    const endYear = run.eraEndYear ?? 2025;
 
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({
