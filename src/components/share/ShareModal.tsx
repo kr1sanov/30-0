@@ -17,15 +17,12 @@ interface ShareModalProps {
 
 export default function ShareModal({ isOpen, onClose, shareText, cardContent }: ShareModalProps) {
   const { user } = useAuthStore();
-  const [isCapturing, setIsCapturing] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const inviteUrl = user?.referralCode
-    ? `https://t.me/RPL30_bot/app?startapp=${user.referralCode}`
-    : 'https://t.me/RPL30_bot';
+  const inviteUrl = 'https://t.me/RPL30_bot/app?startapp';
 
-  const fullText = `${shareText}\n\n🎮 Попробуй: ${inviteUrl}`;
+  const fullText = `${shareText}\n\n${inviteUrl}`;
 
   const captureCard = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
@@ -65,7 +62,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
       }
     }
 
-    // Fallback: Telegram text share with link
+    // Fallback: Telegram text share with link and image
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(shareText)}`;
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       try {
@@ -81,28 +78,6 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     setIsSharing(false);
     onClose();
   }, [captureCard, fullText, shareText, inviteUrl, onClose]);
-
-  const handleSaveImage = useCallback(async () => {
-    setIsCapturing(true);
-    const blob = await captureCard();
-    if (blob) {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = '30-0-rpl-share.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-    setIsCapturing(false);
-  }, [captureCard]);
-
-  const handleCopyText = useCallback(() => {
-    navigator.clipboard.writeText(fullText).then(() => {
-      onClose();
-    }).catch(() => {});
-  }, [fullText, onClose]);
 
   return (
     <AnimatePresence>
@@ -141,7 +116,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
             <div style={{ padding: '0 20px 20px' }}>
               {/* Title */}
               <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 800, marginBottom: 16, textAlign: 'center' }}>
-                Поделиться
+                Поделиться в Telegram
               </h3>
 
               {/* Card preview */}
@@ -179,53 +154,26 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 </pre>
               </div>
 
-              {/* Action buttons */}
+              {/* Action buttons - only Telegram */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Telegram share */}
                 <button
                   onClick={handleShareTelegram}
                   disabled={isSharing}
                   style={{
-                    width: '100%', padding: '12px 0', borderRadius: 12,
-                    background: '#2AABEE', color: '#fff',
-                    fontSize: 14, fontWeight: 700,
+                    width: '100%', padding: '14px 0', borderRadius: 12,
+                    background: 'linear-gradient(135deg, #2AABEE 0%, #229ED9 100%)',
+                    color: '#fff',
+                    fontSize: 15, fontWeight: 700,
                     border: 'none', cursor: isSharing ? 'wait' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    boxShadow: '0 4px 15px rgba(42, 171, 238, 0.3)',
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.02-1.628 4.472-1.636z"/>
                   </svg>
-                  {isSharing ? 'Открываю...' : 'Поделиться в Telegram'}
-                </button>
-
-                {/* Save image */}
-                <button
-                  onClick={handleSaveImage}
-                  disabled={isCapturing}
-                  style={{
-                    width: '100%', padding: '10px 0', borderRadius: 12,
-                    background: 'transparent', color: '#9CA3AF',
-                    fontSize: 13, fontWeight: 600,
-                    border: '1px solid #2a2a2a', cursor: isCapturing ? 'wait' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  }}
-                >
-                  📥 {isCapturing ? 'Сохраняю...' : 'Сохранить картинку'}
-                </button>
-
-                {/* Copy text */}
-                <button
-                  onClick={handleCopyText}
-                  style={{
-                    width: '100%', padding: '10px 0', borderRadius: 12,
-                    background: 'transparent', color: '#64748b',
-                    fontSize: 13, fontWeight: 600,
-                    border: '1px solid #1f1f1f', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  }}
-                >
-                  📋 Скопировать текст
+                  {isSharing ? 'Открываю Telegram...' : 'Поделиться в Telegram'}
                 </button>
 
                 {/* Close */}
@@ -240,19 +188,6 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                   Отмена
                 </button>
               </div>
-
-              {/* Referral info */}
-              {user?.referralCode && (
-                <div style={{
-                  marginTop: 12, padding: 10, borderRadius: 8,
-                  background: `${ACCENT}08`, border: `1px solid ${ACCENT}20`,
-                  textAlign: 'center',
-                }}>
-                  <span style={{ color: ACCENT, fontSize: 10, fontWeight: 600 }}>
-                    🎁 Твоя реферальная ссылка: t.me/RPL30_bot/app?startapp={user.referralCode}
-                  </span>
-                </div>
-              )}
             </div>
           </motion.div>
         </>
