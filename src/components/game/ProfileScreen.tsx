@@ -8,6 +8,7 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import ShareModal from '@/components/share/ShareModal';
 import ProfileShareCard from '@/components/share/ProfileShareCard';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -40,6 +41,7 @@ export default function ProfileScreen() {
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
+  const { haptic, notify, showConfirm, isTelegram, showSecondaryButton, hideSecondaryButton, showAlert } = useTelegram();
 
   const winRate = profileStats.totalSeasons > 0
     ? Math.round((profileStats.totalWins / (profileStats.totalSeasons * 30)) * 100)
@@ -73,8 +75,12 @@ export default function ProfileScreen() {
     if (editName.trim().length >= 2) {
       updateDisplayName(editName.trim());
       setIsEditingName(false);
+      haptic('light');
+      notify('success');
       toast.success('Никнейм обновлён!');
     } else {
+      haptic('heavy');
+      notify('error');
       toast.error('Минимум 2 символа');
     }
   };
@@ -472,7 +478,7 @@ export default function ProfileScreen() {
       {/* Share Profile */}
       <div className="space-y-3">
         <Button
-          onClick={() => setIsShareOpen(true)}
+          onClick={() => { haptic('light'); setIsShareOpen(true); }}
           variant="outline"
           className="w-full h-12 text-sm font-bold border-[#2AABEE]/30 text-[#2AABEE] hover:bg-[#2AABEE]/10 rounded-xl"
         >

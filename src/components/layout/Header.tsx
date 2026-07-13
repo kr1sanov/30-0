@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { Home, User, HelpCircle } from 'lucide-react';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const GAME_SCREENS = new Set([
   'draft',
@@ -19,6 +20,11 @@ const GAME_SCREENS = new Set([
 export default function Header() {
   const { screen, goHome, resetGame, runId } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const { haptic, isTelegram, safeAreaInset } = useTelegram();
+
+  const handleHaptic = () => {
+    haptic('light');
+  };
 
   // Mode 1: Home screen — show a minimal header with navigation
   if (screen === 'home') {
@@ -34,7 +40,7 @@ export default function Header() {
           {/* Right: Navigation buttons */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowHowToPlay(true)}
+              onClick={() => { handleHaptic(); setShowHowToPlay(true); }}
               className="p-2.5 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
               title="Как играть"
             >
@@ -42,7 +48,7 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => useGameStore.getState().setScreen('profile')}
+              onClick={() => { handleHaptic(); useGameStore.getState().setScreen('profile'); }}
               className="p-2.5 text-[#9CA3AF] hover:text-[#FFFFFF] rounded-lg hover:bg-[#141414] transition-all"
               title="Профиль"
             >
@@ -54,14 +60,18 @@ export default function Header() {
     );
   }
 
-  // Mode 2: Game screens — subtle overlay buttons
+  // Mode 2: Game screens — subtle overlay buttons (respect safe area)
   if (GAME_SCREENS.has(screen)) {
+    // In Telegram, adjust top position for safe area (notch/dynamic island)
+    const topOffset = isTelegram && safeAreaInset.top > 0 ? safeAreaInset.top + 4 : 16;
+
     return (
       <>
         {/* Subtle home button — top left */}
         <button
-          onClick={goHome}
-          className="fixed top-4 left-4 z-50 w-11 h-11 flex items-center justify-center rounded-full bg-black/30 opacity-50 hover:opacity-100 transition-opacity duration-200 text-white/70 hover:text-white"
+          onClick={() => { handleHaptic(); goHome(); }}
+          className="fixed z-50 w-11 h-11 flex items-center justify-center rounded-full bg-black/30 opacity-50 hover:opacity-100 transition-opacity duration-200 text-white/70 hover:text-white"
+          style={{ top: topOffset, left: 16 }}
           aria-label="Домой"
           title="Домой"
         >
@@ -70,8 +80,9 @@ export default function Header() {
 
         {/* Subtle profile button — top right */}
         <button
-          onClick={() => useGameStore.getState().setScreen('profile')}
-          className="fixed top-4 right-4 z-50 w-11 h-11 flex items-center justify-center rounded-full bg-black/30 opacity-50 hover:opacity-100 transition-opacity duration-200 text-white/70 hover:text-white"
+          onClick={() => { handleHaptic(); useGameStore.getState().setScreen('profile'); }}
+          className="fixed z-50 w-11 h-11 flex items-center justify-center rounded-full bg-black/30 opacity-50 hover:opacity-100 transition-opacity duration-200 text-white/70 hover:text-white"
+          style={{ top: topOffset, right: 16 }}
           aria-label="Профиль"
           title="Профиль"
         >
@@ -85,6 +96,7 @@ export default function Header() {
 
   // Mode 3: Setup, profile, etc. — normal header with buttons
   const handleHome = () => {
+    handleHaptic();
     if (screen === 'home') return;
     if (runId) {
       goHome();
@@ -109,7 +121,7 @@ export default function Header() {
           {/* Right: Navigation buttons */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowHowToPlay(true)}
+              onClick={() => { handleHaptic(); setShowHowToPlay(true); }}
               className="p-2.5 text-[#9CA3AF] hover:text-[#00C896] rounded-lg hover:bg-[#141414] transition-all"
               title="Как играть"
             >
@@ -117,7 +129,7 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => useGameStore.getState().setScreen('profile')}
+              onClick={() => { handleHaptic(); useGameStore.getState().setScreen('profile'); }}
               className="p-2.5 text-[#9CA3AF] hover:text-[#FFFFFF] rounded-lg hover:bg-[#141414] transition-all"
               title="Профиль"
             >

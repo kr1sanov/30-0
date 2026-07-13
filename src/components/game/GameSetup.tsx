@@ -13,6 +13,7 @@ import type { Position, PositionCategory } from '@/lib/positions';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -232,12 +233,15 @@ function PillButton({
 
 export default function GameSetup() {
   const { config, setConfig, startRun } = useGameStore();
+  const { haptic, selectionChanged } = useTelegram();
 
   const handleStart = async () => {
+    haptic('medium'); // Haptic when starting the game
     await startRun();
   };
 
   const handleFormationSelect = (formationId: string) => {
+    selectionChanged(); // Light haptic for selection change
     setConfig({ formation: formationId });
   };
 

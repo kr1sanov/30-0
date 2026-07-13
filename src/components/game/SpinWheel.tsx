@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Loader2 } from 'lucide-react';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -236,6 +237,7 @@ function EmptyField({ label, value, onClear }: { label: string; value: string | 
 export default function SpinWheel() {
   const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config, skipSpin } =
     useGameStore();
+  const { haptic, notify, selectionChanged } = useTelegram();
 
   const openCount = slots.filter((s) => !s.playerId).length;
   const hasResult = !!currentSpin;
@@ -248,13 +250,15 @@ export default function SpinWheel() {
   /* ── User actions ── */
   const handleSpin = useCallback(async () => {
     if (isSpinning) return;
+    haptic('medium'); // Haptic on spin start
     await spin();
-  }, [isSpinning, spin]);
+  }, [isSpinning, spin, haptic]);
 
   const handleReroll = useCallback(async () => {
     if (isSpinning || rerollsLeft <= 0) return;
+    haptic('light'); // Haptic on reroll
     await reroll();
-  }, [isSpinning, rerollsLeft, reroll]);
+  }, [isSpinning, rerollsLeft, reroll, haptic]);
 
   // Spacebar support & tap-to-spin
   useEffect(() => {

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShareModal from '@/components/share/ShareModal';
 import ResultShareCard from '@/components/share/ResultShareCard';
+import { useTelegram } from '@/hooks/use-telegram';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -115,8 +116,10 @@ const trophyVariants = {
 
 export default function SimulationResult() {
   const { seasonResult, resetGame, goHome, slots, setScreen, config } = useGameStore();
+  const { haptic, notify, showConfirm, isTelegram, showSecondaryButton, hideSecondaryButton } = useTelegram();
   const [currentMatchweek, setCurrentMatchweek] = useState(0);
   const [showTable, setShowTable] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const data = seasonResult as SeasonResultData | null;
@@ -144,11 +147,38 @@ export default function SimulationResult() {
 
   const isComplete = currentMatchweek >= totalMatches;
 
+  // Haptic on simulation completion
+  useEffect(() => {
+    if (isComplete && data) {
+      if (data.position === 1) {
+        notify('success');
+        haptic('heavy');
+      } else if (data.position <= 4) {
+        notify('success');
+        haptic('medium');
+      } else {
+        haptic('light');
+      }
+    }
+  }, [isComplete, data, notify, haptic]);
+
+  // Show Telegram SecondaryButton for sharing when result is complete
+  useEffect(() => {
+    if (!isTelegram || !isComplete) return;
+
+    showSecondaryButton('📤 Поделиться', () => setIsShareOpen(true));
+
+    return () => {
+      hideSecondaryButton();
+    };
+  }, [isTelegram, isComplete, showSecondaryButton, hideSecondaryButton]);
+
   // Skip all
   const handleSkipAll = useCallback(() => {
+    haptic('light');
     if (intervalRef.current) clearInterval(intervalRef.current);
     setCurrentMatchweek(totalMatches);
-  }, [totalMatches]);
+  }, [totalMatches, haptic]);
 
   // Current stats up to currentMatchweek
   const currentStats = useMemo(() => {
@@ -229,8 +259,6 @@ export default function SimulationResult() {
     const upTo = Math.min(currentMatchweek, matches.length);
     return matches.slice(Math.max(0, upTo - 5), upTo).reverse();
   }, [matches, currentMatchweek]);
-
-  const [isShareOpen, setIsShareOpen] = useState(false);
 
   // Share text
   const shareText = useMemo(() => {
@@ -585,27 +613,31 @@ export default function SimulationResult() {
               className="space-y-3"
             >
               <Button
-                onClick={() => goHome()}
+                onClick={() => { haptic('light'); goHome(); }}
                 className="w-full h-12 text-base font-black text-white rounded-xl"
                 style={{ backgroundColor: '#00C896' }}
               >
                 Завершить сезон
               </Button>
               <Button
-                onClick={() => setScreen('awards')}
+                onClick={() => { haptic('medium'); setScreen('awards'); }}
                 className="w-full h-14 text-base font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-xl shadow-lg shadow-[#00C896]/25 transition-all hover:shadow-[#00C896]/40"
               >
                 🏆 Награды сезона
               </Button>
               <div className="flex gap-3">
                 <Button
-                  onClick={resetGame}
+                  onClick={async () => {
+                    haptic('light');
+                    const confirmed = await showConfirm('Начать новый драфт? Текущий результат будет сохранён.');
+                    if (confirmed) resetGame();
+                  }}
                   className="flex-1 h-11 rounded-xl bg-[#00C896] hover:bg-[#00A67A] text-white font-bold shadow-lg shadow-[#00C896]/20"
                 >
                   🔄 Играть снова
                 </Button>
                 <Button
-                  onClick={() => setIsShareOpen(true)}
+                  onClick={() => { haptic('light'); setIsShareOpen(true); }}
                   variant="outline"
                   className="flex-1 h-11 rounded-xl border-[#1E1E1E] text-[#9CA3AF] hover:bg-[#141414] hover:text-[#FFFFFF]"
                 >

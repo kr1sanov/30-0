@@ -438,3 +438,116 @@ Stage Summary:
 - ShareModal: preview + multiple share methods (Telegram, save image, copy text)
 - Referral deep links embedded in all shares
 - Pushed to main, Vercel auto-deploy triggered
+
+---
+Task ID: 3
+Agent: fullstack-developer
+Task: Full Telegram Mini Apps SDK Integration Audit & Implementation
+
+Work Log:
+- Rewrote `/home/z/my-project/src/hooks/use-telegram.ts` from scratch with comprehensive types and features:
+  - Added complete TypeScript type declarations for ALL Telegram WebApp SDK interfaces (WebApp, MainButton, SecondaryButton, BackButton, SettingsButton, HapticFeedback, ClosingBehaviour, CloudStorage, BiometricManager, SafeAreaInset, ContentSafeAreaInset, ViewportData, PopupParams, PopupButton, ThemeParams, InitDataUnsafe, TelegramUser, Chat)
+  - Added TelegramEventType union type for typed event listener management
+  - Implemented UseTelegramReturn interface for full hook return type
+  - Hook auto-initializes in Telegram context, gracefully falls back outside Telegram
+  - Exposes all SDK features with proper TypeScript types and safe fallbacks:
+    - **HapticFeedback**: haptic(), notify(), selectionChanged()
+    - **MainButton**: showMainButton(), hideMainButton(), updateMainButton() with click handler lifecycle management
+    - **SecondaryButton**: showSecondaryButton(), hideSecondaryButton()
+    - **BackButton**: showBackButton(), hideBackButton()
+    - **Closing Behaviour**: enableClosingConfirmation(), disableClosingConfirmation()
+    - **Fullscreen**: requestFullscreen(), exitFullscreen()
+    - **Alerts & Popups**: showAlert() (Promise-based), showConfirm() (Promise<boolean>), showPopup() (Promise<string>) — with browser fallbacks
+    - **Sharing**: shareToTelegram(), switchInlineQuery()
+    - **Links**: openLink(), openTelegramLink()
+    - **CloudStorage**: cloudStorageSetItem/GetItem/GetKeys/RemoveItem (with localStorage fallback)
+    - **Home Screen**: addToHomeScreen(), checkHomeScreenStatus()
+    - **Events**: onTelegramEvent(), offTelegramEvent()
+    - **Clipboard**: readTextFromClipboard()
+    - **State tracking**: isExpanded, colorScheme, themeParams, safeAreaInset, contentSafeAreaInset, viewportHeight, platform, version
+  - Event listeners for themeChanged, viewportChanged, safeAreaChanged, contentSafeAreaChanged, fullscreenChanged with cleanup on unmount
+  - Re-applies dark theme colors (#0A0A0A) when Telegram theme changes
+  - Uses microtask (Promise.resolve) for initial state setting to avoid synchronous setState in effect (lint compliance)
+  - Proper click handler lifecycle (offClick before onClick) with refs to prevent leaks
+
+- Updated `/home/z/my-project/src/app/page.tsx`:
+  - Destructured full Telegram hook with BackButton, MainButton, closing confirmation, fullscreen, safe area
+  - Added screen-aware Telegram BackButton: shows on all screens except home, clicking goes back to home
+  - Added closing confirmation: enabled during active gameplay (draft, simulation), disabled on home/setup/profile
+  - Added fullscreen: requested during draft and simulation screens, exited on other screens
+  - Applied safe area insets to root container (padding top/bottom/left/right for notch/dynamic island)
+  - MainButton hidden on all screens (SecondaryButton used for share actions instead)
+
+- Updated `/home/z/my-project/src/components/layout/Header.tsx`:
+  - Added haptic feedback on all button clicks (home, profile, help)
+  - Respects safe area insets: game screen overlay buttons (home/profile) adjust topOffset for notch/dynamic island devices
+  - Uses useTelegram hook for isTelegram and safeAreaInset
+
+- Updated `/home/z/my-project/src/components/share/ShareModal.tsx`:
+  - Uses shareToTelegram() from useTelegram hook instead of manual window.Telegram check
+  - Added haptic feedback on share button click and success notification
+  - Uses notify('success') haptic on successful share
+
+- Updated `/home/z/my-project/src/components/game/SimulationResult.tsx`:
+  - Added haptic feedback on simulation completion (heavy for champion, medium for top-4, light otherwise)
+  - Added notify() haptic for success/warning/error
+  - Shows Telegram SecondaryButton for sharing when result is complete
+  - Uses showConfirm() for "Play again" confirmation (native Telegram dialog or browser confirm fallback)
+  - Added haptic on skip, home, awards, and share buttons
+  - Fixed isShareOpen state declaration (moved to top to avoid "accessed before declared" lint error)
+
+- Updated `/home/z/my-project/src/components/game/ProfileScreen.tsx`:
+  - Added haptic feedback on save name (light + success notify on success, heavy + error notify on error)
+  - Added haptic feedback on share button click
+  - Uses useTelegram hook for haptic, notify, showConfirm, showAlert
+
+- Updated `/home/z/my-project/src/components/game/SpinWheel.tsx`:
+  - Added haptic('medium') on spin start
+  - Added haptic('light') on reroll
+
+- Updated `/home/z/my-project/src/components/game/FormationView.tsx`:
+  - Added haptic('light') + notify('success') on successful player assignment
+  - Added haptic('heavy') + notify('error') on incompatible position
+
+- Updated `/home/z/my-project/src/components/game/PlayerList.tsx`:
+  - Added selectionChanged() haptic on player selection (subtle tick feedback)
+
+- Updated `/home/z/my-project/src/components/game/GameSetup.tsx`:
+  - Added haptic('medium') on game start
+  - Added selectionChanged() on formation selection
+
+- Updated `/home/z/my-project/src/components/game/ManagerChoice.tsx`:
+  - Added haptic('medium') on manager spin
+  - Added haptic('light') on "with manager" button
+
+- Updated `/home/z/my-project/src/components/game/SeasonAwards.tsx`:
+  - Added haptic('light') on home and profile navigation buttons
+
+- Ran `bun run lint` — only pre-existing script errors remain (require() in scripts/), zero errors in src/
+
+### Intentionally Skipped Features (with reasoning):
+- **BiometricManager**: Not relevant for a game app — no sensitive data to protect
+- **SettingsButton**: No settings screen to link to
+- **sendData()**: Only works in inline mode, not in WebApp mode
+- **invoiceClosed / payments**: No in-app purchases
+- **qrTextReceived**: No QR scanning use case
+- **writeAccessRequested / contactRequested**: No PM functionality needed
+- **CloudStorage for profile sync**: Hook supports it, but actual integration would need backend sync which already exists via Supabase. localStorage fallback is sufficient for now.
+- **addToHomeScreen prompt**: Hook supports it, but no automatic prompting added — would need careful UX design to avoid annoying users
+- **switchInlineQuery**: Hook supports it, but no UI trigger added — the share modal is sufficient for sharing results
+- **prepareMessage**: Deprecated/removed in newer SDK versions
+
+Stage Summary:
+- ✅ Comprehensive useTelegram hook with full SDK type declarations and feature coverage
+- ✅ BackButton navigation integrated (screen-aware, lifecycle-managed)
+- ✅ MainButton/SecondaryButton lifecycle managed (cleanup on unmount)
+- ✅ Closing confirmation during gameplay, disabled on safe screens
+- ✅ Fullscreen request during draft/simulation
+- ✅ Safe area insets respected on root container and header overlay buttons
+- ✅ Theme change listener with dark theme re-application
+- ✅ Viewport change listener with isExpanded state tracking
+- ✅ Haptic feedback on ALL key interactions (spin, select, assign, confirm, navigate)
+- ✅ showAlert/showConfirm with Telegram native dialogs + browser fallbacks
+- ✅ CloudStorage API with localStorage fallback
+- ✅ All changes lint-clean (src/ only, scripts/ pre-existing)
+- ✅ Dev server compiles successfully (HTTP 200)

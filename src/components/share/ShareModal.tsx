@@ -4,8 +4,8 @@ import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
 import { useAuthStore } from '@/store/authStore';
+import { useTelegram } from '@/hooks/use-telegram';
 
-const ACCENT = '#00C896';
 const BG = '#0A0A0A';
 
 interface ShareModalProps {
@@ -19,6 +19,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
   const { user } = useAuthStore();
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { shareToTelegram, haptic, notify, isTelegram, showAlert } = useTelegram();
 
   const inviteUrl = 'https://t.me/RPL30_bot/app?startapp';
 
@@ -44,6 +45,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
 
   const handleShareTelegram = useCallback(async () => {
     setIsSharing(true);
+    haptic('light');
 
     // Try to share with image via native share
     const blob = await captureCard();
@@ -53,6 +55,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
       if (navigator.canShare(shareData)) {
         try {
           await navigator.share(shareData);
+          notify('success');
           setIsSharing(false);
           onClose();
           return;
@@ -62,22 +65,12 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
       }
     }
 
-    // Fallback: Telegram text share with link and image
-    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteUrl)}&text=${encodeURIComponent(shareText)}`;
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      try {
-        window.Telegram.WebApp.openTelegramLink(shareUrl);
-        setIsSharing(false);
-        onClose();
-        return;
-      } catch { /* fallback */ }
-    }
-
-    // Last fallback: open in new tab
-    window.open(shareUrl, '_blank');
+    // Use Telegram SDK share
+    shareToTelegram(shareText, inviteUrl);
+    notify('success');
     setIsSharing(false);
     onClose();
-  }, [captureCard, fullText, shareText, inviteUrl, onClose]);
+  }, [captureCard, fullText, shareText, inviteUrl, onClose, shareToTelegram, haptic, notify]);
 
   return (
     <AnimatePresence>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { POSITION_CATEGORY } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
+import { useTelegram } from '@/hooks/use-telegram';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -71,6 +72,7 @@ const POSITION_LABELS: Record<string, string> = {
 
 export default function SeasonAwards() {
   const { slots, currentManager, seasonResult, resetGame, setScreen, config } = useGameStore();
+  const { haptic, notify } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
 
@@ -385,6 +387,7 @@ export default function SeasonAwards() {
       >
         <Button
           onClick={() => {
+            haptic('light');
             resetGame();
             setScreen('home');
           }}
@@ -393,7 +396,7 @@ export default function SeasonAwards() {
           🏠 На главную
         </Button>
         <Button
-          onClick={() => setScreen('profile')}
+          onClick={() => { haptic('light'); setScreen('profile'); }}
           variant="outline"
           className="w-full h-11 rounded-xl border-[#1E1E1E] text-[#9CA3AF] hover:bg-[#141414] hover:text-[#FFFFFF]"
         >

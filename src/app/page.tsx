@@ -1145,7 +1145,21 @@ export default function Home() {
 
   // Initialize Telegram auth and hooks
   useTelegramAuth();
-  const { haptic, notify } = useTelegram();
+  const {
+    haptic,
+    notify,
+    isTelegram,
+    showBackButton,
+    hideBackButton,
+    showMainButton,
+    hideMainButton,
+    updateMainButton,
+    enableClosingConfirmation,
+    disableClosingConfirmation,
+    requestFullscreen,
+    exitFullscreen,
+    safeAreaInset,
+  } = useTelegram();
   const authUser = useAuthStore((s) => s.user);
 
   // Initialize Telegram WebApp on mount and set gameStore's telegramUser
@@ -1194,6 +1208,41 @@ export default function Home() {
     }
   }, [screen]);
 
+  // ── Telegram BackButton integration ──
+  // Show BackButton on all screens except home; clicking it goes back
+  useEffect(() => {
+    if (!isTelegram) return;
+
+    const GAME_SCREENS_SET = new Set(['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards']);
+
+    if (screen === 'home') {
+      hideBackButton();
+      hideMainButton();
+      disableClosingConfirmation();
+      exitFullscreen();
+    } else if (screen === 'setup' || screen === 'profile') {
+      showBackButton(() => useGameStore.getState().goHome());
+      hideMainButton();
+      disableClosingConfirmation();
+      exitFullscreen();
+    } else if (GAME_SCREENS_SET.has(screen)) {
+      showBackButton(() => useGameStore.getState().goHome());
+      enableClosingConfirmation();
+      // Request fullscreen during active gameplay
+      if (['draft', 'position-assign', 'simulation'].includes(screen)) {
+        requestFullscreen();
+      } else {
+        exitFullscreen();
+      }
+    } else {
+      hideBackButton();
+      hideMainButton();
+      disableClosingConfirmation();
+    }
+
+    // Cleanup on unmount is handled by the hook internally
+  }, [screen, isTelegram, showBackButton, hideBackButton, showMainButton, hideMainButton, enableClosingConfirmation, disableClosingConfirmation, requestFullscreen, exitFullscreen]);
+
   const renderScreen = useCallback(() => {
     switch (screen) {
       case 'home':
@@ -1224,11 +1273,23 @@ export default function Home() {
   }, [screen]);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-[#0A0A0A]">
+    <div
+      className="min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
+      style={{
+        paddingTop: safeAreaInset.top > 0 ? `${safeAreaInset.top}px` : undefined,
+        paddingLeft: safeAreaInset.left > 0 ? `${safeAreaInset.left}px` : undefined,
+        paddingRight: safeAreaInset.right > 0 ? `${safeAreaInset.right}px` : undefined,
+      }}
+    >
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header />
-      <main className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10">
+      <main
+        className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10"
+        style={{
+          paddingBottom: safeAreaInset.bottom > 0 ? `${safeAreaInset.bottom + 16}px` : undefined,
+        }}
+      >
         {renderScreen()}
       </main>
       <AchievementUnlocked />

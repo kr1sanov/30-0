@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
 import { MANAGERS, Manager } from '@/lib/managers';
 import { RotateCw, Sparkles, Zap, Dices } from 'lucide-react';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -593,6 +594,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
 export default function ManagerChoice() {
   const { spinManager, currentManager, isSpinningManager, setScreen } =
     useGameStore();
+  const { haptic, notify } = useTelegram();
 
   const [showSpinAnimation, setShowSpinAnimation] = useState(false);
   const [spinKey, setSpinKey] = useState(0);
@@ -602,6 +604,7 @@ export default function ManagerChoice() {
 
   const handleSpinManager = async () => {
     if (isSpinningManager) return;
+    haptic('medium'); // Haptic when spinning manager
     // Pick the manager locally so we can drive the reel animation toward it.
     const target =
       MANAGERS[Math.floor(Math.random() * MANAGERS.length)] || MANAGERS[0];
@@ -616,6 +619,7 @@ export default function ManagerChoice() {
   };
 
   const handleWithManager = () => {
+    haptic('light');
     setScreen('pre-match');
   };
 

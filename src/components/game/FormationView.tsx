@@ -11,6 +11,7 @@ import type { PositionCategory, Position } from '@/lib/positions';
 import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -217,6 +218,7 @@ export default function FormationView() {
     screen,
     justAssignedSlotIndex,
   } = useGameStore();
+  const { haptic, notify, selectionChanged } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
 
@@ -287,9 +289,13 @@ export default function FormationView() {
         slot.position as Position,
       );
       if (canFill) {
+        haptic('light');
+        notify('success');
         toast.success(`${selectedPlayer.fullName} → ${slot.positionLabel}`);
         assignToSlot(index);
       } else {
+        haptic('heavy');
+        notify('error');
         triggerShake(index);
         toast.error('Несовместимая позиция');
       }

@@ -8,6 +8,7 @@ import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -62,6 +63,7 @@ type SortMode = 'rating' | 'name';
 
 export default function PlayerList() {
   const { currentSpin, slots, config, assignToSlot, selectedPlayer, selectPlayer, deselectPlayer, skipSpin, lastDraftError } = useGameStore();
+  const { haptic, selectionChanged } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
   const [sortMode, setSortMode] = useState<SortMode>('rating');
@@ -132,8 +134,9 @@ export default function PlayerList() {
     }
 
     // Select this player — positions will expand inline
+    selectionChanged(); // Light haptic for selection
     selectPlayer(player as PlayerOption);
-  }, [selectedPlayer, deselectPlayer, selectPlayer]);
+  }, [selectedPlayer, deselectPlayer, selectPlayer, selectionChanged]);
 
   const handlePositionClick = useCallback((slotIndex: number) => {
     assignToSlot(slotIndex);
