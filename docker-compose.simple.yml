@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────
+# 30-0 RPL — Simple Docker Compose (SQLite)
+# ──────────────────────────────────────────────
+# No external database needed — SQLite is embedded
+# Data persists via named volume
+#
+# Usage:
+#   docker compose -f docker-compose.simple.yml up -d
+#   docker compose -f docker-compose.simple.yml logs -f app
+#   docker compose -f docker-compose.simple.yml down
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.sqlite
+    container_name: 30-0-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=file:/app/data/production.db
+    volumes:
+      - 30-0-data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  30-0-data:
+    driver: local

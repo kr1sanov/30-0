@@ -1,197 +1,246 @@
-# 🏟️ 30-0 RPL — Деплой
+# 🚀 Деплой 30-0 RPL
 
-## Архитектура
+Руководство по развёртыванию Telegram Mini App «30-0» на продакшн.
 
-```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   Vercel     │────▶│  Next.js App │────▶│  Supabase   │
-│   (CDN/Edge) │     │  (SSR/API)   │     │  (PostgreSQL)│
-└─────────────┘     └──────────────┘     └─────────────┘
-```
+## Системные требования
 
-## Варианты деплоя
-
-### 1. Vercel + Supabase (рекомендуется)
-
-**Supabase** — бесплатный PostgreSQL-хостинг с пулингом соединений.
-
-#### Шаг 1: Создать проект Supabase
-
-1. Перейдите на [supabase.com](https://supabase.com)
-2. Создайте новый проект
-3. Запишите `Project Ref`, `Password`, `Region`
-
-#### Шаг 2: Получить connection strings
-
-В Supabase Dashboard → Settings → Database:
-
-- **DATABASE_URL** (pooled, через PgBouncer):
-  ```
-  postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:6543/postgres?pgbouncer=true
-  ```
-- **DIRECT_URL** (direct, для миграций):
-  ```
-  postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
-  ```
-
-#### Шаг 3: Настроить Vercel
-
-```bash
-# Установить Vercel CLI
-npm i -g vercel
-
-# Логин
-vercel login
-
-# Привязать проект
-vercel link
-
-# Добавить переменные окружения
-vercel env add DATABASE_URL production
-vercel env add DIRECT_URL production
-
-# Задеплоить
-vercel --prod
-```
-
-Или через Vercel Dashboard:
-1. Import Git Repository
-2. Framework Preset: Next.js
-3. Build Command: `cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate && next build`
-4. Add Environment Variables: `DATABASE_URL`, `DIRECT_URL`
-
-#### Шаг 4: Применить миграции и сидировать
-
-```bash
-# Установить переменные окружения локально
-export DATABASE_URL="postgresql://postgres.PROJECT_REF:PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres"
-export DIRECT_URL="$DATABASE_URL"
-
-# Применить миграции
-npx prisma migrate deploy
-
-# Сидировать данные (5000+ игроков)
-bun run db:seed
-```
+- **Node.js** 20+ (рекомендуется 22)
+- **ОС**: Linux (Ubuntu 22.04+ / Debian 12+ / Alpine)
+- **RAM**: минимум 512 МБ
+- **Диск**: минимум 2 ГБ
+- **Docker** (опционально, но рекомендуется)
 
 ---
 
-### 2. Docker Compose (свой сервер)
+## Вариант 1: Docker (рекомендуется)
 
-#### Локальная разработка с PostgreSQL:
-
-```bash
-# Запустить PostgreSQL
-docker compose -f docker-compose.dev.yml up -d
-
-# Применить схему
-bun run schema:postgres
-bun run db:push
-
-# Сидировать данные
-bun run db:seed
-
-# Запустить dev-сервер
-bun run dev
-```
-
-#### Продакшн деплой:
+### 1. Подготовка
 
 ```bash
-# Настроить .env.production
+# Клонируем репозиторий
+git clone https://github.com/kr1sanov/30-0.git
+cd 30-0
+
+# Создаём .env.production
 cp .env.production.example .env.production
-# Отредактировать .env.production с вашими данными
+nano .env.production  # Заполняем значения
+```
 
-# Запустить все сервисы
-docker compose up -d
+### 2. Запуск
 
-# Применить миграции
-docker compose exec app npx prisma migrate deploy
+```bash
+# Быстрый старт через скрипт
+./deploy.sh
 
-# Сидировать данные
-docker compose exec app bun run db:seed
+# Или вручную
+docker build -f Dockerfile.sqlite -t 30-0-app .
+docker compose -f docker-compose.simple.yml up -d
+```
 
-# Проверить
-curl http://localhost:3000/api/formations
+### 3. Первичная инициализация БД
+
+При первом запуске нужно заполнить базу данными игроков РПЛ:
+
+```bash
+# Заходим в контейнер
+docker exec -it 30-0-app sh
+
+# Применяем схему и загружаем данные
+npx prisma db push
+npx tsx prisma/seed.ts
+```
+
+### 4. Полезные команды
+
+```bash
+docker compose -f docker-compose.simple.yml logs -f app   # Логи
+docker compose -f docker-compose.simple.yml restart        # Рестарт
+docker compose -f docker-compose.simple.yml down           # Остановка
 ```
 
 ---
 
-### 3. Локальная разработка (SQLite)
+## Вариант 2: Прямой запуск (без Docker)
 
-Для быстрой локальной разработки без Docker:
+### 1. Установка зависимостей
 
 ```bash
-# Использовать SQLite-схему
-bun run schema:sqlite
+# Клонируем
+git clone https://github.com/kr1sanov/30-0.git
+cd 30-0
 
-# Применить схему
-bun run db:push
+# Устанавливаем зависимости
+npm install
 
-# Сидировать данные
-bun run db:seed
-
-# Запустить dev-сервер
-bun run dev
+# Или через скрипт
+./deploy.sh --node
 ```
+
+### 2. Ручная сборка
+
+```bash
+# Переключаемся на SQLite-схему
+cp prisma/schema.sqlite.prisma prisma/schema.prisma
+npx prisma generate
+
+# Создаём директорию для данных
+mkdir -p data
+
+# Билдим
+NODE_ENV=production npm run build
+
+# Инициализируем БД
+DATABASE_URL="file:$(pwd)/data/production.db" npx prisma db push
+DATABASE_URL="file:$(pwd)/data/production.db" npx tsx prisma/seed.ts
+```
+
+### 3. Запуск через PM2
+
+```bash
+npm install -g pm2
+
+# Запускаем
+DATABASE_URL="file:/полный/путь/к/data/production.db" \
+  NODE_ENV=production \
+  pm2 start .next/standalone/server.js --name 30-0-app
+
+# Автозапуск при перезагрузке
+pm2 save
+pm2 startup
+```
+
+### 4. Nginx (reverse proxy)
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+Для HTTPS используйте Certbot:
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+---
+
+## Вариант 3: Джино (Jino)
+
+### Что нужно проверить
+
+1. **Поддержка Node.js** — убедитесь, что опция «Поддержка веб-приложений» (83 ₽/мес) позволяет запускать Node.js как долгоживущий процесс (не CGI)
+2. **SSH доступ** — нужен для управления приложением
+3. **Порт** — убедитесь, что можно слушать порт 3000 (или другой)
+4. **MySQL не нужен** — приложение использует SQLite, можно отключить и сэкономить
+
+### Шаги
+
+1. Создайте контейнер с поддержкой веб-приложений
+2. Зайдите по SSH
+3. Установите Node.js 22:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+4. Следуйте инструкции из «Вариант 2»
 
 ---
 
 ## Переменные окружения
 
-| Переменная | Описание | Обязательная |
+| Переменная | Обязательно | Описание |
 |---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string (pooled) | ✅ |
-| `DIRECT_URL` | PostgreSQL connection string (direct) | ✅ для миграций |
-| `NEXTAUTH_URL` | URL сайта (для аутентификации) | ❌ |
-| `NEXTAUTH_SECRET` | Секретный ключ NextAuth | ❌ |
+| `DATABASE_URL` | ✅ | Путь к SQLite файлу, например `file:/app/data/production.db` |
+| `TELEGRAM_BOT_TOKEN` | ✅ | Токен бота от @BotFather |
+| `NEXT_TELEMETRY_DISABLED` | ❌ | Установите `1` для отключения телеметрии |
+| `NODE_ENV` | ❌ | Установите `production` |
 
 ---
 
-## Полезные команды
+## Настройка Telegram Bot
+
+После деплоя обновите URL Mini App в @BotFather:
+
+1. Откройте @BotFather
+2. Выберите вашего бота (`@RPL30_bot`)
+3. `/myapps` → выберите «30-0»
+4. Обновите URL на: `https://your-domain.com`
+
+---
+
+## Мониторинг
 
 ```bash
-# Переключить схему на SQLite (для локальной разработки)
-bun run schema:sqlite
+# Здоровье приложения
+curl http://localhost:3000/
 
-# Переключить схему на PostgreSQL (для продакшена)
-bun run schema:postgres
+# Логи PM2
+pm2 logs 30-0-app
 
-# Prisma Studio — визуальный редактор БД
-bun run db:studio
+# Логи Docker
+docker compose -f docker-compose.simple.yml logs -f app
 
-# Сбросить базу данных
-bun run db:reset
-
-# Создать новую миграцию
-npx prisma migrate dev --name description
-
-# Применить миграции на продакшене
-npx prisma migrate deploy
+# Использование ресурсов
+pm2 monit    # для PM2
+docker stats  # для Docker
 ```
 
 ---
 
-## Структура файлов деплоя
+## Обновление
 
+```bash
+cd 30-0
+git pull origin main
+
+# Docker
+docker build -f Dockerfile.sqlite -t 30-0-app .
+docker compose -f docker-compose.simple.yml up -d
+
+# PM2
+npm install
+cp prisma/schema.sqlite.prisma prisma/schema.prisma
+npx prisma generate
+NODE_ENV=production npm run build
+pm2 restart 30-0-app
 ```
-30-0-rpl/
-├── prisma/
-│   ├── schema.prisma              # Активная схема (SQLite или PostgreSQL)
-│   ├── schema.sqlite.prisma       # SQLite схема для локальной разработки
-│   ├── schema.postgresql.prisma   # PostgreSQL схема для продакшена
-│   ├── seed.ts                    # Сид-данные (5000+ игроков РПЛ)
-│   └── migrations/                # PostgreSQL миграции
-├── supabase/
-│   └── config.toml                # Конфигурация Supabase
-├── scripts/
-│   └── deploy.sh                  # Скрипт деплоя
-├── Dockerfile                     # Multi-stage Docker build
-├── docker-compose.yml             # Продакшн: App + PostgreSQL + pgAdmin
-├── docker-compose.dev.yml         # Разработка: только PostgreSQL
-├── vercel.json                    # Конфигурация Vercel
-├── .env                           # Локальные переменные (gitignored)
-├── .env.example                   # Шаблон переменных
-├── .env.production                # Продакшн переменные (gitignored)
-└── next.config.ts                 # Конфигурация Next.js
+
+---
+
+## Бэкапы
+
+SQLite — это просто файл. Бэкап:
+
+```bash
+# Docker
+docker cp 30-0-app:/app/data/production.db ./backup-$(date +%Y%m%d).db
+
+# Прямой запуск
+cp data/production.db ./backup-$(date +%Y%m%d).db
+```
+
+Восстановление:
+
+```bash
+# Docker
+docker cp ./backup-20250101.db 30-0-app:/app/data/production.db
+docker compose -f docker-compose.simple.yml restart
+
+# Прямой запуск
+cp ./backup-20250101.db data/production.db
+pm2 restart 30-0-app
 ```

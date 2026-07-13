@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Club {
@@ -92,9 +91,6 @@ model User {
   photoUrl         String?
   displayName      String   @default("Игрок")
   profileStatsJson String?
-  referralCode     String   @unique
-  referredBy       String?
-  referralCount    Int      @default(0)
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -109,9 +105,6 @@ model GameRun {
   draftMode    String   @default("squad_first")
   ratingMode   String   @default("season")
   eraFilter    String   @default("all")
-  eraStartYear Int      @default(2000)
-  eraEndYear   Int      @default(2025)
-  clubFilter   String?
   rerollsTotal Int      @default(1)
   rerollsUsed  Int      @default(0)
 
