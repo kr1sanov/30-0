@@ -8,7 +8,7 @@
 - **ОС**: Linux (Ubuntu 22.04+ / Debian 12+ / Alpine)
 - **RAM**: минимум 512 МБ
 - **Диск**: минимум 2 ГБ
-- **Docker** (опционально, но рекомендуется)
+- **MySQL** 5.7+ / 8.0 (или Docker)
 
 ---
 
@@ -33,19 +33,20 @@ nano .env.production  # Заполняем значения
 ./deploy.sh
 
 # Или вручную
-docker build -f Dockerfile.sqlite -t 30-0-app .
-docker compose -f docker-compose.simple.yml up -d
+docker build -t 30-0-app .
+docker compose up -d
 ```
 
 ### 3. Первичная инициализация БД
 
-При первом запуске нужно заполнить базу данными игроков РПЛ:
+При первом запуске нужно создать таблицы и загрузить данные:
 
 ```bash
-# Заходим в контейнер
-docker exec -it 30-0-app sh
+# Через docker compose (одноразовый контейнер)
+docker compose run --rm migrate
 
-# Применяем схему и загружаем данные
+# Или вручную
+docker exec -it 30-0-app sh
 npx prisma db push
 npx tsx prisma/seed.ts
 ```
@@ -53,110 +54,98 @@ npx tsx prisma/seed.ts
 ### 4. Полезные команды
 
 ```bash
-docker compose -f docker-compose.simple.yml logs -f app   # Логи
-docker compose -f docker-compose.simple.yml restart        # Рестарт
-docker compose -f docker-compose.simple.yml down           # Остановка
+docker compose logs -f app     # Логи
+docker compose restart         # Рестарт
+docker compose down            # Остановка
+docker compose up -d --build   # Пересборка и запуск
 ```
 
 ---
 
-## Вариант 2: Прямой запуск (без Docker)
+## Вариант 2: Джино (Jino) — прямая установка
 
-### 1. Установка зависимостей
+### Что нужно проверить
+
+1. ✅ **Поддержка веб-приложений** (83 ₽/мес) — для запуска Node.js
+2. ✅ **MySQL** — база уже создана на хостинге
+3. ⚠️ **SSH доступ** — нужен для управления приложением
+4. ⚠️ **Порт 3000** — убедитесь, что можно слушать этот порт
+
+### Шаги
+
+1. Зайдите по SSH на сервер Джино
+2. Установите Node.js 22:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+   sudo apt install -y nodejs
+   ```
+3. Клонируйте репозиторий:
+   ```bash
+   git clone https://github.com/kr1sanov/30-0.git
+   cd 30-0
+   ```
+4. Установите зависимости и соберите:
+   ```bash
+   npm install
+
+   # Переключаемся на MySQL-схему
+   cp prisma/schema.mysql.prisma prisma/schema.prisma
+   npx prisma generate
+
+   # Создаём таблицы
+   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" npx prisma db push
+
+   # Загружаем данные игроков РПЛ
+   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" npx tsx prisma/seed.ts
+
+   # Билдим
+   NODE_ENV=production npm run build
+   ```
+5. Запустите через PM2:
+   ```bash
+   npm install -g pm2
+
+   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" \
+     TELEGRAM_BOT_TOKEN="ваш_токен" \
+     NODE_ENV=production \
+     pm2 start .next/standalone/server.js --name 30-0-app
+
+   pm2 save
+   pm2 startup
+   ```
+
+---
+
+## Вариант 3: VPS (Timeweb, Selectel и т.д.)
 
 ```bash
 # Клонируем
 git clone https://github.com/kr1sanov/30-0.git
 cd 30-0
 
-# Устанавливаем зависимости
+# Устанавливаем
 npm install
-
-# Или через скрипт
-./deploy.sh --node
-```
-
-### 2. Ручная сборка
-
-```bash
-# Переключаемся на SQLite-схему
-cp prisma/schema.sqlite.prisma prisma/schema.prisma
+cp prisma/schema.mysql.prisma prisma/schema.prisma
 npx prisma generate
 
-# Создаём директорию для данных
-mkdir -p data
+# Настраиваем .env.production
+cp .env.production.example .env.production
+nano .env.production
 
-# Билдим
+# Билдим и запускаем
 NODE_ENV=production npm run build
 
+# MySQL на том же сервере? Используем localhost:
+# DATABASE_URL=mysql://user:pass@localhost:3306/dbname
+
 # Инициализируем БД
-DATABASE_URL="file:$(pwd)/data/production.db" npx prisma db push
-DATABASE_URL="file:$(pwd)/data/production.db" npx tsx prisma/seed.ts
+npx prisma db push
+npx tsx prisma/seed.ts
+
+# Запуск через PM2
+pm2 start .next/standalone/server.js --name 30-0-app
+pm2 save && pm2 startup
 ```
-
-### 3. Запуск через PM2
-
-```bash
-npm install -g pm2
-
-# Запускаем
-DATABASE_URL="file:/полный/путь/к/data/production.db" \
-  NODE_ENV=production \
-  pm2 start .next/standalone/server.js --name 30-0-app
-
-# Автозапуск при перезагрузке
-pm2 save
-pm2 startup
-```
-
-### 4. Nginx (reverse proxy)
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-Для HTTPS используйте Certbot:
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com
-```
-
----
-
-## Вариант 3: Джино (Jino)
-
-### Что нужно проверить
-
-1. **Поддержка Node.js** — убедитесь, что опция «Поддержка веб-приложений» (83 ₽/мес) позволяет запускать Node.js как долгоживущий процесс (не CGI)
-2. **SSH доступ** — нужен для управления приложением
-3. **Порт** — убедитесь, что можно слушать порт 3000 (или другой)
-4. **MySQL не нужен** — приложение использует SQLite, можно отключить и сэкономить
-
-### Шаги
-
-1. Создайте контейнер с поддержкой веб-приложений
-2. Зайдите по SSH
-3. Установите Node.js 22:
-   ```bash
-   curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-   sudo apt install -y nodejs
-   ```
-4. Следуйте инструкции из «Вариант 2»
 
 ---
 
@@ -164,7 +153,7 @@ sudo certbot --nginx -d your-domain.com
 
 | Переменная | Обязательно | Описание |
 |---|---|---|
-| `DATABASE_URL` | ✅ | Путь к SQLite файлу, например `file:/app/data/production.db` |
+| `DATABASE_URL` | ✅ | MySQL подключение, например `mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155` |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Токен бота от @BotFather |
 | `NEXT_TELEMETRY_DISABLED` | ❌ | Установите `1` для отключения телеметрии |
 | `NODE_ENV` | ❌ | Установите `production` |
@@ -192,7 +181,7 @@ curl http://localhost:3000/
 pm2 logs 30-0-app
 
 # Логи Docker
-docker compose -f docker-compose.simple.yml logs -f app
+docker compose logs -f app
 
 # Использование ресурсов
 pm2 monit    # для PM2
@@ -208,12 +197,11 @@ cd 30-0
 git pull origin main
 
 # Docker
-docker build -f Dockerfile.sqlite -t 30-0-app .
-docker compose -f docker-compose.simple.yml up -d
+docker compose up -d --build
 
 # PM2
 npm install
-cp prisma/schema.sqlite.prisma prisma/schema.prisma
+cp prisma/schema.mysql.prisma prisma/schema.prisma
 npx prisma generate
 NODE_ENV=production npm run build
 pm2 restart 30-0-app
@@ -221,26 +209,24 @@ pm2 restart 30-0-app
 
 ---
 
-## Бэкапы
-
-SQLite — это просто файл. Бэкап:
+## Бэкапы MySQL
 
 ```bash
-# Docker
-docker cp 30-0-app:/app/data/production.db ./backup-$(date +%Y%m%d).db
+# Создать бэкап
+mysqldump -u j97915155 -p j97915155 > backup-$(date +%Y%m%d).sql
 
-# Прямой запуск
-cp data/production.db ./backup-$(date +%Y%m%d).db
+# Восстановить
+mysql -u j97915155 -p j97915155 < backup-20250101.sql
 ```
 
-Восстановление:
+---
 
-```bash
-# Docker
-docker cp ./backup-20250101.db 30-0-app:/app/data/production.db
-docker compose -f docker-compose.simple.yml restart
+## Структура схем Prisma
 
-# Прямой запуск
-cp ./backup-20250101.db data/production.db
-pm2 restart 30-0-app
-```
+| Файл | БД | Когда использовать |
+|------|----|----|
+| `schema.sqlite.prisma` | SQLite | Локальная разработка, простой деплой без MySQL |
+| `schema.mysql.prisma` | MySQL | Продакшн на Джино, VPS с MySQL |
+| `schema.postgresql.prisma` | PostgreSQL | Облачные БД (Supabase, VK Cloud) |
+
+Активная схема: `cp prisma/schema.<db>.prrisma prisma/schema.prisma && npx prisma generate`

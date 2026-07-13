@@ -1,13 +1,12 @@
 # ──────────────────────────────────────────────
 # 30-0 RPL — Docker Compose for Production
 # ──────────────────────────────────────────────
+# Uses external MySQL database (Jino hosting)
+#
 # Usage:
 #   docker compose up -d           # Start all services
 #   docker compose logs -f app     # View app logs
 #   docker compose down            # Stop all services
-#
-# For Supabase, set DATABASE_URL and DIRECT_URL in .env.production
-# For local PostgreSQL, uncomment the 'db' service below
 
 services:
   app:
@@ -24,58 +23,29 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - 30-0-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/formations"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
-  # ─── Local PostgreSQL (alternative to Supabase) ───
-  db:
-    image: postgres:16-alpine
-    container_name: 30-0-db
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
+  # ─── Database Migration & Seed (run once) ───
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 30-0-migrate
+    env_file:
+      - .env.production
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: thirtyzero
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - 30-0-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d thirtyzero"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ─── pgAdmin (optional, for DB management) ───
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: 30-0-pgadmin
-    restart: unless-stopped
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@30-0.app
-      PGADMIN_DEFAULT_PASSWORD: admin
-    networks:
-      - 30-0-network
+      - NODE_ENV=production
+    command: >
+      sh -c "
+        npx prisma db push &&
+        echo 'Schema push complete. Now seeding...' &&
+        npx tsx prisma/seed.ts &&
+        echo 'Seed complete!'
+      "
     profiles:
-      - tools
-
-volumes:
-  pgdata:
-    driver: local
-
-networks:
-  30-0-network:
-    driver: bridge
+      - migrate

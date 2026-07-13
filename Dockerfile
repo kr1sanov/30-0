@@ -2,7 +2,7 @@
 # 30-0 RPL — Multi-stage Docker Build
 # ──────────────────────────────────────────────
 # Optimized for small image size and fast cold starts
-# Uses PostgreSQL (Supabase) in production
+# Uses MySQL (Jino) in production
 
 # Stage 1: Dependencies
 FROM node:22-alpine AS deps
@@ -29,17 +29,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Switch to PostgreSQL schema for production build
-RUN cp prisma/schema.postgresql.prisma prisma/schema.prisma
+# Switch to MySQL schema for production build
+RUN cp prisma/schema.mysql.prisma prisma/schema.prisma
 
-# Generate Prisma client for PostgreSQL
+# Generate Prisma client for MySQL
 RUN npx prisma generate
 
 # Set env for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 # Dummy DATABASE_URL for build (Prisma needs it for generate)
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV DATABASE_URL="mysql://dummy:dummy@localhost:3306/dummy"
 
 # Build the app
 RUN npm run build
@@ -78,6 +78,6 @@ ENV HOSTNAME="0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/formations || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
 
 CMD ["node", "server.js"]

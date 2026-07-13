@@ -4,7 +4,7 @@
 # ──────────────────────────────────────────────
 # Usage:
 #   chmod +x deploy.sh
-#   ./deploy.sh          # Docker deployment (SQLite)
+#   ./deploy.sh          # Docker deployment (MySQL)
 #   ./deploy.sh --node   # Direct Node.js deployment
 
 set -e
@@ -33,6 +33,12 @@ if ! grep -q "TELEGRAM_BOT_TOKEN=.\+" .env.production; then
   exit 1
 fi
 
+# Check for DATABASE_URL in .env.production
+if ! grep -q "DATABASE_URL=.\+" .env.production; then
+  echo -e "${RED}❌ DATABASE_URL is not set in .env.production!${NC}"
+  exit 1
+fi
+
 MODE="docker"
 if [ "$1" = "--node" ]; then
   MODE="node"
@@ -55,22 +61,25 @@ if [ "$MODE" = "docker" ]; then
   fi
 
   echo -e "${YELLOW}📦 Building Docker image...${NC}"
-  docker build -f Dockerfile.sqlite -t 30-0-app .
+  docker build -t 30-0-app .
 
   echo -e "${YELLOW}🛑 Stopping old containers...${NC}"
-  docker compose -f docker-compose.simple.yml down 2>/dev/null || true
+  docker compose down 2>/dev/null || true
 
   echo -e "${YELLOW}🚀 Starting app...${NC}"
-  docker compose -f docker-compose.simple.yml up -d
+  docker compose up -d
 
   echo ""
   echo -e "${GREEN}✅ App is running!${NC}"
   echo "   URL: http://localhost:3000"
   echo ""
+  echo -e "${YELLOW}📝 First time? Initialize the database:${NC}"
+  echo "   docker compose run --rm migrate"
+  echo ""
   echo -e "Useful commands:"
-  echo "   docker compose -f docker-compose.simple.yml logs -f app   # View logs"
-  echo "   docker compose -f docker-compose.simple.yml down           # Stop"
-  echo "   docker compose -f docker-compose.simple.yml restart        # Restart"
+  echo "   docker compose logs -f app     # View logs"
+  echo "   docker compose down             # Stop"
+  echo "   docker compose restart          # Restart"
 
 # ─── Direct Node.js Deployment ───
 elif [ "$MODE" = "node" ]; then
@@ -89,19 +98,25 @@ elif [ "$MODE" = "node" ]; then
   echo -e "${YELLOW}📦 Installing dependencies...${NC}"
   npm install
 
-  echo -e "${YELLOW}🔧 Switching to SQLite schema...${NC}"
-  cp prisma/schema.sqlite.prisma prisma/schema.prisma
+  echo -e "${YELLOW}🔧 Switching to MySQL schema...${NC}"
+  cp prisma/schema.mysql.prisma prisma/schema.prisma
   npx prisma generate
 
   echo -e "${YELLOW}🏗️  Building app...${NC}"
   export NODE_ENV=production
   npm run build
 
-  # Create data directory
-  mkdir -p data
+  # Load DATABASE_URL from .env.production
+  source_env() {
+    while IFS='=' read -r key value; do
+      if [ -n "$key" ] && [ -n "$value" ]; then
+        export "$key=$value"
+      fi
+    done < .env.production
+  }
+  source_env
 
-  echo -e "${YELLOW}🌱 Seeding database...${NC}"
-  export DATABASE_URL="file:$(pwd)/data/production.db"
+  echo -e "${YELLOW}🌱 Initializing database...${NC}"
   npx prisma db push
   npx tsx prisma/seed.ts
 
@@ -114,7 +129,7 @@ elif [ "$MODE" = "node" ]; then
   echo "   pm2 save && pm2 startup"
   echo ""
   echo -e "Or start directly:"
-  echo "   DATABASE_URL=\"file:$(pwd)/data/production.db\" NODE_ENV=production node .next/standalone/server.js"
+  echo "   NODE_ENV=production node .next/standalone/server.js"
   echo ""
   echo -e "For reverse proxy, configure nginx to forward to port 3000"
 fi
