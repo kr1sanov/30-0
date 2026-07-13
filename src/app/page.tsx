@@ -1156,8 +1156,6 @@ export default function Home() {
     updateMainButton,
     enableClosingConfirmation,
     disableClosingConfirmation,
-    requestFullscreen,
-    exitFullscreen,
     safeAreaInset,
   } = useTelegram();
   const authUser = useAuthStore((s) => s.user);
@@ -1167,7 +1165,7 @@ export default function Home() {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const webapp = window.Telegram.WebApp;
       webapp.ready();
-      webapp.expand();
+      // Do NOT expand — keep mobile compact view
 
       const tgUser = webapp.initDataUnsafe?.user;
       if (tgUser && !telegramUser) {
@@ -1219,21 +1217,14 @@ export default function Home() {
       hideBackButton();
       hideMainButton();
       disableClosingConfirmation();
-      exitFullscreen();
     } else if (screen === 'setup' || screen === 'profile') {
       showBackButton(() => useGameStore.getState().goHome());
       hideMainButton();
       disableClosingConfirmation();
-      exitFullscreen();
     } else if (GAME_SCREENS_SET.has(screen)) {
       showBackButton(() => useGameStore.getState().goHome());
       enableClosingConfirmation();
-      // Request fullscreen during active gameplay
-      if (['draft', 'position-assign', 'simulation'].includes(screen)) {
-        requestFullscreen();
-      } else {
-        exitFullscreen();
-      }
+      // No fullscreen — keep mobile compact view at all times
     } else {
       hideBackButton();
       hideMainButton();
@@ -1241,7 +1232,7 @@ export default function Home() {
     }
 
     // Cleanup on unmount is handled by the hook internally
-  }, [screen, isTelegram, showBackButton, hideBackButton, showMainButton, hideMainButton, enableClosingConfirmation, disableClosingConfirmation, requestFullscreen, exitFullscreen]);
+  }, [screen, isTelegram, showBackButton, hideBackButton, showMainButton, hideMainButton, enableClosingConfirmation, disableClosingConfirmation]);
 
   const renderScreen = useCallback(() => {
     switch (screen) {
