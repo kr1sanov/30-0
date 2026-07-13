@@ -551,3 +551,28 @@ Stage Summary:
 - ✅ CloudStorage API with localStorage fallback
 - ✅ All changes lint-clean (src/ only, scripts/ pre-existing)
 - ✅ Dev server compiles successfully (HTTP 200)
+
+---
+Task ID: main-audit
+Agent: main
+Task: Full Telegram Mini Apps SDK Audit & Implementation
+
+Work Log:
+- Studied official Telegram Mini Apps documentation (https://core.telegram.org/bots/webapps and https://core.telegram.org/api/bots/webapps)
+- Analyzed current project integration: basic ready(), expand(), haptic, MainButton, BackButton, shareToTelegram, enableClosingConfirmation, setHeaderColor/setBackgroundColor
+- Delegated comprehensive SDK implementation to subagent (full-stack-developer)
+- Subagent rewrote use-telegram.ts with full TypeScript types and 30+ features
+- Subagent integrated features across 11 component files
+- Created TELEGRAM_AUDIT.md with full analysis of all SDK capabilities
+- Verified lint passes (only pre-existing script errors)
+- Committed with conventional commit message
+- Pushed to GitHub (kr1sanov/30-0)
+
+Stage Summary:
+- useTelegram hook now covers: SecondaryButton, Fullscreen, showAlert/showConfirm/showPopup, CloudStorage, Home Screen, switchInlineQuery, Clipboard, Safe Area, Theme events, Viewport events, setBottomBarColor, context-aware Closing Confirmation
+- Haptic feedback integrated across all interactive components (spin, select, assign, navigate)
+- BackButton navigation between screens (profile → home, rules → home)
+- Fullscreen during gameplay
+- Native Telegram dialogs with browser fallbacks
+- TELEGRAM_AUDIT.md created with complete analysis
+- Git: a0ceb5f pushed to origin/main
