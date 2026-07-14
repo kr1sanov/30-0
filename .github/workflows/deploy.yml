@@ -111,7 +111,7 @@ jobs:
         run: |
           mkdir -p deploy-package
           cp -r .next/standalone deploy-package/
-          cp -r .next/static deploy-package/.next/static
+          mkdir -p deploy-package/.next && mkdir -p deploy-package/.next && cp -r .next/static deploy-package/.next/static
           cp -r public deploy-package/public
           cp -r prisma deploy-package/prisma
           cp package.json deploy-package/
