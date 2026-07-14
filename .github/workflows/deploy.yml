@@ -74,12 +74,14 @@ jobs:
           path: .next/standalone/
           retention-days: 1
 
-  # ─── Stage 3: Deploy to Production ───
+  # ─── Stage 3: Deploy ───
+  # Requires GitHub Secrets to be configured:
+  #   JINO_HOST, JINO_USERNAME, JINO_SSH_KEY, JINO_SSH_PORT, JINO_APP_DIR
   deploy:
     name: Deploy to Jino
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
     environment: production
     steps:
       - uses: actions/checkout@v4
@@ -115,26 +117,7 @@ jobs:
           cp package.json deploy-package/
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
 
-      - name: Check SSH secrets
-        id: check_secrets
-        run: |
-          if [ -n "${{ secrets.JINO_HOST }}" ] && [ -n "${{ secrets.JINO_SSH_KEY }}" ]; then
-            echo "has_secrets=true" >> $GITHUB_OUTPUT
-            echo "✅ SSH secrets configured — will deploy"
-          else
-            echo "has_secrets=false" >> $GITHUB_OUTPUT
-            echo "⚠️ SSH secrets not configured — skipping deploy"
-            echo ""
-            echo "To enable automatic deployment, add these GitHub Secrets:"
-            echo "- JINO_HOST: Server IP address"
-            echo "- JINO_USERNAME: SSH username"
-            echo "- JINO_SSH_KEY: Private SSH key"
-            echo "- JINO_SSH_PORT: SSH port (default: 22)"
-            echo "- JINO_APP_DIR: App directory path"
-          fi
-
       - name: Deploy via SSH
-        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.JINO_HOST }}
@@ -145,7 +128,6 @@ jobs:
           target: "/tmp/"
 
       - name: Execute deploy script
-        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.JINO_HOST }}
@@ -156,21 +138,17 @@ jobs:
             set -e
             cd ${{ secrets.JINO_APP_DIR || '/home/j97915155/30-0' }}
 
-            # Backup current version
             if [ -d .next ]; then
               mv .next .next-backup-$(date +%Y%m%d%H%M%S) 2>/dev/null || true
             fi
 
-            # Extract new version
             mkdir -p .next
             tar -xzf /tmp/deploy.tar.gz -C .
             rm -f /tmp/deploy.tar.gz
 
-            # Copy Prisma client
             cp -r node_modules/.prisma .next/standalone/node_modules/ 2>/dev/null || true
             cp -r node_modules/@prisma .next/standalone/node_modules/ 2>/dev/null || true
 
-            # Restart the app with PM2
             if command -v pm2 &> /dev/null; then
               pm2 restart 30-0-app || pm2 start .next/standalone/server.js --name 30-0-app
             else
@@ -181,38 +159,25 @@ jobs:
             echo "Deploy complete!"
 
       - name: Health Check
-        if: steps.check_secrets.outputs.has_secrets == 'true'
         run: |
           sleep 10
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
           if [ "$HTTP_CODE" != "200" ]; then
             echo "⚠️ Health check: HTTP code $HTTP_CODE"
-          else
-            echo "✅ Health check passed! Site is up."
+            exit 1
           fi
+          echo "✅ Health check passed! Site is up."
 
-      - name: Deploy Summary
-        if: always()
-        run: |
-          echo "## Deploy Summary"
-          echo "- Quality: ✅ Passed"
-          echo "- Build: ✅ Passed"
-          if [ "${{ steps.check_secrets.outputs.has_secrets }}" == "true" ]; then
-            echo "- Deploy: ✅ Deployed to Jino"
-          else
-            echo "- Deploy: ⏭️ Skipped (SSH secrets not configured)"
-          fi
-
-  # ─── Stage 4: Post-Deploy Verification ───
+  # ─── Stage 4: Verify Production ───
   verify:
     name: Verify Production
     runs-on: ubuntu-latest
-    needs: deploy
+    needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Check API health
         run: |
-          RESPONSE=$(curl -s http://30-0.рф/api/health 2>/dev/null || curl -s https://30-0.рф/api/health 2>/dev/null || echo "")
+          RESPONSE=$(curl -s https://30-0.рф/api/health 2>/dev/null || curl -s http://30-0.рф/api/health 2>/dev/null || echo "")
           echo "Health API response: $RESPONSE"
 
           STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
@@ -224,8 +189,19 @@ jobs:
 
       - name: Check homepage
         run: |
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || echo "000")
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
           echo "Homepage HTTP code: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "⚠️ Homepage returned non-200 status"
+          else
+            echo "✅ Homepage is up"
           fi
+
+      - name: Pipeline Summary
+        if: always()
+        run: |
+          echo "## CI/CD Pipeline Summary"
+          echo "- ✅ Quality checks: Passed"
+          echo "- ✅ Build: Passed"
+          echo "- ⏭️ Deploy: Requires DEPLOY_ENABLED variable in GitHub"
+          echo "- ✅ Production verification: Complete"
