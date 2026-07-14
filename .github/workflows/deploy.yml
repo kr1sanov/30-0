@@ -177,7 +177,7 @@ jobs:
     steps:
       - name: Check API health
         run: |
-          RESPONSE=$(curl -s https://30-0.рф/api/health 2>/dev/null || curl -s http://30-0.рф/api/health 2>/dev/null || echo "")
+          RESPONSE=$(curl -s --connect-timeout 10 --max-time 15 https://30-0.рф/api/health 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 http://30-0.рф/api/health 2>/dev/null || echo "")
           echo "Health API response: $RESPONSE"
 
           STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
@@ -189,7 +189,7 @@ jobs:
 
       - name: Check homepage
         run: |
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
+          HTTP_CODE=$(curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
           echo "Homepage HTTP code: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "⚠️ Homepage returned non-200 status"
