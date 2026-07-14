@@ -77,3 +77,26 @@ upload/
 .env*
 start-dev.sh
 .dev-server-pid
+
+# Data directory (SQLite production)
+data/
+
+# PM2
+.pm2/
+
+# SSH keys
+*.pem
+id_rsa*
+id_ed25519*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Worklog (local only)
+worklog.md

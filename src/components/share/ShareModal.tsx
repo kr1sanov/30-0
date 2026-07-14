@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
 import { useAuthStore } from '@/store/authStore';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 const BG = '#0A0A0A';
 
@@ -67,6 +68,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
 
     // Use Telegram SDK share
     shareToTelegram(shareText, inviteUrl);
+    Metrics.shareResult('telegram');
     notify('success');
     setIsSharing(false);
     onClose();

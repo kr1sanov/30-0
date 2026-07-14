@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import ShareModal from '@/components/share/ShareModal';
 import ProfileShareCard from '@/components/share/ProfileShareCard';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -42,6 +43,9 @@ export default function ProfileScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
   const { haptic, notify, showConfirm, isTelegram, showSecondaryButton, hideSecondaryButton, showAlert } = useTelegram();
+
+  // Track profile open in Metrika
+  useMemo(() => { Metrics.profileOpen(); }, []);
 
   const winRate = profileStats.totalSeasons > 0
     ? Math.round((profileStats.totalWins / (profileStats.totalSeasons * 30)) * 100)

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { POSITION_CATEGORY } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,6 +74,9 @@ const POSITION_LABELS: Record<string, string> = {
 export default function SeasonAwards() {
   const { slots, currentManager, seasonResult, resetGame, setScreen, config } = useGameStore();
   const { haptic, notify } = useTelegram();
+
+  // Track title earned in Metrika (once on mount)
+  useMemo(() => { Metrics.titleEarned('season_complete'); }, []);
 
   const isPrimeMode = config.ratingMode === 'prime';
 

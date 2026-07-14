@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -252,6 +253,11 @@ export default function SpinWheel() {
     if (isSpinning) return;
     haptic('medium'); // Haptic on spin start
     await spin();
+    // Track spin in Metrika after result
+    const state = useGameStore.getState();
+    if (state.currentSpin) {
+      Metrics.spinWheel(state.currentSpin.clubName, state.currentSpin.seasonLabel);
+    }
   }, [isSpinning, spin, haptic]);
 
   const handleReroll = useCallback(async () => {

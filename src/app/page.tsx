@@ -24,6 +24,7 @@ import type { Position } from '@/lib/positions';
 import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useAuthStore } from '@/store/authStore';
+import { Metrics } from '@/lib/metrics';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -1167,6 +1168,9 @@ export default function Home() {
       webapp.ready();
       // Do NOT expand — keep mobile compact view
 
+      // Track app start
+      Metrics.appStart();
+
       const tgUser = webapp.initDataUnsafe?.user;
       if (tgUser && !telegramUser) {
         setTelegramUser({
@@ -1199,10 +1203,13 @@ export default function Home() {
     }
   }, [authUser, telegramUser, setTelegramUser]);
 
+  // ── Yandex.Metrika SPA navigation tracking ──
   useEffect(() => {
     if (prevScreen.current !== screen) {
       setDirection(getDirection(prevScreen.current, screen));
       prevScreen.current = screen;
+      // Track screen view in Metrika
+      Metrics.screenView(screen);
     }
   }, [screen]);
 

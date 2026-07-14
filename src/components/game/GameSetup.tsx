@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -237,6 +238,14 @@ export default function GameSetup() {
 
   const handleStart = async () => {
     haptic('medium'); // Haptic when starting the game
+    // Track game start in Metrika
+    Metrics.gameStart({
+      formation: config.formation,
+      difficulty: config.difficulty,
+      draftMode: config.draftMode,
+      ratingMode: config.ratingMode,
+      eraFilter: config.eraFilter,
+    });
     await startRun();
   };
 

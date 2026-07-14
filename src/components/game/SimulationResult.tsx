@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ShareModal from '@/components/share/ShareModal';
 import ResultShareCard from '@/components/share/ResultShareCard';
 import { useTelegram } from '@/hooks/use-telegram';
+import { Metrics } from '@/lib/metrics';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -127,6 +128,21 @@ export default function SimulationResult() {
   const totalMatches = matches.length;
   const trophies = (data?.trophies ?? []) as Trophy[];
   const earnedTrophies = trophies.filter(t => t.earned);
+
+  // Track season finish in Metrika (once)
+  const hasTrackedRef = useRef(false);
+  useEffect(() => {
+    if (data && !hasTrackedRef.current) {
+      hasTrackedRef.current = true;
+      Metrics.seasonFinish({
+        wins: data.wins,
+        draws: data.draws,
+        losses: data.losses,
+        points: data.points,
+        position: data.position,
+      });
+    }
+  }, [data]);
 
   // Auto-play through matchweeks
   useEffect(() => {
