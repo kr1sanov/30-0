@@ -1,0 +1,97 @@
+# ──────────────────────────────────────────────
+# 30-0 RPL — Apache Configuration (.htaccess)
+# ──────────────────────────────────────────────
+# Place this in the root directory of the Jino hosting
+
+# ─── Security Headers ───
+<IfModule mod_headers.c>
+  # HSTS — force HTTPS for 2 years
+  Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+  # Prevent clickjacking
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # Prevent MIME sniffing
+  Header always set X-Content-Type-Options "nosniff"
+
+  # XSS Protection
+  Header always set X-XSS-Protection "1; mode=block"
+
+  # Referrer Policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Permissions Policy
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+  # Content Security Policy
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self' https://mc.yandex.ru https://api.telegram.org; frame-src https://web.telegram.org; object-src 'none'; base-uri 'self'"
+
+  # Remove X-Powered-By (hide tech stack)
+  Header unset X-Powered-By
+  Header always unset X-Powered-By
+</IfModule>
+
+# ─── Gzip Compression ───
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ─── Brotli Compression ───
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html
+  AddOutputFilterByType BROTLI_COMPRESS text/css
+  AddOutputFilterByType BROTLI_COMPRESS text/javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/json
+  AddOutputFilterByType BROTLI_COMPRESS application/xml
+  AddOutputFilterByType BROTLI_COMPRESS text/xml
+  AddOutputFilterByType BROTLI_COMPRESS text/plain
+  AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
+# ─── Caching ───
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # Static assets — 1 year
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+
+  # HTML — short cache
+  ExpiresByType text/html "access plus 60 seconds"
+
+  # JSON API — no cache
+  ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# ─── Force HTTPS ───
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ─── Serve static files from public/ ───
+# Ensure sitemap.xml, robots.txt, manifest.json are served correctly
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^sitemap\.xml$ /sitemap.xml [L]
+  RewriteRule ^robots\.txt$ /robots.txt [L]
+  RewriteRule ^manifest\.json$ /manifest.json [L]
+</IfModule>
