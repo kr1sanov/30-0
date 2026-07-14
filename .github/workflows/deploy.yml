@@ -115,9 +115,27 @@ jobs:
           cp package.json deploy-package/
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
 
+      - name: Check SSH secrets
+        id: check_secrets
+        run: |
+          if [ -n "${{ secrets.JINO_HOST }}" ] && [ -n "${{ secrets.JINO_SSH_KEY }}" ]; then
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+            echo "✅ SSH secrets configured — will deploy"
+          else
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+            echo "⚠️ SSH secrets not configured — skipping deploy"
+            echo ""
+            echo "To enable automatic deployment, add these GitHub Secrets:"
+            echo "- JINO_HOST: Server IP address"
+            echo "- JINO_USERNAME: SSH username"
+            echo "- JINO_SSH_KEY: Private SSH key"
+            echo "- JINO_SSH_PORT: SSH port (default: 22)"
+            echo "- JINO_APP_DIR: App directory path"
+          fi
+
       - name: Deploy via SSH
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: appleboy/scp-action@v0.1.7
-        continue-on-error: true
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
@@ -127,8 +145,8 @@ jobs:
           target: "/tmp/"
 
       - name: Execute deploy script
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: appleboy/ssh-action@v1.0.3
-        continue-on-error: true
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
@@ -163,28 +181,27 @@ jobs:
             echo "Deploy complete!"
 
       - name: Health Check
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         run: |
           sleep 10
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
           if [ "$HTTP_CODE" != "200" ]; then
-            echo "⚠️ Health check: HTTP code $HTTP_CODE (may need SSH secrets configuration)"
+            echo "⚠️ Health check: HTTP code $HTTP_CODE"
           else
             echo "✅ Health check passed! Site is up."
           fi
 
       - name: Deploy Summary
+        if: always()
         run: |
           echo "## Deploy Summary"
           echo "- Quality: ✅ Passed"
           echo "- Build: ✅ Passed"
-          echo "- Deploy: Check SSH secrets if not deployed"
-          echo ""
-          echo "To enable automatic deployment, add these GitHub Secrets:"
-          echo "- JINO_HOST: Server IP address"
-          echo "- JINO_USERNAME: SSH username"
-          echo "- JINO_SSH_KEY: Private SSH key"
-          echo "- JINO_SSH_PORT: SSH port (default: 22)"
-          echo "- JINO_APP_DIR: App directory path"
+          if [ "${{ steps.check_secrets.outputs.has_secrets }}" == "true" ]; then
+            echo "- Deploy: ✅ Deployed to Jino"
+          else
+            echo "- Deploy: ⏭️ Skipped (SSH secrets not configured)"
+          fi
 
   # ─── Stage 4: Post-Deploy Verification ───
   verify:
