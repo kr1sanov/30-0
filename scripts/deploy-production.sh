@@ -7,6 +7,22 @@
 # ──────────────────────────────────────────────
 set -euo pipefail
 
+# Load nvm if available (needed for SSH non-interactive sessions)
+export NVM_DIR="$HOME/.nvm"
+# shellcheck source=/dev/null
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# Also try common node paths on Jino shared hosting
+if ! command -v node &> /dev/null; then
+  # Try to find node in common nvm install paths
+  for NODE_PATH in "$HOME/.nvm/versions/node/"*/bin; do
+    if [ -d "$NODE_PATH" ]; then
+      export PATH="$NODE_PATH:$PATH"
+      break
+    fi
+  done
+fi
 APP_DIR="${APP_DIR:-/home/j97915155/30-0}"
 APP_NAME="30-0-app"
 HEALTH_URL="https://30-0.рф/api/health"
