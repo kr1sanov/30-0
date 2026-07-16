@@ -95,6 +95,10 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  referralCode     String?  @unique @db.VarChar(50)
+  referredBy       String?  @db.VarChar(50)
+  referralCount    Int      @default(0)
+
   runs             GameRun[]
 }
 
@@ -126,6 +130,10 @@ model GameRun {
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   createdAt    DateTime @default(now())
+
+  eraStartYear   Int      @default(2000)
+  eraEndYear     Int      @default(2025)
+  clubFilter     String?  @db.VarChar(255)
 
   slots        GameSlot[]
 }

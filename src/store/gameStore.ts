@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry, Achievement } from '@/lib/types';
+import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry, Achievement, DailyChallenge } from '@/lib/types';
 import { FORMATIONS, POSITION_CATEGORY, canFillSlot, canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { DIFFICULTY_CONFIG } from '@/lib/types';
@@ -146,6 +146,12 @@ interface GameState {
   // New achievements to show in popup
   newAchievements: Achievement[];
 
+  // Daily challenge
+  dailyChallenge: DailyChallenge | null;
+
+  // Global error state (for ErrorToast)
+  error: string | null;
+
   // Actions
   startRun: () => Promise<void>;
   spin: () => Promise<void>;
@@ -169,6 +175,9 @@ interface GameState {
   dismissAchievement: () => void;
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
+  startDailyChallenge: (challenge: DailyChallenge) => void;
+  clearError: () => void;
+  setError: (error: string) => void;
 }
 
 const defaultConfig: GameConfig = {
@@ -248,6 +257,12 @@ export const useGameStore = create<GameState>()(
 
       // New achievements
       newAchievements: [],
+
+      // Daily challenge
+      dailyChallenge: null,
+
+      // Global error state
+      error: null,
 
       // =====================================================================
       // ACTIONS
@@ -1261,6 +1276,17 @@ export const useGameStore = create<GameState>()(
           console.error('Failed to load profile from cloud:', error);
         }
       },
+
+      // Start a daily challenge — transition to setup screen with challenge data
+      startDailyChallenge: (challenge: DailyChallenge) => {
+        set({ screen: 'setup', dailyChallenge: challenge });
+      },
+
+      // Clear global error
+      clearError: () => set({ error: null }),
+
+      // Set global error
+      setError: (error: string) => set({ error }),
     }),
     {
       name: '30-0-rpl-storage',

@@ -576,3 +576,90 @@ Stage Summary:
 - Native Telegram dialogs with browser fallbacks
 - TELEGRAM_AUDIT.md created with complete analysis
 - Git: a0ceb5f pushed to origin/main
+
+---
+Task ID: 1-c
+Agent: full-stack-developer
+Task: Fix ESLint errors and rewrite CI/CD pipeline
+
+Work Log:
+- Added `/* eslint-disable @typescript-eslint/no-require-imports */` to `/home/z/my-project/scripts/generate-rpl-2000-2010.js` (line 2)
+- Added `/* eslint-disable @typescript-eslint/no-require-imports */` to `/home/z/my-project/scripts/generate-rpl-data.js` (line 2)
+- Completely rewrote `/home/z/my-project/.github/workflows/deploy.yml` with a production-grade CI/CD pipeline
+- Verified all ESLint errors are resolved (`bun run lint` passes clean)
+
+Stage Summary:
+- ESLint: 2 files fixed with eslint-disable directive for no-require-imports rule (plain JS scripts using require() is expected)
+- CI/CD Pipeline rewritten with 4 jobs: lint → build → deploy → verify
+  - lint: Strict quality gates (ESLint and tsc MUST fail the pipeline, no `|| echo` bailouts)
+  - build: Uses build artifacts (standalone + static uploaded separately), proper node_modules caching
+  - deploy: Only on push to main (NOT PRs), no DEPLOY_ENABLED variable required, downloads build artifacts instead of rebuilding, includes health check loop with 60s timeout, uses secrets: JINO_HOST, JINO_USERNAME, JINO_SSH_KEY, JINO_SSH_PORT, JINO_APP_DIR
+  - verify: Post-deploy checks with proper error annotations, pipeline summary in $GITHUB_STEP_SUMMARY
+  - Added concurrency group to prevent simultaneous deployments
+  - Added actions/cache for node_modules across all jobs
+
+---
+Task ID: 1-b
+Agent: full-stack-developer
+Task: Fix broken components (DailyChallengeScreen, ErrorToast, Header)
+
+Work Log:
+- Added `NationalityRequirement` and `DailyChallenge` interfaces to `/home/z/my-project/src/lib/types.ts`
+- Added `dailyChallenge: DailyChallenge | null` and `error: string | null` to GameState interface in `/home/z/my-project/src/store/gameStore.ts`
+- Added `startDailyChallenge`, `clearError`, `setError` action signatures to GameState interface
+- Added initial values `dailyChallenge: null` and `error: null` to store creation
+- Added `startDailyChallenge`, `clearError`, `setError` action implementations to the store
+- Updated import in gameStore.ts to include `DailyChallenge` from `@/lib/types`
+- Removed unreachable `if (screen === 'home') return;` check in `/home/z/my-project/src/components/layout/Header.tsx` line 100
+- Verified TypeScript compilation — no errors in modified files
+
+Stage Summary:
+- DailyChallengeScreen.tsx: Fixed by adding DailyChallenge and NationalityRequirement types to types.ts, and startDailyChallenge + dailyChallenge to gameStore
+- ErrorToast.tsx: Fixed by adding error, clearError, and setError to gameStore state and actions
+- Header.tsx: Fixed by removing unreachable screen === 'home' guard in Mode 3 handleHome function
+- All three components now compile without TypeScript errors
+
+---
+Task ID: 1-a
+Agent: full-stack-developer
+Task: Fix Prisma schema - add missing fields
+
+Work Log:
+- Read both schema.prisma and schema.mysql.prisma — confirmed they were identical (both MySQL provider)
+- Added 3 fields to User model in schema.mysql.prisma: referralCode (String? @db.VarChar(50)), referredBy (String? @db.VarChar(50)), referralCount (Int @default(0)) — placed before the `runs` relation field
+- Added 3 fields to GameRun model in schema.mysql.prisma: eraStartYear (Int @default(2000)), eraEndYear (Int @default(2025)), clubFilter (String? @db.VarChar(255)) — placed before the `slots` relation field
+- Adapted schema.prisma for SQLite (local dev uses SQLite at file:/home/z/my-project/db/custom.db) — same fields but without MySQL-specific @db.VarChar/@db.Text annotations and with provider="sqlite"
+- Ran `bun run db:generate` — Prisma Client generated successfully (v6.19.2)
+- Ran `bun run db:push` — Database synced successfully (SQLite)
+- Both schema files now contain all 6 new fields; schema.mysql.prisma uses MySQL provider with @db annotations, schema.prisma uses SQLite provider for local dev
+
+Stage Summary:
+- User model: added referralCode, referredBy, referralCount fields
+- GameRun model: added eraStartYear, eraEndYear, clubFilter fields
+- schema.mysql.prisma: MySQL version with proper @db.VarChar/@db.Text annotations
+- schema.prisma: SQLite-compatible version for local development (same fields, no @db annotations)
+- Prisma Client regenerated and local DB schema pushed successfully
+
+---
+Task ID: 10
+Agent: full-stack-developer
+Task: Create project documentation (ARCHITECTURE.md, DEVELOPMENT.md, DEPLOYMENT.md, PRODUCTION.md)
+
+Work Log:
+- Read and analyzed 30+ project files: package.json, all Prisma schemas, gameStore.ts, authStore.ts, all API routes, layout.tsx, next.config.ts, ecosystem.config.js, simulation.ts, positions.ts, wheel.ts, managers.ts, types.ts, metrics.ts, dailyChallenge.ts, use-telegram.ts, db.ts, existing DEPLOY.md, DEPLOYMENT.md, PRODUCTION_CHECKLIST.md, MONITORING.md, worklog.md
+- Cataloged all 25+ API routes with their methods, parameters, and purposes
+- Mapped the complete game screen state machine flow
+- Identified all 19+ Yandex.Metrika custom events from metrics.ts
+- Documented all 7 Prisma models and their relationships
+- Created ARCHITECTURE.md (comprehensive: tech stack, project structure, database, API routes, frontend flow, state management, Telegram SDK, analytics, CI/CD)
+- Created DEVELOPMENT.md (prerequisites, local setup, workflow, database management, feature patterns, testing, code style, git conventions, configuration)
+- Created DEPLOYMENT.md (architecture, GitHub secrets, CI/CD pipeline, server setup, first deployment, deploy process, rollback, monitoring, troubleshooting)
+- Created PRODUCTION.md (server/infrastructure, stack, environment variables, PM2 config, security headers, caching, health check, monitoring, SSL/TLS, backup strategy, incident response)
+
+Stage Summary:
+- Created 4 comprehensive, production-ready documentation files
+- All documentation is based on actual project state — not generic placeholders
+- ARCHITECTURE.md: Full project architecture with 10 sections covering tech stack, structure, database, 25+ API routes, game flow, state management, Telegram SDK, analytics, CI/CD
+- DEVELOPMENT.md: Complete developer onboarding guide with setup, workflow, database management, feature patterns, code style, and git conventions
+- DEPLOYMENT.md: Step-by-step deployment guide with GitHub Actions pipeline, server setup, rollback procedures, and troubleshooting for 8 common issues
+- PRODUCTION.md: Production environment reference with security headers, caching strategy, health check, monitoring, SSL/TLS, backup strategy, and incident response procedures

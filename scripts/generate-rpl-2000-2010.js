@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * RPL Player Data Generator for seasons 2000-2010
  * Generates rpl-2000-2010.json with FIFA-style ratings

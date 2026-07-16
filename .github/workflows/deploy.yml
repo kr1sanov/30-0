@@ -6,12 +6,16 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   NODE_VERSION: '22'
 
 jobs:
-  # ─── Stage 1: Quality Checks ───
-  quality:
+  # ─── Stage 1: Quality Gates ───
+  lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +27,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ env.NODE_VERSION }}-
+
       - name: Install dependencies
         run: npm ci
 
@@ -33,16 +45,16 @@ jobs:
         run: npx prisma generate
 
       - name: ESLint (src only)
-        run: npx eslint src/ || echo "⚠️ ESLint found issues but continuing..."
+        run: npx eslint src/
 
       - name: TypeScript Check
-        run: npx tsc --noEmit 2>&1 || echo "⚠️ TypeScript has issues but continuing..."
+        run: npx tsc --noEmit
 
   # ─── Stage 2: Build ───
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: quality
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -51,6 +63,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ env.NODE_VERSION }}-
 
       - name: Install dependencies
         run: npm ci
@@ -67,65 +87,74 @@ jobs:
           NODE_ENV: production
         run: npm run build
 
-      - name: Upload build artifact
+      - name: Upload standalone artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build
+          name: build-standalone
           path: .next/standalone/
           retention-days: 1
 
-  # ─── Stage 3: Deploy ───
+      - name: Upload static artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-static
+          path: .next/static/
+          retention-days: 1
+
+  # ─── Stage 3: Deploy (only on push to main, NOT on PRs) ───
   # Requires GitHub Secrets to be configured:
   #   JINO_HOST, JINO_USERNAME, JINO_SSH_KEY, JINO_SSH_PORT, JINO_APP_DIR
   deploy:
     name: Deploy to Jino
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Download standalone artifact
+        uses: actions/download-artifact@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          name: build-standalone
+          path: .next/standalone/
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Switch to MySQL schema
-        run: cp prisma/schema.mysql.prisma prisma/schema.prisma
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      - name: Build Next.js
-        env:
-          DATABASE_URL: "mysql://dummy:dummy@localhost:3306/dummy"
-          NODE_ENV: production
-        run: npm run build
+      - name: Download static artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-static
+          path: .next/static/
 
       - name: Create deployment package
         run: |
           mkdir -p deploy-package
           cp -r .next/standalone deploy-package/
-          mkdir -p deploy-package/.next && mkdir -p deploy-package/.next && cp -r .next/static deploy-package/.next/static
+          mkdir -p deploy-package/.next/static
+          cp -r .next/static deploy-package/.next/static
           cp -r public deploy-package/public
           cp -r prisma deploy-package/prisma
           cp package.json deploy-package/
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
 
-      - name: Deploy via SSH
+      - name: Upload via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
           key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT || 22 }}
+          port: ${{ secrets.JINO_SSH_PORT }}
           source: "deploy.tar.gz"
           target: "/tmp/"
+
+      - name: Upload deploy script via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.JINO_HOST }}
+          username: ${{ secrets.JINO_USERNAME }}
+          key: ${{ secrets.JINO_SSH_KEY }}
+          port: ${{ secrets.JINO_SSH_PORT }}
+          source: "scripts/deploy-production.sh"
+          target: "/tmp/deploy-script/"
 
       - name: Execute deploy script
         uses: appleboy/ssh-action@v1.0.3
@@ -133,75 +162,61 @@ jobs:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
           key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT || 22 }}
+          port: ${{ secrets.JINO_SSH_PORT }}
+          script_stop: true
+          command_timeout: 120s
           script: |
-            set -e
-            cd ${{ secrets.JINO_APP_DIR || '/home/j97915155/30-0' }}
+            set -euo pipefail
+            export APP_DIR="${{ secrets.JINO_APP_DIR }}"
+            cd "$APP_DIR"
 
-            if [ -d .next ]; then
-              mv .next .next-backup-$(date +%Y%m%d%H%M%S) 2>/dev/null || true
-            fi
+            # Make deploy script executable
+            chmod +x /tmp/deploy-script/scripts/deploy-production.sh
 
-            mkdir -p .next
-            tar -xzf /tmp/deploy.tar.gz -C .
-            rm -f /tmp/deploy.tar.gz
+            # Run the production deploy script
+            bash /tmp/deploy-script/scripts/deploy-production.sh
 
-            cp -r node_modules/.prisma .next/standalone/node_modules/ 2>/dev/null || true
-            cp -r node_modules/@prisma .next/standalone/node_modules/ 2>/dev/null || true
-
-            if command -v pm2 &> /dev/null; then
-              pm2 restart 30-0-app || pm2 start .next/standalone/server.js --name 30-0-app
-            else
-              pkill -f "node.*server.js" 2>/dev/null || true
-              nohup node .next/standalone/server.js > /dev/null 2>&1 &
-            fi
-
-            echo "Deploy complete!"
-
-      - name: Health Check
-        run: |
-          sleep 10
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "⚠️ Health check: HTTP code $HTTP_CODE"
-            exit 1
-          fi
-          echo "✅ Health check passed! Site is up."
-
-  # ─── Stage 4: Verify Production ───
+  # ─── Stage 4: Post-Deploy Verification ───
   verify:
     name: Verify Production
     runs-on: ubuntu-latest
-    needs: build
+    needs: deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
-      - name: Check API health
+      - name: Check homepage HTTP status
+        run: |
+          HTTP_CODE=$(curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
+          echo "Homepage HTTP code: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Homepage returned HTTP $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "Homepage is up"
+
+      - name: Check API health endpoint
         run: |
           RESPONSE=$(curl -s --connect-timeout 10 --max-time 15 https://30-0.рф/api/health 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 http://30-0.рф/api/health 2>/dev/null || echo "")
           echo "Health API response: $RESPONSE"
 
           STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
           if [ -z "$STATUS" ]; then
-            echo "⚠️ API health check returned unexpected response"
-          else
-            echo "✅ API is healthy"
+            echo "::error::API health check returned unexpected response"
+            exit 1
           fi
-
-      - name: Check homepage
-        run: |
-          HTTP_CODE=$(curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
-          echo "Homepage HTTP code: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "⚠️ Homepage returned non-200 status"
-          else
-            echo "✅ Homepage is up"
-          fi
+          echo "API is healthy"
 
       - name: Pipeline Summary
         if: always()
         run: |
-          echo "## CI/CD Pipeline Summary"
-          echo "- ✅ Quality checks: Passed"
-          echo "- ✅ Build: Passed"
-          echo "- ⏭️ Deploy: Requires DEPLOY_ENABLED variable in GitHub"
-          echo "- ✅ Production verification: Complete"
+          echo "## CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Type Check | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy | Completed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Verify | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

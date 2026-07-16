@@ -1,25 +1,28 @@
-# Руководство по развёртыванию
+# Deployment Guide — 30-0 RPL
 
-## Обзор
-
-| Параметр        | Значение                        |
-|-----------------|---------------------------------|
-| Домен           | https://30-0.рф                 |
-| Хостинг         | Jino (VPS)                      |
-| База данных     | MySQL 8.x                       |
-| Runtime         | Node.js 22 LTS                  |
-| Менеджер процес.| PM2                             |
-| Веб-сервер      | Nginx (обратный прокси)         |
-| CI/CD           | GitHub Actions                  |
-| Мониторинг      | Yandex.Metrika + uptime-сервисы |
+> Step-by-step guide for deploying the 30-0 RPL app to production on Jino hosting.
 
 ---
 
-## Архитектура
+## Table of Contents
+
+1. [Architecture Overview](#architecture-overview)
+2. [GitHub Secrets](#github-secrets)
+3. [GitHub Actions Pipeline](#github-actions-pipeline)
+4. [Server Setup (Jino)](#server-setup-jino)
+5. [First Deployment](#first-deployment)
+6. [Deploy Process](#deploy-process)
+7. [Rollback Procedure](#rollback-procedure)
+8. [Monitoring & Verification](#monitoring--verification)
+9. [Troubleshooting](#troubleshooting)
+
+---
+
+## Architecture Overview
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                        Внешний мир                               │
+│                        External                                  │
 │                    https://30-0.рф                               │
 └──────────────────────────┬───────────────────────────────────────┘
                            │
@@ -28,35 +31,70 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │                         Nginx                                    │
 │  ┌─────────────────────────────────────────────────────────────┐ │
-│  │  SSL-терминация (Let's Encrypt)                             │ │
-│  │  gzip-сжатие                                                │ │
-│  │  Статика → /var/www/30-0.рф/public                         │ │
-│  │  Проксирование → http://127.0.0.1:3000                      │ │
-│  │  WebSocket → ws://127.0.0.1:3003                            │ │
+│  │  SSL termination (Let's Encrypt)                            │ │
+│  │  Gzip compression                                           │ │
+│  │  Static files → /_next/static/ (1 year cache)              │ │
+│  │  Proxy → http://127.0.0.1:3000                              │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └──────────────────────────┬───────────────────────────────────────┘
                            │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-┌─────────────────┐ ┌──────────────┐ ┌──────────────────┐
-│  Next.js App    │ │  Mini-service│ │  MySQL           │
-│  (port 3000)    │ │  WS (3003)   │ │  (3306)          │
-│                 │ │              │ │                  │
-│  - SSR/SSG      │ │  - Socket.io │ │  - Игровые данные│
-│  - API Routes   │ │  - Real-time │ │  - Пользователи  │
-│  - Static       │ │              │ │  - Сессии        │
-└────────┬────────┘ └──────────────┘ └──────────────────┘
-         │
-         │  Prisma ORM
-         └──────────────────────────────────────────────►
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      Next.js App                                 │
+│                    (port 3000)                                    │
+│                                                                  │
+│  Managed by PM2 (30-0-app)                                      │
+│  Standalone server (.next/standalone/server.js)                  │
+│  Connects to MySQL via Prisma ORM                                │
+└──────────────────────────┬───────────────────────────────────────┘
+                           │
+                           │  Prisma ORM
+                           ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      MySQL Database                              │
+│       mysql.925c78adb421.hosting.myjino.ru                       │
+│              (Jino external MySQL)                               │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Deployment Flow
+
+```
+GitHub (main) ──push──> GitHub Actions ──SSH──> Jino Server ──PM2──> Running App
+     │                      │                                         │
+     │                   4 jobs:                               Health Check
+     │                   lint → build → deploy → verify         (/api/health)
+     │
+     └── On failure: Telegram notification
 ```
 
 ---
 
-## GitHub Actions CI/CD Pipeline
+## GitHub Secrets
 
-### Схема пайплайна
+Configure in **Settings → Secrets and variables → Actions**:
+
+| Secret | Required | Description | Example |
+|--------|----------|-------------|---------|
+| `JINO_HOST` | ✅ | IP address or hostname of Jino VPS | `123.45.67.89` |
+| `JINO_USERNAME` | ✅ | SSH username on the server | `root` |
+| `JINO_SSH_KEY` | ✅ | Private SSH key for connection | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+| `JINO_SSH_PORT` | ✅ | SSH port (non-standard for security) | `2222` |
+| `JINO_APP_DIR` | ✅ | Absolute path to app on server | `/home/j97915155/30-0` |
+| `TELEGRAM_BOT_TOKEN` | ✅ | Bot token for deployment notifications | `123456:ABC-DEF...` |
+| `TELEGRAM_CHAT_ID` | ✅ | Chat ID for deployment notifications | `-1001234567890` |
+
+> **Security**: Never commit secret values to the repository. Use GitHub Secrets exclusively.
+
+---
+
+## GitHub Actions Pipeline
+
+### Pipeline Configuration
+
+File: `.github/workflows/deploy.yml`
+
+### 4-Job Pipeline
 
 ```
 ┌─────────┐     ┌─────────┐     ┌──────────┐     ┌──────────┐
@@ -68,143 +106,135 @@
 └─────────┘     └─────────┘     └──────────┘     └──────────┘
      │               │               │                │
      ▼               ▼               ▼                ▼
-   Ошибка →       Ошибка →       Ошибка →         Ошибка →
-   Стоп           Стоп           Откат            Уведомление
+   Error →        Error →        Error →          Error →
+   Stop           Stop           Rollback         Notify
 ```
 
-### Файл `.github/workflows/deploy.yml`
+### Job 1: Lint & Type Check
 
 ```yaml
-name: Deploy to Production
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  lint:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run lint
-      - run: bunx tsc --noEmit
-
-  build:
-    name: Build Application
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun install --frozen-lockfile
-      - run: bun run build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .next/
-
-  deploy:
-    name: Deploy to Jino
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: .next/
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.JINO_HOST }}
-          username: ${{ secrets.JINO_USERNAME }}
-          key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT }}
-          script: |
-            cd ${{ secrets.JINO_APP_DIR }}
-            git pull origin main
-            bun install --frozen-lockfile
-            bun run build
-            cd mini-services/chat-service && bun install && cd ../..
-            pm2 reload ecosystem.config.js --env production
-            sleep 5
-            curl -f http://localhost:3000/api/health || exit 1
-
-      - name: Notify Telegram on Failure
-        if: failure()
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ❌ Деплой на 30-0.рф провалился!
-            Коммит: ${{ github.sha }}
-            Автор: ${{ github.actor }}
-
-  verify:
-    name: Verify Deployment
-    needs: deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Health Check
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/api/health)
-          if [ "$STATUS" != "200" ]; then
-            echo "❌ Health check failed: HTTP $STATUS"
-            exit 1
-          fi
-          echo "✅ Health check passed"
-
-      - name: Notify Telegram on Success
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ✅ Деплой на 30-0.рф успешен!
-            Коммит: ${{ github.sha }}
+lint:
+  name: Lint & Type Check
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - run: bun install --frozen-lockfile
+    - run: bun run lint
+    - run: bunx tsc --noEmit
 ```
 
+**On failure**: Pipeline stops. Fix lint errors or type issues before proceeding.
+
+### Job 2: Build Application
+
+```yaml
+build:
+  name: Build Application
+  needs: lint
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - run: bun install --frozen-lockfile
+    - run: bun run build
+    - uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: .next/
+```
+
+**On failure**: Pipeline stops. Fix build errors before proceeding.
+
+### Job 3: Deploy to Jino
+
+```yaml
+deploy:
+  name: Deploy to Jino
+  needs: build
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/download-artifact@v4
+      with:
+        name: build-output
+        path: .next/
+
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.JINO_HOST }}
+        username: ${{ secrets.JINO_USERNAME }}
+        key: ${{ secrets.JINO_SSH_KEY }}
+        port: ${{ secrets.JINO_SSH_PORT }}
+        script: |
+          cd ${{ secrets.JINO_APP_DIR }}
+          git pull origin main
+          bun install --frozen-lockfile
+          bun run build
+          pm2 reload ecosystem.config.js --env production
+          sleep 5
+          curl -f http://localhost:3000/api/health || exit 1
+
+    - name: Notify Telegram on Failure
+      if: failure()
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          ❌ Deploy to 30-0.рф failed!
+          Commit: ${{ github.sha }}
+          Author: ${{ github.actor }}
+```
+
+**On failure**: Manual intervention required. See [Rollback Procedure](#rollback-procedure).
+
+### Job 4: Verify Deployment
+
+```yaml
+verify:
+  name: Verify Deployment
+  needs: deploy
+  runs-on: ubuntu-latest
+  steps:
+    - name: Health Check
+      run: |
+        STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://30-0.рф/api/health)
+        if [ "$STATUS" != "200" ]; then
+          echo "❌ Health check failed: HTTP $STATUS"
+          exit 1
+        fi
+        echo "✅ Health check passed"
+
+    - name: Notify Telegram on Success
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          ✅ Deploy to 30-0.рф successful!
+          Commit: ${{ github.sha }}
+```
+
+### Triggers
+
+- **Automatic**: On push to `main` branch
+- **Manual**: Via `workflow_dispatch` in GitHub Actions UI
+
 ---
 
-## Обязательные GitHub Secrets
+## Server Setup (Jino)
 
-Настройте в **Settings → Secrets and variables → Actions**:
-
-| Secret             | Описание                                    | Пример                        |
-|--------------------|---------------------------------------------|-------------------------------|
-| `JINO_HOST`        | IP-адрес или хост VPS Jino                  | `123.45.67.89`                |
-| `JINO_USERNAME`    | SSH-пользователь на сервере                 | `root`                        |
-| `JINO_SSH_KEY`     | Приватный SSH-ключ для подключения          | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
-| `JINO_SSH_PORT`    | SSH-порт (нестандартный для безопасности)   | `2222`                        |
-| `JINO_APP_DIR`     | Путь к приложению на сервере                | `/var/www/30-0.рф`            |
-| `TELEGRAM_BOT_TOKEN` | Токен бота для уведомлений               | `123456:ABC-DEF...`           |
-| `DATABASE_URL`     | Строка подключения к MySQL                  | `mysql://user:pass@localhost:3306/dbname` |
-
-> **Важно:** Никогда не коммитьте значения секретов в репозиторий. Используйте только GitHub Secrets.
-
----
-
-## Настройка сервера Jino
-
-### 1. Установка Node.js 22
+### 1. Install Node.js 22
 
 ```bash
-# Установка Node.js 22 LTS через NodeSource
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
-
-# Проверка
 node --version  # v22.x.x
-npm --version   # 10.x.x
 ```
 
-### 2. Установка Bun
+### 2. Install Bun
 
 ```bash
 curl -fsSL https://bun.sh/install | bash
@@ -212,21 +242,23 @@ source ~/.bashrc
 bun --version
 ```
 
-### 3. Установка PM2
+### 3. Install PM2
 
 ```bash
 sudo npm install -g pm2
 pm2 startup
-# Выполните команду, которую выведет pm2 startup
+# Run the command that pm2 startup outputs
 ```
 
-### 4. Установка и настройка Nginx
+### 4. Install Nginx
 
 ```bash
 sudo apt install -y nginx
 ```
 
-Конфигурация `/etc/nginx/sites-available/30-0.рф`:
+### 5. Configure Nginx
+
+Create `/etc/nginx/sites-available/30-0.рф`:
 
 ```nginx
 server {
@@ -239,45 +271,31 @@ server {
     listen 443 ssl http2;
     server_name 30-0.рф www.30-0.рф;
 
-    # SSL-сертификат Let's Encrypt
+    # SSL (Let's Encrypt)
     ssl_certificate /etc/letsencrypt/live/30-0.рф/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/30-0.рф/privkey.pem;
-
-    # Настройки SSL
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
     ssl_prefer_server_ciphers off;
 
-    # Безопасность
+    # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://mc.yandex.ru; connect-src 'self' wss://30-0.рф https://mc.yandex.ru;" always;
 
-    # Gzip-сжатие
+    # Gzip
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
     gzip_min_length 256;
 
-    # Статика Next.js
+    # Static assets (long cache)
     location /_next/static/ {
         proxy_pass http://127.0.0.1:3000;
         expires 365d;
         add_header Cache-Control "public, immutable";
     }
 
-    # WebSocket (мини-сервис)
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:3003;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # Проксирование на Next.js
+    # Proxy to Next.js
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -293,286 +311,468 @@ server {
 ```
 
 ```bash
-# Активация конфигурации
 sudo ln -s /etc/nginx/sites-available/30-0.рф /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-### 5. SSL-сертификат Let's Encrypt
+### 6. Install SSL Certificate
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
 sudo certbot --nginx -d 30-0.рф -d www.30-0.рф
-# Сертификат будет автоматически обновляться через cron/certbot renew
 ```
 
-### 6. Настройка MySQL
+### 7. Configure MySQL
 
 ```bash
-sudo apt install mysql-server -y
-sudo mysql_secure_installation
-
-# Создание базы и пользователя
-sudo mysql -e "CREATE DATABASE game_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -e "CREATE USER 'game_user'@'localhost' IDENTIFIED BY 'СИЛЬНЫЙ_ПАРОЛЬ';"
-sudo mysql -e "GRANT ALL PRIVILEGES ON game_db.* TO 'game_user'@'localhost';"
-sudo mysql -e "FLUSH PRIVILEGES;"
+# Jino provides external MySQL access
+# Set DATABASE_URL in .env with external host:
+# mysql://user:password@mysql.925c78adb421.hosting.myjino.ru:3306/dbname
 ```
 
 ---
 
-## Первый деплой
+## First Deployment
 
-### Пошаговая инструкция
+### Step-by-Step
 
 ```bash
-# 1. Подключитесь к серверу по SSH
+# 1. SSH into the Jino server
 ssh -p 2222 root@123.45.67.89
 
-# 2. Создайте директорию проекта
-mkdir -p /var/www/30-0.рф
-cd /var/www/30-0.рф
+# 2. Create the project directory
+mkdir -p /home/j97915155/30-0
+cd /home/j97915155/30-0
 
-# 3. Клонируйте репозиторий
-git clone https://github.com/YOUR_ORG/YOUR_REPO.git .
+# 3. Clone the repository
+git clone https://github.com/kr1sanov/30-0.git .
 
-# 4. Установите зависимости
+# 4. Install dependencies
 bun install
 
-# 5. Создайте файл окружения
-cp .env.example .env
-nano .env  # Заполните все переменные
+# 5. Switch to MySQL schema for production
+cp prisma/schema.mysql.prisma prisma/schema.prisma
+npx prisma generate
 
-# 6. Примените миграции базы данных
-bun run db:push
+# 6. Create the .env file
+cat > .env << 'EOF'
+DATABASE_URL=mysql://j97915155:PASSWORD@mysql.925c78adb421.hosting.myjino.ru:3306/j97915155
+TELEGRAM_BOT_TOKEN=YOUR_BOT_TOKEN
+NODE_ENV=production
+PORT=3000
+HOSTNAME=0.0.0.0
+EOF
 
-# 7. Соберите проект
+# 7. Push schema to MySQL database
+npx prisma db push
+
+# 8. Seed the database with RPL data
+bun run db:seed
+
+# 9. Build the application
 bun run build
 
-# 8. Установите зависимости мини-сервисов
-cd mini-services/chat-service && bun install && cd ../..
-
-# 9. Запустите через PM2
+# 10. Start with PM2
 pm2 start ecosystem.config.js --env production
 
-# 10. Сохраните конфигурацию PM2
+# 11. Save PM2 configuration (auto-start on reboot)
 pm2 save
 
-# 11. Проверьте работоспособность
+# 12. Verify deployment
 curl -f http://localhost:3000/api/health
+# Expected: {"status":"ok","database":"connected",...}
 ```
 
-### Файл `ecosystem.config.js`
+### PM2 Configuration
+
+The `ecosystem.config.js` file configures the process:
 
 ```javascript
 module.exports = {
-  apps: [
-    {
-      name: '30-0-app',
-      script: 'bun',
-      args: 'run start',
-      cwd: '/var/www/30-0.рф',
-      instances: 1,
-      exec_mode: 'fork',
-      env_production: {
-        NODE_ENV: 'production',
-        PORT: 3000,
-      },
-      max_memory_restart: '512M',
-      error_file: '/var/log/pm2/30-0-error.log',
-      out_file: '/var/log/pm2/30-0-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      autorestart: true,
-      max_restarts: 10,
-      restart_delay: 5000,
+  apps: [{
+    name: '30-0-app',
+    script: '.next/standalone/server.js',
+    cwd: '/home/j97915155/30-0',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      HOSTNAME: '0.0.0.0',
     },
-    {
-      name: '30-0-ws',
-      script: 'bun',
-      args: 'run dev',
-      cwd: '/var/www/30-0.рф/mini-services/chat-service',
-      instances: 1,
-      exec_mode: 'fork',
-      env_production: {
-        NODE_ENV: 'production',
-        PORT: 3003,
-      },
-      max_memory_restart: '256M',
-      error_file: '/var/log/pm2/30-0-ws-error.log',
-      out_file: '/var/log/pm2/30-0-ws-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      merge_logs: true,
-      autorestart: true,
-      max_restarts: 10,
-      restart_delay: 5000,
-    },
-  ],
+    max_restarts: 10,
+    restart_delay: 5000,
+    min_uptime: '10s',
+    max_memory_restart: '512M',
+    out_file: '/home/j97915155/30-0/logs/out.log',
+    error_file: '/home/j97915155/30-0/logs/error.log',
+    log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+    merge_logs: true,
+    watch: false,
+    kill_timeout: 10000,
+    listen_timeout: 30000,
+    shutdown_with_message: true,
+  }],
 };
 ```
 
 ---
 
-## Процесс обновления
+## Deploy Process
 
-### Автоматический (push в main)
+### Automatic Deployment (Push to Main)
 
-При каждом пуше в ветку `main` GitHub Actions автоматически:
+When code is pushed to the `main` branch, GitHub Actions automatically:
 
-1. **Lint** — проверяет код линтером и типами
-2. **Build** — собирает Next.js-приложение
-3. **Deploy** — подключается по SSH, обновляет код, пересобирает, перезапускает PM2
-4. **Verify** — проверяет health check и отправляет уведомление в Telegram
+1. **Lint** — Runs ESLint and TypeScript type checking
+2. **Build** — Compiles the Next.js production build
+3. **Deploy** — Connects via SSH, performs:
+   - `git pull origin main` — Get latest code
+   - `bun install --frozen-lockfile` — Install dependencies
+   - `bun run build` — Build on the server
+   - `pm2 reload ecosystem.config.js --env production` — Restart the app
+   - `sleep 5 && curl -f http://localhost:3000/api/health` — Health check
+4. **Verify** — External health check via `https://30-0.рф/api/health`
 
-### Ручной деплой
+### Manual Deployment
 
 ```bash
-# Подключитесь к серверу
+# SSH into server
 ssh -p 2222 root@123.45.67.89
+cd /home/j97915155/30-0
 
-# Перейдите в директорию проекта
-cd /var/www/30-0.рф
-
-# Получите последние изменения
+# Get latest code
 git pull origin main
 
-# Установите зависимости
+# Install dependencies
 bun install
 
-# Примените миграции (если есть)
+# Apply database migrations (if any)
 bun run db:push
 
-# Соберите проект
+# Build
 bun run build
 
-# Перезапустите приложение
+# Restart PM2
 pm2 reload ecosystem.config.js --env production
 
-# Проверьте
-pm2 status
+# Verify
 curl -f http://localhost:3000/api/health
+```
+
+### Deployment with Database Changes
+
+If the Prisma schema has changed:
+
+```bash
+cd /home/j97915155/30-0
+git pull origin main
+bun install
+
+# Switch to MySQL schema
+cp prisma/schema.mysql.prisma prisma/schema.prisma
+npx prisma generate
+
+# Apply schema changes
+npx prisma db push
+
+# Rebuild and restart
+bun run build
+pm2 reload ecosystem.config.js --env production
 ```
 
 ---
 
-## Процедура отката
+## Rollback Procedure
 
-### Быстрый откат через Git
+### Quick Rollback via Git
 
 ```bash
-cd /var/www/30-0.рф
+cd /home/j97915155/30-0
 
-# 1. Посмотрите последние коммиты
+# 1. View recent commits
 git log --oneline -10
 
-# 2. Откатитесь к предыдущему рабочему коммиту
+# 2. Revert to the last working commit
 git revert HEAD
-# или (ОПАСНО — переписывает историю):
+# Or (DANGEROUS — rewrites history):
 # git reset --hard <COMMIT_HASH>
 
-# 3. Пересоберите и перезапустите
+# 3. Rebuild and restart
 bun install
 bun run build
 pm2 reload ecosystem.config.js --env production
 
-# 4. Проверьте
+# 4. Verify
 curl -f http://localhost:3000/api/health
 ```
 
-### Откат через PM2
+### Rollback via PM2 (if app won't start)
 
 ```bash
-# PM2 не хранит бинарные снапшоты,
-# поэтому откат всегда через Git revert/reset
+# Stop the broken app
+pm2 stop 30-0-app
 
-# Если приложение упало и не поднимается:
-pm2 stop all
-git reset --hard <ПОСЛЕДНИЙ_РАБОЧИЙ_КОММИТ>
+# Revert the code
+cd /home/j97915155/30-0
+git reset --hard <LAST_WORKING_COMMIT>
+
+# Rebuild
 bun install
 bun run build
+
+# Start fresh
+pm2 start ecosystem.config.js --env production
+
+# Verify
+curl -f http://localhost:3000/api/health
+```
+
+### Deployment Backup Strategy
+
+Before each deployment, the existing `.next` build is backed up:
+
+```bash
+# Create backup before deploy
+cp -r .next .next-backup-$(date +%Y%m%d_%H%M%S)
+
+# If deploy fails, restore from backup
+pm2 stop 30-0-app
+rm -rf .next
+cp -r .next-backup-XXXXXXXX_XXXXXX .next
 pm2 start ecosystem.config.js --env production
 ```
 
-### Резервное копирование базы данных перед откатом
+> Keep only the last 3 backups to save disk space:
+> ```bash
+> ls -dt .next-backup-* | tail -n +4 | xargs rm -rf
+> ```
+
+### Database Backup Before Rollback
 
 ```bash
-# Создайте дамп перед любыми операциями
-mysqldump -u game_user -p game_db > /var/backups/game_db_$(date +%Y%m%d_%H%M%S).sql
+# Create a MySQL dump before any destructive operations
+mysqldump -u j97915155 -p j97915155 > /var/backups/game_db_$(date +%Y%m%d_%H%M%S).sql
 
-# Восстановление из дампа
-mysql -u game_user -p game_db < /var/backups/game_db_20250101_120000.sql
+# Restore from dump if needed
+mysql -u j97915155 -p j97915155 < /var/backups/game_db_20250101_120000.sql
 ```
 
 ---
 
-## Переменные окружения
+## Monitoring & Verification
 
-Файл `.env` (на сервере `/var/www/30-0.рф/.env`):
+### Health Check Endpoint
 
-```bash
-# === Приложение ===
-NODE_ENV=production
-NEXT_PUBLIC_APP_URL=https://30-0.рф
-PORT=3000
-
-# === База данных ===
-DATABASE_URL=mysql://game_user:СИЛЬНЫЙ_ПАРОЛЬ@localhost:3306/game_db
-
-# === Telegram (уведомления и авторизация) ===
-TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
-NEXT_PUBLIC_TELEGRAM_BOT_NAME=your_game_bot
-
-# === Yandex.Metrika ===
-NEXT_PUBLIC_YANDEX_METRIKA_ID=12345678
-
-# === Мини-сервис WebSocket ===
-WS_PORT=3003
-
-# === Безопасность ===
-NEXTAUTH_SECRET=СЛУЧАЙНАЯ_СТРОКА_32_СИМВОЛА
-NEXTAUTH_URL=https://30-0.рф
+```
+GET https://30-0.рф/api/health
 ```
 
-> **Важно:** Файл `.env` добавлен в `.gitignore` и никогда не попадает в репозиторий.
+**Success Response** (HTTP 200):
+```json
+{
+  "status": "ok",
+  "database": "connected",
+  "version": "production",
+  "responseTime": "23ms",
+  "timestamp": "2026-07-07T12:00:00.000Z",
+  "stats": {
+    "clubs": 15,
+    "players": 613,
+    "playerSeasons": 1500,
+    "seasons": 33,
+    "gameRuns": 42,
+    "users": 10
+  }
+}
+```
+
+**Error Response** (HTTP 500):
+```json
+{
+  "status": "error",
+  "database": "disconnected",
+  "responseTime": "5003ms",
+  "timestamp": "2026-07-07T12:00:00.000Z",
+  "error": "Can't reach database server"
+}
+```
+
+### PM2 Commands
+
+```bash
+# Status of all processes
+pm2 status
+
+# Detailed info about the app
+pm2 describe 30-0-app
+
+# Real-time monitoring
+pm2 monit
+
+# View logs
+pm2 logs 30-0-app --lines 100
+
+# View error logs only
+pm2 logs 30-0-app --err --lines 50
+
+# Clear logs
+pm2 flush 30-0-app
+```
+
+### External Monitoring
+
+Set up an uptime monitoring service (UptimeRobot, Hetrix Tools) to check:
+
+1. **Main site**: `https://30-0.рф` — HTTP check
+2. **API health**: `https://30-0.рф/api/health` — Keyword check for `"status":"ok"`
+
+Configure alerts to send notifications to Telegram.
 
 ---
 
-## Настройка Telegram-бота
+## Troubleshooting
 
-### Создание бота
+### Common Issues
 
-1. Откройте [@BotFather](https://t.me/BotFather) в Telegram
-2. Отправьте `/newbot`
-3. Укажите имя: **30-0 Игра** (или любое другое)
-4. Укажите username: **your_game_bot** (должен заканчиваться на `bot`)
-5. Скопируйте полученный токен в `TELEGRAM_BOT_TOKEN`
+#### 1. Build Fails on Server
 
-### Настройка Login Widget (авторизация через Telegram)
+**Symptom**: `bun run build` exits with error during GitHub Actions or manual deploy.
 
-1. В @BotFather отправьте `/setdomain`
-2. Выберите вашего бота
-3. Укажите домен: `30-0.рф`
-
-### Настройка уведомлений о деплое
-
-1. Создайте группу или канал для уведомлений
-2. Добавьте бота в группу и выдайте права администратора
-3. Получите `chat_id` группы:
-   ```bash
-   # Отправьте сообщение в группу, затем:
-   curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates" | jq '.result[-1].message.chat.id'
-   ```
-4. Добавьте `chat_id` в GitHub Secrets как `TELEGRAM_CHAT_ID`
-
-### Проверка работоспособности
-
+**Fix**:
 ```bash
-# Проверка токена
+# Check Node.js version
+node --version  # Must be 20+
+
+# Check disk space
+df -h  # Need at least 2GB free
+
+# Clear Next.js cache and rebuild
+rm -rf .next
+bun run build
+```
+
+#### 2. App Starts but API Returns 500
+
+**Symptom**: PM2 shows app running, but `/api/health` returns 500 with `database: "disconnected"`.
+
+**Fix**:
+```bash
+# Check DATABASE_URL in .env
+cat .env | grep DATABASE_URL
+
+# Test MySQL connection directly
+mysql -u j97915155 -p -h mysql.925c78adb421.hosting.myjino.ru j97915155
+
+# Restart app
+pm2 restart 30-0-app
+```
+
+#### 3. PM2 Process Keeps Restarting
+
+**Symptom**: `pm2 status` shows restart count increasing.
+
+**Fix**:
+```bash
+# Check error logs
+pm2 logs 30-0-app --err --lines 50
+
+# Common causes:
+# - Port 3000 already in use
+lsof -i :3000
+kill -9 <PID>
+
+# - Missing .env file
+ls -la .env
+
+# - Out of memory
+free -h
+# Increase max_memory_restart in ecosystem.config.js
+```
+
+#### 4. Nginx 502 Bad Gateway
+
+**Symptom**: Browser shows 502 error.
+
+**Fix**:
+```bash
+# Check if Next.js app is running
+pm2 status
+
+# Check if app responds locally
+curl http://localhost:3000/api/health
+
+# If app is down, restart it
+pm2 restart 30-0-app
+
+# Check Nginx configuration
+sudo nginx -t
+sudo systemctl status nginx
+```
+
+#### 5. Git Pull Conflicts During Deploy
+
+**Symptom**: `git pull` fails with merge conflicts on the server.
+
+**Fix**:
+```bash
+# Force reset to match remote (CAUTION: loses local changes)
+git fetch origin
+git reset --hard origin/main
+
+# Then continue with deploy
+bun install
+bun run build
+pm2 reload ecosystem.config.js --env production
+```
+
+#### 6. Out of Disk Space
+
+**Symptom**: Build fails with "No space left on device".
+
+**Fix**:
+```bash
+# Check disk usage
+df -h
+
+# Clean up old backups
+ls -dt .next-backup-* | tail -n +4 | xargs rm -rf
+
+# Clean PM2 logs
+pm2 flush
+
+# Clean npm/bun cache
+bun pm cache rm
+
+# Clean old Git objects
+git gc --prune=now
+```
+
+#### 7. Telegram Auth Not Working in Production
+
+**Symptom**: Users can't log in via Telegram on production.
+
+**Fix**:
+```bash
+# Check TELEGRAM_BOT_TOKEN in .env
+cat .env | grep TELEGRAM_BOT_TOKEN
+
+# Verify the token works
 curl "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe"
 
-# Отправка тестового сообщения
-curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-  -d chat_id="CHAT_ID" \
-  -d text="✅ Бот настроен правильно!"
+# Check that BotFather has the correct domain set:
+# /setdomain → select bot → 30-0.рф
+```
+
+#### 8. Prisma Client Mismatch
+
+**Symptom**: Errors like "Cannot read properties of undefined (reading 'findMany')".
+
+**Fix**:
+```bash
+# Regenerate Prisma Client
+npx prisma generate
+
+# Rebuild the app
+bun run build
+pm2 restart 30-0-app
 ```

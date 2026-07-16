@@ -157,3 +157,26 @@ export interface LeaderboardEntry {
   seasonPosition: number;
   createdAt: string;
 }
+
+// ---------------------------------------------------------------------------
+// Daily Challenge
+// ---------------------------------------------------------------------------
+
+export interface NationalityRequirement {
+  nationality: string;
+  flag: string;
+  count: number;
+}
+
+export interface DailyChallenge {
+  date: string;
+  title: string;
+  description: string;
+  difficulty: string;
+  nationalityRequirements: NationalityRequirement[];
+  eraRestriction?: { start: number; end: number };
+  formationLock?: string;
+  bonusDescription?: string;
+  completionOdds: number;
+  maxAttempts: number;
+}

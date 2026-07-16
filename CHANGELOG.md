@@ -1,6 +1,44 @@
 # 📋 CHANGELOG — 30-0 RPL
 
 Все значимые изменения проекта документируются в этом файле.
+Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/).
+Версионирование следует [Semantic Versioning](https://semver.org/lang/ru/).
+
+---
+
+## [1.1.0] — 2026-03-04
+
+### Added
+- **Prisma Schema**: Added `referralCode`, `referredBy`, `referralCount` fields to User model
+- **Prisma Schema**: Added `eraStartYear`, `eraEndYear`, `clubFilter` fields to GameRun model
+- **CI/CD**: Complete GitHub Actions pipeline — lint → build → deploy → verify
+- **CI/CD**: Production deploy script with backup, rollback, and health check
+- **CI/CD**: PM2 ecosystem configuration for process management
+- **CI/CD**: Automatic deployment on push to main branch
+- **Types**: Added `DailyChallenge` and `NationalityRequirement` interfaces
+- **Store**: Added `startDailyChallenge`, `setError`, `clearError` actions to gameStore
+- **Store**: Added `dailyChallenge` and `error` state to gameStore
+- **Config**: Added `scripts/`, `examples/`, `skills/`, `supabase/` to tsconfig exclude
+- **Docs**: ARCHITECTURE.md, DEVELOPMENT.md, DEPLOYMENT.md, PRODUCTION.md
+
+### Fixed
+- **TypeScript**: Removed `ignoreBuildErrors` from next.config.ts — all TS errors now cause build failure
+- **TypeScript**: Fixed DailyChallengeScreen missing types and store methods
+- **TypeScript**: Fixed ErrorToast missing store properties (error, clearError)
+- **TypeScript**: Fixed Header unreachable code comparison
+- **TypeScript**: Fixed referral API routes accessing non-existent Prisma fields
+- **TypeScript**: Fixed era API routes accessing non-existent Prisma fields
+- **ESLint**: Added eslint-disable for require-imports in legacy JS scripts
+- **CI/CD**: Removed `|| echo` bailouts — quality gates now properly fail the pipeline
+- **CI/CD**: Removed `DEPLOY_ENABLED` variable requirement — deploy is automatic on main push
+- **CI/CD**: Deploy uses build artifacts instead of rebuilding from scratch
+- **CI/CD**: Added concurrency group to prevent simultaneous deployments
+
+### Security
+- **Headers**: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Permissions-Policy
+- **Config**: `poweredByHeader: false` in Next.js config
+- **Config**: Static asset caching (1 year immutable)
+- **Schema**: `referralCode` field has `@unique` constraint
 
 ---
 

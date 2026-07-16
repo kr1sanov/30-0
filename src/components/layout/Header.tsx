@@ -97,7 +97,6 @@ export default function Header() {
   // Mode 3: Setup, profile, etc. — normal header with buttons
   const handleHome = () => {
     handleHaptic();
-    if (screen === 'home') return;
     if (runId) {
       goHome();
     } else {

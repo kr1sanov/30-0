@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * RPL Player Data Generator 2011-2025 (v2)
  * Generates rpl-2011-2026.json with comprehensive player-season records

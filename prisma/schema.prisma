@@ -3,16 +3,16 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Club {
   id        String   @id @default(cuid())
   nameRu    String
-  nameEn    String?  @db.VarChar(255)
-  city      String?  @db.VarChar(255)
-  logoUrl   String?  @db.Text
+  nameEn    String?
+  city      String?
+  logoUrl   String?
   seasons   ClubSeason[]
 
   @@unique([nameRu])
@@ -22,7 +22,7 @@ model Season {
   id             String   @id @default(cuid())
   startYear      Int
   endYear        Int
-  label          String   @db.VarChar(255)
+  label          String
   matchesPerTeam Int      @default(30)
   clubSeasons    ClubSeason[]
 
@@ -51,10 +51,10 @@ model ClubSeason {
 
 model Player {
   id          String   @id @default(cuid())
-  lastName    String   @db.VarChar(255)
-  firstName   String?  @db.VarChar(255)
-  fullName    String   @db.VarChar(255)
-  nationality String?  @db.VarChar(255)
+  lastName    String
+  firstName   String?
+  fullName    String
+  nationality String?
   birthYear   Int?
 
   seasons     PlayerSeason[]
@@ -68,9 +68,9 @@ model PlayerSeason {
   clubSeasonId   String
   rating         Int
   primeRating    Int      @default(0)
-  primeSeason    String?  @db.VarChar(50)
-  mainPosition   String   @db.VarChar(50)
-  otherPositions String?  @db.VarChar(255)
+  primeSeason    String?
+  mainPosition   String
+  otherPositions String?
   age            Int?
   matches        Int?
   goals          Int?
@@ -84,27 +84,31 @@ model PlayerSeason {
 
 model User {
   id               String   @id @default(cuid())
-  telegramId       String   @unique @db.VarChar(255)
-  username         String?  @db.VarChar(255)
-  firstName        String?  @db.VarChar(255)
-  lastName         String?  @db.VarChar(255)
-  photoUrl         String?  @db.Text
-  displayName      String   @default("Игрок") @db.VarChar(255)
-  profileStatsJson String?  @db.Text
+  telegramId       String   @unique
+  username         String?
+  firstName        String?
+  lastName         String?
+  photoUrl         String?
+  displayName      String   @default("Игрок")
+  profileStatsJson String?
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  referralCode     String?  @unique
+  referredBy       String?
+  referralCount    Int      @default(0)
 
   runs             GameRun[]
 }
 
 model GameRun {
   id           String   @id @default(cuid())
-  formation    String   @default("4-3-3") @db.VarChar(20)
-  difficulty   String   @default("normal") @db.VarChar(20)
-  draftMode    String   @default("squad_first") @db.VarChar(30)
-  ratingMode   String   @default("season") @db.VarChar(20)
-  eraFilter    String   @default("all") @db.VarChar(20)
+  formation    String   @default("4-3-3")
+  difficulty   String   @default("normal")
+  draftMode    String   @default("squad_first")
+  ratingMode   String   @default("season")
+  eraFilter    String   @default("all")
   rerollsTotal Int      @default(1)
   rerollsUsed  Int      @default(0)
 
@@ -118,14 +122,18 @@ model GameRun {
   goalsAgainst Int?
   overallRating Int?
 
-  managerName   String?  @db.VarChar(255)
+  managerName   String?
   managerRating Int?
-  teamName      String?  @db.VarChar(255)
+  teamName      String?
 
   userId       String?
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   createdAt    DateTime @default(now())
+
+  eraStartYear   Int      @default(2000)
+  eraEndYear     Int      @default(2025)
+  clubFilter     String?
 
   slots        GameSlot[]
 }
@@ -133,15 +141,15 @@ model GameRun {
 model GameSlot {
   id                   String   @id @default(cuid())
   runId                String
-  slotPosition         String   @db.VarChar(20)
+  slotPosition         String
   playerSeasonId       String?
-  playerName           String?  @db.VarChar(255)
-  playerLastName       String?  @db.VarChar(255)
+  playerName           String?
+  playerLastName       String?
   playerRating         Int?
   playerPrimeRating    Int?
-  playerPosition       String?  @db.VarChar(50)
-  playerOtherPositions String?  @db.VarChar(255)
-  playerNationality    String?  @db.VarChar(255)
+  playerPosition       String?
+  playerOtherPositions String?
+  playerNationality    String?
   isCompatible         Boolean  @default(true)
 
   run                  GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)

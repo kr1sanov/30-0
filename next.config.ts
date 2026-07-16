@@ -7,10 +7,6 @@ const nextConfig: NextConfig = {
   // Disable X-Powered-By header
   poweredByHeader: false,
 
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-
   reactStrictMode: false,
 
   // Security headers for production
