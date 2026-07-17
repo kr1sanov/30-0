@@ -131,6 +131,11 @@ echo ""
 echo "🚀 Step 6: Restarting application"
 
 # Phusion Passenger auto-restarts on file changes
+# Ensure HOSTNAME is set to 0.0.0.0 to avoid ENOTFOUND error on shared hosting
+if ! grep -q 'HOSTNAME=0.0.0.0' "$APP_DIR/.envrc" 2>/dev/null; then
+  echo 'export HOSTNAME=0.0.0.0' >> "$APP_DIR/.envrc"
+  echo "✅ HOSTNAME=0.0.0.0 added to .envrc"
+fi
 # Create a restart.txt file to trigger Passenger restart
 mkdir -p tmp
 touch tmp/restart.txt
