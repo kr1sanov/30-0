@@ -148,7 +148,7 @@ jobs:
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.JINO_SSH_KEY }}
           port: ${{ secrets.JINO_SSH_PORT }}
           source: "deploy.tar.gz"
           target: "/tmp/"
@@ -158,7 +158,7 @@ jobs:
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.JINO_SSH_KEY }}
           port: ${{ secrets.JINO_SSH_PORT }}
           source: "scripts/deploy-production.sh"
           target: "/tmp/deploy-script/"
@@ -168,7 +168,7 @@ jobs:
         with:
           host: ${{ secrets.JINO_HOST }}
           username: ${{ secrets.JINO_USERNAME }}
-          key_path: ~/.ssh/deploy_key
+          key: ${{ secrets.JINO_SSH_KEY }}
           port: ${{ secrets.JINO_SSH_PORT }}
           script_stop: true
           command_timeout: 120s
