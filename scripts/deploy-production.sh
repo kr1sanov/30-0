@@ -139,6 +139,7 @@ fi
 # Create a restart.txt file to trigger Passenger restart
 mkdir -p tmp
 touch tmp/restart.txt
+direnv allow "$APP_DIR/.envrc" 2>/dev/null || true
 echo "✅ Passenger restart triggered (tmp/restart.txt)"
 
 # If PM2 is available, also restart via PM2 (for non-Passenger environments)
