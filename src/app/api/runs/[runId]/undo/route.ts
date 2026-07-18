@@ -2,11 +2,13 @@ import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ runId: string }> },
 ) {
   try {
     const { runId } = await params;
+    const body = await request.json().catch(() => ({}));
+    const { slotPosition: targetSlotPosition } = body;
 
     // Get the run with slots
     const run = await db.gameRun.findUnique({
@@ -25,7 +27,7 @@ export async function POST(
       );
     }
 
-    // Find the most recent slot with a playerSeasonId (last in the ordered list)
+    // Find filled slots
     const filledSlots = run.slots.filter((s) => s.playerSeasonId);
     if (filledSlots.length === 0) {
       return NextResponse.json(
@@ -34,17 +36,30 @@ export async function POST(
       );
     }
 
-    // The last filled slot (most recently drafted)
-    const lastFilledSlot = filledSlots[filledSlots.length - 1];
+    let targetSlot;
+    if (targetSlotPosition) {
+      // Undo the specific slot the client requested
+      targetSlot = filledSlots.find((s) => s.slotPosition === targetSlotPosition);
+      if (!targetSlot) {
+        return NextResponse.json({ error: 'Slot not found or not filled' }, { status: 400 });
+      }
+    } else {
+      // Fallback: last filled slot by position order (old behavior)
+      targetSlot = filledSlots[filledSlots.length - 1];
+    }
 
-    // Remove the player from that slot
+    // Remove the player from that slot — clear ALL player fields
     await db.gameSlot.update({
-      where: { id: lastFilledSlot.id },
+      where: { id: targetSlot.id },
       data: {
         playerSeasonId: null,
         playerName: null,
+        playerLastName: null,
         playerRating: null,
+        playerPrimeRating: null,
         playerPosition: null,
+        playerOtherPositions: null,
+        playerNationality: null,
         isCompatible: true,
       },
     });

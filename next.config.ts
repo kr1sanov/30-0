@@ -71,7 +71,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "mc.yandex.ru",
+      },
+      {
+        protocol: "https",
+        hostname: "telegram.org",
       },
     ],
   },

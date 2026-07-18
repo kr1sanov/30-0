@@ -19,8 +19,8 @@ Header always set X-XSS-Protection "1; mode=block"
 # Referrer Policy
 Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-# HSTS — force HTTPS (enable ONLY after SSL is confirmed working)
-# Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+# HSTS — force HTTPS
+Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 
 # Permissions Policy — disable unused features
 Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
@@ -82,9 +82,9 @@ PassengerEnvVar PORT 3000
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # Force HTTPS (uncomment after SSL is confirmed)
-  # RewriteCond %{HTTPS} off
-  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  # Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
   # Route all requests through Next.js
   RewriteCond %{REQUEST_FILENAME} !-f

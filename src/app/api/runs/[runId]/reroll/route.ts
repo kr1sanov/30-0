@@ -177,6 +177,8 @@ export async function POST(
       fullName: ps.player.fullName,
       lastName: ps.player.lastName,
       rating: run.difficulty === 'hard' ? 0 : ps.rating,
+      primeRating: ps.primeRating || ps.rating,
+      primeSeason: ps.primeSeason || selectedClubSeason.season.label,
       mainPosition: ps.mainPosition,
       otherPositions: ps.otherPositions ? ps.otherPositions.split(',').map((p) => p.trim()) : [],
       nationality: ps.player.nationality,

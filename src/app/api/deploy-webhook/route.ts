@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 export const dynamic = 'force-dynamic';
 
@@ -14,38 +14,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
-  const artifactUrl = body.artifact_url as string | undefined;
-
   const appDir = process.env.JINO_APP_DIR || '/home/users/j/j97915155/domains/30-0.xn--p1ai';
 
   try {
-    // Run deploy in background so we can respond immediately
-    const deployScript = artifactUrl
-      ? `cd ${appDir} && curl -L -o /tmp/deploy.tar.gz "${artifactUrl}" && tar -xzf /tmp/deploy.tar.gz -C . && rm -f /tmp/deploy.tar.gz && echo 'Deploy complete'`
-      : `cd ${appDir} && git pull origin main && echo 'Git pull complete'`;
-
-    // Execute in background
-    exec(deployScript, (error, stdout, stderr) => {
-      if (error) {
-        console.error('Deploy error:', error);
-        console.error('stderr:', stderr);
-      } else {
-        console.log('Deploy success:', stdout);
-      }
-    });
-
+    // Safe: execFile does NOT use shell interpolation
+    const { stdout } = await execFileAsync('git', ['pull', 'origin', 'main'], { cwd: appDir });
+    
     return NextResponse.json({
       status: 'ok',
-      message: 'Deploy triggered',
-      mode: artifactUrl ? 'artifact' : 'git-pull',
+      message: 'Git pull triggered',
+      output: stdout,
     });
   } catch (error) {
     console.error('Deploy webhook error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Deploy failed' }, { status: 500 });
   }
-}
-
-export async function GET() {
-  return NextResponse.json({ status: 'ok', endpoint: 'deploy-webhook' });
 }

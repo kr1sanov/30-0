@@ -47,6 +47,7 @@ model ClubSeason {
   players      PlayerSeason[]
 
   @@unique([clubId, seasonId])
+  @@index([seasonId])
 }
 
 model Player {
@@ -80,6 +81,8 @@ model PlayerSeason {
   clubSeason     ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, clubSeasonId])
+  @@index([clubSeasonId])
+  @@index([mainPosition])
 }
 
 model User {
@@ -136,6 +139,11 @@ model GameRun {
   clubFilter     String?  @db.VarChar(255)
 
   slots        GameSlot[]
+
+  @@index([userId])
+  @@index([completed])
+  @@index([completed, points])
+  @@index([createdAt])
 }
 
 model GameSlot {
@@ -155,4 +163,6 @@ model GameSlot {
   run                  GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@unique([runId, slotPosition])
+  @@index([runId])
+  @@index([playerSeasonId])
 }
