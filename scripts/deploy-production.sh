@@ -2,8 +2,18 @@
 # ──────────────────────────────────────────────
 # 30-0 RPL — Production Deploy Script (runs on Jino)
 # ──────────────────────────────────────────────
-# Jino uses Apache + Phusion Passenger to serve Node.js apps.
-# Passenger auto-detects changes and restarts the app.
+# Structure on Jino:
+#   ~/domains/30-0.xn--p1ai/
+#     app.js              <- Passenger entrypoint
+#     .next/standalone/   <- Next.js standalone server
+#       server.js
+#       node_modules/
+#       public/
+#       .next/
+#         static/         <- static assets (MUST be here)
+#         server/         <- server chunks
+#     prisma/             <- Prisma schema
+#     tmp/restart.txt     <- triggers Passenger restart
 # ──────────────────────────────────────────────
 set -euo pipefail
 
@@ -15,7 +25,6 @@ export NVM_DIR="$HOME/.nvm"
 
 # Also try common node paths on Jino shared hosting
 if ! command -v node &> /dev/null; then
-  # Try to find node in common nvm install paths
   for NODE_PATH in "$HOME/.nvm/versions/node/"*/bin; do
     if [ -d "$NODE_PATH" ]; then
       export PATH="$NODE_PATH:$PATH"
@@ -23,15 +32,19 @@ if ! command -v node &> /dev/null; then
     fi
   done
 fi
-APP_DIR="${APP_DIR:-/home/j97915155/30-0}"
+
+# Resolve APP_DIR — use env var if set, otherwise default to Jino domain directory
+APP_DIR="${APP_DIR:-$HOME/domains/30-0.xn--p1ai}"
 APP_NAME="30-0-app"
-HEALTH_URL="https://30-0.рф/api/health"
+HEALTH_URL="https://30-0.xn--p1ai/api/health"
 BACKUP_COUNT=3
 
 echo "=========================================="
 echo "  30-0 RPL — Production Deploy"
 echo "  $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
+echo ""
+echo "  APP_DIR: $APP_DIR"
 echo ""
 
 # ─── Step 1: Pre-flight checks ───
@@ -53,140 +66,130 @@ if [ "$NODE_VERSION" -lt 20 ]; then
   exit 1
 fi
 
-echo "✅ Pre-flight checks passed (Node $(node -v))"
+if [ ! -d "$APP_DIR" ]; then
+  echo "❌ APP_DIR does not exist: $APP_DIR"
+  exit 1
+fi
+
+echo "✅ Pre-flight checks passed (Node $(node -v), APP_DIR exists)"
 
 # ─── Step 2: Create backup ───
 echo ""
 echo "📦 Step 2: Creating backup"
-
 cd "$APP_DIR"
 mkdir -p logs
+mkdir -p tmp
 
-# Backup current .next directory
-if [ -d .next ]; then
-  BACKUP_NAME=".next-backup-$(date +%Y%m%d%H%M%S)"
-  cp -r .next "$BACKUP_NAME"
+# Backup current standalone directory
+if [ -d .next/standalone ]; then
+  BACKUP_NAME="standalone-backup-$(date +%Y%m%d%H%M%S)"
+  cp -r .next/standalone "$BACKUP_NAME"
   echo "✅ Backup created: $BACKUP_NAME"
-
   # Clean old backups (keep only last N)
-  ls -dt .next-backup-* 2>/dev/null | tail -n +$((BACKUP_COUNT + 1)) | xargs rm -rf 2>/dev/null || true
+  ls -dt standalone-backup-* 2>/dev/null | tail -n +$((BACKUP_COUNT + 1)) | xargs rm -rf 2>/dev/null || true
   echo "✅ Old backups cleaned (keeping last $BACKUP_COUNT)"
 else
-  echo "⚠️  No existing .next directory to backup"
+  echo "⚠️ No existing .next/standalone to backup"
 fi
 
 # ─── Step 3: Extract deployment ───
 echo ""
 echo "📂 Step 3: Extracting deployment package"
-
-mkdir -p .next
+mkdir -p .next/standalone
 tar -xzf /tmp/deploy.tar.gz -C .
 rm -f /tmp/deploy.tar.gz
 
 echo "✅ Deployment package extracted"
+echo "   Structure after extraction:"
+ls -la .next/standalone/ | head -10
+ls -la .next/standalone/.next/ 2>/dev/null | head -5 || echo "   (no .next inside standalone)"
 
 # ─── Step 4: Ensure Prisma client ───
 echo ""
 echo "🔧 Step 4: Ensuring Prisma client modules"
 
-mkdir -p .next/standalone/node_modules
+STANDALONE_NM=".next/standalone/node_modules"
+mkdir -p "$STANDALONE_NM"
 
-# Copy Prisma client modules if node_modules exists from previous install
+# Copy Prisma client from existing node_modules if available
 if [ -d node_modules/.prisma ]; then
-  cp -r node_modules/.prisma .next/standalone/node_modules/ 2>/dev/null || true
-  echo "✅ .prisma client copied"
+  cp -r node_modules/.prisma "$STANDALONE_NM/" 2>/dev/null || true
+  echo "✅ .prisma client copied from node_modules"
 fi
-
 if [ -d node_modules/@prisma ]; then
-  cp -r node_modules/@prisma .next/standalone/node_modules/ 2>/dev/null || true
-  echo "✅ @prisma client copied"
+  cp -r node_modules/@prisma "$STANDALONE_NM/" 2>/dev/null || true
+  echo "✅ @prisma client copied from node_modules"
 fi
 
-# If Prisma client isn't available yet, install it
-if [ ! -d .next/standalone/node_modules/.prisma ]; then
-  echo "⚠️  Prisma client not found, generating..."
-  cd "$APP_DIR"
-  cp prisma/schema.mysql.prisma prisma/schema.prisma
+# If Prisma client still missing, generate it
+if [ ! -d "$STANDALONE_NM/.prisma" ]; then
+  echo "⚠️ Prisma client not found, generating..."
+  cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
   npx prisma generate
-  cp -r node_modules/.prisma .next/standalone/node_modules/ 2>/dev/null || true
-  cp -r node_modules/@prisma .next/standalone/node_modules/ 2>/dev/null || true
+  cp -r node_modules/.prisma "$STANDALONE_NM/" 2>/dev/null || true
+  cp -r node_modules/@prisma "$STANDALONE_NM/" 2>/dev/null || true
   echo "✅ Prisma client generated and copied"
 fi
 
 # ─── Step 5: Database migration ───
 echo ""
-echo "🗄️  Step 5: Running database sync"
-
-cd "$APP_DIR"
+echo "🗄️ Step 5: Running database sync"
 cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
-
 if [ -f .env ]; then
-  npx prisma db push --accept-data-loss 2>/dev/null && echo "✅ Database schema synced" || echo "⚠️  Database sync warning (non-fatal)"
+  npx prisma db push --accept-data-loss 2>/dev/null && echo "✅ Database schema synced" || echo "⚠️ Database sync warning (non-fatal)"
 else
-  echo "⚠️  No .env file found, skipping database migration"
+  echo "⚠️ No .env file found, skipping database sync"
 fi
 
 # ─── Step 6: Restart application ───
 echo ""
 echo "🚀 Step 6: Restarting application"
 
-# Phusion Passenger auto-restarts on file changes
-# Ensure HOSTNAME is set to 0.0.0.0 to avoid ENOTFOUND error on shared hosting
-if ! grep -q 'HOSTNAME=0.0.0.0' "$APP_DIR/.envrc" 2>/dev/null; then
-  echo 'export HOSTNAME=0.0.0.0' >> "$APP_DIR/.envrc"
+# Ensure HOSTNAME is set to 0.0.0.0 in .envrc
+if [ -f .envrc ] && ! grep -q 'HOSTNAME=0.0.0.0' .envrc; then
+  echo 'export HOSTNAME=0.0.0.0' >> .envrc
   echo "✅ HOSTNAME=0.0.0.0 added to .envrc"
 fi
-# Create a restart.txt file to trigger Passenger restart
+
+# Trigger Phusion Passenger restart
 mkdir -p tmp
 touch tmp/restart.txt
-direnv allow "$APP_DIR/.envrc" 2>/dev/null || true
 echo "✅ Passenger restart triggered (tmp/restart.txt)"
-
-# If PM2 is available, also restart via PM2 (for non-Passenger environments)
-if command -v pm2 &> /dev/null; then
-  if pm2 describe "$APP_NAME" &> /dev/null; then
-    pm2 restart "$APP_NAME" --update-env
-    echo "✅ PM2 process restarted"
-  else
-    echo "ℹ️  PM2 available but no process running — Passenger is handling the app"
-  fi
-fi
 
 # ─── Step 7: Health check ───
 echo ""
 echo "🏥 Step 7: Running health check"
+echo "   Waiting 30s for Passenger to restart..."
+sleep 30
 
-MAX_RETRIES=30
-RETRY_INTERVAL=2
+MAX_RETRIES=40
+RETRY_INTERVAL=5
 HEALTHY=false
 
 for i in $(seq 1 $MAX_RETRIES); do
-  RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "$HEALTH_URL" 2>/dev/null || echo "")
-
+  RESPONSE=$(curl -s --connect-timeout 5 --max-time 10 "$HEALTH_URL" 2>/dev/null || echo "")
   if echo "$RESPONSE" | grep -q '"status":"ok"'; then
-    echo "✅ Health check PASSED after $((i * RETRY_INTERVAL))s"
+    echo "✅ Health check PASSED after $((30 + i * RETRY_INTERVAL))s"
     HEALTHY=true
     break
   fi
-
   if [ $i -lt $MAX_RETRIES ]; then
-    echo "   ⏳ Attempt $i/$MAX_RETRIES — waiting ${RETRY_INTERVAL}s..."
+    echo "   ⏳ Attempt $i/$MAX_RETRIES — response: ${RESPONSE:0:100}..."
     sleep $RETRY_INTERVAL
   fi
 done
 
 if [ "$HEALTHY" = false ]; then
   echo ""
-  echo "❌ Health check FAILED after $((MAX_RETRIES * RETRY_INTERVAL))s"
+  echo "❌ Health check FAILED after $((30 + MAX_RETRIES * RETRY_INTERVAL))s"
   echo ""
   echo "🔄 Rolling back to previous version..."
 
   # Find the latest backup
-  LATEST_BACKUP=$(ls -dt .next-backup-* 2>/dev/null | head -1)
-
+  LATEST_BACKUP=$(ls -dt standalone-backup-* 2>/dev/null | head -1)
   if [ -n "$LATEST_BACKUP" ]; then
-    rm -rf .next
-    mv "$LATEST_BACKUP" .next
+    rm -rf .next/standalone
+    mv "$LATEST_BACKUP" .next/standalone
     touch tmp/restart.txt
     echo "✅ Rolled back to previous version"
   else
@@ -204,13 +207,13 @@ echo "=========================================="
 echo "  ✅ DEPLOY SUCCESSFUL"
 echo "=========================================="
 echo ""
-echo "  App:     $APP_NAME"
-echo "  URL:     https://30-0.рф"
-echo "  Health:  $HEALTH_URL"
-echo "  Server:  Apache + Phusion Passenger"
+echo "  App: $APP_NAME"
+echo "  URL: https://30-0.xn--p1ai"
+echo "  Health: $HEALTH_URL"
+echo "  Server: Apache + Phusion Passenger"
 echo ""
 echo "  $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
 
 # Clean old backups after successful deploy
-ls -dt .next-backup-* 2>/dev/null | tail -n +$((BACKUP_COUNT + 1)) | xargs rm -rf 2>/dev/null || true
+ls -dt standalone-backup-* 2>/dev/null | tail -n +$((BACKUP_COUNT + 1)) | xargs rm -rf 2>/dev/null || true
