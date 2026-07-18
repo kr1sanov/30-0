@@ -117,21 +117,28 @@ jobs:
 
       - name: Create deployment package
         run: |
+          # Next.js standalone deployment structure:
+          # APP_DIR/.next/standalone/ <- the server and its node_modules
+          # APP_DIR/.next/standalone/.next/static/ <- static assets (MUST be here)
+          # APP_DIR/.next/standalone/public/ <- public files
+          # APP_DIR/.next/standalone/.next/server/ <- server chunks
+          # APP_DIR/prisma/ <- Prisma schema
+
           mkdir -p deploy-package/.next/standalone
-          mkdir -p deploy-package/.next/static
-          mkdir -p deploy-package/public
           mkdir -p deploy-package/prisma
 
-          # Copy standalone build (Next.js server)
+          # Copy the full standalone directory (includes server.js, node_modules, .next/)
           cp -r build-artifact/.next/standalone/. deploy-package/.next/standalone/
 
-          # Copy static assets
-          cp -r build-artifact/.next/static/. deploy-package/.next/static/
+          # Copy static assets into standalone/.next/static/ (Next.js requires this)
+          mkdir -p deploy-package/.next/standalone/.next/static
+          cp -r build-artifact/.next/static/. deploy-package/.next/standalone/.next/static/
 
-          # Copy static files for public_html (served by Apache directly)
-          cp -r build-artifact/public/. deploy-package/public/
+          # Copy public files into standalone/public/ (Next.js requires this for serving)
+          mkdir -p deploy-package/.next/standalone/public
+          cp -r build-artifact/public/. deploy-package/.next/standalone/public/ 2>/dev/null || true
 
-          # Copy Prisma schema and migrations
+          # Copy Prisma schema
           cp -r build-artifact/prisma/. deploy-package/prisma/
 
           # Copy package.json for reference
@@ -140,8 +147,9 @@ jobs:
           # Verify structure
           echo "Deploy package structure:"
           ls -la deploy-package/
-          ls -la deploy-package/.next/
-          ls -la deploy-package/.next/standalone/ | head -10
+          ls -la deploy-package/.next/standalone/
+          ls -la deploy-package/.next/standalone/.next/
+          echo "Static files count: $(find deploy-package/.next/standalone/.next/static/ -type f | wc -l)"
 
           # Create tarball
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
@@ -182,11 +190,10 @@ jobs:
           key: ${{ secrets.JINO_SSH_KEY }}
           port: ${{ secrets.JINO_SSH_PORT }}
           script_stop: true
-          command_timeout: 300s
+          command_timeout: 600s
           script: |
             set -euo pipefail
             export APP_DIR="${{ secrets.JINO_APP_DIR }}"
-            cd "$APP_DIR"
             chmod +x /tmp/deploy-script/scripts/deploy-production.sh
             bash /tmp/deploy-script/scripts/deploy-production.sh
 
@@ -198,24 +205,14 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Wait for app startup
-        run: sleep 30
-
-      - name: Check homepage HTTP status
-        run: |
-          HTTP_CODE=$(curl -s --connect-timeout 15 --max-time 20 -o /dev/null -w "%{http_code}" https://30-0.xn--p1ai/ 2>/dev/null || echo "000")
-          echo "Homepage HTTP code: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Homepage returned HTTP $HTTP_CODE (expected 200)"
-            exit 1
-          fi
-          echo "Homepage is up"
+        run: sleep 60
 
       - name: Check API health endpoint
         run: |
-          MAX_RETRIES=20
+          MAX_RETRIES=30
           RETRY_INTERVAL=10
           for i in $(seq 1 $MAX_RETRIES); do
-            RESPONSE=$(curl -s --connect-timeout 10 --max-time 15 https://30-0.xn--p1ai/api/health 2>/dev/null || echo "")
+            RESPONSE=$(curl -s --connect-timeout 15 --max-time 20 https://30-0.xn--p1ai/api/health 2>/dev/null || echo "")
             STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
             if [ -n "$STATUS" ]; then
               echo "Health check PASSED after $((i * RETRY_INTERVAL))s: $RESPONSE"
@@ -226,6 +223,16 @@ jobs:
           done
           echo "::error::API health check failed after $((MAX_RETRIES * RETRY_INTERVAL))s"
           exit 1
+
+      - name: Check homepage HTTP status
+        run: |
+          HTTP_CODE=$(curl -s --connect-timeout 15 --max-time 20 -o /dev/null -w "%{http_code}" https://30-0.xn--p1ai/ 2>/dev/null || echo "000")
+          echo "Homepage HTTP code: $HTTP_CODE"
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Homepage returned HTTP $HTTP_CODE (expected 200)"
+            exit 1
+          fi
+          echo "Homepage is up"
 
       - name: Pipeline Summary
         if: always()
