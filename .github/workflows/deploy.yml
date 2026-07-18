@@ -87,23 +87,19 @@ jobs:
           NODE_ENV: production
         run: npm run build
 
-      - name: Upload standalone artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build-standalone
-          path: .next/standalone/
+          name: nextjs-build
+          path: |
+            .next/standalone/
+            .next/static/
+            public/
+            prisma/
+            package.json
           retention-days: 1
 
-      - name: Upload static artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-static
-          path: .next/static/
-          retention-days: 1
-
-  # ─── Stage 3: Deploy (only on push to main, NOT on PRs) ───
-  # Requires GitHub Secrets to be configured:
-  # JINO_HOST, JINO_USERNAME, JINO_SSH_KEY (base64-encoded PEM), JINO_SSH_PORT, JINO_APP_DIR
+  # ─── Stage 3: Deploy (only on push to main) ───
   deploy:
     name: Deploy to Jino
     runs-on: ubuntu-latest
@@ -113,28 +109,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download standalone artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-standalone
-          path: .next/standalone/
-
-      - name: Download static artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-static
-          path: .next/static/
+          name: nextjs-build
+          path: build-artifact/
 
       - name: Create deployment package
         run: |
-          mkdir -p deploy-package
-          cp -r .next/standalone deploy-package/
+          mkdir -p deploy-package/.next/standalone
           mkdir -p deploy-package/.next/static
-          cp -r .next/static deploy-package/.next/static
-          cp -r public deploy-package/public
-          cp -r prisma deploy-package/prisma
-          cp package.json deploy-package/
+          mkdir -p deploy-package/public
+          mkdir -p deploy-package/prisma
+
+          # Copy standalone build (Next.js server)
+          cp -r build-artifact/.next/standalone/. deploy-package/.next/standalone/
+
+          # Copy static assets
+          cp -r build-artifact/.next/static/. deploy-package/.next/static/
+
+          # Copy static files for public_html (served by Apache directly)
+          cp -r build-artifact/public/. deploy-package/public/
+
+          # Copy Prisma schema and migrations
+          cp -r build-artifact/prisma/. deploy-package/prisma/
+
+          # Copy package.json for reference
+          cp build-artifact/package.json deploy-package/
+
+          # Verify structure
+          echo "Deploy package structure:"
+          ls -la deploy-package/
+          ls -la deploy-package/.next/
+          ls -la deploy-package/.next/standalone/ | head -10
+
+          # Create tarball
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
+          echo "Package size: $(du -sh deploy.tar.gz)"
 
       - name: Setup SSH key
         run: |
@@ -143,7 +154,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.JINO_SSH_PORT }} ${{ secrets.JINO_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Upload via SCP
+      - name: Upload deployment package via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.JINO_HOST }}
@@ -171,7 +182,7 @@ jobs:
           key: ${{ secrets.JINO_SSH_KEY }}
           port: ${{ secrets.JINO_SSH_PORT }}
           script_stop: true
-          command_timeout: 120s
+          command_timeout: 300s
           script: |
             set -euo pipefail
             export APP_DIR="${{ secrets.JINO_APP_DIR }}"
@@ -186,9 +197,12 @@ jobs:
     needs: deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
+      - name: Wait for app startup
+        run: sleep 30
+
       - name: Check homepage HTTP status
         run: |
-          HTTP_CODE=$(curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" https://30-0.рф/ 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 -o /dev/null -w "%{http_code}" http://30-0.рф/ 2>/dev/null || echo "000")
+          HTTP_CODE=$(curl -s --connect-timeout 15 --max-time 20 -o /dev/null -w "%{http_code}" https://30-0.xn--p1ai/ 2>/dev/null || echo "000")
           echo "Homepage HTTP code: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "::error::Homepage returned HTTP $HTTP_CODE (expected 200)"
@@ -198,14 +212,20 @@ jobs:
 
       - name: Check API health endpoint
         run: |
-          RESPONSE=$(curl -s --connect-timeout 10 --max-time 15 https://30-0.рф/api/health 2>/dev/null || curl -s --connect-timeout 10 --max-time 15 http://30-0.рф/api/health 2>/dev/null || echo "")
-          echo "Health API response: $RESPONSE"
-          STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
-          if [ -z "$STATUS" ]; then
-            echo "::error::API health check returned unexpected response"
-            exit 1
-          fi
-          echo "API is healthy"
+          MAX_RETRIES=20
+          RETRY_INTERVAL=10
+          for i in $(seq 1 $MAX_RETRIES); do
+            RESPONSE=$(curl -s --connect-timeout 10 --max-time 15 https://30-0.xn--p1ai/api/health 2>/dev/null || echo "")
+            STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
+            if [ -n "$STATUS" ]; then
+              echo "Health check PASSED after $((i * RETRY_INTERVAL))s: $RESPONSE"
+              exit 0
+            fi
+            echo "Attempt $i/$MAX_RETRIES - waiting ${RETRY_INTERVAL}s... Response: $RESPONSE"
+            sleep $RETRY_INTERVAL
+          done
+          echo "::error::API health check failed after $((MAX_RETRIES * RETRY_INTERVAL))s"
+          exit 1
 
       - name: Pipeline Summary
         if: always()
