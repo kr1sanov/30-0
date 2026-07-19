@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 import GameSetup from '@/components/game/GameSetup';
 import FormationView from '@/components/game/FormationView';
 import SpinWheel from '@/components/game/SpinWheel';
@@ -1284,12 +1285,10 @@ export default function Home() {
       <Header />
       <main
         className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10"
-        style={{
-          paddingBottom: safeAreaInset.bottom > 0 ? `${safeAreaInset.bottom + 16}px` : undefined,
-        }}
       >
         {renderScreen()}
       </main>
+      <Footer />
       <AchievementUnlocked />
     </div>
   );

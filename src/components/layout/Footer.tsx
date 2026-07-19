@@ -1,207 +1,210 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
+import { Home, Play, Users, BookOpen, Trophy, MessageCircle, Instagram } from 'lucide-react';
+import { useTelegram } from '@/hooks/use-telegram';
 
-type TabId = 'home' | 'play' | 'profile';
-
-function getActiveTab(screen: string): TabId {
-  if (screen === 'home' || screen === 'setup') return 'home';
-  if (screen === 'profile') return 'profile';
-  return 'play';
+interface FooterNavLink {
+  label: string;
+  icon?: React.ReactNode;
+  action: () => void;
+  badge?: string;
+  external?: boolean;
+  href?: string;
 }
 
-export default function Footer() {
-  const { screen } = useGameStore();
-  const activeTab = getActiveTab(screen);
+const TelegramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+  </svg>
+);
 
-  const handleTabClick = (tabId: TabId) => {
-    switch (tabId) {
-      case 'home': {
+export default function Footer() {
+  const { haptic, isTelegram } = useTelegram();
+
+  const handleHaptic = () => {
+    haptic('light');
+  };
+
+  const mainNavLinks: FooterNavLink[] = [
+    {
+      label: 'Home',
+      icon: <Home className="w-3.5 h-3.5" />,
+      action: () => {
         const state = useGameStore.getState();
         if (state.runId) {
           state.goHome();
         } else {
           state.resetGame();
         }
-        break;
-      }
-      case 'play': {
+      },
+    },
+    {
+      label: 'Play',
+      icon: <Play className="w-3.5 h-3.5" />,
+      action: () => {
         const state = useGameStore.getState();
         if (state.runId) {
           state.resumeGame();
         } else {
           state.setScreen('setup');
         }
-        break;
-      }
-      case 'profile':
-        useGameStore.getState().setScreen('profile');
-        break;
-    }
-  };
-
-  const tabs: { id: TabId; label: string; icon: React.ReactNode; activeIcon: React.ReactNode }[] = [
-    {
-      id: 'home',
-      label: 'Главная',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        </svg>
-      ),
-      activeIcon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-          <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        </svg>
-      ),
+      },
     },
     {
-      id: 'play',
-      label: 'Играть',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z" />
-        </svg>
-      ),
-      activeIcon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86a1 1 0 0 0-1.5.86z" />
-        </svg>
-      ),
+      label: 'Multiplayer',
+      icon: <Users className="w-3.5 h-3.5" />,
+      action: () => {},
+      badge: 'Скоро',
     },
     {
-      id: 'profile',
-      label: 'Профиль',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="5" />
-          <path d="M20 21a8 8 0 1 0-16 0" />
-        </svg>
-      ),
-      activeIcon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="8" r="5" />
-          <path d="M20 21a8 8 0 1 0-16 0" />
-        </svg>
-      ),
+      label: 'How it works',
+      icon: <BookOpen className="w-3.5 h-3.5" />,
+      action: () => {
+        window.dispatchEvent(new CustomEvent('open-how-to-play'));
+      },
+    },
+    {
+      label: 'Leaderboard',
+      icon: <Trophy className="w-3.5 h-3.5" />,
+      action: () => useGameStore.getState().setScreen('leaderboard'),
+    },
+    {
+      label: 'Story',
+      icon: <MessageCircle className="w-3.5 h-3.5" />,
+      action: () => {},
+      badge: 'Скоро',
+    },
+    {
+      label: 'Telegram',
+      icon: <TelegramIcon className="w-3.5 h-3.5" />,
+      action: () => {},
+      external: true,
+      href: 'https://t.me/RPL30_bot/app?startapp',
     },
   ];
 
+  const socialLinks = [
+    {
+      label: 'Telegram',
+      icon: <TelegramIcon className="w-4 h-4" />,
+      href: 'https://t.me/+iX9kd8CgQJxkYzFi',
+    },
+    {
+      label: 'Instagram',
+      icon: <Instagram className="w-4 h-4" />,
+      href: 'https://www.instagram.com/30_0app',
+    },
+  ];
+
+  const legalLinks = [
+    { label: 'Privacy Policy', href: '#' },
+    { label: 'Terms of Use', href: '#' },
+  ];
+
+  const handleLinkClick = (link: FooterNavLink) => {
+    handleHaptic();
+    if (link.external && link.href) {
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+    } else {
+      link.action();
+    }
+  };
+
   return (
-    <>
-      {/* Mobile Tab Bar — fixed to bottom */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden footer-gradient-border"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        <div className="bg-[#0A0A0A]/95 backdrop-blur-md">
-          <div className="flex items-center justify-around h-14 px-2">
-            {/* Home tab */}
-            <motion.button
-              onClick={() => handleTabClick('home')}
-              whileTap={{ scale: 0.9 }}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
-            >
-              <span className={activeTab === 'home' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}>
-                {activeTab === 'home' ? tabs[0].activeIcon : tabs[0].icon}
-              </span>
-              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'home' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
-                Главная
-              </span>
-            </motion.button>
-
-            {/* Play tab — centered, rounded, prominent */}
-            <motion.button
-              onClick={() => handleTabClick('play')}
-              whileTap={{ scale: 0.92 }}
-              className="flex flex-col items-center justify-center min-w-[56px] h-full"
-            >
-              <div
-                className={`flex items-center justify-center rounded-full transition-all duration-200 ${
-                  activeTab === 'play'
-                    ? 'bg-gradient-to-br from-[#00C896] to-[#00A67A] text-white shadow-md shadow-[#00C896]/40 w-12 h-12'
-                    : 'bg-gradient-to-br from-[#00C896]/70 to-[#00A67A]/70 text-white shadow-sm shadow-[#00C896]/20 w-11 h-11'
-                }`}
-              >
-                {tabs[1].icon}
-              </div>
-              <span className={`text-[10px] font-medium leading-tight mt-0.5 ${activeTab === 'play' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
-                Играть
-              </span>
-            </motion.button>
-
-            {/* Profile tab */}
-            <motion.button
-              onClick={() => handleTabClick('profile')}
-              whileTap={{ scale: 0.9 }}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[56px] h-full transition-colors"
-            >
-              <span className={activeTab === 'profile' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}>
-                {activeTab === 'profile' ? tabs[2].activeIcon : tabs[2].icon}
-              </span>
-              <span className={`text-[10px] font-medium leading-tight ${activeTab === 'profile' ? 'text-[#00C896]' : 'text-[#9CA3AF]'}`}>
-                Профиль
-              </span>
-            </motion.button>
+    <footer
+      className="w-full bg-[#0A0A0A] mt-auto footer-gradient-border"
+      style={isTelegram ? { paddingBottom: 'env(safe-area-inset-bottom, 0px)' } : undefined}
+    >
+      <div className="mx-auto max-w-5xl px-4 lg:px-6 pt-8 pb-6 md:pt-10 md:pb-8">
+        {/* Navigation Links */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5">
+            {mainNavLinks.map((link) => (
+              link.external && link.href ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleHaptic}
+                  className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-white transition-colors duration-200"
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                </a>
+              ) : (
+                <button
+                  key={link.label}
+                  onClick={() => handleLinkClick(link)}
+                  className={`
+                    flex items-center gap-1.5 text-sm transition-colors duration-200
+                    ${link.badge
+                      ? 'text-[#9CA3AF]/40 cursor-default'
+                      : 'text-[#9CA3AF] hover:text-white'
+                    }
+                  `}
+                >
+                  {link.icon}
+                  <span>{link.label}</span>
+                  {link.badge && (
+                    <span className="px-1.5 py-0.5 text-[9px] font-semibold rounded-full bg-[#00C896]/10 text-[#00C896]/60">
+                      {link.badge}
+                    </span>
+                  )}
+                </button>
+              )
+            ))}
           </div>
         </div>
-      </nav>
 
-      {/* Spacer for mobile — reserves space for the fixed bottom bar.
-          Body already has paddingBottom: env(safe-area-inset-bottom) in layout.tsx,
-          so we only need to account for the nav bar height itself. */}
-      <div
-        className="sm:hidden h-14"
-        aria-hidden="true"
-      />
+        {/* Social + Community Links */}
+        <div className="mb-6">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5">
+            {socialLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={handleHaptic}
+                className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-white transition-colors duration-200"
+              >
+                {link.icon}
+                <span>{link.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
 
-      {/* Desktop Footer — normal flow, sticks to bottom via flex mt-auto */}
-      <footer className="hidden sm:flex w-full bg-[#0A0A0A] mt-auto footer-gradient-border">
-        <div className="max-w-4xl mx-auto px-4 py-4 w-full">
-          <div className="flex items-center justify-between">
-            {/* Desktop nav links */}
-            <div className="flex items-center gap-5">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                const isPlay = tab.id === 'play';
+        {/* Description */}
+        <p className="text-xs text-[#9CA3AF]/40 mb-6 max-w-lg leading-relaxed">
+          30-0 — независимый фанатский симулятор драфта и сезона Российской Премьер-Лиги. Не аффилирован с РПЛ.
+        </p>
 
-                return (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => handleTabClick(tab.id)}
-                    whileTap={{ scale: 0.92 }}
-                    className={`flex items-center gap-1.5 text-sm font-medium transition-colors relative ${
-                      isPlay
-                        ? 'px-4 py-2 rounded-full bg-gradient-to-r from-[#00C896] to-[#00A67A] text-white shadow-md shadow-[#00C896]/20'
-                        : isActive
-                        ? 'text-[#00C896]'
-                        : 'text-[#9CA3AF] hover:text-[#FFFFFF]'
-                    }`}
-                  >
-                    <span className={isPlay ? 'w-5 h-5' : 'w-4 h-4'}>{tab.icon}</span>
-                    {tab.label}
-                    {isActive && !isPlay && (
-                      <motion.div
-                        layoutId="desktopActiveTab"
-                        className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#00C896] rounded-full"
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                      />
-                    )}
-                  </motion.button>
-                );
-              })}
+        {/* Bottom section: Legal + Copyright */}
+        <div className="pt-4 border-t border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Legal links */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {legalLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-xs text-[#9CA3AF]/40 hover:text-[#9CA3AF]/70 transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
 
             {/* Copyright */}
-            <div className="text-xs text-[#9CA3AF]/40">
-              © 2025 Футбольный драфт
-            </div>
+            <p className="text-xs text-[#9CA3AF]/30">
+              © 2026 30-0. Все права защищены.
+            </p>
           </div>
         </div>
-      </footer>
-    </>
+      </div>
+    </footer>
   );
 }
