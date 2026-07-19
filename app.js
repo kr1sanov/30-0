@@ -8,6 +8,9 @@
 
 const path = require('path');
 
+// Set NODE_ENV to production (PassengerEnvVar not supported on this Jino version)
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+
 // Set HOSTNAME to 0.0.0.0 so the standalone server binds to all interfaces
 // (required on Jino shared hosting where Passenger proxies to the app)
 process.env.HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
