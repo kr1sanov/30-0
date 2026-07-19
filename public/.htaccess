@@ -1,9 +1,22 @@
 # ──────────────────────────────────────────────
 # 30-0 RPL — Apache .htaccess for Jino Production
 # ──────────────────────────────────────────────
-# This file configures Apache to serve the Next.js app
-# with proper security headers and caching.
+# This file configures Apache + Phusion Passenger
+# to serve the Next.js standalone app.
 # ──────────────────────────────────────────────
+
+# ─── Phusion Passenger Configuration ───
+# NOTE: PassengerNodejs path must point to the Node.js binary installed on Jino.
+# On Jino shared hosting, Node.js is typically installed via nvm.
+# The deploy script auto-detects the correct path and updates this file.
+
+PassengerAppRoot /home/j97915155/domains/30-0.xn--p1ai
+PassengerStartupFile app.js
+PassengerNodejs /home/j97915155/.nvm/versions/node/v22.16.0/bin/node
+
+# Environment variables
+PassengerEnvVar NODE_ENV production
+PassengerEnvVar HOSTNAME 0.0.0.0
 
 # ─── Security Headers ───
 
@@ -47,7 +60,6 @@ Header always unset X-Powered-By
 
 # Static Next.js assets — immutable cache
 <IfModule mod_rewrite.c>
-  # _next/static assets — 1 year immutable
   <FilesMatch "\.next/static/">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
@@ -60,22 +72,8 @@ Header always unset X-Powered-By
   AddOutputFilterByType DEFLATE text/html
   AddOutputFilterByType DEFLATE text/css
   AddOutputFilterByType DEFLATE application/javascript
-  AddOutputFilterByType DEFLATE application/json
   AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
-
-# ─── Phusion Passenger Configuration ───
-
-# Set the Node.js entry point for Passenger
-PassengerNodejs /usr/bin/node
-PassengerAppRoot /home/j97915155/30-0
-
-# Set the startup file
-PassengerStartupFile .next/standalone/server.js
-
-# Environment variables
-PassengerEnvVar NODE_ENV production
-PassengerEnvVar PORT 3000
 
 # ─── Rewrite Rules ───
 
@@ -86,7 +84,7 @@ PassengerEnvVar PORT 3000
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Route all requests through Next.js
+  # Route all requests through Next.js (Passenger handles the app)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^(.*)$ / [L,QSA]

@@ -4,7 +4,8 @@
 # ──────────────────────────────────────────────
 # Structure on Jino:
 #   ~/domains/30-0.xn--p1ai/
-#     app.js              <- Passenger entrypoint
+#     app.js              <- Passenger entrypoint (starts standalone server)
+#     .htaccess           <- Apache/Passenger configuration
 #     .next/standalone/   <- Next.js standalone server
 #       server.js
 #       node_modules/
@@ -45,6 +46,7 @@ echo "  $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="
 echo ""
 echo "  APP_DIR: $APP_DIR"
+echo "  Node.js: $(node -v 2>/dev/null || echo 'NOT FOUND')"
 echo ""
 
 # ─── Step 1: Pre-flight checks ───
@@ -101,12 +103,86 @@ rm -f /tmp/deploy.tar.gz
 
 echo "✅ Deployment package extracted"
 echo "   Structure after extraction:"
+ls -la | head -15
 ls -la .next/standalone/ | head -10
 ls -la .next/standalone/.next/ 2>/dev/null | head -5 || echo "   (no .next inside standalone)"
+echo "   app.js exists: $(test -f app.js && echo YES || echo NO)"
+echo "   .htaccess exists: $(test -f .htaccess && echo YES || echo NO)"
 
-# ─── Step 4: Ensure Prisma client ───
+# ─── Step 4: Ensure Passenger entrypoint ───
 echo ""
-echo "🔧 Step 4: Ensuring Prisma client modules"
+echo "🔧 Step 4: Ensuring Passenger entrypoint (app.js)"
+
+if [ ! -f app.js ]; then
+  echo "⚠️ app.js not found in deployment package, creating..."
+  cat > app.js << 'APPJS'
+// Passenger entrypoint for 30-0 RPL
+const path = require('path');
+process.env.HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
+process.env.PORT = process.env.PORT || '3000';
+const serverPath = path.join(__dirname, '.next', 'standalone', 'server.js');
+require(serverPath);
+APPJS
+  echo "✅ app.js created"
+else
+  echo "✅ app.js already exists"
+fi
+
+# ─── Step 5: Update .htaccess with correct Node.js path ───
+echo ""
+echo "🔧 Step 5: Updating .htaccess with correct Node.js path"
+
+# Find the real Node.js binary path
+NODE_BIN=$(which node 2>/dev/null || echo "")
+if [ -n "$NODE_BIN" ]; then
+  # Resolve any symlinks
+  NODE_BIN_REAL=$(readlink -f "$NODE_BIN" 2>/dev/null || echo "$NODE_BIN")
+  echo "   Node.js binary: $NODE_BIN (resolved: $NODE_BIN_REAL)"
+
+  # Update PassengerNodejs in .htaccess
+  if [ -f .htaccess ]; then
+    # Replace the PassengerNodejs line with the correct path
+    if grep -q "^PassengerNodejs" .htaccess; then
+      sed -i "s|^PassengerNodejs .*|PassengerNodejs $NODE_BIN_REAL|" .htaccess
+      echo "✅ Updated PassengerNodejs to $NODE_BIN_REAL in .htaccess"
+    else
+      # Add PassengerNodejs if missing
+      sed -i "/^PassengerAppRoot/a PassengerNodejs $NODE_BIN_REAL" .htaccess
+      echo "✅ Added PassengerNodejs $NODE_BIN_REAL to .htaccess"
+    fi
+  else
+    echo "⚠️ .htaccess not found, creating minimal version..."
+    cat > .htaccess << HTACCESS
+# Phusion Passenger Configuration
+PassengerAppRoot $APP_DIR
+PassengerStartupFile app.js
+PassengerNodejs $NODE_BIN_REAL
+PassengerEnvVar NODE_ENV production
+PassengerEnvVar HOSTNAME 0.0.0.0
+
+# Route all requests through Passenger
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ / [L,QSA]
+</IfModule>
+HTACCESS
+    echo "✅ Created .htaccess"
+  fi
+
+  # Also update PassengerAppRoot to match actual APP_DIR
+  if grep -q "^PassengerAppRoot" .htaccess; then
+    sed -i "s|^PassengerAppRoot .*|PassengerAppRoot $APP_DIR|" .htaccess
+    echo "✅ Updated PassengerAppRoot to $APP_DIR"
+  fi
+else
+  echo "⚠️ Could not find Node.js binary — .htaccess not updated"
+fi
+
+# ─── Step 6: Ensure Prisma client ───
+echo ""
+echo "🔧 Step 6: Ensuring Prisma client modules"
 
 STANDALONE_NM=".next/standalone/node_modules"
 mkdir -p "$STANDALONE_NM"
@@ -131,9 +207,9 @@ if [ ! -d "$STANDALONE_NM/.prisma" ]; then
   echo "✅ Prisma client generated and copied"
 fi
 
-# ─── Step 5: Database migration ───
+# ─── Step 7: Database migration ───
 echo ""
-echo "🗄️ Step 5: Running database sync"
+echo "🗄️ Step 7: Running database sync"
 cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
 if [ -f .env ]; then
   npx prisma db push --accept-data-loss 2>/dev/null && echo "✅ Database schema synced" || echo "⚠️ Database sync warning (non-fatal)"
@@ -141,24 +217,31 @@ else
   echo "⚠️ No .env file found, skipping database sync"
 fi
 
-# ─── Step 6: Restart application ───
+# ─── Step 8: Ensure HOSTNAME in .envrc ───
 echo ""
-echo "🚀 Step 6: Restarting application"
-
-# Ensure HOSTNAME is set to 0.0.0.0 in .envrc
+echo "🔧 Step 8: Ensuring HOSTNAME in .envrc"
 if [ -f .envrc ] && ! grep -q 'HOSTNAME=0.0.0.0' .envrc; then
   echo 'export HOSTNAME=0.0.0.0' >> .envrc
   echo "✅ HOSTNAME=0.0.0.0 added to .envrc"
+elif [ ! -f .envrc ]; then
+  echo 'export HOSTNAME=0.0.0.0' > .envrc
+  echo "✅ .envrc created with HOSTNAME=0.0.0.0"
+else
+  echo "✅ .envrc already contains HOSTNAME=0.0.0.0"
 fi
+
+# ─── Step 9: Restart application ───
+echo ""
+echo "🚀 Step 9: Restarting application"
 
 # Trigger Phusion Passenger restart
 mkdir -p tmp
 touch tmp/restart.txt
 echo "✅ Passenger restart triggered (tmp/restart.txt)"
 
-# ─── Step 7: Health check ───
+# ─── Step 10: Health check ───
 echo ""
-echo "🏥 Step 7: Running health check"
+echo "🏥 Step 10: Running health check"
 echo "   Waiting 30s for Passenger to restart..."
 sleep 30
 
@@ -201,7 +284,7 @@ if [ "$HEALTHY" = false ]; then
   exit 1
 fi
 
-# ─── Step 8: Deploy summary ───
+# ─── Step 11: Deploy summary ───
 echo ""
 echo "=========================================="
 echo "  ✅ DEPLOY SUCCESSFUL"
@@ -211,6 +294,8 @@ echo "  App: $APP_NAME"
 echo "  URL: https://30-0.xn--p1ai"
 echo "  Health: $HEALTH_URL"
 echo "  Server: Apache + Phusion Passenger"
+echo "  Node: $(node -v)"
+echo "  Entrypoint: app.js"
 echo ""
 echo "  $(date '+%Y-%m-%d %H:%M:%S')"
 echo "=========================================="

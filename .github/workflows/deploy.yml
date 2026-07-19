@@ -117,12 +117,14 @@ jobs:
 
       - name: Create deployment package
         run: |
-          # Next.js standalone deployment structure:
-          # APP_DIR/.next/standalone/ <- the server and its node_modules
+          # Next.js standalone deployment on Jino (Apache + Phusion Passenger):
+          # APP_DIR/app.js                        <- Passenger entrypoint (starts standalone server)
+          # APP_DIR/.htaccess                     <- Apache/Passenger config
+          # APP_DIR/.next/standalone/             <- the server and its node_modules
           # APP_DIR/.next/standalone/.next/static/ <- static assets (MUST be here)
-          # APP_DIR/.next/standalone/public/ <- public files
+          # APP_DIR/.next/standalone/public/      <- public files (served by Next.js)
           # APP_DIR/.next/standalone/.next/server/ <- server chunks
-          # APP_DIR/prisma/ <- Prisma schema
+          # APP_DIR/prisma/                       <- Prisma schema
 
           mkdir -p deploy-package/.next/standalone
           mkdir -p deploy-package/prisma
@@ -144,12 +146,23 @@ jobs:
           # Copy package.json for reference
           cp build-artifact/package.json deploy-package/
 
+          # Copy Passenger entrypoint (app.js) to domain root
+          cp app.js deploy-package/app.js
+
+          # Copy .htaccess to domain root (from public/.htaccess)
+          cp build-artifact/public/.htaccess deploy-package/.htaccess 2>/dev/null || true
+
           # Verify structure
           echo "Deploy package structure:"
           ls -la deploy-package/
-          ls -la deploy-package/.next/standalone/
-          ls -la deploy-package/.next/standalone/.next/
-          echo "Static files count: $(find deploy-package/.next/standalone/.next/static/ -type f | wc -l)"
+          echo "---"
+          ls -la deploy-package/.next/standalone/ | head -10
+          echo "---"
+          ls -la deploy-package/.next/standalone/.next/ 2>/dev/null | head -5
+          echo "---"
+          echo "app.js exists: $(test -f deploy-package/app.js && echo YES || echo NO)"
+          echo ".htaccess exists: $(test -f deploy-package/.htaccess && echo YES || echo NO)"
+          echo "Static files count: $(find deploy-package/.next/standalone/.next/static/ -type f 2>/dev/null | wc -l)"
 
           # Create tarball
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
