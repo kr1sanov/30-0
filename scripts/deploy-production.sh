@@ -5,7 +5,6 @@
 # Structure on Jino:
 #   ~/domains/30-0.xn--p1ai/
 #     app.js              <- Passenger entrypoint (starts standalone server)
-#     .htaccess           <- Apache/Passenger configuration
 #     .next/standalone/   <- Next.js standalone server
 #       server.js
 #       node_modules/
@@ -15,6 +14,10 @@
 #         server/         <- server chunks
 #     prisma/             <- Prisma schema
 #     tmp/restart.txt     <- triggers Passenger restart
+#
+# IMPORTANT: Passenger is configured through the Jino control panel,
+# NOT through .htaccess. The .htaccess only has security headers,
+# caching, and rewrite rules.
 # ──────────────────────────────────────────────
 set -euo pipefail
 
@@ -47,6 +50,7 @@ echo "=========================================="
 echo ""
 echo "  APP_DIR: $APP_DIR"
 echo "  Node.js: $(node -v 2>/dev/null || echo 'NOT FOUND')"
+echo "  Node path: $(which node 2>/dev/null || echo 'NOT FOUND')"
 echo ""
 
 # ─── Step 1: Pre-flight checks ───
@@ -117,6 +121,7 @@ if [ ! -f app.js ]; then
   echo "⚠️ app.js not found in deployment package, creating..."
   cat > app.js << 'APPJS'
 // Passenger entrypoint for 30-0 RPL
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
 process.env.HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 process.env.PORT = process.env.PORT || '3000';
@@ -128,56 +133,26 @@ else
   echo "✅ app.js already exists"
 fi
 
-# ─── Step 5: Update .htaccess with correct Node.js path ───
+# ─── Step 5: Ensure .env file for database connection ───
 echo ""
-echo "🔧 Step 5: Updating .htaccess with correct Node.js path"
+echo "🔧 Step 5: Checking .env file"
 
-# Find the real Node.js binary path
-NODE_BIN=$(which node 2>/dev/null || echo "")
-if [ -n "$NODE_BIN" ]; then
-  # Resolve any symlinks
-  NODE_BIN_REAL=$(readlink -f "$NODE_BIN" 2>/dev/null || echo "$NODE_BIN")
-  echo "   Node.js binary: $NODE_BIN (resolved: $NODE_BIN_REAL)"
+# The Next.js standalone server changes CWD to .next/standalone/
+# We need DATABASE_URL available as an environment variable.
+# Passenger sets env vars from the Jino control panel.
+# Also check if .env exists at APP_DIR for the loadEnvFromFile() fallback.
 
-  # Update PassengerNodejs in .htaccess
-  if [ -f .htaccess ]; then
-    # Replace the PassengerNodejs line with the correct path
-    if grep -q "^PassengerNodejs" .htaccess; then
-      sed -i "s|^PassengerNodejs .*|PassengerNodejs $NODE_BIN_REAL|" .htaccess
-      echo "✅ Updated PassengerNodejs to $NODE_BIN_REAL in .htaccess"
-    else
-      # Add PassengerNodejs if missing
-      sed -i "/^PassengerAppRoot/a PassengerNodejs $NODE_BIN_REAL" .htaccess
-      echo "✅ Added PassengerNodejs $NODE_BIN_REAL to .htaccess"
-    fi
-  else
-    echo "⚠️ .htaccess not found, creating minimal version..."
-    cat > .htaccess << HTACCESS
-# Phusion Passenger Configuration
-PassengerAppRoot $APP_DIR
-PassengerStartupFile app.js
-PassengerNodejs $NODE_BIN_REAL
-PassengerEnvVar NODE_ENV production
-PassengerEnvVar HOSTNAME 0.0.0.0
-
-# Route all requests through Passenger
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ / [L,QSA]
-</IfModule>
-HTACCESS
-    echo "✅ Created .htaccess"
-  fi
-
-  # Also update PassengerAppRoot to match actual APP_DIR
-  if grep -q "^PassengerAppRoot" .htaccess; then
-    sed -i "s|^PassengerAppRoot .*|PassengerAppRoot $APP_DIR|" .htaccess
-    echo "✅ Updated PassengerAppRoot to $APP_DIR"
-  fi
+if [ ! -f .env ]; then
+  echo "⚠️ No .env file found at $APP_DIR/.env"
+  echo "   Make sure DATABASE_URL is set in Jino control panel or create .env manually"
 else
-  echo "⚠️ Could not find Node.js binary — .htaccess not updated"
+  echo "✅ .env file exists"
+  # Verify DATABASE_URL is present
+  if grep -q "^DATABASE_URL=" .env; then
+    echo "✅ DATABASE_URL is configured in .env"
+  else
+    echo "⚠️ DATABASE_URL not found in .env"
+  fi
 fi
 
 # ─── Step 6: Ensure Prisma client ───
@@ -217,31 +192,27 @@ else
   echo "⚠️ No .env file found, skipping database sync"
 fi
 
-# ─── Step 8: Ensure HOSTNAME in .envrc ───
+# ─── Step 8: Restart application ───
 echo ""
-echo "🔧 Step 8: Ensuring HOSTNAME in .envrc"
-if [ -f .envrc ] && ! grep -q 'HOSTNAME=0.0.0.0' .envrc; then
+echo "🚀 Step 8: Restarting application"
+
+# Ensure HOSTNAME is set to 0.0.0.0 (needed for Next.js standalone)
+if [ -f .envrc ] && ! grep -q 'export HOSTNAME=0.0.0.0' .envrc; then
   echo 'export HOSTNAME=0.0.0.0' >> .envrc
   echo "✅ HOSTNAME=0.0.0.0 added to .envrc"
 elif [ ! -f .envrc ]; then
   echo 'export HOSTNAME=0.0.0.0' > .envrc
   echo "✅ .envrc created with HOSTNAME=0.0.0.0"
-else
-  echo "✅ .envrc already contains HOSTNAME=0.0.0.0"
 fi
-
-# ─── Step 9: Restart application ───
-echo ""
-echo "🚀 Step 9: Restarting application"
 
 # Trigger Phusion Passenger restart
 mkdir -p tmp
 touch tmp/restart.txt
 echo "✅ Passenger restart triggered (tmp/restart.txt)"
 
-# ─── Step 10: Health check ───
+# ─── Step 9: Health check ───
 echo ""
-echo "🏥 Step 10: Running health check"
+echo "🏥 Step 9: Running health check"
 echo "   Waiting 30s for Passenger to restart..."
 sleep 30
 
@@ -284,7 +255,7 @@ if [ "$HEALTHY" = false ]; then
   exit 1
 fi
 
-# ─── Step 11: Deploy summary ───
+# ─── Step 10: Deploy summary ───
 echo ""
 echo "=========================================="
 echo "  ✅ DEPLOY SUCCESSFUL"

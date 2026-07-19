@@ -1,22 +1,14 @@
 # ──────────────────────────────────────────────
 # 30-0 RPL — Apache .htaccess for Jino Production
 # ──────────────────────────────────────────────
-# This file configures Apache + Phusion Passenger
-# to serve the Next.js standalone app.
+# IMPORTANT: Jino control panel manages Passenger configuration
+# (interpreter version, startup file, app type). Do NOT add
+# Passenger directives here — they conflict with the control
+# panel settings and cause 500 errors.
+#
+# Only put Apache-level configuration here:
+# security headers, caching, compression, rewrites.
 # ──────────────────────────────────────────────
-
-# ─── Phusion Passenger Configuration ───
-# NOTE: PassengerNodejs path must point to the Node.js binary installed on Jino.
-# On Jino shared hosting, Node.js is typically installed via nvm.
-# The deploy script auto-detects the correct path and updates this file.
-
-PassengerAppRoot /home/j97915155/domains/30-0.xn--p1ai
-PassengerStartupFile app.js
-PassengerNodejs /home/j97915155/.nvm/versions/node/v22.16.0/bin/node
-
-# Environment variables
-PassengerEnvVar NODE_ENV production
-PassengerEnvVar HOSTNAME 0.0.0.0
 
 # ─── Security Headers ───
 
@@ -26,7 +18,7 @@ Header always set X-Frame-Options "SAMEORIGIN"
 # Prevent MIME-type sniffing
 Header always set X-Content-Type-Options "nosniff"
 
-# XSS Protection (legacy, but still useful for older browsers)
+# XSS Protection
 Header always set X-XSS-Protection "1; mode=block"
 
 # Referrer Policy
@@ -35,18 +27,17 @@ Header always set Referrer-Policy "strict-origin-when-cross-origin"
 # HSTS — force HTTPS
 Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 
-# Permissions Policy — disable unused features
+# Permissions Policy
 Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
 
 # Content Security Policy
 Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self' https://mc.yandex.ru https://api.telegram.org; frame-src https://web.telegram.org; object-src 'none'; base-uri 'self'"
 
-# ─── Remove X-Powered-By header ───
+# Remove X-Powered-By header
 Header always unset X-Powered-By
 
 # ─── Caching ───
 
-# Cache static assets for 1 year
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType text/css "access plus 1 year"
@@ -58,20 +49,20 @@ Header always unset X-Powered-By
   ExpiresByType font/woff2 "access plus 1 year"
 </IfModule>
 
-# Static Next.js assets — immutable cache
-<IfModule mod_rewrite.c>
-  <FilesMatch "\.next/static/">
+# Next.js static assets — immutable cache
+<IfModule mod_headers.c>
+  <FilesMatch "\._next/static/">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 </IfModule>
 
 # ─── Compression ───
 
-# Enable Gzip compression
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html
   AddOutputFilterByType DEFLATE text/css
   AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/json
   AddOutputFilterByType DEFLATE image/svg+xml
 </IfModule>
 
@@ -83,13 +74,4 @@ Header always unset X-Powered-By
   # Force HTTPS
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
-  # Route all requests through Next.js (Passenger handles the app)
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^(.*)$ / [L,QSA]
 </IfModule>
-
-# ─── Error Pages ───
-ErrorDocument 404 /404.html
-ErrorDocument 500 /500.html
