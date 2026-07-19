@@ -117,12 +117,11 @@ echo "   .htaccess exists: $(test -f .htaccess && echo YES || echo NO)"
 echo ""
 echo "🔧 Step 4: Ensuring Passenger entrypoint (app.js)"
 
-if [ ! -f app.js ]; then
-  echo "⚠️ app.js not found in deployment package, creating..."
-  cat > app.js << 'APPJS'
-// Passenger entrypoint for 30-0 RPL
+cat > app.js << 'APPJS'
+   // Passenger entrypoint for 30-0 RPL
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 process.env.HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 process.env.PORT = process.env.PORT || '3000';
 const serverPath = path.join(__dirname, '.next', 'standalone', 'server.js');
