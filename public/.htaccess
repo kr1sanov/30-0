@@ -1,3 +1,20 @@
+# ────────────────────────────────────────────────
+# Phusion Passenger Configuration (Jino hosting)
+# ────────────────────────────────────────────────
+PassengerAppRoot /home/users/j/j97915155/domains/30-0.xn--p1ai
+PassengerStartupFile app.js
+PassengerNodejs /home/users/j/j97915155/.nvm/versions/node/v22.23.1/bin/node
+# Note: PassengerEnvVar NOT used - not supported on this Jino Passenger version
+# ENV vars (NODE_ENV, HOSTNAME, PORT) are set inside app.js itself
+
+# Route all requests through Passenger
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ / [L,QSA]
+</IfModule>
+
 # ──────────────────────────────────────────────
 # 30-0 RPL — Minimal .htaccess for Jino Production
 # ──────────────────────────────────────────────
