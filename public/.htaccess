@@ -1,77 +1,13 @@
 # ──────────────────────────────────────────────
-# 30-0 RPL — Apache .htaccess for Jino Production
+# 30-0 RPL — Minimal .htaccess for Jino Production
 # ──────────────────────────────────────────────
-# IMPORTANT: Jino control panel manages Passenger configuration
-# (interpreter version, startup file, app type). Do NOT add
-# Passenger directives here — they conflict with the control
-# panel settings and cause 500 errors.
-#
-# Only put Apache-level configuration here:
-# security headers, caching, compression, rewrites.
+# Passenger is configured through the Jino control panel.
+# This file only has basic Apache configuration.
 # ──────────────────────────────────────────────
 
-# ─── Security Headers ───
-
-# Prevent clickjacking
-Header always set X-Frame-Options "SAMEORIGIN"
-
-# Prevent MIME-type sniffing
-Header always set X-Content-Type-Options "nosniff"
-
-# XSS Protection
-Header always set X-XSS-Protection "1; mode=block"
-
-# Referrer Policy
-Header always set Referrer-Policy "strict-origin-when-cross-origin"
-
-# HSTS — force HTTPS
-Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
-
-# Permissions Policy
-Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
-
-# Content Security Policy
-Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://mc.yandex.ru; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; font-src 'self' data:; connect-src 'self' https://mc.yandex.ru https://api.telegram.org; frame-src https://web.telegram.org; object-src 'none'; base-uri 'self'"
-
-# Remove X-Powered-By header
-Header always unset X-Powered-By
-
-# ─── Caching ───
-
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/css "access plus 1 year"
-  ExpiresByType application/javascript "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/svg+xml "access plus 1 year"
-  ExpiresByType image/webp "access plus 1 year"
-  ExpiresByType font/woff2 "access plus 1 year"
-</IfModule>
-
-# Next.js static assets — immutable cache
-<IfModule mod_headers.c>
-  <FilesMatch "\._next/static/">
-    Header set Cache-Control "public, max-age=31536000, immutable"
-  </FilesMatch>
-</IfModule>
-
-# ─── Compression ───
-
-<IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html
-  AddOutputFilterByType DEFLATE text/css
-  AddOutputFilterByType DEFLATE application/javascript
-  AddOutputFilterByType DEFLATE application/json
-  AddOutputFilterByType DEFLATE image/svg+xml
-</IfModule>
-
-# ─── Rewrite Rules ───
-
+# Force HTTPS
 <IfModule mod_rewrite.c>
   RewriteEngine On
-
-  # Force HTTPS
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>

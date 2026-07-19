@@ -1,4 +1,29 @@
 ---
+Task ID: 2
+Agent: Main Agent
+Task: Fix production 500 error — diagnose and fix Passenger/Jino deployment
+
+Work Log:
+- Diagnosed 500 error: ALL requests (including static files) return 500 on production
+- Read Jino hosting documentation — discovered Passenger is configured through Jino control panel, NOT .htaccess
+- Read Phusion Passenger Node.js deployment guide — found PassengerAppType node directive is required
+- Root cause: Passenger directives in .htaccess (PassengerNodejs, PassengerAppRoot, PassengerStartupFile, PassengerEnvVar) conflict with Jino control panel's Passenger configuration
+- Created app.js Passenger entrypoint that starts Next.js standalone server
+- Removed ALL Passenger directives from .htaccess (Jino manages these through control panel)
+- Fixed src/lib/db.ts to search for .env in multiple directories (CWD, parent, grandparent) since standalone server changes CWD to .next/standalone/
+- Updated deploy-production.sh: removed .htaccess Passenger auto-update step, added .env check step
+- Tested locally: app.js + standalone server works correctly, health check returns 200
+- Pushed fix to GitHub (commit edbb334)
+- Waiting for CI/CD pipeline to deploy
+
+Stage Summary:
+- Root cause: .htaccess Passenger directives conflict with Jino control panel → 500 for ALL requests
+- Fix: Remove Passenger directives from .htaccess, let Jino control panel manage Passenger
+- Also fixed: db.ts .env search paths for standalone deployment
+- Local test: PASSED (app starts and responds correctly)
+- Production: Waiting for CI/CD deployment
+
+---
 Task ID: 1
 Agent: Main Agent
 Task: Redesign Header and Footer to match 38-0.app reference
