@@ -7,21 +7,23 @@ Work Log:
 - Diagnosed 500 error: ALL requests (including static files) return 500 on production
 - Read Jino hosting documentation — discovered Passenger is configured through Jino control panel, NOT .htaccess
 - Read Phusion Passenger Node.js deployment guide — found PassengerAppType node directive is required
-- Root cause: Passenger directives in .htaccess (PassengerNodejs, PassengerAppRoot, PassengerStartupFile, PassengerEnvVar) conflict with Jino control panel's Passenger configuration
-- Created app.js Passenger entrypoint that starts Next.js standalone server
-- Removed ALL Passenger directives from .htaccess (Jino manages these through control panel)
-- Fixed src/lib/db.ts to search for .env in multiple directories (CWD, parent, grandparent) since standalone server changes CWD to .next/standalone/
-- Updated deploy-production.sh: removed .htaccess Passenger auto-update step, added .env check step
-- Tested locally: app.js + standalone server works correctly, health check returns 200
-- Pushed fix to GitHub (commit edbb334)
-- Waiting for CI/CD pipeline to deploy
+- Initial hypothesis: Passenger directives in .htaccess conflict with Jino control panel → removed them
+- Tested with minimal .htaccess (just HTTPS redirect) → STILL 500
+- Conclusion: .htaccess is NOT the root cause of 500 (even minimal .htaccess causes 500)
+- More likely cause: APP_DIR mismatch — CI/CD deploys to /home/j97915155/30-0/ (from JINO_APP_DIR secret) but Jino domain document root is /home/j97915155/domains/30-0.xn--p1ai/public_html/
+- Created diagnostic script: scripts/diagnostic.sh — user should run this on the server via SSH
+- Fixed db.ts to search .env in multiple directories (CWD, parent, grandparent) for standalone deployment
+- Created app.js Passenger entrypoint
+- Removed Passenger directives from .htaccess
+- Multiple CI/CD deploys attempted (#28-#31), all fail at health check step
 
 Stage Summary:
-- Root cause: .htaccess Passenger directives conflict with Jino control panel → 500 for ALL requests
-- Fix: Remove Passenger directives from .htaccess, let Jino control panel manage Passenger
-- Also fixed: db.ts .env search paths for standalone deployment
-- Local test: PASSED (app starts and responds correctly)
-- Production: Waiting for CI/CD deployment
+- 500 error persists even with minimal .htaccess — root cause is NOT .htaccess
+- Most likely root cause: files deployed to wrong directory OR Jino control panel misconfigured
+- User needs to verify: (1) JINO_APP_DIR GitHub secret points to correct domain directory, (2) Jino control panel has Node.js selected as interpreter with app.js as startup file, (3) Document root and static files folder are correct
+- Created diagnostic script for user to run on server
+- Local test: app.js + standalone server works correctly
+- Production: 500 error, needs manual investigation on server
 
 ---
 Task ID: 1
