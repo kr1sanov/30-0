@@ -457,7 +457,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
             >
               <Sparkles className="w-3 h-3" />
               <span className="text-[10px] font-black tracking-widest">
-                JACKPOT
+                ДЖЕКПОТ
               </span>
               <Sparkles className="w-3 h-3" />
             </motion.div>

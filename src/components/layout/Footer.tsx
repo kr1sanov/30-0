@@ -28,7 +28,7 @@ export default function Footer() {
 
   const mainNavLinks: FooterNavLink[] = [
     {
-      label: 'Home',
+      label: 'Главная',
       icon: <Home className="w-3.5 h-3.5" />,
       action: () => {
         const state = useGameStore.getState();
@@ -40,7 +40,7 @@ export default function Footer() {
       },
     },
     {
-      label: 'Play',
+      label: 'Играть',
       icon: <Play className="w-3.5 h-3.5" />,
       action: () => {
         const state = useGameStore.getState();
@@ -52,25 +52,25 @@ export default function Footer() {
       },
     },
     {
-      label: 'Multiplayer',
+      label: 'Мультиплеер',
       icon: <Users className="w-3.5 h-3.5" />,
       action: () => {},
       badge: 'Скоро',
     },
     {
-      label: 'How it works',
+      label: 'Как это работает',
       icon: <BookOpen className="w-3.5 h-3.5" />,
       action: () => {
         window.dispatchEvent(new CustomEvent('open-how-to-play'));
       },
     },
     {
-      label: 'Leaderboard',
+      label: 'Лидерборд',
       icon: <Trophy className="w-3.5 h-3.5" />,
       action: () => useGameStore.getState().setScreen('leaderboard'),
     },
     {
-      label: 'Story',
+      label: 'История',
       icon: <MessageCircle className="w-3.5 h-3.5" />,
       action: () => {},
       badge: 'Скоро',
@@ -98,8 +98,8 @@ export default function Footer() {
   ];
 
   const legalLinks = [
-    { label: 'Privacy Policy', href: '#' },
-    { label: 'Terms of Use', href: '#' },
+    { label: 'Политика конфиденциальности', href: '#' },
+    { label: 'Условия использования', href: '#' },
   ];
 
   const handleLinkClick = (link: FooterNavLink) => {

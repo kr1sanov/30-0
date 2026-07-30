@@ -81,13 +81,13 @@ export default function Header() {
   const navItems: NavItem[] = [
     {
       id: 'home',
-      label: 'Home',
+      label: 'Главная',
       icon: <Home className="w-4 h-4" />,
       action: handleHome,
     },
     {
       id: 'play',
-      label: 'Play',
+      label: 'Играть',
       icon: <Play className="w-4 h-4" />,
       action: () => {
         const state = useGameStore.getState();
@@ -100,20 +100,20 @@ export default function Header() {
     },
     {
       id: 'multiplayer',
-      label: 'Multiplayer',
+      label: 'Мультиплеер',
       icon: <Users className="w-4 h-4" />,
       action: () => {},
       badge: 'Скоро',
     },
     {
       id: 'how-it-works',
-      label: 'How it works',
+      label: 'Как это работает',
       icon: <BookOpen className="w-4 h-4" />,
       action: () => setShowHowToPlay(true),
     },
     {
       id: 'leaderboard',
-      label: 'Leaderboard',
+      label: 'Лидерборд',
       icon: <Trophy className="w-4 h-4" />,
       action: () => useGameStore.getState().setScreen('leaderboard'),
     },
@@ -299,7 +299,7 @@ export default function Header() {
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#9CA3AF] cursor-default transition-all duration-200"
                 >
                   <BookOpen className="w-4 h-4" />
-                  <span>Story</span>
+                  <span>История</span>
                   <span className="ml-auto px-2 py-0.5 text-[10px] font-semibold rounded-full bg-[#00C896]/15 text-[#00C896]">
                     Скоро
                   </span>
