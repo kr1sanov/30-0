@@ -78,6 +78,24 @@ upload/
 start-dev.sh
 .dev-server-pid
 
+# Agent context files (dev artifacts)
+agent-ctx/
+
+# Download/QA screenshots (dev artifacts)
+download/
+
+# MCP tooling files (dev only)
+*.mcp.mjs
+mcp.mjs
+ctx7-mcp.mjs
+pw-mcp.mjs
+supabase-mcp.mjs
+browserbase-mcp.mjs
+
+# Development screenshots (not needed in repo)
+screenshot*.png
+home-screen.png
+
 # Data directory (SQLite production)
 data/
 
@@ -100,3 +118,7 @@ Thumbs.db
 
 # Worklog (local only)
 worklog.md
+
+# Documentation (project analysis, local only)
+PROJECT_ANALYSIS.md
+PROJECT_STATUS.md
