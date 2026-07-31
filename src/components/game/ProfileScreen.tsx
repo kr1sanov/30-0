@@ -4,7 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import ShareModal from '@/components/share/ShareModal';
 import ProfileShareCard from '@/components/share/ProfileShareCard';
@@ -45,7 +45,7 @@ export default function ProfileScreen() {
   const { haptic, notify, showConfirm, isTelegram, showSecondaryButton, hideSecondaryButton, showAlert } = useTelegram();
 
   // Track profile open in Metrika
-  useMemo(() => { Metrics.profileOpen(); }, []);
+  useEffect(() => { Metrics.profileOpen(); }, []);
 
   const winRate = profileStats.totalSeasons > 0
     ? Math.round((profileStats.totalWins / (profileStats.totalSeasons * 30)) * 100)

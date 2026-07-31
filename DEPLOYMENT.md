@@ -357,7 +357,7 @@ npx prisma generate
 
 # 6. Create the .env file
 cat > .env << 'EOF'
-DATABASE_URL=mysql://j97915155:PASSWORD@mysql.925c78adb421.hosting.myjino.ru:3306/j97915155
+DATABASE_URL=mysql://user:PASSWORD@host:3306/dbname
 TELEGRAM_BOT_TOKEN=YOUR_BOT_TOKEN
 NODE_ENV=production
 PORT=3000

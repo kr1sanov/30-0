@@ -42,40 +42,39 @@ export default function RootLayout({
         {/* Telegram WebApp SDK */}
         <script src="https://telegram.org/js/telegram-web-app.js" async />
       </head>
-      {/* Yandex.Metrika counter */}
-      <Script id="yandex-metrika" strategy="afterInteractive">
-        {`(function(m,e,t,r,i,k,a){
-          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-          m[i].l=1*new Date();
-          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110726199', 'ym');
-
-        ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true, trackHash:true});
-
-        // Track JS errors
-        window.addEventListener('error', function(e) {
-          ym(110726199, 'reachGoal', 'js_error', {
-            message: e.message,
-            filename: e.filename,
-            lineno: e.lineno
-          });
-        });
-        window.addEventListener('unhandledrejection', function(e) {
-          ym(110726199, 'reachGoal', 'promise_error', {
-            reason: String(e.reason)
-          });
-        });`}
-      </Script>
-      <noscript>
-        <div><img src="https://mc.yandex.ru/watch/110726199" style={{position:'absolute', left:'-9999px'}} alt="" /></div>
-      </noscript>
-      {/* /Yandex.Metrika counter */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0A] text-[#FFFFFF]`}
         style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}
       >
         {children}
+        {/* Yandex.Metrika counter */}
+        <Script id="yandex-metrika" strategy="afterInteractive">
+          {`(function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+          })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110726199', 'ym');
+
+          ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true, trackHash:true});
+
+          window.addEventListener('error', function(e) {
+            ym(110726199, 'reachGoal', 'js_error', {
+              message: e.message,
+              filename: e.filename,
+              lineno: e.lineno
+            });
+          });
+          window.addEventListener('unhandledrejection', function(e) {
+            ym(110726199, 'reachGoal', 'promise_error', {
+              reason: String(e.reason)
+            });
+          });`}
+        </Script>
+        <noscript>
+          <div><img src="https://mc.yandex.ru/watch/110726199" style={{position:'absolute', left:'-9999px'}} alt="" /></div>
+        </noscript>
+        {/* /Yandex.Metrika counter */}
         <Toaster />
         <SonnerToaster
           theme="dark"

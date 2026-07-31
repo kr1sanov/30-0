@@ -112,37 +112,37 @@ export async function POST(
       }
     }
 
-    // Swap in database — update fromSlot with toSlot's data (ALL fields)
-    await db.gameSlot.update({
-      where: { id: fromSlot.id },
-      data: {
-        playerSeasonId: toData.playerSeasonId,
-        playerName: toData.playerName,
-        playerLastName: toData.playerLastName,
-        playerRating: toData.playerRating,
-        playerPrimeRating: toData.playerPrimeRating,
-        playerPosition: toData.playerPosition,
-        playerOtherPositions: toData.playerOtherPositions,
-        playerNationality: toData.playerNationality,
-        isCompatible: true, // Strict matching — always full compatibility
-      },
-    });
-
-    // Update toSlot with fromSlot's data (ALL fields)
-    await db.gameSlot.update({
-      where: { id: toSlot.id },
-      data: {
-        playerSeasonId: fromData.playerSeasonId,
-        playerName: fromData.playerName,
-        playerLastName: fromData.playerLastName,
-        playerRating: fromData.playerRating,
-        playerPrimeRating: fromData.playerPrimeRating,
-        playerPosition: fromData.playerPosition,
-        playerOtherPositions: fromData.playerOtherPositions,
-        playerNationality: fromData.playerNationality,
-        isCompatible: true, // Strict matching — always full compatibility
-      },
-    });
+    // Swap in database — use a transaction to ensure atomicity
+    await db.$transaction([
+      db.gameSlot.update({
+        where: { id: fromSlot.id },
+        data: {
+          playerSeasonId: toData.playerSeasonId,
+          playerName: toData.playerName,
+          playerLastName: toData.playerLastName,
+          playerRating: toData.playerRating,
+          playerPrimeRating: toData.playerPrimeRating,
+          playerPosition: toData.playerPosition,
+          playerOtherPositions: toData.playerOtherPositions,
+          playerNationality: toData.playerNationality,
+          isCompatible: true, // Strict matching — always full compatibility
+        },
+      }),
+      db.gameSlot.update({
+        where: { id: toSlot.id },
+        data: {
+          playerSeasonId: fromData.playerSeasonId,
+          playerName: fromData.playerName,
+          playerLastName: fromData.playerLastName,
+          playerRating: fromData.playerRating,
+          playerPrimeRating: fromData.playerPrimeRating,
+          playerPosition: fromData.playerPosition,
+          playerOtherPositions: fromData.playerOtherPositions,
+          playerNationality: fromData.playerNationality,
+          isCompatible: true, // Strict matching — always full compatibility
+        },
+      }),
+    ]);
 
     // Return the updated run
     const updatedRun = await db.gameRun.findUnique({

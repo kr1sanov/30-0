@@ -78,7 +78,7 @@ File: `/home/j97915155/30-0/.env`
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `DATABASE_URL` | ✅ | MySQL connection string | `mysql://j97915155:password@mysql.925c78adb421.hosting.myjino.ru:3306/j97915155` |
+| `DATABASE_URL` | ✅ | MySQL connection string | `mysql://user:password@host:3306/dbname` |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Telegram bot token for auth validation | `123456:ABC-DEF1234...` |
 | `NODE_ENV` | ✅ | Node environment | `production` |
 | `PORT` | ✅ | Application port | `3000` |

@@ -93,10 +93,10 @@ docker compose up -d --build   # Пересборка и запуск
    npx prisma generate
 
    # Создаём таблицы
-   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" npx prisma db push
+   DATABASE_URL="$DATABASE_URL" npx prisma db push
 
    # Загружаем данные игроков РПЛ
-   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" npx tsx prisma/seed.ts
+   DATABASE_URL="$DATABASE_URL" npx tsx prisma/seed.ts
 
    # Билдим
    NODE_ENV=production npm run build
@@ -105,7 +105,7 @@ docker compose up -d --build   # Пересборка и запуск
    ```bash
    npm install -g pm2
 
-   DATABASE_URL="mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155" \
+   DATABASE_URL="$DATABASE_URL" \
      TELEGRAM_BOT_TOKEN="ваш_токен" \
      NODE_ENV=production \
      pm2 start .next/standalone/server.js --name 30-0-app
@@ -153,7 +153,7 @@ pm2 save && pm2 startup
 
 | Переменная | Обязательно | Описание |
 |---|---|---|
-| `DATABASE_URL` | ✅ | MySQL подключение, например `mysql://j97915155:ArT2r6hyy@localhost:3306/j97915155` |
+| `DATABASE_URL` | ✅ | MySQL подключение, например `mysql://user:password@localhost:3306/dbname` |
 | `TELEGRAM_BOT_TOKEN` | ✅ | Токен бота от @BotFather |
 | `NEXT_TELEMETRY_DISABLED` | ❌ | Установите `1` для отключения телеметрии |
 | `NODE_ENV` | ❌ | Установите `production` |
@@ -213,10 +213,10 @@ pm2 restart 30-0-app
 
 ```bash
 # Создать бэкап
-mysqldump -u j97915155 -p j97915155 > backup-$(date +%Y%m%d).sql
+mysqldump -u $DB_USER -p $DB_NAME > backup-$(date +%Y%m%d).sql
 
 # Восстановить
-mysql -u j97915155 -p j97915155 < backup-20250101.sql
+mysql -u $DB_USER -p $DB_NAME < backup-20250101.sql
 ```
 
 ---

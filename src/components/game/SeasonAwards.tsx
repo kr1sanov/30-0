@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -76,7 +76,7 @@ export default function SeasonAwards() {
   const { haptic, notify } = useTelegram();
 
   // Track title earned in Metrika (once on mount)
-  useMemo(() => { Metrics.titleEarned('season_complete'); }, []);
+  useEffect(() => { Metrics.titleEarned('season_complete'); }, []);
 
   const isPrimeMode = config.ratingMode === 'prime';
 

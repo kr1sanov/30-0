@@ -406,7 +406,7 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
 function ManagerCard({ manager }: { manager: Manager }) {
   const tier = getRatingTier(manager.rating);
   const color = getTierColor(tier);
-  const isJackpot = manager.rating >= 87;
+  const isJackpot = manager.rating >= 9;
 
   const firstName = manager.name.split(' ')[0];
 
