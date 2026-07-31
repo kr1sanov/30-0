@@ -81,3 +81,41 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { userId, displayName } = body as {
+      userId: string;
+      displayName: string;
+    };
+
+    if (!userId || !displayName || displayName.trim().length < 2) {
+      return NextResponse.json(
+        { error: 'userId and displayName (min 2 chars) are required' },
+        { status: 400 },
+      );
+    }
+
+    const user = await db.user.update({
+      where: { id: userId },
+      data: { displayName: displayName.trim() },
+    });
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        telegramId: user.telegramId,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        photoUrl: user.photoUrl,
+        displayName: user.displayName,
+        referralCode: user.referralCode,
+      },
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+  }
+}

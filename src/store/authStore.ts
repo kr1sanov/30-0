@@ -81,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
           set({ user: { ...user, displayName: name } });
           // Also update on server if not guest
           if (user.id !== 'guest') {
-            fetch('/api/auth/profile', {
+            fetch('/api/users/profile', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId: user.id, displayName: name }),

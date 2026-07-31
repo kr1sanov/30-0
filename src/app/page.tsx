@@ -26,6 +26,7 @@ import { useTelegramAuth } from '@/hooks/use-telegram-auth';
 import { useTelegram } from '@/hooks/use-telegram';
 import { useAuthStore } from '@/store/authStore';
 import { Metrics } from '@/lib/metrics';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -1286,7 +1287,9 @@ export default function Home() {
       <main
         className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10"
       >
-        {renderScreen()}
+        <ErrorBoundary>
+          {renderScreen()}
+        </ErrorBoundary>
       </main>
       <Footer />
       <AchievementUnlocked />
