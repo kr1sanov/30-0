@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "skills": {
+    "glmocr": {
+      "version": "1.0.4",
+      "installedAt": 1782901553931,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmocr-table": {
+      "version": "1.0.3",
+      "installedAt": 1782901558737,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmocr-formula": {
+      "version": "1.0.4",
+      "installedAt": 1782901563472,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmocr-handwriting": {
+      "version": "1.0.4",
+      "installedAt": 1782901568288,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmocr-sdk": {
+      "version": "1.0.4",
+      "installedAt": 1782901577891,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-caption": {
+      "version": "1.0.3",
+      "installedAt": 1782901582421,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-doc-based-writing": {
+      "version": "1.0.2",
+      "installedAt": 1782901587113,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-grounding": {
+      "version": "1.0.5",
+      "installedAt": 1782901593419,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-pdf-to-ppt": {
+      "version": "1.0.1",
+      "installedAt": 1782901598294,
+      "ownerHandle": "zai-org"
+    },
+    "glmv-pdf-to-web": {
+      "version": "1.0.1",
+      "installedAt": 1782901603527,
+      "ownerHandle": "zai-org"
+    },
+    "glmv-prd-to-app": {
+      "version": "1.0.1",
+      "installedAt": 1782901608791,
+      "ownerHandle": "zai-org"
+    },
+    "glmv-prompt-gen": {
+      "version": "1.0.3",
+      "installedAt": 1782901613581,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-resume-screen": {
+      "version": "1.0.3",
+      "installedAt": 1782901618260,
+      "ownerHandle": "jaredforreal"
+    },
+    "glmv-stock-analyst": {
+      "version": "1.0.4",
+      "installedAt": 1782901624441,
+      "ownerHandle": "zai-org"
+    },
+    "glmv-web-replication": {
+      "version": "1.0.2",
+      "installedAt": 1782901628986,
+      "ownerHandle": "zai-org"
+    },
+    "glm-image-gen": {
+      "version": "1.0.4",
+      "installedAt": 1782901638942,
+      "ownerHandle": "jaredforreal"
+    },
+    "glm-master-skill": {
+      "version": "1.0.9",
+      "installedAt": 1782901643637,
+      "ownerHandle": "jaredforreal"
+    }
+  }
+}
