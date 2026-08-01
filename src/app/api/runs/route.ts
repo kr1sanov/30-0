@@ -2,10 +2,52 @@ import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
 import { NextResponse } from 'next/server';
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const completed = searchParams.get('completed');
+    const difficulty = searchParams.get('difficulty');
+    const sort = searchParams.get('sort') || 'date'; // 'date' | 'points'
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+
+    const where: Record<string, unknown> = {};
+    if (completed === 'true') {
+      where.completed = true;
+    }
+    if (difficulty && ['easy', 'normal', 'hard'].includes(difficulty)) {
+      where.difficulty = difficulty;
+    }
+
+    const orderBy: Record<string, string>[] =
+      sort === 'points'
+        ? [{ points: 'desc' }, { createdAt: 'desc' }]
+        : [{ createdAt: 'desc' }];
+
+    const runs = await db.gameRun.findMany({
+      where,
+      include: {
+        slots: {
+          orderBy: { slotPosition: 'asc' },
+        },
+      },
+      orderBy,
+      take: limit,
+    });
+
+    return NextResponse.json(runs);
+  } catch (error) {
+    console.error('Failed to fetch runs:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch runs' },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName } = body;
+    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
 
     // Validate formation exists
     const formationData = FORMATIONS.find((f) => f.id === formation);
@@ -38,6 +80,8 @@ export async function POST(request: Request) {
         rerollsUsed: 0,
         completed: false,
         ...(teamName ? { teamName } : {}),
+        ...(clubFilter ? { clubFilter } : {}),
+        ...(nationalityFilter ? { nationalityFilter } : {}),
       },
     });
 

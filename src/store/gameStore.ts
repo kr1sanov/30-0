@@ -38,6 +38,15 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'iron_curtain', name: 'Железный занавес', description: '10 или менее пропущенных', icon: '🥅', condition: 'goalsAgainst <= 10' },
   { id: 'personal_best', name: 'Взлёт', description: 'Новый личный рекорд очков', icon: '📈', condition: 'points > previousBestPoints' },
   { id: 'win_streak', name: 'Серия побед', description: '5+ побед подряд', icon: '🔥', condition: 'maxStreak >= 5' },
+  { id: 'minimalist', name: 'Минималист', description: 'Сезон без перебросов', icon: '🎯', condition: 'rerollsUsed === 0' },
+  { id: 'hard_champion', name: 'Бриллиант', description: 'Чемпион на сложности', icon: '💎', condition: 'difficulty === "hard" && position === 1' },
+  { id: 'squad_builder', name: 'Архитектор', description: 'Средний рейтинг 80+', icon: '🏗️', condition: 'avgRating >= 80' },
+  { id: 'centurion', name: 'Центурион', description: '100+ очков за сезон', icon: '💯', condition: 'points >= 100' },
+  { id: 'clean_sheet', name: 'Сухарь', description: '10+ сухих матчей', icon: '🧤', condition: 'cleanSheets >= 10' },
+  { id: 'comeback_king', name: 'Король камбэков', description: '5+ побед после пропуска', icon: '👑', condition: 'comebackWins >= 5' },
+  { id: 'globetrotter', name: 'Путешественник', description: 'Игроки 5+ национальностей', icon: '🌍', condition: 'nationalities >= 5' },
+  { id: 'veteran', name: 'Ветеран', description: '10+ сезонов сыграно', icon: '🎖️', condition: 'totalSeasons >= 10' },
+  { id: 'legend', name: 'Легенда', description: '3+ чемпионских титула', icon: '🌟', condition: 'titles >= 3' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -188,6 +197,9 @@ const defaultConfig: GameConfig = {
   eraFilter: 'all',
   eraStartYear: 2000,
   eraEndYear: 2025,
+  gameMode: 'classic',
+  clubFilter: undefined,
+  nationalityFilter: undefined,
 };
 
 const defaultProfileStats: ProfileStats = {
@@ -269,14 +281,31 @@ export const useGameStore = create<GameState>()(
       // =====================================================================
 
       startRun: async () => {
-        const { config } = get();
+        const { config, dailyChallenge } = get();
         // Immediately switch to draft screen so the UI feels instant
         set({ screen: 'draft' });
         try {
+          // Apply daily challenge constraints to the run
+          const runConfig = { ...config };
+
+          // Override rerolls if daily challenge specifies
+          if (dailyChallenge) {
+            // The API will handle rerolls based on difficulty
+            // But we need to ensure the config reflects the challenge
+            if (dailyChallenge.formationLock) {
+              runConfig.formation = dailyChallenge.formationLock;
+            }
+            if (dailyChallenge.eraRestriction) {
+              runConfig.eraStartYear = dailyChallenge.eraRestriction.start;
+              runConfig.eraEndYear = dailyChallenge.eraRestriction.end;
+              runConfig.eraFilter = 'all';
+            }
+          }
+
           const res = await fetch('/api/runs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(config),
+            body: JSON.stringify(runConfig),
           });
 
           if (!res.ok) {
@@ -286,7 +315,7 @@ export const useGameStore = create<GameState>()(
 
           const data = await res.json();
 
-          const formation = FORMATIONS.find((f) => f.id === config.formation);
+          const formation = FORMATIONS.find((f) => f.id === runConfig.formation);
           if (!formation) return;
 
           const slots: DraftSlot[] = formation.slots.map((slot, index) => {
@@ -321,12 +350,16 @@ export const useGameStore = create<GameState>()(
             };
           });
 
-          const difficultyConfig = DIFFICULTY_CONFIG[config.difficulty];
+          // Determine rerolls based on daily challenge or difficulty
+          let rerollsTotal: number = DIFFICULTY_CONFIG[runConfig.difficulty].rerolls;
+          if (dailyChallenge && dailyChallenge.rerollsAllowed !== undefined) {
+            rerollsTotal = dailyChallenge.rerollsAllowed;
+          }
 
           set({
             runId: data.id,
             slots,
-            rerollsLeft: difficultyConfig.rerolls,
+            rerollsLeft: rerollsTotal,
             rerollsUsed: 0,
             currentSpin: null,
             selectedPlayer: null,
@@ -336,7 +369,7 @@ export const useGameStore = create<GameState>()(
             seasonResult: null,
             currentManager: null,
             screen: 'draft',
-            lastConfig: { ...config },
+            lastConfig: { ...runConfig },
             lastDraftError: null,
             lastDraftState: null,
             draftVersion: 0,
@@ -1279,7 +1312,33 @@ export const useGameStore = create<GameState>()(
 
       // Start a daily challenge — transition to setup screen with challenge data
       startDailyChallenge: (challenge: DailyChallenge) => {
-        set({ screen: 'setup', dailyChallenge: challenge });
+        // Apply challenge constraints to config
+        const configOverrides: Partial<GameConfig> = {};
+
+        // Lock formation if specified
+        if (challenge.formationLock) {
+          configOverrides.formation = challenge.formationLock;
+        }
+
+        // Set era restriction if specified
+        if (challenge.eraRestriction) {
+          configOverrides.eraStartYear = challenge.eraRestriction.start;
+          configOverrides.eraEndYear = challenge.eraRestriction.end;
+          configOverrides.eraFilter = 'all';
+        }
+
+        // Set difficulty based on challenge
+        if (challenge.difficulty === 'easy' || challenge.difficulty === 'normal' || challenge.difficulty === 'hard') {
+          configOverrides.difficulty = challenge.difficulty;
+        }
+
+        // Apply config overrides
+        const currentConfig = get().config;
+        set({
+          screen: 'setup',
+          dailyChallenge: challenge,
+          config: { ...currentConfig, ...configOverrides },
+        });
       },
 
       // Clear global error
@@ -1312,6 +1371,7 @@ export const useGameStore = create<GameState>()(
           seasonResult: state.seasonResult,
           telegramUser: state.telegramUser,
           screen: persistedScreen,
+          dailyChallenge: state.dailyChallenge,
         };
       },
     },

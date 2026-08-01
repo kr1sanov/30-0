@@ -6,6 +6,8 @@
 // Game Configuration
 // ---------------------------------------------------------------------------
 
+export type GameModeType = 'classic' | 'single_club' | 'daily' | 'nations_cup';
+
 export interface GameConfig {
   formation: string;
   difficulty: 'easy' | 'normal' | 'hard';
@@ -18,6 +20,9 @@ export interface GameConfig {
   enableManagers?: boolean; // Gaffers toggle
   januaryTransfer?: boolean; // January Transfer Window toggle
   teamName?: string; // default: "Моя команда"
+  gameMode?: GameModeType; // 'classic' (default) or 'single_club'
+  clubFilter?: string; // clubId for single_club mode
+  nationalityFilter?: string; // nationality name for nations_cup mode
 }
 
 // ---------------------------------------------------------------------------
@@ -69,6 +74,8 @@ export interface PlayerOption {
 export type GameScreen =
   | 'home'
   | 'setup'
+  | 'daily-challenge'
+  | 'nations-cup'
   | 'draft'
   | 'position-assign'
   | 'squad-complete'
@@ -78,7 +85,8 @@ export type GameScreen =
   | 'result'
   | 'awards'
   | 'profile'
-  | 'leaderboard';
+  | 'leaderboard'
+  | 'history';
 
 // ---------------------------------------------------------------------------
 // Achievements
@@ -179,4 +187,7 @@ export interface DailyChallenge {
   bonusDescription?: string;
   completionOdds: number;
   maxAttempts: number;
+  rerollsAllowed: number;
+  bonusMultiplier: number;
+  ratingCap?: number;
 }

@@ -137,6 +137,7 @@ model GameRun {
   eraStartYear   Int      @default(2000)
   eraEndYear     Int      @default(2025)
   clubFilter     String?
+  nationalityFilter String?
 
   slots        GameSlot[]
 

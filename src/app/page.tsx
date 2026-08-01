@@ -14,10 +14,13 @@ import SimulationResult from '@/components/game/SimulationResult';
 import ManagerChoice from '@/components/game/ManagerChoice';
 import SeasonAwards from '@/components/game/SeasonAwards';
 import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
+import DailyChallengeScreen from '@/components/game/DailyChallengeScreen';
+import NationsCupScreen from '@/components/game/NationsCupScreen';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
+import HistoryScreen from '@/components/game/HistoryScreen';
 import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
 import { canFillSlot } from '@/lib/positions';
@@ -38,10 +41,10 @@ const STEPS = [
 
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
-  { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6' },
-  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#3b82f6', badge: 'СКОРО' },
-  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', badge: 'СКОРО' },
-  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', badge: 'СКОРО' },
+  { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: true, color: '#00C896', gameMode: 'daily' as const },
+  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: true, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
 
 interface ChallengeDef {
@@ -278,7 +281,7 @@ function RecentResults() {
 
 /* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
-  const { setScreen, profileStats, runId, resumeGame } = useGameStore();
+  const { setScreen, setConfig, profileStats, runId, resumeGame } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   return (
@@ -342,7 +345,10 @@ function HomePage() {
         >
           {/* Primary CTA — full width green */}
           <Button
-            onClick={() => setScreen('setup')}
+            onClick={() => {
+              setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+              setScreen('setup');
+            }}
             className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-2xl transition-colors active:scale-[0.97] shadow-lg shadow-[#00C896]/20"
           >
             Играть 30-0 →
@@ -382,25 +388,55 @@ function HomePage() {
         </h2>
 
         <div className="space-y-3">
-          {/* Active mode: Классика */}
+          {/* Active modes */}
           {GAME_MODES.filter(m => m.active).map((mode, i) => (
             <motion.button
               key={mode.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
-              onClick={() => setScreen('setup')}
+              onClick={() => {
+                if (mode.gameMode === 'daily') {
+                  setScreen('daily-challenge');
+                } else if (mode.gameMode === 'nations_cup') {
+                  setScreen('nations-cup');
+                } else {
+                  setConfig({ gameMode: mode.gameMode, clubFilter: undefined, nationalityFilter: undefined });
+                  setScreen('setup');
+                }
+              }}
               className="relative w-full rounded-2xl p-5 sm:p-6 text-left transition-all overflow-hidden group bg-[#141414] border border-[#1E1E1E] hover:border-[#00C896]/30 hover:bg-[#1E1E1E] active:scale-[0.98]"
             >
+              {mode.gameMode === 'single_club' && (
+                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
+                  НОВОЕ
+                </span>
+              )}
+              {mode.gameMode === 'daily' && (
+                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
+                  НОВОЕ
+                </span>
+              )}
+              {mode.gameMode === 'nations_cup' && (
+                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/20">
+                  НОВОЕ
+                </span>
+              )}
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-[#00C896]/10 flex items-center justify-center text-2xl sm:text-3xl">
+                <div
+                  className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl sm:text-3xl"
+                  style={{ backgroundColor: `${mode.color}15` }}
+                >
                   {mode.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-lg sm:text-xl font-bold text-[#FFFFFF] mb-1">{mode.title}</div>
                   <div className="text-sm text-[#9CA3AF] leading-relaxed">{mode.desc}</div>
                 </div>
-                <div className="text-[#00C896]/50 group-hover:text-[#00C896] transition-colors text-2xl">
+                <div
+                  className="transition-colors text-2xl"
+                  style={{ color: `${mode.color}50` }}
+                >
                   →
                 </div>
               </div>
@@ -561,13 +597,15 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex, dailyChallenge } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [lastPlacedInfo, setLastPlacedInfo] = useState<{ name: string; position: string } | null>(null);
   const spinWheelRef = useRef<HTMLDivElement>(null);
   const prevLastAssignedSlot = useRef(lastAssignedSlotIndex);
 
-  const maxRerolls = config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
+  const maxRerolls = dailyChallenge?.rerollsAllowed !== undefined
+    ? dailyChallenge.rerollsAllowed
+    : config.difficulty === 'easy' ? 3 : config.difficulty === 'normal' ? 1 : 0;
   const openCount = slots.filter((s) => !s.playerId).length;
   const isMoving = movingPlayerSlotIndex !== null;
 
@@ -652,6 +690,11 @@ function DraftScreen() {
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-black text-[#FFFFFF] tracking-wide bg-[#1E1E1E] px-2 py-1 rounded-lg">{config.formation}</span>
+          {dailyChallenge && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
+              ⚽ Челлендж
+            </span>
+          )}
           <span className="text-[10px] text-[#64748b]">{openCount} поз. осталось</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -679,6 +722,47 @@ function DraftScreen() {
           </button>
         </div>
       </div>
+
+      {/* ── Daily Challenge Constraints Banner ── */}
+      <AnimatePresence>
+        {dailyChallenge && (
+          <motion.div
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="rounded-xl bg-[#00C896]/5 border border-[#00C896]/20 px-3 py-2"
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-bold text-[#00C896]">⚽ {dailyChallenge.title}</span>
+              {dailyChallenge.bonusMultiplier > 1 && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#fbbf24]/15 text-[#fbbf24]">×{dailyChallenge.bonusMultiplier}</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {dailyChallenge.nationalityRequirements.map((req, i) => (
+                <span key={i} className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#00C896]/10 text-[#00C896]">
+                  {req.flag}{req.count} {req.nationality}
+                </span>
+              ))}
+              {dailyChallenge.eraRestriction && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#f97316]/10 text-[#f97316]">
+                  📅 {dailyChallenge.eraRestriction.start}-{dailyChallenge.eraRestriction.end}
+                </span>
+              )}
+              {dailyChallenge.formationLock && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#3b82f6]/10 text-[#3b82f6]">
+                  📐 {dailyChallenge.formationLock}
+                </span>
+              )}
+              {dailyChallenge.rerollsAllowed === 0 && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#ef4444]/10 text-[#ef4444]">
+                  🚫 Без перебросов
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Selected Player Instruction Banner ── */}
       <AnimatePresence>
@@ -1105,7 +1189,7 @@ const SCREEN_ORDER = ['home', 'setup', 'draft', 'position-assign', 'squad-comple
 
 function getDirection(from: string, to: string): number {
   // Forward = 1, Backward = -1, Scale = 0
-  const scaleScreens = ['profile', 'leaderboard'];
+  const scaleScreens = ['profile', 'leaderboard', 'history'];
   if (scaleScreens.includes(to) || scaleScreens.includes(from)) return 0;
 
   const fromIdx = SCREEN_ORDER.indexOf(from);
@@ -1226,7 +1310,7 @@ export default function Home() {
       hideBackButton();
       hideMainButton();
       disableClosingConfirmation();
-    } else if (screen === 'setup' || screen === 'profile') {
+    } else if (screen === 'setup' || screen === 'profile' || screen === 'daily-challenge' || screen === 'nations-cup') {
       showBackButton(() => useGameStore.getState().goHome());
       hideMainButton();
       disableClosingConfirmation();
@@ -1249,6 +1333,10 @@ export default function Home() {
         return <HomePage />;
       case 'setup':
         return <GameSetup />;
+      case 'daily-challenge':
+        return <DailyChallengeScreen />;
+      case 'nations-cup':
+        return <NationsCupScreen />;
       case 'draft':
         return <DraftScreen />;
       case 'position-assign':
@@ -1267,6 +1355,8 @@ export default function Home() {
         return <ProfileScreen />;
       case 'leaderboard':
         return <LeaderboardScreen />;
+      case 'history':
+        return <HistoryScreen />;
       default:
         return <HomePage />;
     }

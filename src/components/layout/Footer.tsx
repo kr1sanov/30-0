@@ -72,8 +72,7 @@ export default function Footer() {
     {
       label: 'История',
       icon: <MessageCircle className="w-3.5 h-3.5" />,
-      action: () => {},
-      badge: 'Скоро',
+      action: () => useGameStore.getState().setScreen('history'),
     },
     {
       label: 'Telegram',

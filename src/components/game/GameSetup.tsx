@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
 import {
@@ -8,7 +9,7 @@ import {
   DRAFT_MODE_CONFIG,
   RATING_MODE_CONFIG,
 } from '@/lib/types';
-import type { Difficulty, EraFilter } from '@/lib/types';
+import type { Difficulty, EraFilter, GameModeType } from '@/lib/types';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -20,6 +21,42 @@ import { Metrics } from '@/lib/metrics';
 const ACCENT = '#00C896';
 const BG_PAGE = '#0A0A0A';
 const BG_CARD = '#141414';
+
+/* ─── Club type for fetching ─── */
+interface ClubData {
+  id: string;
+  nameRu: string;
+  nameEn?: string;
+  city?: string;
+  logoUrl?: string;
+}
+
+/* ─── Game Mode Config ─── */
+const GAME_MODE_CONFIG: Record<
+  GameModeType,
+  { label: string; description: string; icon: string }
+> = {
+  classic: {
+    label: 'Классика',
+    description: 'Крутите колесо — случайный клуб и сезон РПЛ',
+    icon: '⚔️',
+  },
+  single_club: {
+    label: 'Один клуб',
+    description: 'Выберите клуб — все спины только его сезоны',
+    icon: '🏟️',
+  },
+  daily: {
+    label: 'Челлендж',
+    description: 'Ежедневный челлендж с ограничениями',
+    icon: '⚽',
+  },
+  nations_cup: {
+    label: 'Кубок наций',
+    description: 'Выберите нацию — все спины только с игроками этой нации',
+    icon: '🏆',
+  },
+};
 
 /* ─── Pitch dot layout for formation preview ─── */
 const PITCH_LAYOUTS: Record<string, { row: number; col: number }[]> = {
@@ -232,13 +269,114 @@ function PillButton({
   );
 }
 
+/* ─── Club Card ─── */
+function ClubCard({
+  club,
+  isSelected,
+  onClick,
+}: {
+  club: ClubData;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.96 }}
+      whileHover={{ scale: 1.02 }}
+      className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
+      style={{
+        backgroundColor: isSelected ? `${ACCENT}15` : BG_CARD,
+        borderColor: isSelected ? ACCENT : '#2a2a2a',
+        boxShadow: isSelected ? `0 0 16px ${ACCENT}30` : 'none',
+      }}
+    >
+      {/* Selected checkmark */}
+      {isSelected && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+          style={{ backgroundColor: ACCENT }}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5L4 7L8 3" stroke="#0A0A0A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </motion.div>
+      )}
+      {/* Club icon */}
+      <div
+        className="w-10 h-10 rounded-lg mx-auto mb-1.5 flex items-center justify-center text-lg"
+        style={{
+          backgroundColor: isSelected ? `${ACCENT}20` : '#1f1f1f',
+        }}
+      >
+        ⚽
+      </div>
+      {/* Club name */}
+      <div
+        className="text-xs font-bold leading-tight"
+        style={{ color: isSelected ? ACCENT : '#FFFFFF' }}
+      >
+        {club.nameRu}
+      </div>
+      {club.city && (
+        <div className="text-[9px] text-[#64748b] mt-0.5 leading-tight">
+          {club.city}
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
 export default function GameSetup() {
-  const { config, setConfig, startRun } = useGameStore();
+  const { config, setConfig, startRun, dailyChallenge } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
 
+  // Club list for single_club mode
+  const [clubs, setClubs] = useState<ClubData[]>([]);
+  const [clubsLoading, setClubsLoading] = useState(false);
+  const [clubSearch, setClubSearch] = useState('');
+
+  // Current game mode
+  const currentGameMode: GameModeType = config.gameMode ?? 'classic';
+
+  // Fetch clubs when single_club mode is selected
+  useEffect(() => {
+    if (currentGameMode === 'single_club' && clubs.length === 0) {
+      setClubsLoading(true);
+      fetch('/api/clubs')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setClubs(data);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setClubsLoading(false));
+    }
+  }, [currentGameMode, clubs.length]);
+
+  // Filter clubs by search
+  const filteredClubs = clubs.filter((c) =>
+    c.nameRu.toLowerCase().includes(clubSearch.toLowerCase()) ||
+    (c.city && c.city.toLowerCase().includes(clubSearch.toLowerCase()))
+  );
+
+  // Selected club name
+  const selectedClub = clubs.find((c) => c.id === config.clubFilter);
+
   const handleStart = async () => {
-    haptic('medium'); // Haptic when starting the game
-    // Track game start in Metrika
+    // In single_club mode, require a club selection
+    if (currentGameMode === 'single_club' && !config.clubFilter) {
+      return;
+    }
+    // In nations_cup mode, require a nationality selection
+    if (currentGameMode === 'nations_cup' && !config.nationalityFilter) {
+      return;
+    }
+
+    haptic('medium');
     Metrics.gameStart({
       formation: config.formation,
       difficulty: config.difficulty,
@@ -250,8 +388,21 @@ export default function GameSetup() {
   };
 
   const handleFormationSelect = (formationId: string) => {
-    selectionChanged(); // Light haptic for selection change
+    selectionChanged();
     setConfig({ formation: formationId });
+  };
+
+  const handleGameModeSelect = (mode: GameModeType) => {
+    selectionChanged();
+    if (mode === 'classic') {
+      setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+    } else if (mode === 'single_club') {
+      setConfig({ gameMode: 'single_club', nationalityFilter: undefined });
+    } else if (mode === 'nations_cup') {
+      setConfig({ gameMode: 'nations_cup', clubFilter: undefined });
+    } else {
+      setConfig({ gameMode: mode });
+    }
   };
 
   const selectedFormation = FORMATIONS.find((f) => f.id === config.formation);
@@ -262,17 +413,253 @@ export default function GameSetup() {
       ? config.showRatings
       : DIFFICULTY_CONFIG[config.difficulty].showRatings;
 
+  // Can start? In single_club mode, need a club selected. In nations_cup mode, need a nationality selected.
+  const canStart = currentGameMode === 'single_club' ? !!config.clubFilter : currentGameMode === 'nations_cup' ? !!config.nationalityFilter : true;
+
   return (
     <div className="space-y-6 animate-fade-in-up" style={{ background: BG_PAGE }}>
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-black text-white inline-block">
-          Настройка игры
+          {dailyChallenge ? 'Ежедневный челлендж' : 'Настройка игры'}
         </h2>
         <p className="text-sm text-[#9CA3AF] mt-1">
-          Выберите параметры драфта
+          {dailyChallenge ? dailyChallenge.title : 'Выберите параметры драфта'}
         </p>
       </div>
+
+      {/* ─── Daily Challenge Banner ── */}
+      {dailyChallenge && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl p-4 border border-[#00C896]/30 bg-[#00C896]/10"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm">⚽</span>
+            <span className="text-sm font-bold text-[#00C896]">{dailyChallenge.title}</span>
+          </div>
+          <p className="text-xs text-[#9CA3AF] mb-3">{dailyChallenge.description}</p>
+
+          {/* Constraints summary */}
+          <div className="flex flex-wrap gap-1.5">
+            {dailyChallenge.formationLock && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#3b82f6]/15 text-[#3b82f6]">
+                📐 {dailyChallenge.formationLock}
+              </span>
+            )}
+            {dailyChallenge.eraRestriction && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f97316]/15 text-[#f97316]">
+                📅 {dailyChallenge.eraRestriction.start}-{dailyChallenge.eraRestriction.end}
+              </span>
+            )}
+            {dailyChallenge.rerollsAllowed === 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ef4444]/15 text-[#ef4444]">
+                🚫 Без перебросов
+              </span>
+            )}
+            {dailyChallenge.nationalityRequirements.map((req, i) => (
+              <span key={i} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896]">
+                {req.flag} {req.count} из {req.nationality}
+              </span>
+            ))}
+            {dailyChallenge.bonusMultiplier > 1 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fbbf24]/15 text-[#fbbf24]">
+                ×{dailyChallenge.bonusMultiplier} бонус
+              </span>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ─── GAME MODE ─── */}
+      {!dailyChallenge && (
+        <div
+          className="rounded-2xl p-4"
+          style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+        >
+          <SectionHeader>Режим игры</SectionHeader>
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
+              ([key, val]) => {
+                const isSelected = currentGameMode === key;
+                return (
+                  <motion.button
+                    key={key}
+                    onClick={() => handleGameModeSelect(key)}
+                    whileTap={{ scale: 0.97 }}
+                    className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden"
+                    style={{
+                      backgroundColor: isSelected ? `${ACCENT}15` : 'transparent',
+                      borderColor: isSelected ? ACCENT : '#2a2a2a',
+                      boxShadow: isSelected ? `0 0 12px ${ACCENT}25` : 'none',
+                    }}
+                  >
+                    <div className="text-xl mb-1">{val.icon}</div>
+                    <div
+                      className="text-sm font-bold"
+                      style={{ color: isSelected ? ACCENT : '#FFFFFF' }}
+                    >
+                      {val.label}
+                    </div>
+                    <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
+                      {val.description}
+                    </div>
+                  </motion.button>
+                );
+              }
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── CLUB SELECTION (only for single_club mode) ─── */}
+      <AnimatePresence>
+        {currentGameMode === 'single_club' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div
+              className="rounded-2xl p-4"
+              style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+            >
+              <SectionHeader>Выберите клуб</SectionHeader>
+
+              {/* Selected club indicator */}
+              {selectedClub && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-3 rounded-xl p-3 flex items-center gap-3"
+                  style={{
+                    backgroundColor: `${ACCENT}10`,
+                    border: `1px solid ${ACCENT}30`,
+                  }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                    style={{ backgroundColor: `${ACCENT}20` }}
+                  >
+                    🏟️
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold" style={{ color: ACCENT }}>
+                      {selectedClub.nameRu}
+                    </div>
+                    <div className="text-xs text-[#9CA3AF]">
+                      Все спины будут только с сезонами этого клуба
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Search input */}
+              <div className="mb-3 relative">
+                <input
+                  type="text"
+                  placeholder="Поиск клуба..."
+                  value={clubSearch}
+                  onChange={(e) => setClubSearch(e.target.value)}
+                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#64748b] outline-none transition-all"
+                  style={{
+                    backgroundColor: '#1f1f1f',
+                    border: '1px solid #2a2a2a',
+                  }}
+                />
+                {clubSearch && (
+                  <button
+                    onClick={() => setClubSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Club grid */}
+              {clubsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-[#2a2a2a] border-t-[#00C896] rounded-full animate-spin" />
+                  <span className="ml-2 text-sm text-[#9CA3AF]">Загрузка клубов...</span>
+                </div>
+              ) : (
+                <div className="max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {filteredClubs.map((club) => (
+                      <ClubCard
+                        key={club.id}
+                        club={club}
+                        isSelected={config.clubFilter === club.id}
+                        onClick={() => {
+                          selectionChanged();
+                          if (config.clubFilter === club.id) {
+                            setConfig({ clubFilter: undefined });
+                          } else {
+                            setConfig({ clubFilter: club.id });
+                          }
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {filteredClubs.length === 0 && (
+                    <div className="text-center py-6 text-sm text-[#64748b]">
+                      Клубы не найдены
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── NATIONALITY INDICATOR (for nations_cup mode) ─── */}
+      <AnimatePresence>
+        {currentGameMode === 'nations_cup' && config.nationalityFilter && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="overflow-hidden"
+          >
+            <div
+              className="rounded-2xl p-4"
+              style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+            >
+              <SectionHeader>Выбранная нация</SectionHeader>
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl p-3 flex items-center gap-3"
+                style={{
+                  backgroundColor: `${ACCENT}10`,
+                  border: `1px solid ${ACCENT}30`,
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                  style={{ backgroundColor: `${ACCENT}20` }}
+                >
+                  🏆
+                </div>
+                <div>
+                  <div className="text-sm font-bold" style={{ color: ACCENT }}>
+                    {config.nationalityFilter}
+                  </div>
+                  <div className="text-xs text-[#9CA3AF]">
+                    Все спины будут содержать только игроков этой нации
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── FORMATION ─── */}
       <div
@@ -281,30 +668,40 @@ export default function GameSetup() {
       >
         <SectionHeader>Схема</SectionHeader>
 
-        {/* Horizontal scrollable pills */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-          {FORMATIONS.map((f) => (
-            <PillButton
-              key={f.id}
-              label={f.id}
-              isSelected={config.formation === f.id}
-              onClick={() => handleFormationSelect(f.id)}
-            />
-          ))}
-        </div>
+        {/* If formation is locked by daily challenge, show lock indicator */}
+        {dailyChallenge?.formationLock ? (
+          <div className="flex items-center gap-2 rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/20 px-3 py-2">
+            <span className="text-sm">🔒</span>
+            <span className="text-xs font-bold text-[#3b82f6]">Схема заблокирована: {dailyChallenge.formationLock}</span>
+          </div>
+        ) : (
+          <>
+            {/* Horizontal scrollable pills */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              {FORMATIONS.map((f) => (
+                <PillButton
+                  key={f.id}
+                  label={f.id}
+                  isSelected={config.formation === f.id}
+                  onClick={() => handleFormationSelect(f.id)}
+                />
+              ))}
+            </div>
 
-        {/* Formation description when selected */}
-        {selectedFormation && (
-          <motion.div
-            key={config.formation}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3"
-          >
-            <p className="text-xs text-[#9CA3AF] text-center">
-              {selectedFormation.description}
-            </p>
-          </motion.div>
+            {/* Formation description when selected */}
+            {selectedFormation && (
+              <motion.div
+                key={config.formation}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3"
+              >
+                <p className="text-xs text-[#9CA3AF] text-center">
+                  {selectedFormation.description}
+                </p>
+              </motion.div>
+            )}
+          </>
         )}
 
         {/* Formation preview */}
@@ -338,7 +735,6 @@ export default function GameSetup() {
                 onClick={() => {
                   setConfig({
                     difficulty: key,
-                    // Reset showRatings override when changing difficulty
                     showRatings: undefined,
                   });
                 }}
@@ -482,34 +878,52 @@ export default function GameSetup() {
         style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
       >
         <SectionHeader>Эпоха</SectionHeader>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
-            ([key, val]) => (
-              <PillButton
-                key={key}
-                label={val.label}
-                isSelected={config.eraFilter === key}
-                onClick={() => setConfig({
-                  eraFilter: key,
-                  eraStartYear: ERA_CONFIG[key].minYear,
-                  eraEndYear: ERA_CONFIG[key].maxYear,
-                })}
-              />
-            ),
-          )}
-        </div>
+        {dailyChallenge?.eraRestriction ? (
+          <div className="flex items-center gap-2 rounded-xl bg-[#f97316]/10 border border-[#f97316]/20 px-3 py-2">
+            <span className="text-sm">🔒</span>
+            <span className="text-xs font-bold text-[#f97316]">
+              Эпоха заблокирована: {dailyChallenge.eraRestriction.start}-{dailyChallenge.eraRestriction.end}
+            </span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+              ([key, val]) => (
+                <PillButton
+                  key={key}
+                  label={val.label}
+                  isSelected={config.eraFilter === key}
+                  onClick={() => setConfig({
+                    eraFilter: key,
+                    eraStartYear: ERA_CONFIG[key].minYear,
+                    eraEndYear: ERA_CONFIG[key].maxYear,
+                  })}
+                />
+              ),
+            )}
+          </div>
+        )}
       </div>
 
       {/* ─── Start Button ─── */}
       <Button
         onClick={handleStart}
+        disabled={!canStart}
         className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
         style={{
-          backgroundColor: ACCENT,
-          boxShadow: `0 4px 20px ${ACCENT}40`,
+          backgroundColor: canStart ? ACCENT : '#2a2a2a',
+          boxShadow: canStart ? `0 4px 20px ${ACCENT}40` : 'none',
+          opacity: canStart ? 1 : 0.6,
+          cursor: canStart ? 'pointer' : 'not-allowed',
         }}
       >
-        Начать драфт
+        {currentGameMode === 'single_club' && !config.clubFilter
+          ? 'Выберите клуб'
+          : currentGameMode === 'nations_cup' && !config.nationalityFilter
+          ? 'Выберите нацию'
+          : dailyChallenge
+          ? 'Начать челлендж →'
+          : 'Начать драфт'}
       </Button>
     </div>
   );

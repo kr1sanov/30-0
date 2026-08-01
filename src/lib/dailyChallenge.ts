@@ -27,6 +27,8 @@ export interface DailyChallenge {
   difficulty: 'easy' | 'normal' | 'hard';
   bonusDescription?: string;       // "Доп. игроки из сегодняшних наций улучшают счёт"
   completionOdds: number;          // 0-100 estimated probability
+  bonusMultiplier: number;         // 1.0 - 3.0
+  ratingCap?: number;              // max average squad rating
 }
 
 // ---------------------------------------------------------------------------
@@ -67,7 +69,7 @@ const NATIONALITIES: Array<{ name: string; flag: string }> = [
   { name: 'Грузия', flag: '🇬🇪' },
   { name: 'Армения', flag: '🇦🇲' },
   { name: 'Беларусь', flag: '🇧🇾' },
-  { name: 'Украина', flag: '🇺🇦' },  // Not in DB but may be added; still fun
+  { name: 'Украина', flag: '🇺🇦' },
   { name: 'Казахстан', flag: '🇰🇿' },
   { name: 'Польша', flag: '🇵🇱' },
   { name: 'Чехия', flag: '🇨🇿' },
@@ -128,8 +130,11 @@ interface ChallengeTemplate {
   difficulty: 'easy' | 'normal' | 'hard';
   bonusDescription?: string;
   completionOdds: number;
+  bonusMultiplier: number;
+  rerollsAllowed: number;
   formationLock?: string;
   eraRestriction?: { start: number; end: number };
+  ratingCap?: number;
 }
 
 interface TemplateExtra {
@@ -145,12 +150,10 @@ const TEMPLATES: ChallengeTemplate[] = [
       return `Соберите ${parts.join(' и ')}`;
     },
     reqsFn: (rng) => {
-      // Pick 1-2 nationalities
       const count = rng() < 0.5 ? 1 : 2;
       const picked: NationalityRequirement[] = [];
       const used = new Set<string>();
 
-      // First nationality: Russia often, or other rich nation
       const firstPool = rng() < 0.4
         ? NATIONALITIES.filter(n => n.name === 'Россия')
         : RICH_NATIONALITIES;
@@ -159,8 +162,8 @@ const TEMPLATES: ChallengeTemplate[] = [
       used.add(firstNat.name);
 
       const firstCount = firstNat.name === 'Россия'
-        ? Math.floor(rng() * 4) + 4  // 4-7 Russian players
-        : Math.floor(rng() * 3) + 2;  // 2-4 from other nation
+        ? Math.floor(rng() * 4) + 4
+        : Math.floor(rng() * 3) + 2;
 
       picked.push({
         nationality: firstNat.name,
@@ -169,11 +172,10 @@ const TEMPLATES: ChallengeTemplate[] = [
       });
 
       if (count >= 2) {
-        // Second nationality: different from first
         const secondPool = RICH_NATIONALITIES.filter(n => !used.has(n.name));
         const secondIdx = Math.floor(rng() * secondPool.length);
         const secondNat = secondPool[secondIdx];
-        const secondCount = Math.floor(rng() * 2) + 1; // 1-2
+        const secondCount = Math.floor(rng() * 2) + 1;
         picked.push({
           nationality: secondNat.name,
           count: secondCount,
@@ -186,6 +188,8 @@ const TEMPLATES: ChallengeTemplate[] = [
     difficulty: 'normal',
     bonusDescription: 'Доп. игроки из сегодняшних наций улучшают счёт челленджа',
     completionOdds: 35,
+    bonusMultiplier: 1.5,
+    rerollsAllowed: 1,
   },
   // Template 1: Era restriction + some nationality
   {
@@ -203,7 +207,6 @@ const TEMPLATES: ChallengeTemplate[] = [
       const era = eras[Math.floor(rng() * eras.length)];
 
       const requirements: NationalityRequirement[] = [];
-      // Sometimes add a nationality requirement
       if (rng() < 0.6) {
         const natIdx = Math.floor(rng() * RICH_NATIONALITIES.length);
         const nat = RICH_NATIONALITIES[natIdx];
@@ -222,7 +225,9 @@ const TEMPLATES: ChallengeTemplate[] = [
     difficulty: 'hard',
     bonusDescription: 'Используйте легенд прошлого для максимального счёта',
     completionOdds: 25,
-    eraRestriction: undefined as unknown as { start: number; end: number }, // set dynamically
+    bonusMultiplier: 2.0,
+    rerollsAllowed: 1,
+    eraRestriction: undefined as unknown as { start: number; end: number },
   },
   // Template 2: Formation lock challenge
   {
@@ -236,7 +241,6 @@ const TEMPLATES: ChallengeTemplate[] = [
       const formation = FORMATIONS[Math.floor(rng() * FORMATIONS.length)];
       const requirements: NationalityRequirement[] = [];
 
-      // Sometimes add a nationality requirement
       if (rng() < 0.5) {
         const natIdx = Math.floor(rng() * RICH_NATIONALITIES.length);
         const nat = RICH_NATIONALITIES[natIdx];
@@ -255,7 +259,9 @@ const TEMPLATES: ChallengeTemplate[] = [
     difficulty: 'normal',
     bonusDescription: 'Соблюдайте тактическую дисциплину!',
     completionOdds: 40,
-    formationLock: undefined as unknown as string, // set dynamically
+    bonusMultiplier: 1.3,
+    rerollsAllowed: 1,
+    formationLock: undefined as unknown as string,
   },
   // Template 3: International mix — many different nationalities
   {
@@ -265,7 +271,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       return `Соберите команду из разных стран: ${parts.join(' ')}`;
     },
     reqsFn: (rng) => {
-      const numReqs = Math.floor(rng() * 2) + 3; // 3-4 nationalities
+      const numReqs = Math.floor(rng() * 2) + 3;
       const requirements: NationalityRequirement[] = [];
       const used = new Set<string>();
 
@@ -276,7 +282,7 @@ const TEMPLATES: ChallengeTemplate[] = [
         used.add(nat.name);
         requirements.push({
           nationality: nat.name,
-          count: Math.floor(rng() * 2) + 1, // 1-2
+          count: Math.floor(rng() * 2) + 1,
           flag: nat.flag,
         });
       }
@@ -286,6 +292,8 @@ const TEMPLATES: ChallengeTemplate[] = [
     difficulty: 'hard',
     bonusDescription: 'Каждая дополнительная нация в составе даёт бонус',
     completionOdds: 20,
+    bonusMultiplier: 2.5,
+    rerollsAllowed: 1,
   },
   // Template 4: Easy warm-up — just a few players from 1 nation
   {
@@ -298,7 +306,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       return {
         requirements: [{
           nationality: nat.name,
-          count: Math.floor(rng() * 2) + 2, // 2-3
+          count: Math.floor(rng() * 2) + 2,
           flag: nat.flag,
         }],
         extra: {},
@@ -307,6 +315,121 @@ const TEMPLATES: ChallengeTemplate[] = [
     difficulty: 'easy',
     bonusDescription: 'Лёгкое начало дня — попробуйте!',
     completionOdds: 65,
+    bonusMultiplier: 1.0,
+    rerollsAllowed: 2,
+  },
+  // Template 5: Минималист — no rerolls allowed
+  {
+    title: 'Минималист',
+    descriptionFn: (reqs) => {
+      const natPart = reqs.length > 0 ? ` и ${reqs.map(r => `${r.count} из ${r.flag} ${r.nationality}`).join(', ')}` : '';
+      return `Соберите состав без перебросов${natPart}`;
+    },
+    reqsFn: (rng) => {
+      const requirements: NationalityRequirement[] = [];
+
+      // Sometimes add a nationality requirement
+      if (rng() < 0.4) {
+        const natIdx = Math.floor(rng() * RICH_NATIONALITIES.length);
+        const nat = RICH_NATIONALITIES[natIdx];
+        requirements.push({
+          nationality: nat.name,
+          count: Math.floor(rng() * 2) + 1,
+          flag: nat.flag,
+        });
+      }
+
+      return { requirements, extra: {} };
+    },
+    difficulty: 'hard',
+    bonusDescription: 'Без перебросов — каждый спин на вес золота!',
+    completionOdds: 15,
+    bonusMultiplier: 2.5,
+    rerollsAllowed: 0,
+  },
+  // Template 6: Экономный режим — squad rating must be under a threshold
+  {
+    title: 'Экономный режим',
+    descriptionFn: (reqs) => {
+      const natPart = reqs.length > 0 ? ` + ${reqs[0].count} из ${reqs[0].flag}` : '';
+      return `Соберите состав с рейтингом ниже 72${natPart}`;
+    },
+    reqsFn: (rng) => {
+      const requirements: NationalityRequirement[] = [];
+
+      if (rng() < 0.3) {
+        const natIdx = Math.floor(rng() * RICH_NATIONALITIES.length);
+        const nat = RICH_NATIONALITIES[natIdx];
+        requirements.push({
+          nationality: nat.name,
+          count: Math.floor(rng() * 2) + 1,
+          flag: nat.flag,
+        });
+      }
+
+      return { requirements, extra: {} };
+    },
+    difficulty: 'hard',
+    bonusDescription: 'Меньше рейтинг — больше бонус!',
+    completionOdds: 20,
+    bonusMultiplier: 2.0,
+    rerollsAllowed: 1,
+    ratingCap: 72,
+  },
+  // Template 7: Советская школа — 2000-2005 era only
+  {
+    title: 'Советская школа',
+    descriptionFn: (reqs) => {
+      const natPart = reqs.length > 0 ? ` + ${reqs.map(r => `${r.count} из ${r.flag} ${r.nationality}`).join(', ')}` : '';
+      return `Соберите состав из эпохи 2000-2005${natPart}`;
+    },
+    reqsFn: (rng) => {
+      const requirements: NationalityRequirement[] = [];
+
+      if (rng() < 0.5) {
+        const natIdx = Math.floor(rng() * RICH_NATIONALITIES.length);
+        const nat = RICH_NATIONALITIES[natIdx];
+        requirements.push({
+          nationality: nat.name,
+          count: Math.floor(rng() * 2) + 1,
+          flag: nat.flag,
+        });
+      }
+
+      return {
+        requirements,
+        extra: { era: '2000-2005', eraStart: 2000, eraEnd: 2005 },
+      };
+    },
+    difficulty: 'hard',
+    bonusDescription: 'Легенды начала века ждут вас!',
+    completionOdds: 18,
+    bonusMultiplier: 2.0,
+    rerollsAllowed: 1,
+    eraRestriction: { start: 2000, end: 2005 },
+  },
+  // Template 8: Сборная Бразилии — must include N Brazilian players
+  {
+    title: 'Сборная Бразилии',
+    descriptionFn: (reqs) => {
+      return `Соберите ${reqs[0].count} бразильских игроков в составе`;
+    },
+    reqsFn: (rng) => {
+      const count = Math.floor(rng() * 2) + 3; // 3-4
+      return {
+        requirements: [{
+          nationality: 'Бразилия',
+          count,
+          flag: '🇧🇷',
+        }],
+        extra: {},
+      };
+    },
+    difficulty: 'normal',
+    bonusDescription: 'Жёлто-зелёные в сердце команды!',
+    completionOdds: 30,
+    bonusMultiplier: 1.5,
+    rerollsAllowed: 1,
   },
 ];
 
@@ -336,8 +459,16 @@ export function generateDailyChallenge(dateStr?: string): DailyChallenge {
   if (extra.eraStart && extra.eraEnd) {
     eraRestriction = { start: extra.eraStart as number, end: extra.eraEnd as number };
   }
+  // Template-level era restriction (e.g., Советская школа)
+  if (!eraRestriction && template.eraRestriction) {
+    eraRestriction = template.eraRestriction;
+  }
   if (extra.formation) {
     formationLock = extra.formation as string;
+  }
+  // Template-level formation lock
+  if (!formationLock && template.formationLock) {
+    formationLock = template.formationLock;
   }
 
   // Adjust completion odds based on requirements
@@ -347,6 +478,8 @@ export function generateDailyChallenge(dateStr?: string): DailyChallenge {
   if (totalRequired <= 3) odds = Math.min(80, odds + 15);
   if (eraRestriction) odds = Math.max(10, odds - 10);
   if (formationLock) odds = Math.max(10, odds - 5);
+  if (template.rerollsAllowed === 0) odds = Math.max(5, odds - 10);
+  if (template.ratingCap) odds = Math.max(5, odds - 5);
 
   return {
     date: today,
@@ -356,10 +489,12 @@ export function generateDailyChallenge(dateStr?: string): DailyChallenge {
     formationLock,
     nationalityRequirements: requirements,
     maxAttempts: 5,
-    rerollsAllowed: 1,
+    rerollsAllowed: template.rerollsAllowed,
     difficulty: template.difficulty,
     bonusDescription: template.bonusDescription,
     completionOdds: Math.round(odds),
+    bonusMultiplier: template.bonusMultiplier,
+    ratingCap: template.ratingCap,
   };
 }
 

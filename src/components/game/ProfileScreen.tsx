@@ -21,6 +21,15 @@ const TROPHIES = [
   { id: 'iron_curtain', icon: '🥅', name: 'Железный занавес', desc: '10 или менее пропущенных' },
   { id: 'personal_best', icon: '📈', name: 'Взлёт', desc: 'Новый личный рекорд очков' },
   { id: 'win_streak', icon: '🔥', name: 'Серия побед', desc: '5+ побед подряд' },
+  { id: 'minimalist', icon: '🎯', name: 'Минималист', desc: 'Сезон без перебросов' },
+  { id: 'hard_champion', icon: '💎', name: 'Бриллиант', desc: 'Чемпион на сложности' },
+  { id: 'squad_builder', icon: '🏗️', name: 'Архитектор', desc: 'Средний рейтинг 80+' },
+  { id: 'centurion', icon: '💯', name: 'Центурион', desc: '100+ очков за сезон' },
+  { id: 'clean_sheet', icon: '🧤', name: 'Сухарь', desc: '10+ сухих матчей' },
+  { id: 'comeback_king', icon: '👑', name: 'Король камбэков', desc: '5+ побед после пропуска' },
+  { id: 'globetrotter', icon: '🌍', name: 'Путешественник', desc: 'Игроки 5+ национальностей' },
+  { id: 'veteran', icon: '🎖️', name: 'Ветеран', desc: '10+ сезонов сыграно' },
+  { id: 'legend', icon: '🌟', name: 'Легенда', desc: '3+ чемпионских титула' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {

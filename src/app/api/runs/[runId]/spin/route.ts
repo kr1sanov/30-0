@@ -55,13 +55,21 @@ export async function POST(
     const startYear = run.eraStartYear ?? 2000;
     const endYear = run.eraEndYear ?? 2025;
 
+    // Build the where clause for ClubSeasons
+    // If clubFilter is set (single_club mode), only return club-seasons for that club
+    const clubSeasonWhere: Record<string, unknown> = {
+      season: {
+        startYear: { gte: startYear, lte: endYear },
+      },
+    };
+
+    if (run.clubFilter) {
+      clubSeasonWhere.clubId = run.clubFilter;
+    }
+
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({
-      where: {
-        season: {
-          startYear: { gte: startYear, lte: endYear },
-        },
-      },
+      where: clubSeasonWhere,
       include: {
         club: true,
         season: true,
@@ -86,6 +94,9 @@ export async function POST(
 
         // Skip players with the same fullName as already drafted (unique person rule)
         if (draftedPlayerNames.has(ps.player.fullName)) continue;
+
+        // In nations_cup mode, skip players whose nationality doesn't match
+        if (run.nationalityFilter && ps.player.nationality !== run.nationalityFilter) continue;
 
         // Check main position compatibility with open slots
         for (const slotPos of openPositions) {
@@ -163,10 +174,12 @@ export async function POST(
       );
     }
 
-    // Filter players - exclude already drafted and unique person rule
+    // Filter players - exclude already drafted, unique person rule, and nationality filter
     const eligiblePlayers = selectedClubSeason.players.filter((ps) => {
       if (draftedPlayerSeasonIds.has(ps.id)) return false;
       if (draftedPlayerNames.has(ps.player.fullName)) return false;
+      // In nations_cup mode, only include players of the selected nationality
+      if (run.nationalityFilter && ps.player.nationality !== run.nationalityFilter) return false;
       return true;
     });
 
