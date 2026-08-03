@@ -1,23 +1,22 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-interface TelegramUser {
+interface AppUser {
   id: string;
-  telegramId: string;
+  provider: 'guest' | 'vk';
   username: string | null;
   firstName: string | null;
   lastName: string | null;
   photoUrl: string | null;
   displayName: string;
-  referralCode?: string;
 }
 
 interface AuthState {
-  user: TelegramUser | null;
+  user: AppUser | null;
   isAuthenticated: boolean;
   isAuthenticating: boolean;
 
-  loginWithTelegram: (initData: string, startParam?: string | null) => Promise<void>;
+  loginWithVK: (code: string, state?: string) => Promise<void>;
   loginAsGuest: () => void;
   updateDisplayName: (name: string) => void;
   logout: () => void;
@@ -30,19 +29,17 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isAuthenticating: false,
 
-      loginWithTelegram: async (initData: string, _startParam?: string | null) => {
+      loginWithVK: async (code: string, _state?: string) => {
         set({ isAuthenticating: true });
         try {
-          // Include start_param in initData for server-side referral tracking
-          const res = await fetch('/api/auth/telegram', {
+          const res = await fetch('/api/auth/vk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData }),
+            body: JSON.stringify({ code }),
           });
 
           if (!res.ok) {
-            console.error('Telegram auth failed');
-            // Fall back to guest mode
+            console.error('VK auth failed');
             get().loginAsGuest();
             return;
           }
@@ -54,7 +51,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticating: false,
           });
         } catch (error) {
-          console.error('Telegram auth error:', error);
+          console.error('VK auth error:', error);
           get().loginAsGuest();
         }
       },
@@ -63,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           user: {
             id: 'guest',
-            telegramId: '',
+            provider: 'guest',
             username: null,
             firstName: 'Гость',
             lastName: null,
@@ -79,7 +76,6 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (user) {
           set({ user: { ...user, displayName: name } });
-          // Also update on server if not guest
           if (user.id !== 'guest') {
             fetch('/api/users/profile', {
               method: 'PATCH',

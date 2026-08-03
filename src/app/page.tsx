@@ -25,8 +25,7 @@ import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
 import { canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
-import { useTelegramAuth } from '@/hooks/use-telegram-auth';
-import { useTelegram } from '@/hooks/use-telegram';
+import { useAutoAuth } from '@/hooks/use-telegram-auth';
 import { useAuthStore } from '@/store/authStore';
 import { Metrics } from '@/lib/metrics';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -1226,68 +1225,12 @@ const pageVariants = {
 
 /* ─── Main Home Component ─── */
 export default function Home() {
-  const { screen, setTelegramUser, telegramUser, loadProfileFromCloud } = useGameStore();
+  const { screen } = useGameStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
 
-  // Initialize Telegram auth and hooks
-  useTelegramAuth();
-  const {
-    haptic,
-    notify,
-    isTelegram,
-    showBackButton,
-    hideBackButton,
-    showMainButton,
-    hideMainButton,
-    updateMainButton,
-    enableClosingConfirmation,
-    disableClosingConfirmation,
-    safeAreaInset,
-  } = useTelegram();
-  const authUser = useAuthStore((s) => s.user);
-
-  // Initialize Telegram WebApp on mount and set gameStore's telegramUser
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const webapp = window.Telegram.WebApp;
-      webapp.ready();
-      // Do NOT expand — keep mobile compact view
-
-      // Track app start
-      Metrics.appStart();
-
-      const tgUser = webapp.initDataUnsafe?.user;
-      if (tgUser && !telegramUser) {
-        setTelegramUser({
-          id: tgUser.id,
-          first_name: tgUser.first_name || '',
-          last_name: tgUser.last_name,
-          username: tgUser.username,
-          photo_url: tgUser.photo_url,
-          language_code: tgUser.language_code,
-        });
-        // Load profile from cloud after setting Telegram user
-        setTimeout(() => {
-          loadProfileFromCloud();
-        }, 500);
-      }
-    }
-  }, [setTelegramUser, telegramUser, loadProfileFromCloud]);
-
-  // Sync auth store user to game store for cloud sync (handles edge case where
-  // initDataUnsafe is not available but auth API succeeded)
-  useEffect(() => {
-    if (authUser && authUser.id !== 'guest' && authUser.telegramId && !telegramUser) {
-      setTelegramUser({
-        id: Number(authUser.telegramId),
-        first_name: authUser.firstName || '',
-        last_name: authUser.lastName || undefined,
-        username: authUser.username || undefined,
-        photo_url: authUser.photoUrl || undefined,
-      });
-    }
-  }, [authUser, telegramUser, setTelegramUser]);
+  // Initialize auth (auto-login as guest)
+  useAutoAuth();
 
   // ── Yandex.Metrika SPA navigation tracking ──
   useEffect(() => {
@@ -1299,33 +1242,7 @@ export default function Home() {
     }
   }, [screen]);
 
-  // ── Telegram BackButton integration ──
-  // Show BackButton on all screens except home; clicking it goes back
-  useEffect(() => {
-    if (!isTelegram) return;
 
-    const GAME_SCREENS_SET = new Set(['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards']);
-
-    if (screen === 'home') {
-      hideBackButton();
-      hideMainButton();
-      disableClosingConfirmation();
-    } else if (screen === 'setup' || screen === 'profile' || screen === 'daily-challenge' || screen === 'nations-cup') {
-      showBackButton(() => useGameStore.getState().goHome());
-      hideMainButton();
-      disableClosingConfirmation();
-    } else if (GAME_SCREENS_SET.has(screen)) {
-      showBackButton(() => useGameStore.getState().goHome());
-      enableClosingConfirmation();
-      // No fullscreen — keep mobile compact view at all times
-    } else {
-      hideBackButton();
-      hideMainButton();
-      disableClosingConfirmation();
-    }
-
-    // Cleanup on unmount is handled by the hook internally
-  }, [screen, isTelegram, showBackButton, hideBackButton, showMainButton, hideMainButton, enableClosingConfirmation, disableClosingConfirmation]);
 
   const renderScreen = useCallback(() => {
     switch (screen) {
@@ -1365,11 +1282,7 @@ export default function Home() {
   return (
     <div
       className="min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
-      style={{
-        paddingTop: safeAreaInset.top > 0 ? `${safeAreaInset.top}px` : undefined,
-        paddingLeft: safeAreaInset.left > 0 ? `${safeAreaInset.left}px` : undefined,
-        paddingRight: safeAreaInset.right > 0 ? `${safeAreaInset.right}px` : undefined,
-      }}
+
     >
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />

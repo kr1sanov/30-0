@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { Home, User, Menu, X, Play, Users, Trophy, BookOpen } from 'lucide-react';
-import { useTelegram } from '@/hooks/use-telegram';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const GAME_SCREENS = new Set([
@@ -30,11 +29,6 @@ export default function Header() {
   const { screen, goHome, resetGame, runId } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { haptic, isTelegram, safeAreaInset } = useTelegram();
-
-  const handleHaptic = () => {
-    haptic('light');
-  };
 
   // Listen for custom event from Footer "How it works" link
   useEffect(() => {
@@ -44,7 +38,6 @@ export default function Header() {
   }, []);
 
   const handleHome = () => {
-    handleHaptic();
     if (runId) {
       goHome();
     } else {
@@ -54,7 +47,6 @@ export default function Header() {
   };
 
   const handleNav = (action: () => void) => {
-    handleHaptic();
     action();
     setMobileMenuOpen(false);
   };
@@ -119,30 +111,30 @@ export default function Header() {
     },
   ];
 
-  // Mode 2: Game screens — subtle overlay buttons (respect safe area)
+  // Mode 2: Game screens — subtle overlay buttons
   if (GAME_SCREENS.has(screen)) {
-    const topOffset = isTelegram && safeAreaInset.top > 0 ? safeAreaInset.top + 4 : 16;
-
     return (
       <>
         <button
-          onClick={() => { handleHaptic(); handleHome(); }}
-          className="fixed z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm opacity-60 hover:opacity-100 transition-opacity duration-200 text-white/80 hover:text-white"
-          style={{ top: topOffset, left: 12 }}
+          onClick={() => handleHome()}
+          className="fixed z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] transition-all duration-200"
+          style={{ top: 16, left: 12 }}
           aria-label="Домой"
           title="Домой"
         >
-          <Home className="w-5 h-5" />
+          <Home className="w-4 h-4" />
+          <span className="hidden sm:inline">Домой</span>
         </button>
 
         <button
-          onClick={() => { handleHaptic(); useGameStore.getState().setScreen('profile'); }}
-          className="fixed z-50 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm opacity-60 hover:opacity-100 transition-opacity duration-200 text-white/80 hover:text-white"
-          style={{ top: topOffset, right: 12 }}
-          aria-label="Профиль"
-          title="Профиль"
+          onClick={() => useGameStore.getState().setScreen('profile')}
+          className="fixed z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] transition-all duration-200"
+          style={{ top: 16, right: 12 }}
+          aria-label="Мой профиль"
+          title="Мой профиль"
         >
-          <User className="w-5 h-5" />
+          <User className="w-4 h-4" />
+          <span className="hidden sm:inline">Мой профиль</span>
         </button>
 
         <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
@@ -153,26 +145,20 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/95 backdrop-blur-lg border-b border-white/[0.06]">
-        <div
-          className="mx-auto flex items-center justify-between h-14 px-4 lg:px-6"
-          style={isTelegram && safeAreaInset.top > 0 ? { paddingTop: safeAreaInset.top } : undefined}
-        >
-          {/* Left: Logo */}
+        <div className="mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
+          {/* Left: Home button (38-0 style — dark rounded button with icon + text) */}
           <button
             onClick={handleHome}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity shrink-0"
-            aria-label="На главную"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] hover:border-white/[0.12] transition-all duration-200 active:scale-[0.97]"
+            aria-label="Домой"
           >
-            <span className="text-xl font-bold tracking-tight">
-              <span className="text-[#00C896]">30</span>
-              <span className="text-white/40">-</span>
-              <span className="text-white">0</span>
-            </span>
+            <Home className="w-4 h-4" />
+            <span>Домой</span>
           </button>
 
-          {/* Desktop Navigation (≥768px) */}
+          {/* Desktop Navigation (≥768px) — center section */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
+            {navItems.filter(item => item.id !== 'home').map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleNav(item.action)}
@@ -196,21 +182,20 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right: Account + Mobile Menu */}
+          {/* Right: My Profile button (38-0 style — dark rounded button with icon + text) */}
           <div className="flex items-center gap-1">
-            {/* Account button */}
             <button
-              onClick={() => { handleHaptic(); useGameStore.getState().setScreen('profile'); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-white/[0.06] transition-all duration-200 active:scale-[0.97]"
-              title="Мой аккаунт"
+              onClick={() => useGameStore.getState().setScreen('profile')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] hover:border-white/[0.12] transition-all duration-200 active:scale-[0.97]"
+              title="Мой профиль"
             >
               <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Мой аккаунт</span>
+              <span>Мой профиль</span>
             </button>
 
             {/* Mobile hamburger menu button (<768px) */}
             <button
-              onClick={() => { handleHaptic(); setMobileMenuOpen(!mobileMenuOpen); }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg text-[#9CA3AF] hover:text-white hover:bg-white/[0.06] transition-all duration-200"
               aria-label={mobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
               aria-expanded={mobileMenuOpen}
@@ -242,20 +227,14 @@ export default function Header() {
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 300 }}
               className="fixed top-0 left-0 bottom-0 z-[70] w-[280px] bg-[#0F0F0F] border-r border-white/[0.06] md:hidden flex flex-col"
-              style={isTelegram && safeAreaInset.top > 0 ? { paddingTop: safeAreaInset.top } : undefined}
             >
               {/* Menu header */}
               <div className="flex items-center justify-between h-14 px-4 border-b border-white/[0.06]">
-                <button
-                  onClick={handleHome}
-                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                >
-                  <span className="text-xl font-bold tracking-tight">
-                    <span className="text-[#00C896]">30</span>
-                    <span className="text-white/40">-</span>
-                    <span className="text-white">0</span>
-                  </span>
-                </button>
+                <span className="text-xl font-bold tracking-tight">
+                  <span className="text-[#00C896]">30</span>
+                  <span className="text-white/40">-</span>
+                  <span className="text-white">0</span>
+                </span>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center w-9 h-9 rounded-lg text-[#9CA3AF] hover:text-white hover:bg-white/[0.06] transition-all duration-200"
@@ -304,26 +283,12 @@ export default function Header() {
                     Скоро
                   </span>
                 </button>
-
-                {/* Telegram link */}
-                <a
-                  href="https://t.me/RPL30_bot/app?startapp"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => { handleHaptic(); setMobileMenuOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-white/[0.06] transition-all duration-200"
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                  </svg>
-                  <span>Telegram</span>
-                </a>
               </nav>
 
               {/* Menu footer */}
               <div className="px-4 py-3 border-t border-white/[0.06]">
                 <p className="text-[11px] text-[#9CA3AF]/50">
-                  © 2026 30-0. Все права защищены.
+                  &copy; 2026 30-0. Все права защищены.
                 </p>
               </div>
             </motion.div>

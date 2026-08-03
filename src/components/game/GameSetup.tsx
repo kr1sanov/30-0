@@ -8,6 +8,8 @@ import {
   ERA_CONFIG,
   DRAFT_MODE_CONFIG,
   RATING_MODE_CONFIG,
+  ERA_MIN_YEAR,
+  ERA_MAX_YEAR,
 } from '@/lib/types';
 import type { Difficulty, EraFilter, GameModeType } from '@/lib/types';
 import type { Position, PositionCategory } from '@/lib/positions';
@@ -886,22 +888,103 @@ export default function GameSetup() {
             </span>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
-              ([key, val]) => (
-                <PillButton
-                  key={key}
-                  label={val.label}
-                  isSelected={config.eraFilter === key}
-                  onClick={() => setConfig({
-                    eraFilter: key,
-                    eraStartYear: ERA_CONFIG[key].minYear,
-                    eraEndYear: ERA_CONFIG[key].maxYear,
-                  })}
-                />
-              ),
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+              {(Object.entries(ERA_CONFIG) as [EraFilter, { label: string }][]).map(
+                ([key, val]) => (
+                  <PillButton
+                    key={key}
+                    label={val.label}
+                    isSelected={config.eraFilter === key}
+                    onClick={() => setConfig({
+                      eraFilter: key,
+                      eraStartYear: ERA_CONFIG[key].minYear,
+                      eraEndYear: ERA_CONFIG[key].maxYear,
+                    })}
+                  />
+                ),
+              )}
+            </div>
+
+            {/* Custom era range slider — shown when "Свой" is selected */}
+            {config.eraFilter === 'custom' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 space-y-3"
+              >
+                {/* Year range display */}
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-black text-[#00C896]">
+                    {config.eraStartYear}
+                  </div>
+                  <div className="flex-1 mx-3 flex items-center justify-center">
+                    <div className="h-px flex-1 bg-gradient-to-r from-[#00C896]/40 to-[#00C896]/40" />
+                    <span className="mx-2 text-sm text-[#9CA3AF]">—</span>
+                    <div className="h-px flex-1 bg-gradient-to-l from-[#00C896]/40 to-[#00C896]/40" />
+                  </div>
+                  <div className="text-2xl font-black text-[#00C896]">
+                    {config.eraEndYear}
+                  </div>
+                </div>
+
+                {/* Dual range slider */}
+                <div className="relative h-8">
+                  {/* Track background */}
+                  <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-2 rounded-full bg-[#1f1f1f]" />
+                  {/* Active range highlight */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 h-2 rounded-full bg-[#00C896]/30"
+                    style={{
+                      left: `${((config.eraStartYear - ERA_MIN_YEAR) / (ERA_MAX_YEAR - ERA_MIN_YEAR)) * 100}%`,
+                      right: `${((ERA_MAX_YEAR - config.eraEndYear) / (ERA_MAX_YEAR - ERA_MIN_YEAR)) * 100}%`,
+                    }}
+                  />
+
+                  {/* Start year slider */}
+                  <input
+                    type="range"
+                    min={ERA_MIN_YEAR}
+                    max={ERA_MAX_YEAR - 1}
+                    step={1}
+                    value={config.eraStartYear}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), config.eraEndYear - 1);
+                      setConfig({ eraStartYear: val });
+                    }}
+                    className="era-range-slider absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-10 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00C896] [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(0,200,150,0.4)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#0A0A0A]"
+                  />
+
+                  {/* End year slider */}
+                  <input
+                    type="range"
+                    min={ERA_MIN_YEAR + 1}
+                    max={ERA_MAX_YEAR}
+                    step={1}
+                    value={config.eraEndYear}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), config.eraStartYear + 1);
+                      setConfig({ eraEndYear: val });
+                    }}
+                    className="era-range-slider absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-20 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00C896] [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(0,200,150,0.4)] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#0A0A0A]"
+                  />
+                </div>
+
+                {/* Year markers */}
+                <div className="flex justify-between text-[10px] text-[#9CA3AF]/50">
+                  {Array.from({ length: ERA_MAX_YEAR - ERA_MIN_YEAR + 1 }, (_, i) => ERA_MIN_YEAR + i).filter(y => y % 5 === 0 || y === ERA_MAX_YEAR).map(y => (
+                    <span key={y}>{y}</span>
+                  ))}
+                </div>
+
+                {/* Period info */}
+                <div className="text-center text-xs text-[#9CA3AF]">
+                  Период: {config.eraEndYear - config.eraStartYear + 1} {config.eraEndYear - config.eraStartYear + 1 === 1 ? 'год' : config.eraEndYear - config.eraStartYear + 1 < 5 ? 'года' : 'лет'}
+                </div>
+              </motion.div>
             )}
-          </div>
+          </>
         )}
       </div>
 

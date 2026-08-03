@@ -71,7 +71,7 @@ export function trackUserParams(params: Record<string, unknown>): void {
 
 export const Metrics = {
   /** App launched */
-  appStart: () => trackEvent('app_start', { source: typeof window !== 'undefined' && window.Telegram?.WebApp ? 'telegram' : 'browser' }),
+  appStart: () => trackEvent('app_start', { source: 'browser' }),
 
   /** First launch ever */
   firstLaunch: () => trackEvent('first_launch'),

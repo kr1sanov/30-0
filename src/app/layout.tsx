@@ -38,10 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="dark" suppressHydrationWarning>
-      <head>
-        {/* Telegram WebApp SDK */}
-        <script src="https://telegram.org/js/telegram-web-app.js" async />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0A] text-[#FFFFFF]`}
         style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}

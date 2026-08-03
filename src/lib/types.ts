@@ -114,16 +114,17 @@ export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
 // Era presets with year ranges
 export const ERA_CONFIG = {
-  all:    { label: 'Все',    minYear: 2000, maxYear: 2025 },
+  all:    { label: 'Все',    minYear: 2000, maxYear: 2026 },
   '2000s': { label: '2000-е', minYear: 2000, maxYear: 2009 },
-  '2010s': { label: '2010-е', minYear: 2010, maxYear: 2015 },
-  modern: { label: '2016+',  minYear: 2016, maxYear: 2025 },
+  '2010s': { label: '2010-е', minYear: 2010, maxYear: 2019 },
+  modern: { label: '2020+',  minYear: 2020, maxYear: 2026 },
+  custom: { label: 'Свой',   minYear: 2000, maxYear: 2026 },
 } as const;
 
 export type EraFilter = keyof typeof ERA_CONFIG;
 
 export const ERA_MIN_YEAR = 2000;
-export const ERA_MAX_YEAR = 2025;
+export const ERA_MAX_YEAR = 2026;
 
 // ---------------------------------------------------------------------------
 // Draft Mode & Rating Mode

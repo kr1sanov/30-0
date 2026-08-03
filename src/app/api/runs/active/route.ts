@@ -12,17 +12,10 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const telegramId = searchParams.get('telegramId');
 
-    let userFilter: { userId: string } | { user: { telegramId: string } };
-
-    if (userId) {
-      userFilter = { userId };
-    } else if (telegramId) {
-      userFilter = { user: { telegramId: String(telegramId) } };
-    } else {
+    if (!userId) {
       return NextResponse.json(
-        { error: 'userId or telegramId query parameter is required' },
+        { error: 'userId query parameter is required' },
         { status: 400 },
       );
     }
@@ -31,7 +24,7 @@ export async function GET(request: Request) {
     const run = await db.gameRun.findFirst({
       where: {
         completed: false,
-        ...userFilter,
+        userId,
       },
       include: {
         slots: { orderBy: { slotPosition: 'asc' } },

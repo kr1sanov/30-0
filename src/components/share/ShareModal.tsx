@@ -3,8 +3,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
-import { useAuthStore } from '@/store/authStore';
-import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
 
 const BG = '#0A0A0A';
@@ -17,14 +15,8 @@ interface ShareModalProps {
 }
 
 export default function ShareModal({ isOpen, onClose, shareText, cardContent }: ShareModalProps) {
-  const { user } = useAuthStore();
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const { shareToTelegram, haptic, notify, isTelegram, showAlert } = useTelegram();
-
-  const inviteUrl = 'https://t.me/RPL30_bot/app?startapp';
-
-  const fullText = `${shareText}\n\n${inviteUrl}`;
 
   const captureCard = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
@@ -44,19 +36,17 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     }
   }, []);
 
-  const handleShareTelegram = useCallback(async () => {
+  const handleShareNative = useCallback(async () => {
     setIsSharing(true);
-    haptic('light');
 
-    // Try to share with image via native share
     const blob = await captureCard();
     if (blob && typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
       const file = new File([blob], '30-0-rpl.png', { type: 'image/png' });
-      const shareData = { text: fullText, files: [file] };
+      const shareData = { text: shareText, files: [file] };
       if (navigator.canShare(shareData)) {
         try {
           await navigator.share(shareData);
-          notify('success');
+          Metrics.shareResult('native');
           setIsSharing(false);
           onClose();
           return;
@@ -66,13 +56,32 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
       }
     }
 
-    // Use Telegram SDK share
-    shareToTelegram(shareText, inviteUrl);
-    Metrics.shareResult('telegram');
-    notify('success');
+    // Fallback: copy text to clipboard
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        Metrics.shareResult('clipboard');
+      } catch {
+        // Clipboard failed
+      }
+    }
+
     setIsSharing(false);
     onClose();
-  }, [captureCard, fullText, shareText, inviteUrl, onClose, shareToTelegram, haptic, notify]);
+  }, [captureCard, shareText, onClose]);
+
+  const handleSaveImage = useCallback(async () => {
+    const blob = await captureCard();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '30-0-rpl-share.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [captureCard]);
 
   return (
     <AnimatePresence>
@@ -111,7 +120,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
             <div style={{ padding: '0 20px 20px' }}>
               {/* Title */}
               <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 800, marginBottom: 16, textAlign: 'center' }}>
-                Поделиться в Telegram
+                Поделиться
               </h3>
 
               {/* Card preview */}
@@ -131,44 +140,35 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 </div>
               </div>
 
-              {/* Share text preview */}
-              <div style={{
-                background: '#0A0A0A',
-                borderRadius: 10,
-                padding: 12,
-                marginBottom: 16,
-                border: '1px solid #1f1f1f',
-              }}>
-                <div style={{ color: '#64748b', fontSize: 10, marginBottom: 4, letterSpacing: 1 }}>ТЕКСТ СООБЩЕНИЯ</div>
-                <pre style={{
-                  color: '#9CA3AF', fontSize: 11, lineHeight: 1.5,
-                  whiteSpace: 'pre-wrap', margin: 0,
-                  maxHeight: 80, overflow: 'auto',
-                }}>
-                  {fullText}
-                </pre>
-              </div>
-
-              {/* Action buttons - only Telegram */}
+              {/* Action buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {/* Telegram share */}
+                {/* Native share */}
                 <button
-                  onClick={handleShareTelegram}
+                  onClick={handleShareNative}
                   disabled={isSharing}
                   style={{
                     width: '100%', padding: '14px 0', borderRadius: 12,
-                    background: 'linear-gradient(135deg, #2AABEE 0%, #229ED9 100%)',
+                    background: 'linear-gradient(135deg, #00C896 0%, #00A67A 100%)',
                     color: '#fff',
                     fontSize: 15, fontWeight: 700,
                     border: 'none', cursor: isSharing ? 'wait' : 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    boxShadow: '0 4px 15px rgba(42, 171, 238, 0.3)',
+                    boxShadow: '0 4px 15px rgba(0, 200, 150, 0.3)',
                   }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.02-1.628 4.472-1.636z"/>
-                  </svg>
-                  {isSharing ? 'Открываю Telegram...' : 'Поделиться в Telegram'}
+                  {isSharing ? 'Делимся...' : 'Поделиться'}
+                </button>
+
+                {/* Save image */}
+                <button
+                  onClick={handleSaveImage}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 12,
+                    background: 'transparent', color: '#9CA3AF',
+                    fontSize: 13, border: '1px solid #2a2a2a', cursor: 'pointer',
+                  }}
+                >
+                  Сохранить картинку
                 </button>
 
                 {/* Close */}

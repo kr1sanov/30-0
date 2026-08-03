@@ -4,19 +4,20 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { telegramId, username, firstName, lastName, photoUrl, profileStats } = body;
+    const { userId, providerId, username, firstName, lastName, photoUrl, profileStats } = body;
 
-    if (!telegramId) {
-      return NextResponse.json({ error: 'telegramId is required' }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    // Serialize profileStats to JSON string for storage
     const profileStatsJson = profileStats ? JSON.stringify(profileStats) : undefined;
 
     const user = await db.user.upsert({
-      where: { telegramId: String(telegramId) },
+      where: { id: userId },
       create: {
-        telegramId: String(telegramId),
+        id: userId,
+        provider: 'guest',
+        providerId: providerId || '',
         username: username || null,
         firstName: firstName || null,
         lastName: lastName || null,
@@ -37,7 +38,6 @@ export async function POST(request: Request) {
       success: true,
       user: {
         id: user.id,
-        telegramId: user.telegramId,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,

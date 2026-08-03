@@ -4,14 +4,14 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const telegramId = searchParams.get('telegramId');
+    const userId = searchParams.get('userId');
 
-    if (!telegramId) {
-      return NextResponse.json({ error: 'telegramId query parameter is required' }, { status: 400 });
+    if (!userId) {
+      return NextResponse.json({ error: 'userId query parameter is required' }, { status: 400 });
     }
 
     const user = await db.user.findUnique({
-      where: { telegramId: String(telegramId) },
+      where: { id: userId },
       include: {
         runs: {
           where: { completed: true },
@@ -25,7 +25,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Calculate aggregate stats from completed runs
     const completedRuns = user.runs;
     const totalGames = completedRuns.length;
     const totalWins = completedRuns.reduce((sum, r) => sum + (r.wins || 0), 0);
@@ -44,7 +43,6 @@ export async function GET(request: Request) {
     return NextResponse.json({
       user: {
         id: user.id,
-        telegramId: user.telegramId,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -105,7 +103,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       user: {
         id: user.id,
-        telegramId: user.telegramId,
         username: user.username,
         firstName: user.firstName,
         lastName: user.lastName,

@@ -49,17 +49,6 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'legend', name: 'Легенда', description: '3+ чемпионских титула', icon: '🌟', condition: 'titles >= 3' },
 ];
 
-// ---------------------------------------------------------------------------
-// Telegram User
-// ---------------------------------------------------------------------------
-export interface TelegramUser {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  language_code?: string;
-}
 
 interface ProfileStats {
   totalSeasons: number;
@@ -98,9 +87,6 @@ interface GameState {
   screen: GameScreen;
   setScreen: (screen: GameScreen) => void;
 
-  // Telegram user
-  telegramUser: TelegramUser | null;
-  setTelegramUser: (user: TelegramUser | null) => void;
 
   // Game config
   config: GameConfig;
@@ -196,7 +182,7 @@ const defaultConfig: GameConfig = {
   ratingMode: 'season',
   eraFilter: 'all',
   eraStartYear: 2000,
-  eraEndYear: 2025,
+  eraEndYear: 2026,
   gameMode: 'classic',
   clubFilter: undefined,
   nationalityFilter: undefined,
@@ -222,9 +208,6 @@ export const useGameStore = create<GameState>()(
       screen: 'home',
       setScreen: (screen) => set({ screen }),
 
-      // Telegram user
-      telegramUser: null,
-      setTelegramUser: (user) => set({ telegramUser: user }),
 
       // Config
       config: defaultConfig,
@@ -1270,44 +1253,14 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      // Cloud sync — save profile to database
+      // Cloud sync — save profile to database (no-op without Telegram)
       syncProfileToCloud: async () => {
-        const { telegramUser, profileStats } = get();
-        if (!telegramUser) return; // Only sync if logged in via Telegram
-
-        try {
-          await fetch('/api/users/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegramId: telegramUser.id,
-              username: telegramUser.username,
-              firstName: telegramUser.first_name,
-              lastName: telegramUser.last_name,
-              photoUrl: telegramUser.photo_url,
-              profileStats,
-            }),
-          });
-        } catch (error) {
-          console.error('Failed to sync profile to cloud:', error);
-        }
+        // No-op: Telegram sync removed
       },
 
-      // Load profile from cloud
+      // Load profile from cloud (no-op without Telegram)
       loadProfileFromCloud: async () => {
-        const { telegramUser } = get();
-        if (!telegramUser) return;
-
-        try {
-          const res = await fetch(`/api/users/profile?telegramId=${telegramUser.id}`);
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.profileStats) {
-            set({ profileStats: data.profileStats });
-          }
-        } catch (error) {
-          console.error('Failed to load profile from cloud:', error);
-        }
+        // No-op: Telegram sync removed
       },
 
       // Start a daily challenge — transition to setup screen with challenge data
@@ -1369,7 +1322,7 @@ export const useGameStore = create<GameState>()(
           currentManager: state.currentManager,
           config: state.config,
           seasonResult: state.seasonResult,
-          telegramUser: state.telegramUser,
+
           screen: persistedScreen,
           dailyChallenge: state.dailyChallenge,
         };
