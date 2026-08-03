@@ -1253,14 +1253,14 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      // Cloud sync — save profile to database (no-op without Telegram)
+      // Cloud sync — save profile to database (placeholder for future backend integration)
       syncProfileToCloud: async () => {
-        // No-op: Telegram sync removed
+        // TODO: Implement cloud sync when auth provider is ready
       },
 
-      // Load profile from cloud (no-op without Telegram)
+      // Load profile from cloud (placeholder for future backend integration)
       loadProfileFromCloud: async () => {
-        // No-op: Telegram sync removed
+        // TODO: Implement cloud load when auth provider is ready
       },
 
       // Start a daily challenge — transition to setup screen with challenge data

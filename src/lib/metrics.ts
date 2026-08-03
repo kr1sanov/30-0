@@ -3,7 +3,7 @@
  * Counter ID: 110726199
  *
  * Provides type-safe event tracking for the 30-0 RPL app.
- * Works both inside Telegram WebApp and in regular browsers.
+ * Works in both Mini App and regular browser contexts.
  */
 
 const YM_ID = 110726199;
