@@ -13,7 +13,7 @@ export interface GameConfig {
   difficulty: 'easy' | 'normal' | 'hard';
   draftMode: 'squad_first' | 'position_first';
   ratingMode: 'season' | 'prime';
-  eraFilter: 'all' | '2000s' | '2010s' | 'modern';
+  eraFilter: 'all' | '2000s' | '2010s' | 'modern' | 'custom';
   eraStartYear: number;
   eraEndYear: number;
   showRatings?: boolean; // overrides difficulty default; undefined = follow difficulty
