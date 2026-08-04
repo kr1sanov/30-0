@@ -117,7 +117,7 @@ const trophyVariants = {
 
 export default function SimulationResult() {
   const { seasonResult, resetGame, goHome, slots, setScreen, config } = useGameStore();
-  const { haptic, notify, showConfirm, isTelegram, showSecondaryButton, hideSecondaryButton } = useTelegram();
+  const { haptic, notify, showConfirm } = useTelegram();
   const [currentMatchweek, setCurrentMatchweek] = useState(0);
   const [showTable, setShowTable] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
@@ -177,17 +177,6 @@ export default function SimulationResult() {
       }
     }
   }, [isComplete, data, notify, haptic]);
-
-  // Show Telegram SecondaryButton for sharing when result is complete
-  useEffect(() => {
-    if (!isTelegram || !isComplete) return;
-
-    showSecondaryButton('📤 Поделиться', () => setIsShareOpen(true));
-
-    return () => {
-      hideSecondaryButton();
-    };
-  }, [isTelegram, isComplete, showSecondaryButton, hideSecondaryButton]);
 
   // Skip all
   const handleSkipAll = useCallback(() => {
