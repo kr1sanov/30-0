@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AppUser {
   id: string;
-  provider: 'guest' | 'vk';
+  provider: 'guest' | 'yandex';
   username: string | null;
   firstName: string | null;
   lastName: string | null;
@@ -16,7 +16,8 @@ interface AuthState {
   isAuthenticated: boolean;
   isAuthenticating: boolean;
 
-  loginWithVK: (code: string, state?: string) => Promise<void>;
+  loginWithYandex: () => void;
+  handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string }) => void;
   loginAsGuest: () => void;
   updateDisplayName: (name: string) => void;
   logout: () => void;
@@ -29,31 +30,25 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isAuthenticating: false,
 
-      loginWithVK: async (code: string, _state?: string) => {
-        set({ isAuthenticating: true });
-        try {
-          const res = await fetch('/api/auth/vk', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
-          });
+      loginWithYandex: () => {
+        // Redirect to Yandex OAuth
+        window.location.href = '/api/auth/yandex';
+      },
 
-          if (!res.ok) {
-            console.error('VK auth failed');
-            get().loginAsGuest();
-            return;
-          }
-
-          const data = await res.json();
-          set({
-            user: data.user,
-            isAuthenticated: true,
-            isAuthenticating: false,
-          });
-        } catch (error) {
-          console.error('VK auth error:', error);
-          get().loginAsGuest();
-        }
+      handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string }) => {
+        set({
+          user: {
+            id: params.user_id,
+            provider: 'yandex',
+            username: null,
+            firstName: params.display_name,
+            lastName: null,
+            photoUrl: params.photo_url || null,
+            displayName: params.display_name,
+          },
+          isAuthenticated: true,
+          isAuthenticating: false,
+        });
       },
 
       loginAsGuest: () => {

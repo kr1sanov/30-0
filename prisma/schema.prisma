@@ -88,11 +88,12 @@ model PlayerSeason {
 model User {
   id               String   @id @default(cuid())
   provider         String   @default("guest")
-  providerId       String   @default("")
+  providerId       String   @default("") @unique
   username         String?
   firstName        String?
   lastName         String?
   photoUrl         String?
+  email            String?
   displayName      String   @default("Игрок")
   profileStatsJson String?
 

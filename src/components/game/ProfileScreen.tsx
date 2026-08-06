@@ -43,7 +43,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName } = useAuthStore();
+  const { user, updateDisplayName, loginWithYandex } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -155,6 +155,22 @@ export default function ProfileScreen() {
           }
         </p>
       </div>
+
+      {/* Yandex login button — only for guest users */}
+      {(!user || user.provider === 'guest') && (
+        <div className="flex justify-center py-2">
+          <button
+            onClick={loginWithYandex}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FC3F1D] hover:bg-[#e6371a] text-white font-bold transition-colors shadow-lg shadow-[#FC3F1D]/20"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="0" y="4" width="10" height="16" rx="1" />
+              <rect x="14" y="4" width="10" height="16" rx="1" />
+            </svg>
+            Войти через Яндекс
+          </button>
+        </div>
+      )}
 
       {/* Prominent Season Count + Best Result */}
       {profileStats.totalSeasons > 0 && (
