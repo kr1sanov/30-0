@@ -34,16 +34,16 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 const STEPS = [
   { title: 'Крути колесо', desc: 'Колесо фортуны выбирает реальный клуб и сезон РПЛ' },
   { title: 'Выбери игрока', desc: 'Бери игрока из состава этого клуба в свою команду' },
-  { title: 'Собери XI', desc: 'Повторяй, пока все 11 позиций не будут заполнены' },
+  { title: 'Собери состав', desc: 'Повторяй, пока все 11 позиций не будут заполнены' },
   { title: 'Сыграй сезон', desc: 'Симулируй 30 матчей — сможешь ли добиться 30-0?' },
 ];
 
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
-  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
-  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: true, color: '#00C896', gameMode: 'daily' as const },
-  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: true, color: '#f59e0b', gameMode: 'nations_cup' as const },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', gameMode: 'daily' as const },
+  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
 
 interface ChallengeDef {
@@ -301,7 +301,7 @@ function HomePage() {
         >
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#1E1E1E] text-xs font-medium text-[#9CA3AF]">
             <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse" />
-            НЕОФИЦИАЛЬНАЯ ДРАФТ-ИГРА ДЛЯ ФАНАТОВ
+            Неофициальная драфт-игра для фанатов РПЛ
           </span>
         </motion.div>
 
@@ -514,52 +514,7 @@ function HomePage() {
         </div>
       </motion.section>
 
-      {/* ── Challenges Section ── */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.25 }}
-        className="px-4 py-6"
-      >
-        <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
-          Челленджи
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {CHALLENGES.map((ch) => {
-            const isCompleted = ch.checkFn(profileStats);
-            const progress = ch.progressFn(profileStats);
-
-            return (
-              <motion.button
-                key={ch.title}
-                onClick={() => setScreen('setup')}
-                whileTap={{ scale: 0.97 }}
-                className={`relative rounded-2xl p-4 text-left border transition-all hover:border-[#2A2A2A] overflow-hidden bg-[#141414] border-[#1E1E1E] ${isCompleted ? 'ring-1 ring-[#00C896]/30' : ''}`}
-              >
-                {/* Emoji */}
-                <div className="text-2xl mb-2">{ch.emoji}</div>
-                <div className="text-sm font-bold text-[#FFFFFF] mb-1">{ch.title}</div>
-                <div className="text-xs text-[#9CA3AF] mb-3">{ch.desc}</div>
-
-                {/* Progress bar */}
-                <div className="h-1.5 rounded-full bg-[#1E1E1E] overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.8, delay: 0.3 }}
-                    className="h-full rounded-full bg-[#00C896]"
-                  />
-                </div>
-
-                {/* Completed overlay */}
-                {isCompleted && (
-                  <div className="absolute inset-0 bg-[#00C896]/5 pointer-events-none rounded-2xl" />
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
-      </motion.section>
+      {/* ── Challenges Section (hidden on home — only in Profile) ── */}
 
       {/* ── FAQ Section ── */}
       <motion.section
