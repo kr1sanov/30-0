@@ -25,16 +25,20 @@ export async function POST(req: NextRequest) {
 
     const clientId = process.env.YANDEX_CLIENT_ID;
     const clientSecret = process.env.YANDEX_CLIENT_SECRET;
-    const redirectUri = process.env.YANDEX_REDIRECT_URI;
 
-    if (!clientId || !clientSecret || !redirectUri) {
+    // Get redirect_uri from cookie (set by login route) or determine from request
+    const redirectUri = req.cookies.get('yandex_redirect_uri')?.value
+      || getRedirectUriFromRequest(req);
+
+    if (!clientId || !clientSecret) {
       console.error('Yandex OAuth env vars missing:', {
         hasClientId: !!clientId,
         hasClientSecret: !!clientSecret,
-        hasRedirectUri: !!redirectUri,
       });
       return NextResponse.json({ error: 'config_missing' }, { status: 500 });
     }
+
+    console.log('[Yandex callback] Using redirect_uri:', redirectUri);
 
     // Step 1: Exchange code for OAuth token
     const tokenResponse = await fetch('https://oauth.yandex.ru/token', {
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (!tokenResponse.ok) {
       const errBody = await tokenResponse.text();
       console.error('Yandex token exchange failed:', errBody);
-      return NextResponse.json({ error: 'token_failed' }, { status: 502 });
+      return NextResponse.json({ error: 'token_failed', details: errBody }, { status: 502 });
     }
 
     const tokenData = await tokenResponse.json();
@@ -153,8 +157,9 @@ export async function POST(req: NextRequest) {
       path: '/',
     });
 
-    // Clear the OAuth state cookie
+    // Clear the OAuth state and redirect_uri cookies
     response.cookies.delete('yandex_oauth_state');
+    response.cookies.delete('yandex_redirect_uri');
 
     return response;
   } catch (err) {
@@ -165,11 +170,30 @@ export async function POST(req: NextRequest) {
 
 /**
  * GET /api/auth/yandex/callback
- * Fallback for direct browser navigation (e.g. if redirect_uri was set to this path).
- * Redirects to root with error since the primary flow is POST from frontend.
+ * Fallback for direct browser navigation.
  */
 export async function GET() {
-  // If someone navigates here directly, redirect to home
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   return NextResponse.redirect(new URL('/?auth_error=invalid_callback', baseUrl));
+}
+
+/**
+ * Determine redirect_uri from the request (same logic as login route).
+ */
+function getRedirectUriFromRequest(req: NextRequest): string {
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}/`;
+  }
+
+  const host = req.headers.get('host');
+  if (host) {
+    const proto = host.startsWith('localhost') ? 'http' : 'https';
+    return `${proto}://${host}/`;
+  }
+
+  const envBase = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  return `${envBase.replace(/\/$/, '')}/`;
 }
