@@ -9,9 +9,11 @@ export async function GET() {
   const redirectUri = process.env.YANDEX_REDIRECT_URI;
 
   if (!clientId || !redirectUri) {
-    return NextResponse.json(
-      { error: 'Yandex OAuth not configured' },
-      { status: 500 }
+    // Instead of returning JSON, redirect back with error param
+    // so the user sees a friendly error in the app
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+    return NextResponse.redirect(
+      new URL('/?auth_error=oauth_not_configured', baseUrl || 'http://localhost:3000')
     );
   }
 

@@ -9,18 +9,21 @@ interface AppUser {
   lastName: string | null;
   photoUrl: string | null;
   displayName: string;
+  email?: string | null;
 }
 
 interface AuthState {
   user: AppUser | null;
   isAuthenticated: boolean;
   isAuthenticating: boolean;
+  authError: string | null;
 
   loginWithYandex: () => void;
-  handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string }) => void;
+  handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string; email?: string }) => void;
   loginAsGuest: () => void;
   updateDisplayName: (name: string) => void;
   logout: () => void;
+  clearAuthError: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,13 +32,16 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       isAuthenticating: false,
+      authError: null,
 
       loginWithYandex: () => {
-        // Redirect to Yandex OAuth
+        set({ isAuthenticating: true, authError: null });
+        // Redirect to Yandex OAuth login route
+        // The API route will redirect to Yandex's authorization page
         window.location.href = '/api/auth/yandex';
       },
 
-      handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string }) => {
+      handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string; email?: string }) => {
         set({
           user: {
             id: params.user_id,
@@ -45,9 +51,11 @@ export const useAuthStore = create<AuthState>()(
             lastName: null,
             photoUrl: params.photo_url || null,
             displayName: params.display_name,
+            email: params.email || null,
           },
           isAuthenticated: true,
           isAuthenticating: false,
+          authError: null,
         });
       },
 
@@ -61,9 +69,11 @@ export const useAuthStore = create<AuthState>()(
             lastName: null,
             photoUrl: null,
             displayName: 'Гость',
+            email: null,
           },
           isAuthenticated: true,
           isAuthenticating: false,
+          authError: null,
         });
       },
 
@@ -82,7 +92,13 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
-        set({ user: null, isAuthenticated: false });
+        // Call logout API to clear any server-side session
+        fetch('/api/auth/yandex/logout', { method: 'POST' }).catch(() => {});
+        set({ user: null, isAuthenticated: false, isAuthenticating: false, authError: null });
+      },
+
+      clearAuthError: () => {
+        set({ authError: null });
       },
     }),
     {

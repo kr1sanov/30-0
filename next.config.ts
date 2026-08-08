@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://mc.yandex.ru https://api.telegram.org",
+              "connect-src 'self' https://mc.yandex.ru https://api.telegram.org https://oauth.yandex.ru https://login.yandex.ru",
               "frame-src https://web.telegram.org",
               "object-src 'none'",
               "base-uri 'self'",
@@ -76,6 +76,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "telegram.org",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.yandex.net",
       },
     ],
   },
