@@ -551,7 +551,7 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
-  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex, dailyChallenge } = useGameStore();
+  const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex, dailyChallenge, lastDraftError } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [lastPlacedInfo, setLastPlacedInfo] = useState<{ name: string; position: string } | null>(null);
   const spinWheelRef = useRef<HTMLDivElement>(null);
@@ -640,6 +640,20 @@ function DraftScreen() {
 
   return (
     <div className="space-y-3 animate-fade-in pb-24 sm:pb-4">
+      {/* ── Draft Error Banner ── */}
+      <AnimatePresence>
+        {lastDraftError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 px-3 py-2 flex items-center gap-2"
+          >
+            <span className="text-[#ef4444] text-xs font-bold">⚠️</span>
+            <span className="text-xs text-[#ef4444] font-medium">{lastDraftError}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* ── Header: Formation + Rerolls + Restart ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">

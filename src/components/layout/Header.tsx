@@ -6,6 +6,7 @@ import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { Home, User } from 'lucide-react';
 
 const GAME_SCREENS = new Set([
+  'setup',
   'draft',
   'position-assign',
   'squad-complete',

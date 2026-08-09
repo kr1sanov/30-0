@@ -266,8 +266,6 @@ export const useGameStore = create<GameState>()(
 
       startRun: async () => {
         const { config, dailyChallenge } = get();
-        // Immediately switch to draft screen so the UI feels instant
-        set({ screen: 'draft' });
         try {
           // Apply daily challenge constraints to the run
           const runConfig = { ...config };
@@ -293,7 +291,9 @@ export const useGameStore = create<GameState>()(
           });
 
           if (!res.ok) {
-            console.error('Failed to start run:', await res.json());
+            const errData = await res.json().catch(() => ({}));
+            console.error('Failed to start run:', errData);
+            set({ screen: 'setup', lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
             return;
           }
 
@@ -361,6 +361,8 @@ export const useGameStore = create<GameState>()(
           });
         } catch (error) {
           console.error('Failed to start run:', error);
+          // Revert to setup screen so the user isn't stuck on draft with no runId
+          set({ screen: 'setup', lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
         }
       },
 
@@ -369,7 +371,18 @@ export const useGameStore = create<GameState>()(
       // -------------------------------------------------------------------
       spin: async () => {
         const { runId, isSpinning } = get();
-        if (!runId || isSpinning) return;
+        if (!runId) {
+          // runId is null — startRun either failed or wasn't called
+          // Try to recover by calling startRun
+          console.warn('[spin] No runId, attempting to start a new run...');
+          await get().startRun();
+          const newRunId = get().runId;
+          if (!newRunId) {
+            set({ lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
+            return;
+          }
+        }
+        if (isSpinning) return;
 
         // Clear previous selection and spin state before spinning
         set({ isSpinning: true, selectedPlayer: null, currentSpin: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: null });
@@ -1026,6 +1039,10 @@ export const useGameStore = create<GameState>()(
       // updateProfileStats — Update persistent profile stats after simulation
       // -------------------------------------------------------------------
       updateProfileStats: (result) => {
+        // Only track progress for Yandex-authenticated users
+        const authUser = useAuthStore.getState().user;
+        if (!authUser || authUser.provider !== 'yandex') return;
+
         const r = result as {
           wins: number;
           draws: number;
@@ -1340,7 +1357,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
@@ -1369,12 +1386,22 @@ export const useGameStore = create<GameState>()(
           dailyChallenge: state.dailyChallenge,
         };
       },
-      migrate: (persistedState: Record<string, unknown>, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
+        // Version 3: full reset — clear all progress, only Yandex auth users keep data
         // Version 2: reset all profileStats to start fresh
-        if (version < 2) {
+        if (version < 3) {
           return {
-            ...persistedState,
+            ...(persistedState as Record<string, unknown>),
             profileStats: defaultProfileStats,
+            runId: null,
+            slots: [],
+            rerollsLeft: 0,
+            rerollsUsed: 0,
+            currentSpin: null,
+            selectedPlayer: null,
+            currentManager: null,
+            seasonResult: null,
+            screen: 'home',
           };
         }
         return persistedState;
