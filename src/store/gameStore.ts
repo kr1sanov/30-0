@@ -6,6 +6,7 @@ import type { Position } from '@/lib/positions';
 import { DIFFICULTY_CONFIG } from '@/lib/types';
 import { MANAGERS } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
+import { useAuthStore } from './authStore';
 
 /**
  * ============================================================================
@@ -376,17 +377,18 @@ export const useGameStore = create<GameState>()(
         try {
           const res = await fetch(`/api/runs/${runId}/spin`, { method: 'POST' });
           if (!res.ok) {
-            console.error('Failed to spin:', await res.json());
-            set({ isSpinning: false });
+            const errData = await res.json().catch(() => ({}));
+            console.error('Failed to spin:', errData);
+            set({ isSpinning: false, lastDraftError: (errData as Record<string, unknown>).error as string || 'Ошибка при круточке колеса' });
             return;
           }
 
           const data: SpinResult = await res.json();
           // Step 2: Result arrives — Club × Season is set, player list will show
-          set({ currentSpin: data, isSpinning: false });
+          set({ currentSpin: data, isSpinning: false, lastDraftError: null });
         } catch (error) {
           console.error('Failed to spin:', error);
-          set({ isSpinning: false });
+          set({ isSpinning: false, lastDraftError: 'Сетевая ошибка при круточке колеса' });
         }
       },
 
@@ -1005,12 +1007,15 @@ export const useGameStore = create<GameState>()(
           }
 
           const data = await res.json();
-          // Update profile stats
+          // Update profile stats (always, for local play)
           get().updateProfileStats(data);
           set({ seasonResult: data, screen: 'result' });
 
-          // Sync to cloud after simulation
-          get().syncProfileToCloud();
+          // Sync to cloud ONLY for Yandex-authenticated users
+          const authUser = useAuthStore.getState().user;
+          if (authUser && authUser.provider === 'yandex') {
+            get().syncProfileToCloud();
+          }
         } catch (error) {
           console.error('Failed to simulate:', error);
           set({ screen: 'pre-match' });
@@ -1253,14 +1258,46 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      // Cloud sync — save profile to database (placeholder for future backend integration)
+      // Cloud sync — save profile to database for Yandex-authenticated users
       syncProfileToCloud: async () => {
-        // TODO: Implement cloud sync when auth provider is ready
+        const authUser = useAuthStore.getState().user;
+        if (!authUser || authUser.provider !== 'yandex') return;
+
+        try {
+          const { profileStats } = get();
+          await fetch('/api/users/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: authUser.id,
+              providerId: authUser.id,
+              username: authUser.username,
+              firstName: authUser.firstName,
+              lastName: authUser.lastName,
+              photoUrl: authUser.photoUrl,
+              profileStats,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to sync profile to cloud:', error);
+        }
       },
 
-      // Load profile from cloud (placeholder for future backend integration)
+      // Load profile from cloud for Yandex-authenticated users
       loadProfileFromCloud: async () => {
-        // TODO: Implement cloud load when auth provider is ready
+        const authUser = useAuthStore.getState().user;
+        if (!authUser || authUser.provider !== 'yandex') return;
+
+        try {
+          const res = await fetch(`/api/users/profile?userId=${encodeURIComponent(authUser.id)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          if (data.user?.profileStats) {
+            set({ profileStats: data.user.profileStats });
+          }
+        } catch (error) {
+          console.error('Failed to load profile from cloud:', error);
+        }
       },
 
       // Start a daily challenge — transition to setup screen with challenge data
@@ -1303,6 +1340,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
+      version: 2,
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
@@ -1312,8 +1350,12 @@ export const useGameStore = create<GameState>()(
         const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'result', 'profile', 'leaderboard'];
         const persistedScreen = stableScreens.includes(state.screen) ? state.screen : 'home';
 
+        // Only persist profileStats for Yandex users; guests start fresh each session
+        const authUser = useAuthStore.getState().user;
+        const shouldPersistProfile = authUser?.provider === 'yandex';
+
         return {
-          profileStats: state.profileStats,
+          profileStats: shouldPersistProfile ? state.profileStats : defaultProfileStats,
           lastConfig: state.lastConfig,
           runId: state.runId,
           slots: state.slots,
@@ -1326,6 +1368,16 @@ export const useGameStore = create<GameState>()(
           screen: persistedScreen,
           dailyChallenge: state.dailyChallenge,
         };
+      },
+      migrate: (persistedState: Record<string, unknown>, version: number) => {
+        // Version 2: reset all profileStats to start fresh
+        if (version < 2) {
+          return {
+            ...persistedState,
+            profileStats: defaultProfileStats,
+          };
+        }
+        return persistedState;
       },
     },
   ),

@@ -37,31 +37,33 @@ export default function Header() {
 
   const btnClass = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a]/80 border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] hover:border-white/[0.12] transition-all duration-200 active:scale-[0.97] backdrop-blur-sm";
 
-  // Mode 2: Game screens — subtle overlay buttons
+  // Mode 2: Game screens — sticky header bar (same style as home screen)
   if (GAME_SCREENS.has(screen)) {
     return (
       <>
-        <button
-          onClick={handleHome}
-          className="fixed z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] transition-all duration-200"
-          style={{ top: 16, left: 12 }}
-          aria-label="Домой"
-          title="Домой"
-        >
-          <Home className="w-4 h-4" />
-          <span className="hidden sm:inline">Домой</span>
-        </button>
+        <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/70 backdrop-blur-xl border-b border-white/[0.04]">
+          <div className="mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
+            {/* Left: Home button */}
+            <button
+              onClick={handleHome}
+              className={btnClass}
+              aria-label="Домой"
+            >
+              <Home className="w-4 h-4" />
+              <span>Домой</span>
+            </button>
 
-        <button
-          onClick={() => useGameStore.getState().setScreen('profile')}
-          className="fixed z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1a1a1a] border border-white/[0.08] text-sm font-medium text-[#9CA3AF] hover:text-white hover:bg-[#222] transition-all duration-200"
-          style={{ top: 16, right: 12 }}
-          aria-label="Мой профиль"
-          title="Мой профиль"
-        >
-          <User className="w-4 h-4" />
-          <span className="hidden sm:inline">Мой профиль</span>
-        </button>
+            {/* Right: My Profile button */}
+            <button
+              onClick={() => useGameStore.getState().setScreen('profile')}
+              className={btnClass}
+              title="Мой профиль"
+            >
+              <User className="w-4 h-4" />
+              <span>Мой профиль</span>
+            </button>
+          </div>
+        </header>
 
         <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
       </>
