@@ -2,45 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
 /**
- * GET /api/auth/yandex/callback
- * Handles the OAuth callback from Yandex:
- * 1. Exchanges authorization code for OAuth token
- * 2. Fetches user info from Yandex API
- * 3. Creates or updates user in database
- * 4. Redirects to the app with auth data
+ * POST /api/auth/yandex/callback
+ * Called by the frontend after Yandex redirects to the app root with ?code=...
+ * Exchanges the code for a token, fetches user info, creates/updates user.
+ * Returns JSON (not redirect) since this is called via fetch() from the client.
  */
-export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const code = searchParams.get('code');
-  const state = searchParams.get('state');
-  const error = searchParams.get('error');
-
-  // Handle user denial
-  if (error) {
-    const redirectUrl = new URL('/', req.url);
-    redirectUrl.searchParams.set('auth_error', error);
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (!code) {
-    return NextResponse.redirect(new URL('/?auth_error=no_code', req.url));
-  }
-
-  // Verify CSRF state
-  const savedState = req.cookies.get('yandex_oauth_state')?.value;
-  if (state && savedState && state !== savedState) {
-    return NextResponse.redirect(new URL('/?auth_error=state_mismatch', req.url));
-  }
-
-  const clientId = process.env.YANDEX_CLIENT_ID;
-  const clientSecret = process.env.YANDEX_CLIENT_SECRET;
-  const redirectUri = process.env.YANDEX_REDIRECT_URI;
-
-  if (!clientId || !clientSecret || !redirectUri) {
-    return NextResponse.redirect(new URL('/?auth_error=config_missing', req.url));
-  }
-
+export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
+    const code = body.code as string | undefined;
+    const state = body.state as string | undefined;
+
+    if (!code) {
+      return NextResponse.json({ error: 'no_code' }, { status: 400 });
+    }
+
+    // Verify CSRF state from cookie
+    const savedState = req.cookies.get('yandex_oauth_state')?.value;
+    if (state && savedState && state !== savedState) {
+      return NextResponse.json({ error: 'state_mismatch' }, { status: 400 });
+    }
+
+    const clientId = process.env.YANDEX_CLIENT_ID;
+    const clientSecret = process.env.YANDEX_CLIENT_SECRET;
+
+    // Get redirect_uri from cookie (set by login route) or determine from request
+    const redirectUri = req.cookies.get('yandex_redirect_uri')?.value
+      || getRedirectUriFromRequest(req);
+
+    if (!clientId || !clientSecret) {
+      console.error('Yandex OAuth env vars missing:', {
+        hasClientId: !!clientId,
+        hasClientSecret: !!clientSecret,
+      });
+      return NextResponse.json({ error: 'config_missing' }, { status: 500 });
+    }
+
+    console.log('[Yandex callback] Using redirect_uri:', redirectUri);
+
     // Step 1: Exchange code for OAuth token
     const tokenResponse = await fetch('https://oauth.yandex.ru/token', {
       method: 'POST',
@@ -59,14 +58,14 @@ export async function GET(req: NextRequest) {
     if (!tokenResponse.ok) {
       const errBody = await tokenResponse.text();
       console.error('Yandex token exchange failed:', errBody);
-      return NextResponse.redirect(new URL('/?auth_error=token_failed', req.url));
+      return NextResponse.json({ error: 'token_failed', details: errBody }, { status: 502 });
     }
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
     if (!accessToken) {
-      return NextResponse.redirect(new URL('/?auth_error=no_access_token', req.url));
+      return NextResponse.json({ error: 'no_access_token' }, { status: 502 });
     }
 
     // Step 2: Fetch user info from Yandex
@@ -78,12 +77,12 @@ export async function GET(req: NextRequest) {
 
     if (!userInfoResponse.ok) {
       console.error('Yandex user info failed:', await userInfoResponse.text());
-      return NextResponse.redirect(new URL('/?auth_error=user_info_failed', req.url));
+      return NextResponse.json({ error: 'user_info_failed' }, { status: 502 });
     }
 
     const userInfo = await userInfoResponse.json();
 
-    // Extract user data
+    // Extract user data from Yandex response
     const yandexId = String(userInfo.id);
     const login = userInfo.login || '';
     const firstName = userInfo.first_name || null;
@@ -95,42 +94,106 @@ export async function GET(req: NextRequest) {
       ? `https://avatars.yandex.net/get-yapic/${avatarId}/islands-200`
       : null;
 
+    const displayName = firstName
+      ? `${firstName}${lastName ? ' ' + lastName : ''}`
+      : login || 'Игрок';
+
     // Step 3: Create or update user in database
-    const user = await db.user.upsert({
-      where: { providerId: `yandex_${yandexId}` },
-      update: {
-        firstName,
-        lastName,
-        photoUrl,
-        email,
-      },
-      create: {
+    let user;
+    try {
+      user = await db.user.upsert({
+        where: { providerId: `yandex_${yandexId}` },
+        update: {
+          firstName,
+          lastName,
+          photoUrl,
+          email,
+          displayName,
+        },
+        create: {
+          provider: 'yandex',
+          providerId: `yandex_${yandexId}`,
+          firstName,
+          lastName,
+          photoUrl,
+          email,
+          displayName,
+        },
+      });
+    } catch (dbError) {
+      console.error('Database upsert failed:', dbError);
+      // Continue without DB — still authenticate the user
+      user = null;
+    }
+
+    const userId = user?.id || `yandex_${yandexId}`;
+
+    // Step 4: Set session cookie and return user data
+    const sessionData = JSON.stringify({
+      id: userId,
+      provider: 'yandex',
+      displayName,
+      photoUrl,
+      email,
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      user: {
+        id: userId,
         provider: 'yandex',
-        providerId: `yandex_${yandexId}`,
-        firstName,
-        lastName,
+        displayName,
         photoUrl,
         email,
-        displayName: firstName ? `${firstName}${lastName ? ' ' + lastName : ''}` : login,
       },
     });
 
-    // Step 4: Redirect to app with user data
-    const redirectUrl = new URL('/', req.url);
-    redirectUrl.searchParams.set('auth_success', 'yandex');
-    redirectUrl.searchParams.set('user_id', user.id);
-    redirectUrl.searchParams.set('display_name', user.displayName || login);
-    if (user.photoUrl) {
-      redirectUrl.searchParams.set('photo_url', user.photoUrl);
-    }
+    // Set a session cookie (valid for 30 days)
+    response.cookies.set('yandex_session', encodeURIComponent(sessionData), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: '/',
+    });
 
-    // Clear the OAuth state cookie
-    const response = NextResponse.redirect(redirectUrl);
+    // Clear the OAuth state and redirect_uri cookies
     response.cookies.delete('yandex_oauth_state');
+    response.cookies.delete('yandex_redirect_uri');
 
     return response;
   } catch (err) {
     console.error('Yandex auth callback error:', err);
-    return NextResponse.redirect(new URL('/?auth_error=server_error', req.url));
+    return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
+}
+
+/**
+ * GET /api/auth/yandex/callback
+ * Fallback for direct browser navigation.
+ */
+export async function GET() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  return NextResponse.redirect(new URL('/?auth_error=invalid_callback', baseUrl));
+}
+
+/**
+ * Determine redirect_uri from the request (same logic as login route).
+ */
+function getRedirectUriFromRequest(req: NextRequest): string {
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}/`;
+  }
+
+  const host = req.headers.get('host');
+  if (host) {
+    const proto = host.startsWith('localhost') ? 'http' : 'https';
+    return `${proto}://${host}/`;
+  }
+
+  const envBase = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+  return `${envBase.replace(/\/$/, '')}/`;
 }

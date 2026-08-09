@@ -43,7 +43,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName, loginWithYandex } = useAuthStore();
+  const { user, updateDisplayName, loginWithYandex, logout } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -161,13 +161,33 @@ export default function ProfileScreen() {
         <div className="flex justify-center py-2">
           <button
             onClick={loginWithYandex}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#FC3F1D] hover:bg-[#e6371a] text-white font-bold transition-colors shadow-lg shadow-[#FC3F1D]/20"
+            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[#FC3F1D] hover:bg-[#e6371a] text-white font-bold transition-all duration-200 shadow-lg shadow-[#FC3F1D]/20 active:scale-[0.97]"
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="0" y="4" width="10" height="16" rx="1" />
-              <rect x="14" y="4" width="10" height="16" rx="1" />
-            </svg>
+            {/* Yandex «Я» logo */}
+            <span className="w-6 h-6 rounded-md bg-white flex items-center justify-center text-[#FC3F1D] font-black text-sm leading-none select-none" style={{ fontFamily: 'system-ui, sans-serif' }}>Я</span>
             Войти через Яндекс
+          </button>
+        </div>
+      )}
+
+      {/* Logged in with Yandex — show provider badge + logout */}
+      {user && user.provider === 'yandex' && (
+        <div className="flex items-center justify-center gap-3 py-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FC3F1D]/10 border border-[#FC3F1D]/20">
+            <span className="w-4 h-4 rounded bg-[#FC3F1D] flex items-center justify-center text-white font-black text-[10px] leading-none select-none" style={{ fontFamily: 'system-ui, sans-serif' }}>Я</span>
+            <span className="text-xs font-medium text-[#FC3F1D]">Яндекс ID</span>
+            {user.email && (
+              <span className="text-[10px] text-[#9CA3AF] ml-1">{user.email}</span>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              logout();
+              toast.success('Вы вышли из аккаунта');
+            }}
+            className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
+          >
+            Выйти
           </button>
         </div>
       )}
