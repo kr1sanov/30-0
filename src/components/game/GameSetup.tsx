@@ -485,29 +485,37 @@ export default function GameSetup() {
             {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
               ([key, val]) => {
                 const isSelected = currentGameMode === key;
+                const isComingSoon = key !== 'classic';
                 return (
-                  <motion.button
+                  <motion.div
                     key={key}
-                    onClick={() => handleGameModeSelect(key)}
-                    whileTap={{ scale: 0.97 }}
+                    whileTap={!isComingSoon ? { scale: 0.97 } : undefined}
                     className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden"
                     style={{
-                      backgroundColor: isSelected ? `${ACCENT}15` : 'transparent',
-                      borderColor: isSelected ? ACCENT : '#2a2a2a',
-                      boxShadow: isSelected ? `0 0 12px ${ACCENT}25` : 'none',
+                      backgroundColor: isSelected && !isComingSoon ? `${ACCENT}15` : 'transparent',
+                      borderColor: isSelected && !isComingSoon ? ACCENT : '#2a2a2a',
+                      boxShadow: isSelected && !isComingSoon ? `0 0 12px ${ACCENT}25` : 'none',
+                      opacity: isComingSoon ? 0.5 : 1,
+                      cursor: isComingSoon ? 'not-allowed' : 'pointer',
                     }}
+                    onClick={() => !isComingSoon && handleGameModeSelect(key)}
                   >
-                    <div className="text-xl mb-1">{val.icon}</div>
+                    {isComingSoon && (
+                      <span className="absolute top-1.5 right-1.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20 z-10">
+                        СКОРО
+                      </span>
+                    )}
+                    <div className={`text-xl mb-1 ${isComingSoon ? 'grayscale' : ''}`}>{val.icon}</div>
                     <div
                       className="text-sm font-bold"
-                      style={{ color: isSelected ? ACCENT : '#FFFFFF' }}
+                      style={{ color: isSelected && !isComingSoon ? ACCENT : '#FFFFFF' }}
                     >
                       {val.label}
                     </div>
-                    <div className="text-[10px] text-[#9CA3AF] mt-1 leading-tight">
+                    <div className={`text-[10px] mt-1 leading-tight ${isComingSoon ? 'text-[#9CA3AF]/40' : 'text-[#9CA3AF]'}`}>
                       {val.description}
                     </div>
-                  </motion.button>
+                  </motion.div>
                 );
               }
             )}

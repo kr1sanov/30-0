@@ -370,19 +370,19 @@ export const useGameStore = create<GameState>()(
       // spin — Step 1: User clicks "Spin the Wheel"
       // -------------------------------------------------------------------
       spin: async () => {
-        const { runId, isSpinning } = get();
+        let { runId } = get();
         if (!runId) {
           // runId is null — startRun either failed or wasn't called
           // Try to recover by calling startRun
           console.warn('[spin] No runId, attempting to start a new run...');
           await get().startRun();
-          const newRunId = get().runId;
-          if (!newRunId) {
+          runId = get().runId;
+          if (!runId) {
             set({ lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
             return;
           }
         }
-        if (isSpinning) return;
+        if (get().isSpinning) return;
 
         // Clear previous selection and spin state before spinning
         set({ isSpinning: true, selectedPlayer: null, currentSpin: null, lastAssignedSlotIndex: null, justAssignedSlotIndex: null, lastDraftError: null });
@@ -409,8 +409,16 @@ export const useGameStore = create<GameState>()(
       // reroll — Re-spin with a different club/season
       // -------------------------------------------------------------------
       reroll: async () => {
-        const { runId, rerollsLeft } = get();
-        if (!runId || rerollsLeft <= 0) return;
+        let { runId } = get();
+        const { rerollsLeft } = get();
+        if (!runId) {
+          // Same recovery as spin()
+          console.warn('[reroll] No runId, attempting to start a new run...');
+          await get().startRun();
+          runId = get().runId;
+          if (!runId) return;
+        }
+        if (rerollsLeft <= 0) return;
 
         // Clear previous selection before rerolling
         set({ isSpinning: true, selectedPlayer: null, currentSpin: null });
