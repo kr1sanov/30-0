@@ -48,6 +48,7 @@ model ClubSeason {
   players      PlayerSeason[]
 
   @@unique([clubId, seasonId])
+  @@index([seasonId])
 }
 
 model Player {
@@ -81,15 +82,19 @@ model PlayerSeason {
   clubSeason     ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, clubSeasonId])
+  @@index([clubSeasonId])
+  @@index([mainPosition])
 }
 
 model User {
   id               String   @id @default(cuid())
-  telegramId       String   @unique
+  provider         String   @default("guest")
+  providerId       String   @default("") @unique
   username         String?
   firstName        String?
   lastName         String?
   photoUrl         String?
+  email            String?
   displayName      String   @default("Игрок")
   profileStatsJson String?
 
@@ -135,6 +140,7 @@ model GameRun {
   eraStartYear   Int      @default(2000)
   eraEndYear     Int      @default(2025)
   clubFilter     String?
+  nationalityFilter String?
 
   slots        GameSlot[]
 
