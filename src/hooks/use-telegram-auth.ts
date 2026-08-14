@@ -17,9 +17,12 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function useAutoAuth() {
-  const { isAuthenticated, isAuthenticating, loginAsGuest, handleYandexCallback, clearAuthError } = useAuthStore();
+  const { isAuthenticated, isAuthenticating, _hasHydrated, loginAsGuest, handleYandexCallback, clearAuthError } = useAuthStore();
 
   useEffect(() => {
+    // Wait for persisted state to rehydrate before making auth decisions
+    if (!_hasHydrated) return;
+
     const params = new URLSearchParams(window.location.search);
 
     // ── Case 1: Yandex redirected to our app root with ?code=...&state=...
@@ -113,5 +116,5 @@ export function useAutoAuth() {
     // ── Case 5: Auto-login as guest if not authenticated
     if (isAuthenticated || isAuthenticating) return;
     loginAsGuest();
-  }, [isAuthenticated, isAuthenticating, loginAsGuest, handleYandexCallback, clearAuthError]);
+  }, [isAuthenticated, isAuthenticating, _hasHydrated, loginAsGuest, handleYandexCallback, clearAuthError]);
 }

@@ -392,7 +392,19 @@ export const useGameStore = create<GameState>()(
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
             console.error('Failed to spin:', errData);
-            set({ isSpinning: false, lastDraftError: (errData as Record<string, unknown>).error as string || 'Ошибка при круточке колеса' });
+            const errMsg = (errData as Record<string, unknown>).error as string;
+            // Provide user-friendly Russian messages for common API errors
+            let userMsg = 'Ошибка при вращении колеса';
+            if (errMsg === 'No compatible club-seasons available') {
+              userMsg = 'Нет доступных клубов-сезонов для оставшихся позиций. Попробуйте начать заново.';
+            } else if (errMsg === 'Run not found') {
+              userMsg = 'Игровая сессия не найдена. Начните новую игру.';
+            } else if (errMsg === 'No open slots remaining') {
+              userMsg = 'Все позиции заполнены!';
+            } else if (errMsg) {
+              userMsg = errMsg;
+            }
+            set({ isSpinning: false, lastDraftError: userMsg });
             return;
           }
 

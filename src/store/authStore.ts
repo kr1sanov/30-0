@@ -17,6 +17,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isAuthenticating: boolean;
   authError: string | null;
+  _hasHydrated: boolean;
 
   loginWithYandex: () => void;
   handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string; email?: string }) => void;
@@ -24,6 +25,7 @@ interface AuthState {
   updateDisplayName: (name: string) => void;
   logout: () => void;
   clearAuthError: () => void;
+  setHasHydrated: (state: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -33,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isAuthenticating: false,
       authError: null,
+      _hasHydrated: false,
 
       loginWithYandex: () => {
         set({ isAuthenticating: true, authError: null });
@@ -100,11 +103,22 @@ export const useAuthStore = create<AuthState>()(
       clearAuthError: () => {
         set({ authError: null });
       },
+
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
     }),
     {
       name: '30-0-rpl-auth',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => {
+        return (_state, error) => {
+          if (!error) {
+            useAuthStore.setState({ _hasHydrated: true });
+          }
+        };
+      },
     },
   ),
 );

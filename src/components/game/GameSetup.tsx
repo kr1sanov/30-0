@@ -18,6 +18,7 @@ import { Switch } from '@/components/ui/switch';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
+import { useAuthStore } from '@/store/authStore';
 
 /* ─── Colors ─── */
 const ACCENT = '#00C896';
@@ -332,13 +333,16 @@ function ClubCard({
 }
 
 export default function GameSetup() {
-  const { config, setConfig, startRun, dailyChallenge } = useGameStore();
+  const { config, setConfig, startRun, dailyChallenge, lastDraftError } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
+  const { user, loginWithYandex } = useAuthStore();
 
   // Club list for single_club mode
   const [clubs, setClubs] = useState<ClubData[]>([]);
   const [clubsLoading, setClubsLoading] = useState(false);
   const [clubSearch, setClubSearch] = useState('');
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   // Current game mode
   const currentGameMode: GameModeType = config.gameMode ?? 'classic';
@@ -368,7 +372,14 @@ export default function GameSetup() {
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
 
+  const isYandexUser = user?.provider === 'yandex';
+
   const handleStart = async () => {
+    // Require Yandex auth to play
+    if (!isYandexUser) {
+      return; // Auth gate button handles this
+    }
+
     // In single_club mode, require a club selection
     if (currentGameMode === 'single_club' && !config.clubFilter) {
       return;
@@ -379,6 +390,8 @@ export default function GameSetup() {
     }
 
     haptic('medium');
+    setStartError(null);
+    setIsStarting(true);
     Metrics.gameStart({
       formation: config.formation,
       difficulty: config.difficulty,
@@ -386,7 +399,18 @@ export default function GameSetup() {
       ratingMode: config.ratingMode,
       eraFilter: config.eraFilter,
     });
-    await startRun();
+    try {
+      await startRun();
+      // If we're still on setup after startRun, it means it failed
+      const currentScreen = useGameStore.getState().screen;
+      if (currentScreen === 'setup') {
+        setStartError(useGameStore.getState().lastDraftError || 'Не удалось начать игру. Попробуйте ещё раз.');
+      }
+    } catch (err) {
+      setStartError('Произошла ошибка. Попробуйте ещё раз.');
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const handleFormationSelect = (formationId: string) => {
@@ -996,26 +1020,71 @@ export default function GameSetup() {
         )}
       </div>
 
-      {/* ─── Start Button ─── */}
-      <Button
-        onClick={handleStart}
-        disabled={!canStart}
-        className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
-        style={{
-          backgroundColor: canStart ? ACCENT : '#2a2a2a',
-          boxShadow: canStart ? `0 4px 20px ${ACCENT}40` : 'none',
-          opacity: canStart ? 1 : 0.6,
-          cursor: canStart ? 'pointer' : 'not-allowed',
-        }}
-      >
-        {currentGameMode === 'single_club' && !config.clubFilter
+      {/* ─── Error Display ─── */}
+      <AnimatePresence>
+        {(startError || lastDraftError) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-3 overflow-hidden"
+          >
+            <div className="rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/30 p-3 text-sm text-[#ef4444] flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span>{startError || lastDraftError}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Auth Gate or Start Button ─── */}
+      {!isYandexUser ? (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-3"
+        >
+          <div className="rounded-xl bg-[#00C896]/5 border border-[#00C896]/20 p-4 text-center space-y-3">
+            <div className="text-2xl">🔐</div>
+            <div className="text-sm font-bold text-[#FFFFFF]">Войдите через Яндекс, чтобы играть</div>
+            <div className="text-xs text-[#9CA3AF]">Сохранение прогресса и достижений доступно только авторизованным игрокам</div>
+            <Button
+              onClick={loginWithYandex}
+              className="w-full h-11 text-sm font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-xl transition-colors"
+            >
+              Войти через Яндекс
+            </Button>
+          </div>
+        </motion.div>
+      ) : (
+        <Button
+          onClick={handleStart}
+          disabled={!canStart || isStarting}
+          className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
+          style={{
+            backgroundColor: canStart && !isStarting ? ACCENT : '#2a2a2a',
+            boxShadow: canStart && !isStarting ? `0 4px 20px ${ACCENT}40` : 'none',
+            opacity: canStart && !isStarting ? 1 : 0.6,
+            cursor: canStart && !isStarting ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {isStarting ? (
+            <span className="flex items-center gap-2">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Загрузка...
+            </span>
+          ) : currentGameMode === 'single_club' && !config.clubFilter
           ? 'Выберите клуб'
           : currentGameMode === 'nations_cup' && !config.nationalityFilter
           ? 'Выберите нацию'
           : dailyChallenge
           ? 'Начать челлендж →'
           : 'Начать драфт'}
-      </Button>
+        </Button>
+      )}
     </div>
   );
 }
