@@ -144,8 +144,16 @@ export async function POST(
     const compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
 
     if (compatible.length === 0) {
+      // Check if database is empty — give a more helpful error
+      const totalClubs = await db.club.count();
+      if (totalClubs === 0) {
+        return NextResponse.json(
+          { error: 'База данных пуста. Запустите сид: POST /api/seed', needsSeed: true },
+          { status: 503 },
+        );
+      }
       return NextResponse.json(
-        { error: 'No compatible club-seasons available' },
+        { error: 'No compatible club-seasons available for the selected era/filters' },
         { status: 400 },
       );
     }

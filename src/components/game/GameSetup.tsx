@@ -392,6 +392,25 @@ export default function GameSetup() {
       return;
     }
 
+    // Check if database has data (quick pre-flight check)
+    try {
+      const seedCheck = await fetch('/api/seed');
+      const seedData = await seedCheck.json();
+      if (!seedData.seeded || seedData.stats?.clubs === 0) {
+        setStartError('Загрузка данных... Подождите.');
+        // Trigger seeding
+        const seedRes = await fetch('/api/seed', { method: 'POST' });
+        const seedResult = await seedRes.json();
+        if (seedResult.error) {
+          setStartError('Не удалось загрузить данные. Попробуйте позже.');
+          return;
+        }
+        // Seed succeeded, continue
+      }
+    } catch {
+      // Network error — proceed anyway, the spin will handle it
+    }
+
     haptic('medium');
     setStartError(null);
     setIsStarting(true);

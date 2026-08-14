@@ -407,8 +407,12 @@ export const useGameStore = create<GameState>()(
             const errMsg = (errData as Record<string, unknown>).error as string;
             // Provide user-friendly Russian messages for common API errors
             let userMsg = 'Ошибка при вращении колеса';
-            if (errMsg === 'No compatible club-seasons available') {
-              userMsg = 'Нет доступных клубов-сезонов для оставшихся позиций. Попробуйте начать заново.';
+            if ((errData as Record<string, unknown>).needsSeed) {
+              userMsg = 'База данных пуста. Подождите, идёт загрузка данных...';
+              // Auto-seed in background
+              fetch('/api/seed', { method: 'POST' }).catch(() => {});
+            } else if (errMsg === 'No compatible club-seasons available' || errMsg === 'No compatible club-seasons available for the selected era/filters') {
+              userMsg = 'Нет доступных клубов-сезонов для оставшихся позиций. Попробуйте изменить эпоху или начать заново.';
             } else if (errMsg === 'Run not found') {
               userMsg = 'Игровая сессия не найдена. Начните новую игру.';
             } else if (errMsg === 'No open slots remaining') {
