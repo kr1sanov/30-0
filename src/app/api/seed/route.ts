@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     // Run the seed script as a subprocess
     const seedScript = path.join(process.cwd(), 'prisma', 'seed.ts');
     
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       execFile('bun', ['run', seedScript], {
         cwd: process.cwd(),
         timeout: 120000, // 2 minutes timeout
