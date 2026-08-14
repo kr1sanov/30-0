@@ -377,15 +377,18 @@ export default function GameSetup() {
   const handleStart = async () => {
     // Require Yandex auth to play
     if (!isYandexUser) {
-      return; // Auth gate button handles this
+      setStartError('Войдите через Яндекс, чтобы начать игру.');
+      return;
     }
 
     // In single_club mode, require a club selection
     if (currentGameMode === 'single_club' && !config.clubFilter) {
+      setStartError('Выберите клуб для режима "Один клуб".');
       return;
     }
     // In nations_cup mode, require a nationality selection
     if (currentGameMode === 'nations_cup' && !config.nationalityFilter) {
+      setStartError('Выберите национальность для режима "Кубок наций".');
       return;
     }
 
@@ -400,14 +403,20 @@ export default function GameSetup() {
       eraFilter: config.eraFilter,
     });
     try {
+      console.log('[handleStart] Starting run with config:', { formation: config.formation, difficulty: config.difficulty, userId: user?.id });
       await startRun();
       // If we're still on setup after startRun, it means it failed
-      const currentScreen = useGameStore.getState().screen;
-      if (currentScreen === 'setup') {
-        setStartError(useGameStore.getState().lastDraftError || 'Не удалось начать игру. Попробуйте ещё раз.');
+      const currentState = useGameStore.getState();
+      if (currentState.screen === 'setup') {
+        const error = currentState.lastDraftError || 'Не удалось начать игру. Попробуйте ещё раз.';
+        console.error('[handleStart] Run failed, still on setup screen:', error);
+        setStartError(error);
+      } else {
+        console.log('[handleStart] Run started successfully, screen:', currentState.screen);
       }
     } catch (err) {
-      setStartError('Произошла ошибка. Попробуйте ещё раз.');
+      console.error('[handleStart] Exception during startRun:', err);
+      setStartError(err instanceof Error ? err.message : 'Произошла ошибка. Попробуйте ещё раз.');
     } finally {
       setIsStarting(false);
     }

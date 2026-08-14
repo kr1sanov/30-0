@@ -284,23 +284,35 @@ export const useGameStore = create<GameState>()(
             }
           }
 
+          // Include userId from auth store for server-side association
+          const authUser = useAuthStore.getState().user;
+          const userId = authUser?.provider === 'yandex' ? authUser.id : undefined;
+
           const res = await fetch('/api/runs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(runConfig),
+            body: JSON.stringify({ ...runConfig, userId }),
           });
 
           if (!res.ok) {
             const errData = await res.json().catch(() => ({}));
-            console.error('Failed to start run:', errData);
-            set({ screen: 'setup', lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
+            console.error('[startRun] API error:', res.status, errData);
+            const errMsg = errData?.error === 'Invalid formation'
+              ? 'Неверная схема формирования. Выберите другую схему.'
+              : `Не удалось начать игру (ошибка ${res.status}). Попробуйте ещё раз.`;
+            set({ screen: 'setup', lastDraftError: errMsg });
             return;
           }
 
           const data = await res.json();
+          console.log('[startRun] Run created:', data.id);
 
           const formation = FORMATIONS.find((f) => f.id === runConfig.formation);
-          if (!formation) return;
+          if (!formation) {
+            console.error('[startRun] Formation not found:', runConfig.formation);
+            set({ screen: 'setup', lastDraftError: `Схема "${runConfig.formation}" не найдена. Выберите другую.` });
+            return;
+          }
 
           const slots: DraftSlot[] = formation.slots.map((slot, index) => {
             const category = POSITION_CATEGORY[slot.position];

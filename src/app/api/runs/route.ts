@@ -1,8 +1,8 @@
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const completed = searchParams.get('completed');
@@ -44,10 +44,10 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
+    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter, userId } = body;
 
     // Validate formation exists
     const formationData = FORMATIONS.find((f) => f.id === formation);
@@ -58,19 +58,37 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate difficulty
+    const validDifficulties = ['easy', 'normal', 'hard'];
+    const safeDifficulty = validDifficulties.includes(difficulty) ? difficulty : 'normal';
+
     // Determine rerolls based on difficulty
     const rerollsMap: Record<string, number> = {
       easy: 3,
       normal: 1,
       hard: 0,
     };
-    const rerollsTotal = rerollsMap[difficulty] ?? 1;
+    const rerollsTotal = rerollsMap[safeDifficulty] ?? 1;
+
+    // Resolve userId: try from body first, then from session cookie
+    let dbUserId: string | undefined;
+    const effectiveUserId = userId || getUserIdFromSession(request);
+    if (effectiveUserId && typeof effectiveUserId === 'string') {
+      try {
+        const existingUser = await db.user.findUnique({ where: { id: effectiveUserId } });
+        if (existingUser) {
+          dbUserId = effectiveUserId;
+        }
+      } catch {
+        // User lookup failed — continue without userId
+      }
+    }
 
     // Create the game run
     const run = await db.gameRun.create({
       data: {
         formation: formation || '4-3-3',
-        difficulty: difficulty || 'normal',
+        difficulty: safeDifficulty,
         draftMode: draftMode || 'squad_first',
         ratingMode: ratingMode || 'season',
         eraFilter: eraFilter || 'all',
@@ -82,6 +100,7 @@ export async function POST(request: Request) {
         ...(teamName ? { teamName } : {}),
         ...(clubFilter ? { clubFilter } : {}),
         ...(nationalityFilter ? { nationalityFilter } : {}),
+        ...(dbUserId ? { userId: dbUserId } : {}),
       },
     });
 
@@ -107,5 +126,19 @@ export async function POST(request: Request) {
       { error: 'Failed to create game run' },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Extract userId from the Yandex session cookie.
+ */
+function getUserIdFromSession(request: NextRequest): string | undefined {
+  try {
+    const sessionCookie = request.cookies.get('yandex_session')?.value;
+    if (!sessionCookie) return undefined;
+    const sessionData = JSON.parse(decodeURIComponent(sessionCookie));
+    return sessionData?.id;
+  } catch {
+    return undefined;
   }
 }

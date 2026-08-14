@@ -17,7 +17,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function useAutoAuth() {
-  const { isAuthenticated, isAuthenticating, _hasHydrated, loginAsGuest, handleYandexCallback, clearAuthError } = useAuthStore();
+  const { user, isAuthenticated, isAuthenticating, _hasHydrated, loginAsGuest, handleYandexCallback, clearAuthError } = useAuthStore();
 
   useEffect(() => {
     // Wait for persisted state to rehydrate before making auth decisions
@@ -113,8 +113,36 @@ export function useAutoAuth() {
       }
     }
 
-    // ── Case 5: Auto-login as guest if not authenticated
+    // ── Case 5: Validate existing Yandex session on server (best-effort)
+    // If the user appears authenticated via Yandex from localStorage,
+    // try to refresh user data from the server-side session.
+    // If the server session is missing/expired, we DON'T log out —
+    // the client-side auth is the source of truth for the UI.
+    // The server session is only needed for API calls that require it.
+    if (isAuthenticated && user?.provider === 'yandex') {
+      fetch('/api/auth/yandex/me')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.authenticated && data.user) {
+            // Server session is valid — refresh user data from server
+            handleYandexCallback({
+              user_id: data.user.id,
+              display_name: data.user.displayName,
+              photo_url: data.user.photoUrl || undefined,
+              email: data.user.email || undefined,
+            });
+          }
+          // If server session is missing/expired, keep client-side auth.
+          // The user can still play; we just won't have server-side session data.
+        })
+        .catch(() => {
+          // Network error — keep existing auth state, don't disrupt
+        });
+      return;
+    }
+
+    // ── Case 6: Auto-login as guest if not authenticated
     if (isAuthenticated || isAuthenticating) return;
     loginAsGuest();
-  }, [isAuthenticated, isAuthenticating, _hasHydrated, loginAsGuest, handleYandexCallback, clearAuthError]);
+  }, [isAuthenticated, isAuthenticating, _hasHydrated, user, loginAsGuest, handleYandexCallback, clearAuthError]);
 }

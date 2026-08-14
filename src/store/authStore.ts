@@ -28,6 +28,12 @@ interface AuthState {
   setHasHydrated: (state: boolean) => void;
 }
 
+/**
+ * Flag to track hydration completion outside the store
+ * to avoid circular reference during store initialization.
+ */
+let _hydrationComplete = false;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -111,14 +117,59 @@ export const useAuthStore = create<AuthState>()(
     {
       name: '30-0-rpl-auth',
       storage: createJSONStorage(() => localStorage),
+      version: 1,
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      migrate: (persistedState: unknown, version: number) => {
+        // Handle migration from older versions
+        if (version < 1) {
+          // v0 had no version field — data is still valid, just return as-is
+          return persistedState as AuthState;
+        }
+        return persistedState as AuthState;
+      },
       onRehydrateStorage: () => {
         return (_state, error) => {
-          if (!error) {
-            useAuthStore.setState({ _hasHydrated: true });
+          if (error) {
+            // Only clear localStorage for genuine data corruption errors.
+            // TDZ / init-order errors (e.g. HMR cycles) are non-fatal —
+            // the persisted data is still valid; the store just hasn't been
+            // assigned to its module-level variable yet.
+            const msg = (error as Error)?.message ?? String(error);
+            const isInitOrderError =
+              msg.includes('before initialization') ||
+              msg.includes('Cannot access');
+            if (isInitOrderError) {
+              // Non-fatal: keep localStorage intact so the next mount
+              // (or a fresh page load) can rehydrate successfully.
+            } else {
+              console.error('[authStore] Rehydration failed, clearing corrupted state:', error);
+              try {
+                localStorage.removeItem('30-0-rpl-auth');
+              } catch {}
+            }
           }
+          // Use queueMicrotask to defer store access until after initialization
+          // This avoids the "Cannot access before initialization" error
+          _hydrationComplete = true;
+          queueMicrotask(() => {
+            try {
+              useAuthStore.setState({ _hasHydrated: true });
+            } catch {
+              // Last resort: retry after a small delay
+              setTimeout(() => {
+                useAuthStore.setState({ _hasHydrated: true });
+              }, 50);
+            }
+          });
         };
       },
     },
   ),
 );
+
+/**
+ * Check if auth store has completed hydration (for external consumers).
+ */
+export function isAuthHydrated(): boolean {
+  return _hydrationComplete;
+}
