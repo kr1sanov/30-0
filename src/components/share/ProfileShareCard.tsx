@@ -86,17 +86,7 @@ export default function ProfileShareCard({ stats }: ProfileShareCardProps) {
         <div style={{
           display: 'flex', alignItems: 'center', gap: 12,
         }}>
-          {user?.photoUrl ? (
-            <img
-              src={user.photoUrl}
-              alt=""
-              style={{
-                width: 44, height: 44, borderRadius: '50%',
-                border: `2px solid ${ACCENT}`,
-                objectFit: 'cover',
-              }}
-            />
-          ) : (
+          {(
             <div style={{
               width: 44, height: 44, borderRadius: '50%',
               background: CARD_BG, border: `2px solid ${ACCENT}`,
@@ -110,7 +100,6 @@ export default function ProfileShareCard({ stats }: ProfileShareCardProps) {
             </div>
             <div style={{ color: '#64748b', fontSize: 10 }}>
               {stats.totalSeasons} {stats.totalSeasons === 1 ? 'сезон' : stats.totalSeasons < 5 ? 'сезона' : 'сезонов'}
-              {user?.username ? ` · @${user.username}` : ''}
             </div>
           </div>
           <div style={{
