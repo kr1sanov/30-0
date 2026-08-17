@@ -3,28 +3,19 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface AppUser {
   id: string;
-  provider: 'guest' | 'yandex';
-  username: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  photoUrl: string | null;
+  provider: 'local';
   displayName: string;
-  email?: string | null;
+  createdAt: number; // timestamp
 }
 
 interface AuthState {
   user: AppUser | null;
   isAuthenticated: boolean;
-  isAuthenticating: boolean;
-  authError: string | null;
   _hasHydrated: boolean;
 
-  loginWithYandex: () => void;
-  handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string; email?: string }) => void;
-  loginAsGuest: () => void;
+  initLocalProfile: () => void;
   updateDisplayName: (name: string) => void;
-  logout: () => void;
-  clearAuthError: () => void;
+  resetProfile: () => void;
   setHasHydrated: (state: boolean) => void;
 }
 
@@ -39,50 +30,21 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isAuthenticating: false,
-      authError: null,
       _hasHydrated: false,
 
-      loginWithYandex: () => {
-        set({ isAuthenticating: true, authError: null });
-        // Redirect to Yandex OAuth login route
-        // The API route will redirect to Yandex's authorization page
-        window.location.href = '/api/auth/yandex';
-      },
-
-      handleYandexCallback: (params: { user_id: string; display_name: string; photo_url?: string; email?: string }) => {
+      initLocalProfile: () => {
+        const { user } = get();
+        if (user) return; // already initialized
+        // Create a new local profile with a random ID
+        const id = `local_${crypto.randomUUID().slice(0, 8)}`;
         set({
           user: {
-            id: params.user_id,
-            provider: 'yandex',
-            username: null,
-            firstName: params.display_name,
-            lastName: null,
-            photoUrl: params.photo_url || null,
-            displayName: params.display_name,
-            email: params.email || null,
+            id,
+            provider: 'local',
+            displayName: 'Игрок',
+            createdAt: Date.now(),
           },
           isAuthenticated: true,
-          isAuthenticating: false,
-          authError: null,
-        });
-      },
-
-      loginAsGuest: () => {
-        set({
-          user: {
-            id: 'guest',
-            provider: 'guest',
-            username: null,
-            firstName: 'Гость',
-            lastName: null,
-            photoUrl: null,
-            displayName: 'Гость',
-            email: null,
-          },
-          isAuthenticated: true,
-          isAuthenticating: false,
-          authError: null,
         });
       },
 
@@ -90,24 +52,22 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (user) {
           set({ user: { ...user, displayName: name } });
-          if (user.id !== 'guest') {
-            fetch('/api/users/profile', {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: user.id, displayName: name }),
-            }).catch(() => {});
-          }
         }
       },
 
-      logout: () => {
-        // Call logout API to clear any server-side session
-        fetch('/api/auth/yandex/logout', { method: 'POST' }).catch(() => {});
-        set({ user: null, isAuthenticated: false, isAuthenticating: false, authError: null });
-      },
-
-      clearAuthError: () => {
-        set({ authError: null });
+      resetProfile: () => {
+        set({ user: null, isAuthenticated: false });
+        // Re-initialize with a fresh profile
+        const id = `local_${crypto.randomUUID().slice(0, 8)}`;
+        set({
+          user: {
+            id,
+            provider: 'local',
+            displayName: 'Игрок',
+            createdAt: Date.now(),
+          },
+          isAuthenticated: true,
+        });
       },
 
       setHasHydrated: (state: boolean) => {
@@ -117,12 +77,21 @@ export const useAuthStore = create<AuthState>()(
     {
       name: '30-0-rpl-auth',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
       migrate: (persistedState: unknown, version: number) => {
-        // Handle migration from older versions
-        if (version < 1) {
-          // v0 had no version field — data is still valid, just return as-is
+        // Migration from v1 (Yandex auth) to v2 (local profile)
+        if (version < 2) {
+          const old = persistedState as Record<string, unknown>;
+          // Clear old Yandex data — user will get a fresh local profile
+          if (old.user && (old.user as Record<string, unknown>).provider === 'yandex') {
+            return {
+              ...old,
+              user: null,
+              isAuthenticated: false,
+            } as AuthState;
+          }
+          // Keep guest/local data
           return persistedState as AuthState;
         }
         return persistedState as AuthState;
@@ -130,32 +99,22 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => {
         return (_state, error) => {
           if (error) {
-            // Only clear localStorage for genuine data corruption errors.
-            // TDZ / init-order errors (e.g. HMR cycles) are non-fatal —
-            // the persisted data is still valid; the store just hasn't been
-            // assigned to its module-level variable yet.
             const msg = (error as Error)?.message ?? String(error);
             const isInitOrderError =
               msg.includes('before initialization') ||
               msg.includes('Cannot access');
-            if (isInitOrderError) {
-              // Non-fatal: keep localStorage intact so the next mount
-              // (or a fresh page load) can rehydrate successfully.
-            } else {
+            if (!isInitOrderError) {
               console.error('[authStore] Rehydration failed, clearing corrupted state:', error);
               try {
                 localStorage.removeItem('30-0-rpl-auth');
               } catch {}
             }
           }
-          // Use queueMicrotask to defer store access until after initialization
-          // This avoids the "Cannot access before initialization" error
           _hydrationComplete = true;
           queueMicrotask(() => {
             try {
               useAuthStore.setState({ _hasHydrated: true });
             } catch {
-              // Last resort: retry after a small delay
               setTimeout(() => {
                 useAuthStore.setState({ _hasHydrated: true });
               }, 50);

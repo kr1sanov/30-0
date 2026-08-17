@@ -281,9 +281,8 @@ function RecentResults() {
 /* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
   const { setScreen, setConfig, profileStats, runId, resumeGame } = useGameStore();
-  const { user, loginWithYandex } = useAuthStore();
+  const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const isYandexUser = user?.provider === 'yandex';
 
   return (
     <div className="pb-8">
@@ -347,16 +346,12 @@ function HomePage() {
           {/* Primary CTA — full width green */}
           <Button
             onClick={() => {
-              if (!isYandexUser) {
-                loginWithYandex();
-                return;
-              }
               setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
               setScreen('setup');
             }}
             className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-2xl transition-colors active:scale-[0.97] shadow-lg shadow-[#00C896]/20"
           >
-            {isYandexUser ? 'Играть 30-0 →' : '🔐 Войти через Яндекс'}
+            Играть 30-0 →
           </Button>
 
           {/* Secondary — dark outline */}
@@ -401,10 +396,6 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
-                if (!isYandexUser) {
-                  loginWithYandex();
-                  return;
-                }
                 if (mode.gameMode === 'daily') {
                   setScreen('daily-challenge');
                 } else if (mode.gameMode === 'nations_cup') {

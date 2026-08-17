@@ -335,7 +335,7 @@ function ClubCard({
 export default function GameSetup() {
   const { config, setConfig, startRun, dailyChallenge, lastDraftError } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
-  const { user, loginWithYandex } = useAuthStore();
+  const { user } = useAuthStore();
 
   // Club list for single_club mode
   const [clubs, setClubs] = useState<ClubData[]>([]);
@@ -372,15 +372,9 @@ export default function GameSetup() {
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
 
-  const isYandexUser = user?.provider === 'yandex';
+  // Local profile — always available
 
   const handleStart = async () => {
-    // Require Yandex auth to play
-    if (!isYandexUser) {
-      setStartError('Войдите через Яндекс, чтобы начать игру.');
-      return;
-    }
-
     // In single_club mode, require a club selection
     if (currentGameMode === 'single_club' && !config.clubFilter) {
       setStartError('Выберите клуб для режима "Один клуб".');
@@ -1066,26 +1060,7 @@ export default function GameSetup() {
       </AnimatePresence>
 
       {/* ─── Auth Gate or Start Button ─── */}
-      {!isYandexUser ? (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-3"
-        >
-          <div className="rounded-xl bg-[#00C896]/5 border border-[#00C896]/20 p-4 text-center space-y-3">
-            <div className="text-2xl">🔐</div>
-            <div className="text-sm font-bold text-[#FFFFFF]">Войдите через Яндекс, чтобы играть</div>
-            <div className="text-xs text-[#9CA3AF]">Сохранение прогресса и достижений доступно только авторизованным игрокам</div>
-            <Button
-              onClick={loginWithYandex}
-              className="w-full h-11 text-sm font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-xl transition-colors"
-            >
-              Войти через Яндекс
-            </Button>
-          </div>
-        </motion.div>
-      ) : (
-        <Button
+      <Button
           onClick={handleStart}
           disabled={!canStart || isStarting}
           className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
@@ -1112,7 +1087,6 @@ export default function GameSetup() {
           ? 'Начать челлендж →'
           : 'Начать драфт'}
         </Button>
-      )}
     </div>
   );
 }

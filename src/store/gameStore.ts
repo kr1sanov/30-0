@@ -284,14 +284,10 @@ export const useGameStore = create<GameState>()(
             }
           }
 
-          // Include userId from auth store for server-side association
-          const authUser = useAuthStore.getState().user;
-          const userId = authUser?.provider === 'yandex' ? authUser.id : undefined;
-
           const res = await fetch('/api/runs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...runConfig, userId }),
+            body: JSON.stringify(runConfig),
           });
 
           if (!res.ok) {
@@ -1060,11 +1056,7 @@ export const useGameStore = create<GameState>()(
           get().updateProfileStats(data);
           set({ seasonResult: data, screen: 'result' });
 
-          // Sync to cloud ONLY for Yandex-authenticated users
-          const authUser = useAuthStore.getState().user;
-          if (authUser && authUser.provider === 'yandex') {
-            get().syncProfileToCloud();
-          }
+          // Local profile — progress is stored in localStorage via Zustand persist
         } catch (error) {
           console.error('Failed to simulate:', error);
           set({ screen: 'pre-match' });
@@ -1075,9 +1067,7 @@ export const useGameStore = create<GameState>()(
       // updateProfileStats — Update persistent profile stats after simulation
       // -------------------------------------------------------------------
       updateProfileStats: (result) => {
-        // Only track progress for Yandex-authenticated users
-        const authUser = useAuthStore.getState().user;
-        if (!authUser || authUser.provider !== 'yandex') return;
+        // Track progress for all users (stored locally)
 
         const r = result as {
           wins: number;
@@ -1311,46 +1301,14 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      // Cloud sync — save profile to database for Yandex-authenticated users
+      // Cloud sync — no longer needed (local profiles only)
       syncProfileToCloud: async () => {
-        const authUser = useAuthStore.getState().user;
-        if (!authUser || authUser.provider !== 'yandex') return;
-
-        try {
-          const { profileStats } = get();
-          await fetch('/api/users/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: authUser.id,
-              providerId: authUser.id,
-              username: authUser.username,
-              firstName: authUser.firstName,
-              lastName: authUser.lastName,
-              photoUrl: authUser.photoUrl,
-              profileStats,
-            }),
-          });
-        } catch (error) {
-          console.error('Failed to sync profile to cloud:', error);
-        }
+        // No-op: all data is stored locally
       },
 
-      // Load profile from cloud for Yandex-authenticated users
+      // Load profile from cloud — no longer needed (local profiles only)
       loadProfileFromCloud: async () => {
-        const authUser = useAuthStore.getState().user;
-        if (!authUser || authUser.provider !== 'yandex') return;
-
-        try {
-          const res = await fetch(`/api/users/profile?userId=${encodeURIComponent(authUser.id)}`);
-          if (!res.ok) return;
-          const data = await res.json();
-          if (data.user?.profileStats) {
-            set({ profileStats: data.user.profileStats });
-          }
-        } catch (error) {
-          console.error('Failed to load profile from cloud:', error);
-        }
+        // No-op: all data is stored locally
       },
 
       // Start a daily challenge — transition to setup screen with challenge data
@@ -1403,12 +1361,10 @@ export const useGameStore = create<GameState>()(
         const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'result', 'profile', 'leaderboard'];
         const persistedScreen = stableScreens.includes(state.screen) ? state.screen : 'home';
 
-        // Only persist profileStats for Yandex users; guests start fresh each session
-        const authUser = useAuthStore.getState().user;
-        const shouldPersistProfile = authUser?.provider === 'yandex';
+        // Always persist profileStats for local profiles
 
         return {
-          profileStats: shouldPersistProfile ? state.profileStats : defaultProfileStats,
+          profileStats: state.profileStats,
           lastConfig: state.lastConfig,
           runId: state.runId,
           slots: state.slots,

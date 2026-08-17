@@ -43,7 +43,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName, loginWithYandex, logout } = useAuthStore();
+  const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -76,8 +76,7 @@ export default function ProfileScreen() {
     }
   };
 
-  // Avatar source — user photo or fallback
-  const avatarUrl = user?.photoUrl;
+  // Local profile — no avatar URL from external provider
   const displayName = user?.displayName || 'Игрок';
 
   return (
@@ -90,16 +89,7 @@ export default function ProfileScreen() {
           className="relative inline-block"
         >
           <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={displayName}
-                className="w-full h-full object-cover rounded-full"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              '⚽'
-            )}
+            ⚽
           </div>
           {profileStats.titles > 0 && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
@@ -156,41 +146,22 @@ export default function ProfileScreen() {
         </p>
       </div>
 
-      {/* Yandex login button — only for guest users */}
-      {(!user || user.provider === 'guest') && (
-        <div className="flex justify-center py-2">
-          <button
-            onClick={loginWithYandex}
-            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[#FC3F1D] hover:bg-[#e6371a] text-white font-bold transition-all duration-200 shadow-lg shadow-[#FC3F1D]/20 active:scale-[0.97]"
-          >
-            {/* Yandex «Я» logo */}
-            <span className="w-6 h-6 rounded-md bg-white flex items-center justify-center text-[#FC3F1D] font-black text-sm leading-none select-none" style={{ fontFamily: 'system-ui, sans-serif' }}>Я</span>
-            Войти через Яндекс
-          </button>
+      {/* Local profile info + reset button */}
+      <div className="flex items-center justify-center gap-3 py-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00C896]/10 border border-[#00C896]/20">
+          <span className="text-xs">💾</span>
+          <span className="text-xs font-medium text-[#00C896]">Локальный профиль</span>
         </div>
-      )}
-
-      {/* Logged in with Yandex — show provider badge + logout */}
-      {user && user.provider === 'yandex' && (
-        <div className="flex items-center justify-center gap-3 py-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FC3F1D]/10 border border-[#FC3F1D]/20">
-            <span className="w-4 h-4 rounded bg-[#FC3F1D] flex items-center justify-center text-white font-black text-[10px] leading-none select-none" style={{ fontFamily: 'system-ui, sans-serif' }}>Я</span>
-            <span className="text-xs font-medium text-[#FC3F1D]">Яндекс ID</span>
-            {user.email && (
-              <span className="text-[10px] text-[#9CA3AF] ml-1">{user.email}</span>
-            )}
-          </div>
-          <button
-            onClick={() => {
-              logout();
-              toast.success('Вы вышли из аккаунта');
-            }}
-            className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
-          >
-            Выйти
-          </button>
-        </div>
-      )}
+        <button
+          onClick={() => {
+            resetProfile();
+            toast.success('Профиль сброшен');
+          }}
+          className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
+        >
+          Сбросить
+        </button>
+      </div>
 
       {/* Prominent Season Count + Best Result */}
       {profileStats.totalSeasons > 0 && (
