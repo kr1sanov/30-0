@@ -13,6 +13,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:reset": "prisma migrate reset",
     "db:seed": "node prisma/seed.ts",
+    "data:audit": "node scripts/audit-rpl-data.mjs",
+    "data:audit:strict": "node scripts/audit-rpl-data.mjs --strict",
     "db:studio": "prisma studio",
     "schema:sqlite": "cp prisma/schema.sqlite.prisma prisma/schema.prisma && prisma generate",
     "schema:postgres": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && prisma generate",
