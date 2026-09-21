@@ -2,14 +2,21 @@ import { db } from '@/lib/db';
 import { canFillSlot } from '@/lib/positions';
 import { filterCompatibleClubSeasons, spinWheel } from '@/lib/wheel';
 import type { ClubSeasonWithPlayers } from '@/lib/wheel';
+import { enforceRateLimit } from '@/lib/rateLimit';
+import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ runId: string }> },
 ) {
   try {
     const { runId } = await params;
+    const limited = enforceRateLimit(request, 'runs:spin', { limit: 60, windowMs: 60_000 });
+    if (limited) return limited;
+    const denied = authorizeRun(request, runId);
+    if (denied) return denied;
+
 
     // Get the run with slots
     const run = await db.gameRun.findUnique({

@@ -30,6 +30,15 @@ export async function GET() {
 // Call via: curl -X POST http://localhost:3000/api/seed
 export async function POST(req: NextRequest) {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      const expectedSecret = process.env.SEED_API_SECRET;
+      const authorization = req.headers.get('authorization');
+
+      if (!expectedSecret || authorization !== `Bearer ${expectedSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
     // Check if already seeded
     const existingClubs = await db.club.count();
     if (existingClubs > 0) {
@@ -50,7 +59,7 @@ export async function POST(req: NextRequest) {
     const seedScript = path.join(process.cwd(), 'prisma', 'seed.ts');
     
     return new Promise<NextResponse>((resolve) => {
-      execFile('bun', ['run', seedScript], {
+      execFile(process.execPath, [seedScript], {
         cwd: process.cwd(),
         timeout: 120000, // 2 minutes timeout
         env: { ...process.env },

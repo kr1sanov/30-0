@@ -6,6 +6,31 @@
 
 ---
 
+## [Unreleased] — 2026-09-21
+
+### Fixed
+- Восстановлена production-сборка: удалена ссылка на отсутствующий `scripts/select-schema.js`
+- Миграции БД отделены от шага сборки
+- Синхронизированы SQLite, MySQL и PostgreSQL Prisma-схемы
+- Исправлен синтаксис Jino deployment-скрипта и запуск seed без зависимости от Bun
+- Устранена чрезмерная трассировка файлов в standalone-сборке
+
+### Security
+- Добавлены HttpOnly capability cookies для защиты операций над игровыми сессиями
+- Добавлен rate limiting для создания игры и игровых mutation API
+- Production seed endpoint защищён отдельным секретом
+- Удалён `unsafe-eval` из Content Security Policy
+- Опасный автоматический `prisma db push --accept-data-loss` заменён безопасной проверкой
+- Next.js и транзитивные production-зависимости обновлены до исправленных версий
+
+### Changed
+- Включён React Strict Mode
+- Добавлен безопасный пример environment variables
+- Подготовлена сохраняющая данные миграция MySQL для перехода на локальные профили
+- Удалена зависимость production build от загрузки Google Fonts
+
+---
+
 ## [1.1.0] — 2026-03-04
 
 ### Added

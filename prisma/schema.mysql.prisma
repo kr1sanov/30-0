@@ -87,11 +87,14 @@ model PlayerSeason {
 
 model User {
   id               String   @id @default(cuid())
-  telegramId       String   @unique @db.VarChar(255)
+  provider         String   @default("guest") @db.VarChar(50)
+  providerId       String   @unique @db.VarChar(255)
+  telegramId       String?  @unique @db.VarChar(255) // Temporary legacy field for rollback compatibility
   username         String?  @db.VarChar(255)
   firstName        String?  @db.VarChar(255)
   lastName         String?  @db.VarChar(255)
   photoUrl         String?  @db.Text
+  email            String?  @db.VarChar(255)
   displayName      String   @default("Игрок") @db.VarChar(255)
   profileStatsJson String?  @db.Text
 
@@ -137,6 +140,7 @@ model GameRun {
   eraStartYear   Int      @default(2000)
   eraEndYear     Int      @default(2025)
   clubFilter     String?  @db.VarChar(255)
+  nationalityFilter String? @db.VarChar(255)
 
   slots        GameSlot[]
 

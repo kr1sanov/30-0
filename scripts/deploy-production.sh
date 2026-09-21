@@ -43,6 +43,21 @@ APP_NAME="30-0-app"
 HEALTH_URL="https://30-0.xn--p1ai/api/health"
 BACKUP_COUNT=3
 
+rollback_standalone() {
+  local latest_backup
+  latest_backup=$(ls -dt standalone-backup-* 2>/dev/null | head -1 || true)
+  if [ -z "$latest_backup" ]; then
+    echo "❌ No standalone backup is available for rollback"
+    return 1
+  fi
+
+  rm -rf .next/standalone
+  cp -r "$latest_backup" .next/standalone
+  mkdir -p tmp
+  touch tmp/restart.txt
+  echo "✅ Rolled back to $latest_backup"
+}
+
 echo "=========================================="
 echo "  30-0 RPL — Production Deploy"
 echo "  $(date '+%Y-%m-%d %H:%M:%S')"
@@ -117,10 +132,17 @@ echo "   .htaccess exists: $(test -f .htaccess && echo YES || echo NO)"
 echo ""
 echo "🔧 Step 4: Ensuring Passenger entrypoint (app.js)"
 
+if [ ! -f app.js ]; then
 cat > app.js << 'APPJS'
-   // Passenger entrypoint for 30-0 RPL
+// Passenger entrypoint for 30-0 RPL
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
+const { loadEnvFile } = require('node:process');
+try {
+  loadEnvFile(path.join(__dirname, '.env'));
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 process.env.HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
 process.env.PORT = process.env.PORT || '3000';
@@ -186,9 +208,17 @@ echo ""
 echo "🗄️ Step 7: Running database sync"
 cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
 if [ -f .env ]; then
-  npx prisma db push --accept-data-loss 2>/dev/null && echo "✅ Database schema synced" || echo "⚠️ Database sync warning (non-fatal)"
+  if npx prisma db push; then
+    echo "✅ Database schema synced"
+  else
+    echo "❌ Database schema sync failed; refusing to restart the application"
+    rollback_standalone || true
+    exit 1
+  fi
 else
-  echo "⚠️ No .env file found, skipping database sync"
+  echo "❌ No .env file found; refusing to deploy without a database connection"
+  rollback_standalone || true
+  exit 1
 fi
 
 # ─── Step 8: Restart application ───
@@ -238,16 +268,7 @@ if [ "$HEALTHY" = false ]; then
   echo ""
   echo "🔄 Rolling back to previous version..."
 
-  # Find the latest backup
-  LATEST_BACKUP=$(ls -dt standalone-backup-* 2>/dev/null | head -1)
-  if [ -n "$LATEST_BACKUP" ]; then
-    rm -rf .next/standalone
-    mv "$LATEST_BACKUP" .next/standalone
-    touch tmp/restart.txt
-    echo "✅ Rolled back to previous version"
-  else
-    echo "❌ No backup available for rollback"
-  fi
+  rollback_standalone || true
 
   echo ""
   echo "❌ DEPLOY FAILED — see logs above"

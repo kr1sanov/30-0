@@ -1,5 +1,7 @@
 import { db } from '@/lib/db';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
+import { enforceRateLimit } from '@/lib/rateLimit';
+import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -8,6 +10,11 @@ export async function POST(
 ) {
   try {
     const { runId } = await params;
+    const limited = enforceRateLimit(request, 'runs:simulate', { limit: 10, windowMs: 60_000 });
+    if (limited) return limited;
+    const denied = authorizeRun(request, runId);
+    if (denied) return denied;
+
     const body = await request.json().catch(() => ({}));
     const managerName = (body as { managerName?: string }).managerName;
     const managerRating = (body as { managerRating?: number }).managerRating;

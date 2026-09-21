@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // Disable X-Powered-By header
   poweredByHeader: false,
 
-  reactStrictMode: false,
+  reactStrictMode: true,
 
   // Security headers for production
   async headers() {
@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://telegram.org https://mc.yandex.ru",
+              "script-src 'self' 'unsafe-inline' https://telegram.org https://mc.yandex.ru",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
@@ -40,16 +40,6 @@ const nextConfig: NextConfig = {
               "object-src 'none'",
               "base-uri 'self'",
             ].join("; "),
-          },
-        ],
-      },
-      {
-        // Cache static assets aggressively
-        source: "/_next/static/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
           },
         ],
       },

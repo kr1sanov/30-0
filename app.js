@@ -7,6 +7,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 const path = require('path');
+const { loadEnvFile } = require('node:process');
+
+// Passenger does not automatically load the application root .env file.
+try {
+  loadEnvFile(path.join(__dirname, '.env'));
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 
 // Set NODE_ENV to production (PassengerEnvVar not supported on this Jino version)
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
