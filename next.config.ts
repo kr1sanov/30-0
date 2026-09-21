@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
               "connect-src 'self' https://mc.yandex.ru https://api.telegram.org https://oauth.yandex.ru https://login.yandex.ru",
-              "frame-src https://web.telegram.org",
+              "frame-src https://web.telegram.org https://oauth.telegram.org",
               "object-src 'none'",
               "base-uri 'self'",
             ].join("; "),

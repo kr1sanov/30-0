@@ -66,11 +66,13 @@ export default function ProfileScreen() {
   // Total earned trophies
   const earnedTrophies = TROPHIES.filter(t => profileStats.achievements.includes(t.id)).length;
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (editName.trim().length >= 2) {
-      updateDisplayName(editName.trim());
-      setIsEditingName(false);
-      toast.success('Никнейм обновлён!');
+      try {
+        await updateDisplayName(editName.trim());
+        setIsEditingName(false);
+        toast.success('Никнейм обновлён!');
+      } catch { toast.error('Не удалось сохранить имя'); }
     } else {
       toast.error('Минимум 2 символа');
     }
@@ -150,16 +152,16 @@ export default function ProfileScreen() {
       <div className="flex items-center justify-center gap-3 py-2">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00C896]/10 border border-[#00C896]/20">
           <span className="text-xs">💾</span>
-          <span className="text-xs font-medium text-[#00C896]">Локальный профиль</span>
+          <span className="text-xs font-medium text-[#00C896]">Профиль Telegram</span>
         </div>
         <button
-          onClick={() => {
-            resetProfile();
-            toast.success('Профиль сброшен');
+          onClick={async () => {
+            try { await resetProfile(); }
+            catch { toast.error('Не удалось выйти'); }
           }}
           className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
         >
-          Сбросить
+          Выйти
         </button>
       </div>
 

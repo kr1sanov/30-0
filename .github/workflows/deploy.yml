@@ -50,6 +50,9 @@ jobs:
       - name: TypeScript Check
         run: npx tsc --noEmit
 
+      - name: Telegram authentication tests
+        run: node --experimental-strip-types --test tests/telegram-verification.test.ts tests/telegram-session.test.ts
+
   # ─── Stage 2: Build ───
   build:
     name: Build

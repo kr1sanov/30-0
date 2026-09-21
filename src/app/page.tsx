@@ -29,6 +29,7 @@ import { useAutoAuth } from '@/hooks/use-telegram-auth';
 import { useAuthStore } from '@/store/authStore';
 import { Metrics } from '@/lib/metrics';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import TelegramLogin from '@/components/game/TelegramLogin';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -40,8 +41,8 @@ const STEPS = [
 
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
-  { emoji: '⚔️', title: 'Классика', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
-  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '⚔️', title: 'Обычная', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
+  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
   { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', gameMode: 'daily' as const },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
@@ -1196,6 +1197,7 @@ const pageVariants = {
 /* ─── Main Home Component ─── */
 export default function Home() {
   const { screen } = useGameStore();
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
 
@@ -1261,7 +1263,7 @@ export default function Home() {
         className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10"
       >
         <ErrorBoundary>
-          {renderScreen()}
+          {screen === 'home' ? renderScreen() : !_hasHydrated ? <p role="status">Проверяем вход…</p> : !isAuthenticated ? <TelegramLogin /> : renderScreen()}
         </ErrorBoundary>
       </main>
       <Footer />
