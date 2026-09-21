@@ -169,26 +169,7 @@ npm run dev
 
 Перед первым deployment обязательны резервная копия MySQL, применение `scripts/migrate-mysql-local-profiles.sql` и настройка переменных из `.env.example`, включая стойкий `RUN_SESSION_SECRET`.
 
-### Альтернативный деплой на Vercel
-
-### Через GitHub (рекомендуется)
-
-1. Создайте репозиторий на GitHub и запушьте код
-2. Зайдите на [vercel.com/new](https://vercel.com/new)
-3. Выберите репозиторий `30-0-rpl`
-4. Vercel автоматически определит Next.js
-5. Настройки сборки:
-   - **Build Command:** `cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate && next build`
-   - **Install Command:** `npm install`
-6. Добавьте Environment Variable: `DATABASE_URL` (PostgreSQL строка подключения)
-7. Нажмите **Deploy**
-
-### Через CLI
-
-```bash
-vercel login
-vercel --prod
-```
+Ручной запуск на собственном сервере доступен через Docker Compose: `npm run deploy:docker`. Production-секреты хранятся только в окружении сервера или GitHub Environments и не добавляются в репозиторий.
 
 ---
 

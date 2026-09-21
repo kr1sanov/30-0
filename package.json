@@ -22,8 +22,7 @@
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f app",
-    "vercel:deploy": "vercel --prod",
-    "vercel:env": "vercel env pull .env.local"
+    "deploy:docker": "./scripts/deploy.sh docker"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

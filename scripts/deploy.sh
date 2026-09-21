@@ -3,7 +3,6 @@
 # 30-0 RPL — Deploy Script
 # ──────────────────────────────────────────────
 # Usage:
-#   ./scripts/deploy.sh vercel    # Deploy to Vercel
 #   ./scripts/deploy.sh docker    # Build & run Docker
 #   ./scripts/deploy.sh supabase  # Setup Supabase
 #   ./scripts/deploy.sh seed      # Seed the database
@@ -25,32 +24,6 @@ log() { echo -e "${BLUE}[30-0]${NC} $1"; }
 ok() { echo -e "${GREEN}[✓]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 err() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
-
-# ─── Vercel Deploy ───
-deploy_vercel() {
-  log "Deploying to Vercel..."
-  
-  # Check Vercel CLI
-  if ! command -v vercel &> /dev/null; then
-    warn "Vercel CLI not found. Installing..."
-    npm i -g vercel
-  fi
-  
-  cd "$PROJECT_DIR"
-  
-  # Generate Prisma client
-  log "Generating Prisma client..."
-  npx prisma generate
-  
-  # Deploy
-  log "Running vercel deploy..."
-  vercel --prod
-  
-  ok "Deployed to Vercel!"
-  log "Set environment variables in Vercel Dashboard:"
-  log "  DATABASE_URL = your Supabase pooled connection string"
-  log "  DIRECT_URL   = your Supabase direct connection string"
-}
 
 # ─── Docker Deploy ───
 deploy_docker() {
@@ -142,9 +115,6 @@ create_migration() {
 
 # ─── Main ───
 case "${1:-}" in
-  vercel)
-    deploy_vercel
-    ;;
   docker)
     deploy_docker
     ;;
@@ -166,7 +136,6 @@ case "${1:-}" in
     echo "Usage: $0 <command>"
     echo ""
     echo "Commands:"
-    echo "  vercel     Deploy to Vercel"
     echo "  docker     Build & run with Docker Compose"
     echo "  supabase   Setup Supabase project"
     echo "  migrate    Run Prisma migrations"
