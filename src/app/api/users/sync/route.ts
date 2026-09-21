@@ -16,8 +16,8 @@ export async function POST(request: Request) {
       where: { id: userId },
       create: {
         id: userId,
-        provider: 'guest',
-        providerId: providerId || '',
+        provider: 'local',
+        providerId: providerId || userId,
         username: username || null,
         firstName: firstName || null,
         lastName: lastName || null,

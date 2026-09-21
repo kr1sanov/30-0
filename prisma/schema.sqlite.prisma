@@ -87,16 +87,22 @@ model PlayerSeason {
 
 model User {
   id               String   @id @default(cuid())
-  telegramId       String   @unique
+  provider         String   @default("guest")
+  providerId       String   @unique
   username         String?
   firstName        String?
   lastName         String?
   photoUrl         String?
+  email            String?
   displayName      String   @default("Игрок")
   profileStatsJson String?
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  referralCode     String?  @unique
+  referredBy       String?
+  referralCount    Int      @default(0)
 
   runs             GameRun[]
 }
@@ -129,6 +135,11 @@ model GameRun {
   user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   createdAt    DateTime @default(now())
+
+  eraStartYear      Int     @default(2000)
+  eraEndYear        Int     @default(2025)
+  clubFilter        String?
+  nationalityFilter String?
 
   slots        GameSlot[]
 

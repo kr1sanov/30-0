@@ -75,6 +75,7 @@ upload/
 *.db
 *.db-journal
 .env*
+!.env.example
 start-dev.sh
 .dev-server-pid
 

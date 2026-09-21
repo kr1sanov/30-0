@@ -1,12 +1,15 @@
 import { db } from '@/lib/db';
+import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ runId: string }> },
 ) {
   try {
     const { runId } = await params;
+    const denied = authorizeRun(request, runId);
+    if (denied) return denied;
 
     const run = await db.gameRun.findUnique({
       where: { id: runId },

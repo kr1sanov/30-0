@@ -88,7 +88,7 @@ model PlayerSeason {
 model User {
   id               String   @id @default(cuid())
   provider         String   @default("guest")
-  providerId       String   @default("") @unique
+  providerId       String   @unique
   username         String?
   firstName        String?
   lastName         String?
@@ -136,9 +136,9 @@ model GameRun {
 
   createdAt    DateTime @default(now())
 
-  eraStartYear   Int      @default(2000)
-  eraEndYear     Int      @default(2025)
-  clubFilter     String?
+  eraStartYear      Int     @default(2000)
+  eraEndYear        Int     @default(2025)
+  clubFilter        String?
   nationalityFilter String?
 
   slots        GameSlot[]

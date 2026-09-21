@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
+import { enforceRateLimit } from '@/lib/rateLimit';
+import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -9,6 +11,11 @@ export async function POST(
 ) {
   try {
     const { runId } = await params;
+    const limited = enforceRateLimit(request, 'runs:swap', { limit: 60, windowMs: 60_000 });
+    if (limited) return limited;
+    const denied = authorizeRun(request, runId);
+    if (denied) return denied;
+
     const body = await request.json();
     const { fromSlotPosition, toSlotPosition } = body as {
       fromSlotPosition: string;

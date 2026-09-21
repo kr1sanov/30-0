@@ -89,7 +89,7 @@ model PlayerSeason {
 model User {
   id               String   @id @default(cuid())
   provider         String   @default("guest")
-  providerId       String   @default("") @unique
+  providerId       String   @unique
   username         String?
   firstName        String?
   lastName         String?

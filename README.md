@@ -59,7 +59,7 @@
 - 🎵 Звуковые эффекты (8 типов)
 - 🫨 Telegram WebApp SDK (хаптика, шеринг, тема)
 - 📲 PWA манифест для установки
-- 🔤 Кириллическая поддержка шрифта Geist
+- 🔤 Системный стек шрифтов с кириллической поддержкой и без внешней загрузки
 - 💾 Zustand persist — сохранение состояния драфта в localStorage
 
 ---
@@ -76,7 +76,7 @@
 | **База данных** | Prisma ORM (SQLite — dev, PostgreSQL — prod) |
 | **Иконки** | Lucide React |
 | **Звук** | Web Audio API |
-| **Деплой** | Vercel |
+| **Деплой** | Jino (Apache + Phusion Passenger), GitHub Actions |
 
 ---
 
@@ -132,7 +132,7 @@ src/
 ## 🚀 Запуск локально
 
 ### Предварительные требования
-- [Bun](https://bun.sh/) или Node.js 18+
+- Node.js 22+
 - Git
 
 ### Установка
@@ -143,23 +143,33 @@ git clone https://github.com/ВАШ_ЮЗЕРНЕЙМ/30-0-rpl.git
 cd 30-0-rpl
 
 # Установите зависимости
-bun install
+npm ci
+
+# Создайте локальную конфигурацию
+cp .env.example .env
 
 # Настройте базу данных (SQLite для разработки)
-bun run db:push
+npm run schema:sqlite
+npm run db:push
 
 # Заполните базу данными (5278 записей)
-bun run db:seed
+npm run db:seed
 
 # Запустите dev-сервер
-bun run dev
+npm run dev
 ```
 
 Откройте [http://localhost:3000](http://localhost:3000) в браузере.
 
 ---
 
-## 🌐 Деплой на Vercel
+## 🌐 Production deployment
+
+Основная production-схема проекта — GitHub Actions → Jino → Apache/Phusion Passenger → Next.js standalone → MySQL. Push в `main` запускает lint, typecheck, build, deployment и внешний health check.
+
+Перед первым deployment обязательны резервная копия MySQL, применение `scripts/migrate-mysql-local-profiles.sql` и настройка переменных из `.env.example`, включая стойкий `RUN_SESSION_SECRET`.
+
+### Альтернативный деплой на Vercel
 
 ### Через GitHub (рекомендуется)
 

@@ -1,5 +1,7 @@
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
+import { enforceRateLimit } from '@/lib/rateLimit';
+import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -46,6 +48,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const limited = enforceRateLimit(request, 'runs:create', { limit: 20, windowMs: 60_000 });
+    if (limited) return limited;
+    ensureRunAccessConfigured();
+
     const body = await request.json();
     const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter, userId } = body;
 
@@ -119,7 +125,9 @@ export async function POST(request: NextRequest) {
       include: { slots: true },
     });
 
-    return NextResponse.json(runWithSlots, { status: 201 });
+    const response = NextResponse.json(runWithSlots, { status: 201 });
+    setRunAccessCookie(response, run.id);
+    return response;
   } catch (error) {
     console.error('Failed to create game run:', error);
     return NextResponse.json(
