@@ -167,7 +167,7 @@ npm run dev
 
 Основная production-схема проекта — GitHub Actions → Jino → Apache/Phusion Passenger → Next.js standalone → MySQL. Push в `main` запускает lint, typecheck, build, deployment и внешний health check.
 
-Перед первым deployment обязательны резервная копия MySQL, применение `scripts/migrate-mysql-local-profiles.sql` и настройка переменных из `.env.example`, включая стойкий `RUN_SESSION_SECRET`.
+Перед синхронизацией MySQL pipeline запускает безопасную идемпотентную проверку `scripts/prepare-production-users.cjs`: она не удаляет пользователей и игровые попытки, а резервирует и нормализует только конфликтующие legacy-идентификаторы. Runtime-секреты сессий создаются на Jino один раз и сохраняются между релизами.
 
 Ручной запуск на собственном сервере доступен через Docker Compose: `npm run deploy:docker`. Production-секреты хранятся только в окружении сервера или GitHub Environments и не добавляются в репозиторий.
 
