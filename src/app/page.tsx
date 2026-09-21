@@ -1201,7 +1201,7 @@ export default function Home() {
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
 
-  // Initialize auth (auto-login as guest)
+  // Initialize the server-verified Telegram session
   useAutoAuth();
 
   // ── Yandex.Metrika SPA navigation tracking ──

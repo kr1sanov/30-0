@@ -1,10 +1,32 @@
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, createPublicKey, verify, timingSafeEqual } from 'node:crypto';
 
 export interface TelegramIdentity {
   id: string;
   firstName: string;
   lastName?: string;
   username?: string;
+}
+
+// Production key published at https://core.telegram.org/bots/webapps#validating-data-for-third-party-use
+const TELEGRAM_PUBLIC_KEY = 'e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c187fe7d34caed242d';
+
+/** Verify Mini App identity with Telegram's public Ed25519 key; no bot token. */
+export function verifyMiniAppPublic(input: string, botId: string, now = Math.floor(Date.now() / 1000)): TelegramIdentity | null {
+  if (!/^[1-9][0-9]+$/.test(botId) || input.length > 16384) return null;
+  try {
+    const params = new URLSearchParams(input);
+    const keys = [...params.keys()];
+    if (new Set(keys).size !== keys.length || !fresh(params.get('auth_date'), now)) return null;
+    const signature = params.get('signature') ?? '';
+    if (!/^[A-Za-z0-9_-]{86}(==)?$/.test(signature)) return null;
+    params.delete('hash');
+    params.delete('signature');
+    const fields = [...params.entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
+      .map(([key, value]) => `${key}=${value}`).join('\n');
+    const publicKey = createPublicKey({ key: Buffer.from('302a300506032b6570032100' + TELEGRAM_PUBLIC_KEY, 'hex'), format: 'der', type: 'spki' });
+    if (!verify(null, Buffer.from(`${botId}:WebAppData\n${fields}`), publicKey, Buffer.from(signature, 'base64url'))) return null;
+    return identity(JSON.parse(params.get('user') ?? '{}'));
+  } catch { return null; }
 }
 
 function equalHex(expected: string, supplied: string): boolean {

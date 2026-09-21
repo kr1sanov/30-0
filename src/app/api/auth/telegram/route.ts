@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
 import { enforceRateLimit } from '@/lib/rateLimit';
-import { verifyMiniApp, verifyLoginWidget } from '@/lib/telegramVerification';
+import { verifyMiniAppPublic } from '@/lib/telegramVerification';
+import { verifyTelegramIdToken } from '@/lib/telegramOidc';
 import { createSession, sessionUser, sameOrigin, SESSION_COOKIE, SESSION_SECONDS } from '@/lib/telegramSession';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,8 @@ export async function GET(request: Request) {
   const response = NextResponse.json({
     user: user?.provider === 'telegram' ? { id: user.id, provider: 'telegram', displayName: user.displayName, createdAt: user.createdAt.getTime() } : null,
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? null,
-    configured: Boolean(process.env.TELEGRAM_BOT_TOKEN && (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) >= 32),
+    clientId: process.env.TELEGRAM_CLIENT_ID ?? null,
+    configured: Boolean(process.env.TELEGRAM_CLIENT_ID && (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) >= 32),
     csrf,
   }, { headers: { 'Cache-Control': 'no-store' } });
   response.cookies.set('rpl_login_csrf', csrf, { ...options, maxAge: 600 });
@@ -26,8 +28,8 @@ export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
   const limited = enforceRateLimit(request, 'telegram:login', { limit: 15, windowMs: 60_000 });
   if (limited) return limited;
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token || (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) < 32) return NextResponse.json({ error: 'Вход через Telegram ещё не настроен' }, { status: 503 });
+  const clientId = process.env.TELEGRAM_CLIENT_ID;
+  if (!clientId || (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) < 32) return NextResponse.json({ error: 'Вход через Telegram ещё не настроен' }, { status: 503 });
   try {
     const text = await request.text();
     if (text.length > 20000) return NextResponse.json({ error: 'Слишком большой запрос' }, { status: 413 });
@@ -36,7 +38,9 @@ export async function POST(request: Request) {
     if (!cookie || typeof body.csrf !== 'string' || cookie.length !== body.csrf.length || !timingSafeEqual(Buffer.from(cookie), Buffer.from(body.csrf))) {
       return NextResponse.json({ error: 'Обновите страницу входа' }, { status: 403 });
     }
-    const verified = typeof body.initData === 'string' ? verifyMiniApp(body.initData, token) : body.widget && typeof body.widget === 'object' ? verifyLoginWidget(body.widget, token) : null;
+    const verified = typeof body.initData === 'string'
+      ? verifyMiniAppPublic(body.initData, clientId)
+      : typeof body.idToken === 'string' ? await verifyTelegramIdToken(body.idToken, clientId, cookie) : null;
     if (!verified) return NextResponse.json({ error: 'Не удалось подтвердить вход через Telegram' }, { status: 401 });
     const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null };
     const user = await db.user.upsert({
