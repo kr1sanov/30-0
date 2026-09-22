@@ -27,7 +27,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# Also try common node paths on Jino shared hosting
+# Jino shared hosting publishes versioned interpreters outside the default PATH.
+# Prefer the configured production runtime (Node.js 22), then fall back to nvm.
+if ! command -v node &> /dev/null; then
+  JINO_NODE22_BIN="/opt/alt/alt-nodejs22/root/usr/bin"
+  if [ -x "$JINO_NODE22_BIN/node" ]; then
+    export PATH="$JINO_NODE22_BIN:$PATH"
+  fi
+fi
+
 if ! command -v node &> /dev/null; then
   for NODE_PATH in "$HOME/.nvm/versions/node/"*/bin; do
     if [ -d "$NODE_PATH" ]; then

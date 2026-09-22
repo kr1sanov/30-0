@@ -4,6 +4,13 @@ Production работает на Jino shared hosting: Apache/Phusion Passenger �
 Next.js standalone, приложение подключается к MySQL через Prisma. Vercel, PM2 и
 отдельный VPS проекта `poigraem-bot` в этой схеме не используются.
 
+Актуальные параметры Jino: пользователь `j97915155`, SSH-хост
+`925c78adb421.hosting.myjino.ru:22`, каталог приложения
+`/home/users/j/j97915155/domains/30-0.xn--p1ai`, Node.js 22 по пути
+`/opt/alt/alt-nodejs22/root/usr/bin/node`, MariaDB 10.11 на `localhost:3306`.
+DNS A-записи основного домена и wildcard должны указывать на «IP Пользователя»
+из технической информации shared-хостинга, а не на отдельный VPS.
+
 ## Автодеплой
 
 Каждый push в `main` запускает `.github/workflows/deploy.yml`:
