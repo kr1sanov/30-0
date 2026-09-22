@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
-import { openTelegramLogin } from '@/lib/telegramLogin';
+import { isTelegramLoginData, type TelegramLoginData } from '@/lib/telegramLogin';
 
 export default function TelegramLogin() {
   const openLogin = useRef<(() => void) | null>(null);
@@ -10,9 +10,14 @@ export default function TelegramLogin() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
-    let closeLogin: (() => void) | undefined;
     const win = window as typeof window & { Telegram?: {
       WebApp?: { initData?: string };
+      Login?: {
+        auth: (
+          options: { bot_id: number; request_access?: boolean; lang?: string },
+          callback: (data: TelegramLoginData | false) => void,
+        ) => void;
+      };
     } };
     async function setup() {
       try {
@@ -21,7 +26,6 @@ export default function TelegramLogin() {
         const config = await response.json();
         if (cancelled) return;
         if (config.user) { useAuthStore.getState().setUser(config.user); return; }
-        if (!config.configured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуйте позже.');
         const login = async (payload: Record<string, unknown>) => {
           setLoading(true); setError('');
           try {
@@ -32,23 +36,37 @@ export default function TelegramLogin() {
           } catch (e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось войти'); }
           finally { if (!cancelled) setLoading(false); }
         };
-        if (win.Telegram?.WebApp?.initData) { await login({ initData: win.Telegram.WebApp.initData }); return; }
-        openLogin.current = () => {
-          closeLogin?.();
-          setError('');
-          closeLogin = openTelegramLogin({ clientId: Number(config.clientId), nonce: config.csrf, lang: 'ru' }, data => {
-            if (cancelled) return;
-            if (data.id_token) void login({ idToken: data.id_token });
-            else if (data.error === 'popup_blocked') setError('Разрешите всплывающие окна и попробуйте снова.');
-            else setError('Вход не завершён. Попробуйте ещё раз.');
-          });
+        if (win.Telegram?.WebApp?.initData) {
+          if (!config.configured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуйте позже.');
+          await login({ initData: win.Telegram.WebApp.initData });
+          return;
+        }
+        if (!config.webConfigured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуйте позже.');
+        const enableLogin = () => {
+          if (cancelled) return;
+          if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обновите страницу.'); return; }
+          openLogin.current = () => {
+            setError('');
+            win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), request_access: false, lang: 'ru' }, data => {
+              if (cancelled) return;
+              if (isTelegramLoginData(data)) void login({ authData: data });
+              else setError('Вход не завершён. Попробуйте ещё раз.');
+            });
+          };
+          setReady(true);
         };
-        setReady(true);
+        if (win.Telegram?.Login) { enableLogin(); return; }
+        const script = document.createElement('script');
+        script.src = 'https://telegram.org/js/telegram-widget.js?22';
+        script.async = true;
+        script.onload = enableLogin;
+        script.onerror = () => { if (!cancelled) setError('Не удалось загрузить Telegram. Проверьте соединение и обновите страницу.'); };
+        document.head.appendChild(script);
       } catch(e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось загрузить вход'); }
       finally { if (!cancelled) setLoading(false); }
     }
     void setup();
-    return () => { cancelled = true; closeLogin?.(); openLogin.current = null; };
+    return () => { cancelled = true; openLogin.current = null; };
   }, []);
   return <section className="mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center">
     <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>

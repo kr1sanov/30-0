@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { verifyTelegramIdTokenWithKeys } from '../src/lib/telegramOidc.ts';
-import { buildTelegramLoginUrl } from '../src/lib/telegramLogin.ts';
+import { isTelegramLoginData } from '../src/lib/telegramLogin.ts';
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const jwk = publicKey.export({ format: 'jwk' });
@@ -41,20 +41,9 @@ test('rejects forged signature', () => {
   assert.equal(verifyTelegramIdTokenWithKeys(forged, clientId, nonce, keys, now), null);
 });
 
-test('builds Telegram popup URL with an explicit production origin', () => {
-  const url = new URL(buildTelegramLoginUrl({
-    clientId: Number(clientId),
-    nonce,
-    origin: 'https://30-0.xn--p1ai',
-    pathname: '/',
-  }));
-  assert.equal(url.origin, 'https://oauth.telegram.org');
-  assert.equal(url.pathname, '/auth');
-  assert.equal(url.searchParams.get('response_type'), 'post_message');
-  assert.equal(url.searchParams.get('client_id'), clientId);
-  assert.equal(url.searchParams.get('redirect_uri'), 'https://30-0.xn--p1ai/');
-  assert.equal(url.searchParams.get('origin'), 'https://30-0.xn--p1ai');
-  assert.equal(url.searchParams.get('scope'), 'openid profile');
-  assert.equal(url.searchParams.get('nonce'), nonce);
-  assert.equal(url.searchParams.get('lang'), 'ru');
-});
+test('accepts Telegram Login Widget callback data', () => assert.equal(isTelegramLoginData({
+  id: 1234567, first_name: 'Никита', username: 'test_player', auth_date: now, hash: 'a'.repeat(64),
+}), true));
+test('rejects incomplete Telegram Login Widget callback data', () => assert.equal(isTelegramLoginData({
+  id: 1234567, first_name: 'Никита', auth_date: now,
+}), false));
