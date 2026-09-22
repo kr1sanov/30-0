@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
 import { enforceRateLimit } from '@/lib/rateLimit';
-import { verifyMiniAppPublic } from '@/lib/telegramVerification';
+import { verifyLoginWidget, verifyMiniAppPublic } from '@/lib/telegramVerification';
 import { verifyTelegramIdToken } from '@/lib/telegramOidc';
 import { createSession, sessionUser, sameOrigin, SESSION_COOKIE, SESSION_SECONDS } from '@/lib/telegramSession';
 
@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? null,
     clientId: process.env.TELEGRAM_CLIENT_ID ?? null,
     configured: Boolean(process.env.TELEGRAM_CLIENT_ID && (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) >= 32),
+    webConfigured: Boolean(process.env.TELEGRAM_CLIENT_ID && process.env.TELEGRAM_BOT_TOKEN && (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) >= 32),
     csrf,
   }, { headers: { 'Cache-Control': 'no-store' } });
   response.cookies.set('rpl_login_csrf', csrf, { ...options, maxAge: 600 });
@@ -38,9 +39,16 @@ export async function POST(request: Request) {
     if (!cookie || typeof body.csrf !== 'string' || cookie.length !== body.csrf.length || !timingSafeEqual(Buffer.from(cookie), Buffer.from(body.csrf))) {
       return NextResponse.json({ error: 'Обновите страницу входа' }, { status: 403 });
     }
+    const authData = body.authData && typeof body.authData === 'object' && !Array.isArray(body.authData)
+      ? body.authData as Record<string, unknown>
+      : null;
     const verified = typeof body.initData === 'string'
       ? verifyMiniAppPublic(body.initData, clientId)
-      : typeof body.idToken === 'string' ? await verifyTelegramIdToken(body.idToken, clientId, cookie) : null;
+      : typeof body.idToken === 'string'
+        ? await verifyTelegramIdToken(body.idToken, clientId, cookie)
+        : authData && process.env.TELEGRAM_BOT_TOKEN
+          ? verifyLoginWidget(authData, process.env.TELEGRAM_BOT_TOKEN)
+          : null;
     if (!verified) return NextResponse.json({ error: 'Не удалось подтвердить вход через Telegram' }, { status: 401 });
     const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null };
     const user = await db.user.upsert({
