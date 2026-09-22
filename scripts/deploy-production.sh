@@ -130,9 +130,9 @@ rm -f /tmp/deploy.tar.gz
 
 echo "✅ Deployment package extracted"
 echo "   Structure after extraction:"
-ls -la | head -15
-ls -la .next/standalone/ | head -10
-ls -la .next/standalone/.next/ 2>/dev/null | head -5 || echo "   (no .next inside standalone)"
+ls -la | sed -n '1,15p'
+ls -la .next/standalone/ | sed -n '1,10p'
+ls -la .next/standalone/.next/ 2>/dev/null | sed -n '1,5p' || echo "   (no .next inside standalone)"
 echo "   app.js exists: $(test -f app.js && echo YES || echo NO)"
 echo "   .htaccess exists: $(test -f .htaccess && echo YES || echo NO)"
 
