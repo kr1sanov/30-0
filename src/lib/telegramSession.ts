@@ -32,5 +32,13 @@ export function sessionUser(request: Request, now = Math.floor(Date.now() / 1000
 
 export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
-  return origin === new URL(request.url).origin;
+  if (!origin) return false;
+  const requestOrigin = new URL(request.url).origin;
+  if (origin === requestOrigin) return true;
+  try {
+    const publicBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    return Boolean(publicBaseUrl && origin === new URL(publicBaseUrl).origin);
+  } catch {
+    return false;
+  }
 }

@@ -18,3 +18,14 @@ test('duplicate session cookie fails', () => {
 });
 test('cross-origin mutation rejected', () => assert.equal(sameOrigin(new Request('https://example.com', {headers:{origin:'https://attacker.example'}})), false));
 test('same-origin mutation accepted', () => assert.equal(sameOrigin(new Request('https://example.com', {headers:{origin:'https://example.com'}})), true));
+test('configured public origin accepted behind a reverse proxy', () => {
+  const previous = process.env.NEXT_PUBLIC_BASE_URL;
+  process.env.NEXT_PUBLIC_BASE_URL = 'https://30-0.xn--p1ai';
+  try {
+    assert.equal(sameOrigin(new Request('http://127.0.0.1:3000/api', {headers:{origin:'https://30-0.xn--p1ai'}})), true);
+    assert.equal(sameOrigin(new Request('http://127.0.0.1:3000/api', {headers:{origin:'https://attacker.example'}})), false);
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_BASE_URL;
+    else process.env.NEXT_PUBLIC_BASE_URL = previous;
+  }
+});
