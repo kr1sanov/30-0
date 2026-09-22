@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { openTelegramLogin } from '@/lib/telegramLogin';
 
 export default function TelegramLogin() {
   const openLogin = useRef<(() => void) | null>(null);
@@ -9,9 +10,9 @@ export default function TelegramLogin() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
+    let closeLogin: (() => void) | undefined;
     const win = window as typeof window & { Telegram?: {
       WebApp?: { initData?: string };
-      Login?: { auth: (options: {client_id: number; scope: string[]; lang: string; nonce: string}, callback: (data: {id_token?: string; error?: string}) => void) => void };
     } };
     async function setup() {
       try {
@@ -32,30 +33,22 @@ export default function TelegramLogin() {
           finally { if (!cancelled) setLoading(false); }
         };
         if (win.Telegram?.WebApp?.initData) { await login({ initData: win.Telegram.WebApp.initData }); return; }
-        const enableLogin = () => {
-          if (cancelled) return;
-          if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обновите страницу.'); return; }
-          openLogin.current = () => {
-            win.Telegram?.Login?.auth({ client_id: Number(config.clientId), scope: ['profile'], lang: 'ru', nonce: config.csrf }, data => {
-              if (cancelled) return;
-              if (data.id_token) void login({ idToken: data.id_token });
-              else setError('Вход не завершён. Попробуйте ещё раз.');
-            });
-          };
-          setReady(true);
+        openLogin.current = () => {
+          closeLogin?.();
+          setError('');
+          closeLogin = openTelegramLogin({ clientId: Number(config.clientId), nonce: config.csrf, lang: 'ru' }, data => {
+            if (cancelled) return;
+            if (data.id_token) void login({ idToken: data.id_token });
+            else if (data.error === 'popup_blocked') setError('Разрешите всплывающие окна и попробуйте снова.');
+            else setError('Вход не завершён. Попробуйте ещё раз.');
+          });
         };
-        if (win.Telegram?.Login) { enableLogin(); return; }
-        const script = document.createElement('script');
-        script.src = 'https://oauth.telegram.org/js/telegram-login.js?6';
-        script.async = true;
-        script.onload = enableLogin;
-        script.onerror = () => { if (!cancelled) setError('Не удалось загрузить Telegram. Проверьте соединение и обновите страницу.'); };
-        document.head.appendChild(script);
+        setReady(true);
       } catch(e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось загрузить вход'); }
       finally { if (!cancelled) setLoading(false); }
     }
     void setup();
-    return () => { cancelled = true; openLogin.current = null; };
+    return () => { cancelled = true; closeLogin?.(); openLogin.current = null; };
   }, []);
   return <section className="mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center">
     <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>

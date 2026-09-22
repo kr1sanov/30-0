@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { verifyTelegramIdTokenWithKeys } from '../src/lib/telegramOidc.ts';
+import { buildTelegramLoginUrl } from '../src/lib/telegramLogin.ts';
 
 const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
 const jwk = publicKey.export({ format: 'jwk' });
@@ -38,4 +39,22 @@ test('rejects forged signature', () => {
   forgedBytes[0] ^= 1;
   const forged = `${header}.${payload}.${forgedBytes.toString('base64url')}`;
   assert.equal(verifyTelegramIdTokenWithKeys(forged, clientId, nonce, keys, now), null);
+});
+
+test('builds Telegram popup URL with an explicit production origin', () => {
+  const url = new URL(buildTelegramLoginUrl({
+    clientId: Number(clientId),
+    nonce,
+    origin: 'https://30-0.xn--p1ai',
+    pathname: '/',
+  }));
+  assert.equal(url.origin, 'https://oauth.telegram.org');
+  assert.equal(url.pathname, '/auth');
+  assert.equal(url.searchParams.get('response_type'), 'post_message');
+  assert.equal(url.searchParams.get('client_id'), clientId);
+  assert.equal(url.searchParams.get('redirect_uri'), 'https://30-0.xn--p1ai/');
+  assert.equal(url.searchParams.get('origin'), 'https://30-0.xn--p1ai');
+  assert.equal(url.searchParams.get('scope'), 'openid profile');
+  assert.equal(url.searchParams.get('nonce'), nonce);
+  assert.equal(url.searchParams.get('lang'), 'ru');
 });
