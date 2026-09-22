@@ -32,6 +32,7 @@ export default function RootLayout({
         className="font-sans antialiased bg-[#0A0A0A] text-[#FFFFFF]"
         style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}
       >
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
         {children}
         {/* Yandex.Metrika counter */}
         <Script id="yandex-metrika" strategy="afterInteractive">

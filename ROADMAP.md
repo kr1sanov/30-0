@@ -14,7 +14,7 @@
 - [ ] 1.3 **Добавить API-аутентификацию** — middleware для проверки Telegram initData
 - [ ] 1.4 **Добавить rate limiting** — защитить spin/draft/simulate от спама
 - [ ] 1.5 **Реализовать `PATCH /api/auth/profile`** — updateDisplayName() не работает
-- [ ] 1.6 **Настроить Vercel деплой** — авторизация, подключение, env vars
+- [ ] 1.6 **Восстановить деплой на Jino/собственный сервер** — SSH, env vars, миграции
 - [ ] 1.7 **Тестовый деплой** — проверить health endpoint
 
 ## Phase 2 — Стабилизация (2-3 дня) 🟡

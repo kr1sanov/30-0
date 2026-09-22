@@ -27,7 +27,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# Also try common node paths on Jino shared hosting
+# Jino shared hosting publishes versioned interpreters outside the default PATH.
+# Prefer the configured production runtime (Node.js 22), then fall back to nvm.
+if ! command -v node &> /dev/null; then
+  JINO_NODE22_BIN="/opt/alt/alt-nodejs22/root/usr/bin"
+  if [ -x "$JINO_NODE22_BIN/node" ]; then
+    export PATH="$JINO_NODE22_BIN:$PATH"
+  fi
+fi
+
 if ! command -v node &> /dev/null; then
   for NODE_PATH in "$HOME/.nvm/versions/node/"*/bin; do
     if [ -d "$NODE_PATH" ]; then
@@ -154,7 +162,7 @@ else
   echo "✅ app.js already exists"
 fi
 
-# ─── Step 5: Ensure .env file for database connection ───
+# ─── Step 5: Ensure production environment ───
 echo ""
 echo "🔧 Step 5: Checking .env file"
 
@@ -163,18 +171,28 @@ echo "🔧 Step 5: Checking .env file"
 # Passenger sets env vars from the Jino control panel.
 # Also check if .env exists at APP_DIR for the loadEnvFromFile() fallback.
 
-if [ ! -f .env ]; then
-  echo "⚠️ No .env file found at $APP_DIR/.env"
-  echo "   Make sure DATABASE_URL is set in Jino control panel or create .env manually"
-else
-  echo "✅ .env file exists"
-  # Verify DATABASE_URL is present
-  if grep -q "^DATABASE_URL=" .env; then
-    echo "✅ DATABASE_URL is configured in .env"
-  else
-    echo "⚠️ DATABASE_URL not found in .env"
-  fi
+if [ ! -f .env ] || ! grep -q "^DATABASE_URL=" .env; then
+  echo "❌ $APP_DIR/.env with DATABASE_URL is required"
+  rollback_standalone || true
+  exit 1
 fi
+
+ensure_env() {
+  local key="$1"
+  local value="$2"
+  if ! grep -q "^${key}=" .env; then
+    printf '%s=%s\n' "$key" "$value" >> .env
+  fi
+}
+
+ensure_env "NODE_ENV" "production"
+ensure_env "NEXT_PUBLIC_BASE_URL" "https://30-0.xn--p1ai"
+ensure_env "TELEGRAM_CLIENT_ID" "8197702906"
+ensure_env "TELEGRAM_BOT_USERNAME" "RPL30_bot"
+ensure_env "TELEGRAM_SESSION_SECRET" "$(openssl rand -hex 32)"
+ensure_env "RUN_SESSION_SECRET" "$(openssl rand -hex 32)"
+chmod 600 .env
+echo "✅ Required production variables are present (values are not printed)"
 
 # ─── Step 6: Ensure Prisma client ───
 echo ""
@@ -208,7 +226,15 @@ echo ""
 echo "🗄️ Step 7: Running database sync"
 cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
 if [ -f .env ]; then
-  if npx prisma db push; then
+  export MIGRATION_BACKUP_DIR="$APP_DIR/backups/private"
+  if ! node --env-file=.env scripts/prepare-production-users.cjs; then
+    echo "❌ Legacy user preflight failed; database schema was not changed"
+    rollback_standalone || true
+    exit 1
+  fi
+  # Prisma classifies adding a unique index as potentially destructive even
+  # after the explicit preflight above proves the values are unique.
+  if npx prisma db push --accept-data-loss; then
     echo "✅ Database schema synced"
   else
     echo "❌ Database schema sync failed; refusing to restart the application"

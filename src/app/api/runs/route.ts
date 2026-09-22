@@ -3,6 +3,7 @@ import { FORMATIONS } from '@/lib/positions';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
 import { NextRequest, NextResponse } from 'next/server';
+import { sessionUser } from '@/lib/telegramSession';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,9 @@ export async function GET(request: NextRequest) {
     const sort = searchParams.get('sort') || 'date'; // 'date' | 'points'
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
 
-    const where: Record<string, unknown> = {};
+    const userId = sessionUser(request);
+    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    const where: Record<string, unknown> = { userId };
     if (completed === 'true') {
       where.completed = true;
     }
@@ -53,7 +56,12 @@ export async function POST(request: NextRequest) {
     ensureRunAccessConfigured();
 
     const body = await request.json();
-    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter, userId } = body;
+    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
+    const userId = sessionUser(request);
+    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (nationalityFilter || (body.gameMode && !['classic', 'single_club'].includes(body.gameMode))) {
+      return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
+    }
 
     // Validate formation exists
     const formationData = FORMATIONS.find((f) => f.id === formation);
@@ -78,7 +86,7 @@ export async function POST(request: NextRequest) {
 
     // Resolve userId: try from body first, then from session cookie
     let dbUserId: string | undefined;
-    const effectiveUserId = userId || getUserIdFromSession(request);
+    const effectiveUserId = userId;
     if (effectiveUserId && typeof effectiveUserId === 'string') {
       try {
         const existingUser = await db.user.findUnique({ where: { id: effectiveUserId } });
@@ -134,19 +142,5 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to create game run' },
       { status: 500 },
     );
-  }
-}
-
-/**
- * Extract userId from the Yandex session cookie.
- */
-function getUserIdFromSession(request: NextRequest): string | undefined {
-  try {
-    const sessionCookie = request.cookies.get('yandex_session')?.value;
-    if (!sessionCookie) return undefined;
-    const sessionData = JSON.parse(decodeURIComponent(sessionCookie));
-    return sessionData?.id;
-  } catch {
-    return undefined;
   }
 }

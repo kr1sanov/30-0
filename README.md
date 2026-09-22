@@ -167,38 +167,17 @@ npm run dev
 
 Основная production-схема проекта — GitHub Actions → Jino → Apache/Phusion Passenger → Next.js standalone → MySQL. Push в `main` запускает lint, typecheck, build, deployment и внешний health check.
 
-Перед первым deployment обязательны резервная копия MySQL, применение `scripts/migrate-mysql-local-profiles.sql` и настройка переменных из `.env.example`, включая стойкий `RUN_SESSION_SECRET`.
+Перед синхронизацией MySQL pipeline запускает безопасную идемпотентную проверку `scripts/prepare-production-users.cjs`: она не удаляет пользователей и игровые попытки, а резервирует и нормализует только конфликтующие legacy-идентификаторы. Runtime-секреты сессий создаются на Jino один раз и сохраняются между релизами.
 
-### Альтернативный деплой на Vercel
-
-### Через GitHub (рекомендуется)
-
-1. Создайте репозиторий на GitHub и запушьте код
-2. Зайдите на [vercel.com/new](https://vercel.com/new)
-3. Выберите репозиторий `30-0-rpl`
-4. Vercel автоматически определит Next.js
-5. Настройки сборки:
-   - **Build Command:** `cp prisma/schema.postgresql.prisma prisma/schema.prisma && npx prisma generate && next build`
-   - **Install Command:** `npm install`
-6. Добавьте Environment Variable: `DATABASE_URL` (PostgreSQL строка подключения)
-7. Нажмите **Deploy**
-
-### Через CLI
-
-```bash
-vercel login
-vercel --prod
-```
+Ручной запуск на собственном сервере доступен через Docker Compose: `npm run deploy:docker`. Production-секреты хранятся только в окружении сервера или GitHub Environments и не добавляются в репозиторий.
 
 ---
 
 ## 🎯 Игровые данные
 
-База содержит **5278 записей** PlayerSeason, охватывающих:
-- **~15 клубов** РПЛ (Зенит, Спартак, ЦСКА, Локомотив, Краснодар, и др.)
-- **5000+ игроков** с рейтингами по сезонам
-- **1992–2026** — полная история российского чемпионата
-- **30 матчей** в сезоне для симуляции
+Текущий SQLite seed для разработки содержит **20 клубов, 718 игроков и 5257 записей PlayerSeason** за 1992–2024 годы. Файлы-кандидаты в `scripts/data` содержат 9923 строки за 2000–2025 годы, но пока не считаются проверенным архивом: в них есть сгенерированные заполнители, дубли и неполные составы.
+
+Перед production-импортом запустите `npm run data:audit`. Строгая проверка `npm run data:audit:strict` завершится ошибкой, пока все проблемы не исправлены и для записей не добавлено происхождение. Критерии и ограничения описаны в `docs/DATA_QUALITY.md`.
 
 ---
 

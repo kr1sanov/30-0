@@ -61,10 +61,10 @@ export async function GET(req: NextRequest) {
 
 /**
  * Determine the base URL from the request.
- * Works for both local dev and Vercel production.
+ * Works for local development and reverse-proxy production.
  */
 function getBaseUrl(req: NextRequest): string {
-  // In Vercel, x-forwarded-host + x-forwarded-proto give the public URL
+  // A trusted reverse proxy forwards the public host and protocol.
   const forwardedHost = req.headers.get('x-forwarded-host');
   const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
 

@@ -40,12 +40,12 @@ const GAME_MODE_CONFIG: Record<
   { label: string; description: string; icon: string }
 > = {
   classic: {
-    label: 'Классика',
+    label: 'Обычная',
     description: 'Крутите колесо — случайный клуб и сезон РПЛ',
     icon: '⚔️',
   },
   single_club: {
-    label: 'Один клуб',
+    label: 'Мой клуб',
     description: 'Выберите клуб — все спины только его сезоны',
     icon: '🏟️',
   },
@@ -512,7 +512,7 @@ export default function GameSetup() {
             {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
               ([key, val]) => {
                 const isSelected = currentGameMode === key;
-                const isComingSoon = key !== 'classic';
+                const isComingSoon = key !== 'classic' && key !== 'single_club';
                 return (
                   <motion.div
                     key={key}
