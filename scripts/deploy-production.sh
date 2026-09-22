@@ -299,12 +299,12 @@ echo "🏥 Step 9: Running health check"
 echo "   Waiting 30s for Passenger to restart..."
 sleep 30
 
-MAX_RETRIES=40
+MAX_RETRIES=30
 RETRY_INTERVAL=5
 HEALTHY=false
 
 for i in $(seq 1 $MAX_RETRIES); do
-  RESPONSE=$(curl -s --connect-timeout 5 --max-time 10 "$HEALTH_URL" 2>/dev/null || echo "")
+  RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "$HEALTH_URL" 2>/dev/null || echo "")
   if echo "$RESPONSE" | grep -q '"status":"ok"'; then
     echo "✅ Health check PASSED after $((30 + i * RETRY_INTERVAL))s"
     HEALTHY=true
