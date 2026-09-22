@@ -124,9 +124,35 @@ fi
 # ─── Step 3: Extract deployment ───
 echo ""
 echo "📂 Step 3: Extracting deployment package"
-mkdir -p .next/standalone
-tar -xzf /tmp/deploy.tar.gz -C .
+DEPLOY_STAGE=$(mktemp -d "$APP_DIR/.deploy-stage.XXXXXX")
+tar -xzf /tmp/deploy.tar.gz -C "$DEPLOY_STAGE"
 rm -f /tmp/deploy.tar.gz
+
+# Never unpack a new standalone build over the previous one. Next.js gives
+# generated server chunks and its runtime content-addressed names; mixing two
+# builds can make route modules call methods that do not exist in the retained
+# runtime (for example, `this.load is not a function`).
+if [ ! -f "$DEPLOY_STAGE/.next/standalone/server.js" ]; then
+  echo "❌ Deployment package does not contain a standalone Next.js server"
+  rm -rf "$DEPLOY_STAGE"
+  exit 1
+fi
+
+mkdir -p .next prisma scripts
+rm -rf .next/standalone-next
+mv "$DEPLOY_STAGE/.next/standalone" .next/standalone-next
+
+# Install the non-standalone files from the same package without touching
+# persistent runtime configuration such as .env and .envrc.
+cp "$DEPLOY_STAGE/app.js" app.js
+cp "$DEPLOY_STAGE/.htaccess" .htaccess
+cp "$DEPLOY_STAGE/package.json" package.json
+cp -r "$DEPLOY_STAGE/prisma/." prisma/
+cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
+
+rm -rf .next/standalone
+mv .next/standalone-next .next/standalone
+rm -rf "$DEPLOY_STAGE"
 
 echo "✅ Deployment package extracted"
 echo "   Structure after extraction:"
