@@ -18,9 +18,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Некорректный токен' }, { status: 400 });
     }
 
-    const telegramResponse = await fetch(`https://api.telegram.org/bot${token}/getMe`, { cache: 'no-store' });
-    const telegram = await telegramResponse.json() as { ok?: boolean; result?: { id?: number; username?: string } };
-    if (!telegramResponse.ok || !telegram.ok || String(telegram.result?.id ?? '') !== process.env.TELEGRAM_CLIENT_ID || telegram.result?.username !== 'RPL30_bot') {
+    const tokenBotId = token.split(':', 1)[0];
+    if (tokenBotId !== process.env.TELEGRAM_CLIENT_ID) {
       return NextResponse.json({ error: 'Токен не принадлежит @RPL30_bot' }, { status: 403 });
     }
 
