@@ -132,8 +132,10 @@ rm -f /tmp/deploy.tar.gz
 # generated server chunks and its runtime content-addressed names; mixing two
 # builds can make route modules call methods that do not exist in the retained
 # runtime (for example, `this.load is not a function`).
-if [ ! -f "$DEPLOY_STAGE/.next/standalone/server.js" ]; then
-  echo "❌ Deployment package does not contain a standalone Next.js server"
+if [ ! -f "$DEPLOY_STAGE/.next/standalone/server.js" ] || \
+   [ ! -f "$DEPLOY_STAGE/.next/standalone/.next/BUILD_ID" ] || \
+   [ ! -d "$DEPLOY_STAGE/.next/standalone/.next/server" ]; then
+  echo "❌ Deployment package does not contain a complete standalone Next.js build"
   rm -rf "$DEPLOY_STAGE"
   exit 1
 fi
@@ -297,12 +299,12 @@ echo "🏥 Step 9: Running health check"
 echo "   Waiting 30s for Passenger to restart..."
 sleep 30
 
-MAX_RETRIES=40
+MAX_RETRIES=30
 RETRY_INTERVAL=5
 HEALTHY=false
 
 for i in $(seq 1 $MAX_RETRIES); do
-  RESPONSE=$(curl -s --connect-timeout 5 --max-time 10 "$HEALTH_URL" 2>/dev/null || echo "")
+  RESPONSE=$(curl -s --connect-timeout 3 --max-time 5 "$HEALTH_URL" 2>/dev/null || echo "")
   if echo "$RESPONSE" | grep -q '"status":"ok"'; then
     echo "✅ Health check PASSED after $((30 + i * RETRY_INTERVAL))s"
     HEALTHY=true

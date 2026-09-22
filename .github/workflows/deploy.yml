@@ -100,6 +100,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
+          # The standalone output contains its server build under the nested
+          # hidden directory `.next/standalone/.next`. Without this option the
+          # artifact only carries server.js and node_modules, so production
+          # starts without BUILD_ID and server chunks.
+          include-hidden-files: true
           path: |
             .next/standalone/
             .next/static/
