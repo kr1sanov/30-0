@@ -162,8 +162,9 @@ jobs:
           # Copy Passenger entrypoint (app.js) to domain root
           cp app.js deploy-package/app.js
 
-          # Copy .htaccess to domain root (from public/.htaccess)
-          cp build-artifact/public/.htaccess deploy-package/.htaccess 2>/dev/null || true
+          # Copy .htaccess from the checked-out repository. upload-artifact excludes
+          # hidden files by default, so it is intentionally not read from the build artifact.
+          cp public/.htaccess deploy-package/.htaccess
 
           # Verify structure
           echo "Deploy package structure:"
