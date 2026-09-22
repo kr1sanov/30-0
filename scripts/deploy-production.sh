@@ -132,8 +132,10 @@ rm -f /tmp/deploy.tar.gz
 # generated server chunks and its runtime content-addressed names; mixing two
 # builds can make route modules call methods that do not exist in the retained
 # runtime (for example, `this.load is not a function`).
-if [ ! -f "$DEPLOY_STAGE/.next/standalone/server.js" ]; then
-  echo "❌ Deployment package does not contain a standalone Next.js server"
+if [ ! -f "$DEPLOY_STAGE/.next/standalone/server.js" ] || \
+   [ ! -f "$DEPLOY_STAGE/.next/standalone/.next/BUILD_ID" ] || \
+   [ ! -d "$DEPLOY_STAGE/.next/standalone/.next/server" ]; then
+  echo "❌ Deployment package does not contain a complete standalone Next.js build"
   rm -rf "$DEPLOY_STAGE"
   exit 1
 fi
