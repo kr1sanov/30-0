@@ -11,12 +11,5 @@ PassengerNodejs /home/users/j/j97915155/.nvm/versions/node/v22.23.1/bin/node
 # 30-0 RPL — Minimal .htaccess for Jino Production
 # ──────────────────────────────────────────────
 # The application binding and routing are configured through the Jino control panel.
-# This file pins the Passenger runtime and adds basic Apache configuration.
+# This file pins the Passenger runtime. HTTPS is enforced by the Jino control panel.
 # ──────────────────────────────────────────────
-
-# Force HTTPS
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteCond %{HTTPS} off
-  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-</IfModule>
