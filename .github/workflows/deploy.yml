@@ -203,6 +203,10 @@ jobs:
           port: ${{ secrets.JINO_SSH_PORT }}
           source: "deploy.tar.gz"
           target: "/tmp/"
+          # Jino can take longer than the action's 30s default to establish
+          # the second SSH connection used for the actual file transfer.
+          timeout: 120s
+          command_timeout: 15m
 
       - name: Upload deploy script via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -213,6 +217,8 @@ jobs:
           port: ${{ secrets.JINO_SSH_PORT }}
           source: "scripts/deploy-production.sh"
           target: "/tmp/deploy-script/"
+          timeout: 120s
+          command_timeout: 5m
 
       - name: Execute deploy script
         uses: appleboy/ssh-action@v1.0.3
