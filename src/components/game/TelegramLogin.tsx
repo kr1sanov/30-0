@@ -47,7 +47,7 @@ export default function TelegramLogin() {
           if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обновите страницу.'); return; }
           openLogin.current = () => {
             setError('');
-            win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), request_access: false, lang: 'ru' }, data => {
+            win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), request_access: true, lang: 'ru' }, data => {
               if (cancelled) return;
               if (isTelegramLoginData(data)) void login({ authData: data });
               else setError('Вход не завершён. Попробуйте ещё раз.');

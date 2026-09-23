@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
-    if (nationalityFilter || (body.gameMode && !['classic', 'single_club'].includes(body.gameMode))) {
+    if (nationalityFilter || (body.gameMode && body.gameMode !== 'classic')) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     };
     const rerollsTotal = rerollsMap[safeDifficulty] ?? 1;
 
-    // Resolve userId: try from body first, then from session cookie
+    // Resolve the user exclusively from the signed Telegram session.
     let dbUserId: string | undefined;
     const effectiveUserId = userId;
     if (effectiveUserId && typeof effectiveUserId === 'string') {

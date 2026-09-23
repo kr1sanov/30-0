@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 
-export interface AppUser { id: string; provider: 'telegram'; displayName: string; createdAt: number; }
+export interface AppUser { id: string; provider: 'telegram'; displayName: string; createdAt: number; telegramNotificationsEnabled: boolean; }
 interface AuthState {
   user: AppUser | null; isAuthenticated: boolean; _hasHydrated: boolean;
   setUser: (user: AppUser | null) => void;
   updateDisplayName: (name: string) => Promise<void>;
+  updateTelegramNotifications: (enabled: boolean) => Promise<void>;
   resetProfile: () => Promise<void>;
 }
 // Identity is restored only by the server, never from localStorage.
@@ -16,10 +17,20 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!user) throw new Error('Войдите через Telegram');
     const response = await fetch('/api/auth/profile', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, displayName: name }),
+      body: JSON.stringify({ displayName: name }),
     });
     if (!response.ok) throw new Error('Не удалось сохранить имя');
     set({ user: { ...user, displayName: name } });
+  },
+  updateTelegramNotifications: async (enabled) => {
+    const user = useAuthStore.getState().user;
+    if (!user) throw new Error('Войдите через Telegram');
+    const response = await fetch('/api/auth/profile', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ telegramNotificationsEnabled: enabled }),
+    });
+    if (!response.ok) throw new Error('Не удалось сохранить уведомления');
+    set({ user: { ...user, telegramNotificationsEnabled: enabled } });
   },
   resetProfile: async () => {
     const response = await fetch('/api/auth/telegram', { method: 'DELETE' });

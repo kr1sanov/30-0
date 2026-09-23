@@ -43,7 +43,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName, resetProfile } = useAuthStore();
+  const { user, updateDisplayName, updateTelegramNotifications, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
   const displayName = user?.displayName || 'Игрок';
 
   return (
-    <div className="space-y-6 animate-fade-in pb-8">
+    <div className="mx-auto max-w-4xl space-y-6 animate-fade-in pb-8">
       {/* Header with avatar */}
       <div className="text-center">
         <motion.div
@@ -165,6 +165,45 @@ export default function ProfileScreen() {
         </button>
       </div>
 
+      <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-lg" aria-hidden="true">🔔</span>
+              <h3 className="text-sm font-bold text-white">Уведомления Telegram</h3>
+            </div>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">
+              Карточка результата после каждого сезона и важные игровые обновления.
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={user?.telegramNotificationsEnabled ?? true}
+            onClick={async () => {
+              const next = !(user?.telegramNotificationsEnabled ?? true);
+              try {
+                await updateTelegramNotifications(next);
+                toast.success(next ? 'Уведомления включены' : 'Уведомления выключены');
+              } catch {
+                toast.error('Не удалось изменить настройки');
+              }
+            }}
+            className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors ${
+              (user?.telegramNotificationsEnabled ?? true)
+                ? 'border-[#00C896] bg-[#00C896]'
+                : 'border-[#333] bg-[#222]'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                (user?.telegramNotificationsEnabled ?? true) ? 'translate-x-5' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+
       {/* Prominent Season Count + Best Result */}
       {profileStats.totalSeasons > 0 && (
         <motion.div
@@ -190,7 +229,7 @@ export default function ProfileScreen() {
       )}
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {[
           { value: profileStats.totalSeasons, label: 'Сезоны', color: '#00C896' },
           { value: profileStats.bestPoints, label: 'Очки', color: '#FFFFFF' },
@@ -211,7 +250,7 @@ export default function ProfileScreen() {
       </div>
 
       {/* Win Rate Ring + Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {/* Win rate ring */}
         <div className="rounded-2xl bg-[#141414] p-4 flex flex-col items-center justify-center border border-[#141414]">
           <div className="relative w-20 h-20">
@@ -361,7 +400,7 @@ export default function ProfileScreen() {
           <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Витрина трофеев</h3>
           <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length}</span>
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {TROPHIES.map((trophy) => {
             const earned = profileStats.achievements.includes(trophy.id);
             return (

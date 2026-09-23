@@ -295,7 +295,9 @@ export const useGameStore = create<GameState>()(
             console.error('[startRun] API error:', res.status, errData);
             const errMsg = errData?.error === 'Invalid formation'
               ? 'Неверная схема формирования. Выберите другую схему.'
-              : `Не удалось начать игру (ошибка ${res.status}). Попробуйте ещё раз.`;
+              : typeof errData?.error === 'string'
+                ? errData.error
+                : `Не удалось начать игру (ошибка ${res.status}). Попробуйте ещё раз.`;
             set({ screen: 'setup', lastDraftError: errMsg });
             return;
           }

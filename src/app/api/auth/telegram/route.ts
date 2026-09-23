@@ -5,6 +5,7 @@ import { enforceRateLimit } from '@/lib/rateLimit';
 import { verifyLoginWidget, verifyMiniAppPublic } from '@/lib/telegramVerification';
 import { verifyTelegramIdToken } from '@/lib/telegramOidc';
 import { createSession, sessionUser, sameOrigin, SESSION_COOKIE, SESSION_SECONDS } from '@/lib/telegramSession';
+import { sendTelegramMessage, telegramChatId } from '@/lib/telegramBot';
 
 export const dynamic = 'force-dynamic';
 const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/' };
@@ -14,7 +15,13 @@ export async function GET(request: Request) {
   const user = userId ? await db.user.findUnique({ where: { id: userId } }) : null;
   const csrf = randomBytes(32).toString('hex');
   const response = NextResponse.json({
-    user: user?.provider === 'telegram' ? { id: user.id, provider: 'telegram', displayName: user.displayName, createdAt: user.createdAt.getTime() } : null,
+    user: user?.provider === 'telegram' ? {
+      id: user.id,
+      provider: 'telegram',
+      displayName: user.displayName,
+      createdAt: user.createdAt.getTime(),
+      telegramNotificationsEnabled: user.telegramNotificationsEnabled,
+    } : null,
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? null,
     clientId: process.env.TELEGRAM_CLIENT_ID ?? null,
     configured: Boolean(process.env.TELEGRAM_CLIENT_ID && (process.env.TELEGRAM_SESSION_SECRET?.length ?? 0) >= 32),
@@ -56,9 +63,29 @@ export async function POST(request: Request) {
       create: { ...data, provider: 'telegram', providerId: `telegram_${verified.id}`, displayName: verified.firstName || verified.username || 'Игрок' },
       update: data,
     });
-    const response = NextResponse.json({ user: { id: user.id, provider: 'telegram', displayName: user.displayName, createdAt: user.createdAt.getTime() } }, { headers: { 'Cache-Control': 'no-store' } });
+    const response = NextResponse.json({ user: {
+      id: user.id,
+      provider: 'telegram',
+      displayName: user.displayName,
+      createdAt: user.createdAt.getTime(),
+      telegramNotificationsEnabled: user.telegramNotificationsEnabled,
+    } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
+    if (!user.telegramWelcomeSentAt && user.telegramNotificationsEnabled) {
+      const chatId = telegramChatId(user.providerId);
+      if (chatId) {
+        void sendTelegramMessage(chatId, [
+          '<b>Добро пожаловать в 30-0!</b> ⚽',
+          '',
+          'Соберите команду из игроков РПЛ разных эпох и попробуйте пройти сезон без поражений.',
+          '',
+          'После каждого сезона сюда будет приходить карточка результата.',
+        ].join('\n')).then(async sent => {
+          if (sent) await db.user.update({ where: { id: user.id }, data: { telegramWelcomeSentAt: new Date() } });
+        }).catch(() => undefined);
+      }
+    }
     return response;
   } catch {
     return NextResponse.json({ error: 'Не удалось выполнить вход. Попробуйте ещё раз.' }, { status: 400 });

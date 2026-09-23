@@ -1,14 +1,11 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { sessionUser } from '@/lib/telegramSession';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'userId query parameter is required' }, { status: 400 });
-    }
+    const userId = sessionUser(request);
+    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
 
     const user = await db.user.findUnique({
       where: { id: userId },
@@ -83,12 +80,13 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { userId, displayName } = body as {
-      userId: string;
+    const userId = sessionUser(request);
+    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    const { displayName } = body as {
       displayName: string;
     };
 
-    if (!userId || !displayName || displayName.trim().length < 2) {
+    if (!displayName || displayName.trim().length < 2) {
       return NextResponse.json(
         { error: 'userId and displayName (min 2 chars) are required' },
         { status: 400 },

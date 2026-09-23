@@ -97,6 +97,8 @@ model User {
   email            String?  @db.VarChar(255)
   displayName      String   @default("Игрок") @db.VarChar(255)
   profileStatsJson String?  @db.Text
+  telegramNotificationsEnabled Boolean @default(true)
+  telegramWelcomeSentAt DateTime?
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

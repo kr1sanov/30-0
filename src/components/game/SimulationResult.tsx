@@ -8,6 +8,7 @@ import ShareModal from '@/components/share/ShareModal';
 import ResultShareCard from '@/components/share/ResultShareCard';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
+import html2canvas from 'html2canvas-pro';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -32,6 +33,7 @@ interface Trophy {
 }
 
 interface SeasonResultData {
+  runId?: string;
   wins: number;
   draws: number;
   losses: number;
@@ -122,6 +124,8 @@ export default function SimulationResult() {
   const [showTable, setShowTable] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const telegramCardRef = useRef<HTMLDivElement | null>(null);
+  const telegramSendRef = useRef<string | null>(null);
 
   const data = seasonResult as SeasonResultData | null;
   const matches = (data?.matches ?? []) as MatchDetail[];
@@ -162,6 +166,41 @@ export default function SimulationResult() {
   }, [totalMatches]);
 
   const isComplete = currentMatchweek >= totalMatches;
+
+  // Send the same share card to Telegram once the season animation is complete.
+  // The off-screen card stays rendered (rather than display:none) so html2canvas
+  // can measure it reliably on both desktop and mobile browsers.
+  useEffect(() => {
+    const runId = data?.runId;
+    if (!isComplete || !runId || !telegramCardRef.current) return;
+    const sentKey = `30-0-result-sent-${runId}`;
+    if (telegramSendRef.current === runId || sessionStorage.getItem(sentKey)) return;
+    telegramSendRef.current = runId;
+
+    let cancelled = false;
+    const sendResult = async () => {
+      try {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        if (cancelled || !telegramCardRef.current) return;
+        const canvas = await html2canvas(telegramCardRef.current, {
+          scale: 2,
+          backgroundColor: '#0A0A0A',
+          logging: false,
+          useCORS: true,
+        });
+        const response = await fetch('/api/telegram/result', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ runId, image: canvas.toDataURL('image/png') }),
+        });
+        if (response.ok) sessionStorage.setItem(sentKey, '1');
+      } catch {
+        // Telegram delivery must never interrupt the completed season screen.
+      }
+    };
+    void sendResult();
+    return () => { cancelled = true; };
+  }, [isComplete, data]);
 
   // Haptic on simulation completion
   useEffect(() => {
@@ -686,6 +725,30 @@ export default function SimulationResult() {
           ) : null
         }
       />
+
+      {data && (
+        <div
+          ref={telegramCardRef}
+          aria-hidden="true"
+          className="fixed left-[-10000px] top-0 pointer-events-none"
+        >
+          <ResultShareCard
+            data={{
+              points: data.points,
+              wins: data.wins,
+              draws: data.draws,
+              losses: data.losses,
+              goalsFor: data.goalsFor,
+              goalsAgainst: data.goalsAgainst,
+              position: data.position,
+              formation: data.formation,
+            }}
+            trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
+            teamName={config.teamName}
+            managerName={null}
+          />
+        </div>
+      )}
     </div>
   );
 }
