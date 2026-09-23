@@ -30,6 +30,7 @@ import { useAuthStore } from '@/store/authStore';
 import { Metrics } from '@/lib/metrics';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import TelegramLogin from '@/components/game/TelegramLogin';
+import { clubThemeStyle } from '@/lib/clubThemes';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -42,7 +43,7 @@ const STEPS = [
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычная', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
-  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
   { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', gameMode: 'daily' as const },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
@@ -347,7 +348,7 @@ function HomePage() {
           {/* Primary CTA — full width green */}
           <Button
             onClick={() => {
-              setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+              setConfig({ gameMode: 'classic', clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
               setScreen('setup');
             }}
             className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-2xl transition-colors active:scale-[0.97] shadow-lg shadow-[#00C896]/20"
@@ -402,7 +403,7 @@ function HomePage() {
                 } else if (mode.gameMode === 'nations_cup') {
                   setScreen('nations-cup');
                 } else {
-                  setConfig({ gameMode: mode.gameMode, clubFilter: undefined, nationalityFilter: undefined });
+                  setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
                   setScreen('setup');
                 }
               }}
@@ -1204,7 +1205,7 @@ const pageVariants = {
 
 /* ─── Main Home Component ─── */
 export default function Home() {
-  const { screen } = useGameStore();
+  const { screen, config } = useGameStore();
   const { isAuthenticated, _hasHydrated } = useAuthStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
@@ -1261,8 +1262,8 @@ export default function Home() {
 
   return (
     <div
-      className="min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
-
+      className="club-theme-shell min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
+      style={clubThemeStyle(config.gameMode === 'single_club' ? config.clubName : undefined)}
     >
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />

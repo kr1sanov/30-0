@@ -22,6 +22,7 @@ export interface GameConfig {
   teamName?: string; // default: "Моя команда"
   gameMode?: GameModeType; // 'classic' (default) or 'single_club'
   clubFilter?: string; // clubId for single_club mode
+  clubName?: string; // persisted presentation metadata for the selected club
   nationalityFilter?: string; // nationality name for nations_cup mode
 }
 

@@ -11,7 +11,8 @@ import type { PlayerOption } from '@/lib/types';
 import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
-const ACCENT = '#00C896';
+const ACCENT = 'var(--club-primary)';
+const accentMix = (percent: number) => `color-mix(in srgb, var(--club-primary) ${percent}%, transparent)`;
 const BG_CARD = '#141414';
 
 /** Rating color tiers — ≥85 green, 75-84 blue, <75 gray */
@@ -191,7 +192,7 @@ export default function PlayerList() {
             onClick={() => setSortMode('rating')}
             className="px-3 py-1 text-xs font-bold transition-all"
             style={{
-              backgroundColor: sortMode === 'rating' ? `${ACCENT}20` : 'transparent',
+              backgroundColor: sortMode === 'rating' ? accentMix(14) : 'transparent',
               color: sortMode === 'rating' ? ACCENT : '#64748b',
             }}
           >
@@ -201,7 +202,7 @@ export default function PlayerList() {
             onClick={() => setSortMode('name')}
             className="px-3 py-1 text-xs font-bold transition-all"
             style={{
-              backgroundColor: sortMode === 'name' ? `${ACCENT}20` : 'transparent',
+              backgroundColor: sortMode === 'name' ? accentMix(14) : 'transparent',
               color: sortMode === 'name' ? ACCENT : '#64748b',
             }}
           >
@@ -231,7 +232,7 @@ export default function PlayerList() {
                 className="w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left"
                 style={{
                   backgroundColor: isExpanded
-                    ? `${ACCENT}15`
+                    ? accentMix(10)
                     : !player.canFillAny
                     ? 'transparent'
                     : BG_CARD,
@@ -239,7 +240,7 @@ export default function PlayerList() {
                     ? `2px solid ${ACCENT}`
                     : '2px solid transparent',
                   boxShadow: isExpanded
-                    ? `0 0 12px ${ACCENT}30`
+                    ? '0 0 12px var(--club-glow)'
                     : 'none',
                   opacity: !player.canFillAny ? 0.35 : 1,
                   cursor: !player.canFillAny ? 'not-allowed' : 'pointer',
@@ -313,8 +314,8 @@ export default function PlayerList() {
                       className="p-3 space-y-2.5 rounded-xl"
                       style={{
                         backgroundColor: '#0a0a0a',
-                        border: `2px solid ${ACCENT}40`,
-                        boxShadow: `0 0 20px ${ACCENT}15`,
+                        border: `2px solid ${accentMix(30)}`,
+                        boxShadow: '0 0 20px var(--club-glow)',
                       }}
                     >
                       {/* PLACE IN section header */}
@@ -338,8 +339,8 @@ export default function PlayerList() {
                                 active:scale-95 transition-all duration-150"
                               style={{
                                 backgroundColor: catColor,
-                                border: `2px solid ${ACCENT}60`,
-                                boxShadow: `0 0 10px ${ACCENT}25`,
+                                border: `2px solid ${accentMix(45)}`,
+                                boxShadow: '0 0 10px var(--club-glow)',
                               }}
                             >
                               <span className="relative z-10">{slot.label}</span>

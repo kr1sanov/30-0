@@ -59,8 +59,16 @@ export async function POST(request: NextRequest) {
     const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
-    if (nationalityFilter || (body.gameMode && body.gameMode !== 'classic')) {
+    const gameMode = body.gameMode || 'classic';
+    if (nationalityFilter || !['classic', 'single_club'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
+    }
+    if (gameMode === 'single_club' && !clubFilter) {
+      return NextResponse.json({ error: 'Выберите клуб' }, { status: 400 });
+    }
+    if (clubFilter) {
+      const clubExists = await db.club.findUnique({ where: { id: clubFilter }, select: { id: true } });
+      if (!clubExists) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
     }
 
     // Validate formation exists
