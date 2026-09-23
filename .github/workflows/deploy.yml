@@ -160,6 +160,7 @@ jobs:
           # Copy the idempotent production data preflight used before db push
           mkdir -p deploy-package/scripts
           cp scripts/prepare-production-users.cjs deploy-package/scripts/
+          cp scripts/deploy-production.sh deploy-package/scripts/
 
           # Copy package.json for reference
           cp build-artifact/package.json deploy-package/
@@ -192,48 +193,22 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.JINO_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p ${{ secrets.JINO_SSH_PORT }} ${{ secrets.JINO_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Upload deployment package via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.JINO_HOST }}
-          username: ${{ secrets.JINO_USERNAME }}
-          key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT }}
-          source: "deploy.tar.gz"
-          target: "/tmp/"
-          # Jino can take longer than the action's 30s default to establish
-          # the second SSH connection used for the actual file transfer.
-          timeout: 120s
-          command_timeout: 15m
-
-      - name: Upload deploy script via SCP
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.JINO_HOST }}
-          username: ${{ secrets.JINO_USERNAME }}
-          key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT }}
-          source: "scripts/deploy-production.sh"
-          target: "/tmp/deploy-script/"
-          timeout: 120s
-          command_timeout: 5m
-
-      - name: Execute deploy script
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.JINO_HOST }}
-          username: ${{ secrets.JINO_USERNAME }}
-          key: ${{ secrets.JINO_SSH_KEY }}
-          port: ${{ secrets.JINO_SSH_PORT }}
-          script_stop: true
-          command_timeout: 600s
-          script: |
-            set -euo pipefail
-            export APP_DIR="${{ secrets.JINO_APP_DIR }}"
-            chmod +x /tmp/deploy-script/scripts/deploy-production.sh
-            bash /tmp/deploy-script/scripts/deploy-production.sh
+      - name: Upload and deploy over one SSH connection
+        run: |
+          # Jino intermittently throttles consecutive SSH connections. Stream
+          # the archive and execute the bundled deploy script in one session.
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p "${{ secrets.JINO_SSH_PORT }}" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            -o ConnectTimeout=180 \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
+            "set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod +x /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
+            < deploy.tar.gz
 
   # ─── Stage 4: Post-Deploy Verification ───
   verify:
