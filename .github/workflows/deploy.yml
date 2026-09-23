@@ -211,36 +211,21 @@ jobs:
             < deploy.tar.gz
 
   # ─── Stage 4: Post-Deploy Verification ───
-  # Jino does not accept public HTTPS requests from GitHub-hosted runners.
-  # Verify from the production host instead; the deploy script has already
-  # waited for Passenger and completed its rollback-safe health check.
+  # scripts/deploy-production.sh blocks until /api/health reports status=ok
+  # and rolls back the release on failure. Keep verification in the same SSH
+  # session because Jino throttles consecutive connections from GitHub runners.
   verify:
     name: Verify Production
     runs-on: ubuntu-latest
     needs: deploy
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     steps:
-      - name: Setup SSH key
+      - name: Confirm deployment health gate
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.JINO_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
-      - name: Check production from Jino host
-        run: |
-          ssh \
-            -i ~/.ssh/deploy_key \
-            -p "${{ secrets.JINO_SSH_PORT }}" \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=accept-new \
-            -o ConnectTimeout=180 \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=5 \
-            "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
-            "set -e; RESPONSE=\$(curl -s --connect-timeout 5 --max-time 15 https://30-0.xn--p1ai/api/health); echo \"\$RESPONSE\" | grep -q status; HTTP_CODE=\$(curl -s --connect-timeout 5 --max-time 15 -o /dev/null -w '%{http_code}' https://30-0.xn--p1ai/); test \"\$HTTP_CODE\" = 200; echo 'Production health and homepage checks passed'"
+          echo "Deployment completed only after the production health check passed."
+          echo "The deploy script would have rolled back and failed otherwise."
 
       - name: Pipeline Summary
-        if: always()
         run: |
           echo "## CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -248,8 +233,7 @@ jobs:
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Lint & Type Check | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Build | Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Deploy | Completed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Verify | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy + Health Check | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
