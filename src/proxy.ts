@@ -11,7 +11,7 @@ export async function proxy(request: NextRequest) {
   if (path.startsWith('/api/daily') || path.startsWith('/api/referrals')) {
     return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 403 });
   }
-  const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path === '/api/auth/profile';
+  const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path.startsWith('/api/telegram') || path === '/api/auth/profile';
   if (!protectedPath) return NextResponse.next();
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
@@ -20,12 +20,10 @@ export async function proxy(request: NextRequest) {
   }
   const suppliedUser = request.nextUrl.searchParams.get('userId');
   if (suppliedUser && suppliedUser !== userId) return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
-  if (['POST', 'PATCH', 'PUT'].includes(request.method)) {
-    try {
-      const body = await request.clone().json();
-      if (body.userId && body.userId !== userId) return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
-    } catch { return NextResponse.json({ error: 'Некорректный запрос' }, { status: 400 }); }
-  }
+  // Do not consume or clone mutation bodies in the proxy. Under Passenger the
+  // request stream is not reliably replayable, which made every valid game
+  // POST fail with “Некорректный запрос”. Mutation handlers derive the user
+  // from the signed Telegram session and never trust a body userId.
   const match = path.match(/^\/api\/runs\/([^/]+)/);
   if (match && match[1] !== 'active') {
     const run = await db.gameRun.findUnique({ where: { id: match[1] }, select: { userId: true } });

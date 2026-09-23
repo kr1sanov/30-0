@@ -347,6 +347,14 @@ export default function GameSetup() {
   // Current game mode
   const currentGameMode: GameModeType = config.gameMode ?? 'classic';
 
+  // Only the classic mode is released. Normalize persisted drafts from older
+  // builds so users cannot get stuck in an unfinished mode.
+  useEffect(() => {
+    if (currentGameMode !== 'classic') {
+      setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+    }
+  }, [currentGameMode, setConfig]);
+
   // Fetch clubs when single_club mode is selected
   useEffect(() => {
     if (currentGameMode === 'single_club' && clubs.length === 0) {
@@ -512,7 +520,7 @@ export default function GameSetup() {
             {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
               ([key, val]) => {
                 const isSelected = currentGameMode === key;
-                const isComingSoon = key !== 'classic' && key !== 'single_club';
+                const isComingSoon = key !== 'classic';
                 return (
                   <motion.div
                     key={key}

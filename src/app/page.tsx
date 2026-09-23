@@ -42,7 +42,7 @@ const STEPS = [
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычная', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
-  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: false, color: '#00C896', gameMode: 'single_club' as const },
   { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', gameMode: 'daily' as const },
   { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
@@ -656,6 +656,8 @@ function DraftScreen() {
           </motion.div>
         )}
       </AnimatePresence>
+      <div className="lg:grid lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <div className="space-y-3 lg:sticky lg:top-20">
       {/* ── Header: Formation + Rerolls + Restart ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -813,6 +815,10 @@ function DraftScreen() {
         </div>
       </div>
 
+        </div>
+
+        <div className="mt-3 space-y-3 lg:mt-0">
+
       {/* ── Spin Section ── */}
       <div ref={spinWheelRef} className="space-y-2">
         <SpinWheel />
@@ -830,6 +836,8 @@ function DraftScreen() {
       {/* ── Player List ── */}
       <div>
         {currentSpin && <PlayerList />}
+      </div>
+        </div>
       </div>
 
       {/* ── Restart Modal ── */}
@@ -1260,7 +1268,11 @@ export default function Home() {
       <div className="football-field-bg" />
       <Header />
       <main
-        className="flex-1 w-full max-w-lg mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10"
+        className={`flex-1 w-full mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10 ${
+          ['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'].includes(screen)
+            ? 'max-w-7xl'
+            : 'max-w-4xl'
+        }`}
       >
         <ErrorBoundary>
           {screen === 'home' ? renderScreen() : !_hasHydrated ? <p role="status">Проверяем вход…</p> : !isAuthenticated ? <TelegramLogin /> : renderScreen()}

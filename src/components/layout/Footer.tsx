@@ -1,7 +1,7 @@
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
-import { Home, Play, User, Instagram } from 'lucide-react';
+import { Home, Play, User } from 'lucide-react';
 
 interface FooterNavLink {
   label: string;
@@ -42,14 +42,6 @@ export default function Footer() {
     },
   ];
 
-  const socialLinks = [
-    {
-      label: 'Instagram',
-      icon: <Instagram className="w-4 h-4" />,
-      href: 'https://www.instagram.com/30_0app',
-    },
-  ];
-
   const legalLinks = [
     { label: 'Политика конфиденциальности', href: '#' },
     { label: 'Условия использования', href: '#' },
@@ -76,21 +68,6 @@ export default function Footer() {
               </button>
             ))}
 
-            {/* Divider */}
-            <span className="hidden sm:block text-[#9CA3AF]/20">|</span>
-
-            {socialLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-sm text-[#9CA3AF] hover:text-white transition-colors duration-200"
-              >
-                {link.icon}
-                <span>{link.label}</span>
-              </a>
-            ))}
           </div>
         </div>
 
