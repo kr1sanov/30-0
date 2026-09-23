@@ -225,7 +225,7 @@ jobs:
           MAX_RETRIES=30
           RETRY_INTERVAL=10
           for i in $(seq 1 $MAX_RETRIES); do
-            RESPONSE=$(curl -s --connect-timeout 15 --max-time 20 https://30-0.xn--p1ai/api/health 2>/dev/null || echo "")
+            RESPONSE=$(curl -4 -s --connect-timeout 15 --max-time 20 https://30-0.xn--p1ai/api/health 2>/dev/null || echo "")
             STATUS=$(echo "$RESPONSE" | grep -o '"status":"ok"' || echo "")
             if [ -n "$STATUS" ]; then
               echo "Health check PASSED after $((i * RETRY_INTERVAL))s: $RESPONSE"
@@ -239,7 +239,7 @@ jobs:
 
       - name: Check homepage HTTP status
         run: |
-          HTTP_CODE=$(curl -s --connect-timeout 15 --max-time 20 -o /dev/null -w "%{http_code}" https://30-0.xn--p1ai/ 2>/dev/null || echo "000")
+          HTTP_CODE=$(curl -4 -s --connect-timeout 15 --max-time 20 -o /dev/null -w "%{http_code}" https://30-0.xn--p1ai/ 2>/dev/null || echo "000")
           echo "Homepage HTTP code: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ]; then
             echo "::error::Homepage returned HTTP $HTTP_CODE (expected 200)"
