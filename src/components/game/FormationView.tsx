@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Colors ─── */
-const ACCENT = '#00C896';
+const ACCENT = 'var(--club-primary)';
+const accentMix = (percent: number) => `color-mix(in srgb, var(--club-primary) ${percent}%, transparent)`;
 
 // Slot category colors for circles
 const SLOT_COLORS: Record<PositionCategory, string> = {
@@ -365,7 +366,7 @@ export default function FormationView() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
-            style={{ backgroundColor: '#0a0a0a', border: `1px solid ${ACCENT}25` }}
+            style={{ backgroundColor: '#0a0a0a', border: `1px solid ${accentMix(20)}` }}
           >
             <span className="text-[10px] text-[#94a3b8]">Выберите позицию для</span>
             <span className="text-[10px] font-bold text-white">
@@ -597,7 +598,7 @@ export default function FormationView() {
                         ? `2px solid ${ACCENT}`
                         : '2px dashed rgba(255,255,255,0.2)',
                       boxShadow: isCompatible || isMoveTarget
-                        ? `0 0 8px 2px ${ACCENT}40, 0 0 16px 4px ${ACCENT}15`
+                        ? '0 0 8px 2px var(--club-glow), 0 0 16px 4px var(--club-glow)'
                         : 'none',
                       animation: isCompatible || isMoveTarget
                         ? 'strongGreenPulse 1.2s ease-in-out infinite'

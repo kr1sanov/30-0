@@ -310,6 +310,7 @@ export default function SimulationResult() {
     const pos = getPositionOrdinal(data.position);
     const lines = [
       `⚽ 30-0 RPL`,
+      config.gameMode === 'single_club' ? `🏟️ Мой клуб: ${config.clubName ?? 'выбранный клуб'}` : '⚔️ Обычный режим',
       `${data.points} оч · ${pos} место`,
       `${data.wins}В ${data.draws}Н ${data.losses}П`,
       `Забито ${data.goalsFor} · Пропущено ${data.goalsAgainst}`,
@@ -325,8 +326,9 @@ export default function SimulationResult() {
       lines.push(`📐 ${data.formation}`);
     }
     lines.push('#30п0 #РПЛ');
+    lines.push('https://30-0.рф');
     return lines.join('\n');
-  }, [data, earnedTrophies]);
+  }, [data, earnedTrophies, config.gameMode, config.clubName]);
 
   if (!data) return null;
 
@@ -461,7 +463,7 @@ export default function SimulationResult() {
               transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.3 }}
               className="text-center py-4"
             >
-              <div className="text-5xl sm:text-6xl font-black text-[#00C896] leading-none">
+              <div className="text-5xl sm:text-6xl font-black leading-none" style={{ color: 'var(--club-primary)' }}>
                 {data.points}
                 <span className="text-2xl sm:text-3xl text-[#9CA3AF] font-bold ml-1">оч</span>
               </div>
@@ -482,7 +484,7 @@ export default function SimulationResult() {
               transition={{ delay: 0.5 }}
               className="flex items-center justify-center gap-1 text-lg font-black"
             >
-              <span className="text-[#00C896]">{data.wins}В</span>
+              <span style={{ color: 'var(--club-primary)' }}>{data.wins}В</span>
               <span className="text-[#64748b] mx-1">·</span>
               <span className="text-[#9CA3AF]">{data.draws}Н</span>
               <span className="text-[#64748b] mx-1">·</span>
@@ -496,7 +498,7 @@ export default function SimulationResult() {
               transition={{ delay: 0.6 }}
               className="flex items-center justify-center gap-2 text-sm font-bold"
             >
-              <span className="text-[#00C896]">Забито {data.goalsFor}</span>
+              <span style={{ color: 'var(--club-primary)' }}>Забито {data.goalsFor}</span>
               <span className="text-[#64748b]">·</span>
               <span className="text-[#ef4444]">Пропущено {data.goalsAgainst}</span>
             </motion.div>
@@ -659,13 +661,14 @@ export default function SimulationResult() {
               <Button
                 onClick={() => { haptic('light'); goHome(); }}
                 className="w-full h-12 text-base font-black text-white rounded-xl"
-                style={{ backgroundColor: '#00C896' }}
+                style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-on-primary)' }}
               >
                 Завершить сезон
               </Button>
               <Button
                 onClick={() => { haptic('medium'); setScreen('awards'); }}
-                className="w-full h-14 text-base font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-xl shadow-lg shadow-[#00C896]/25 transition-all hover:shadow-[#00C896]/40"
+                className="w-full h-14 text-base font-black rounded-xl transition-all"
+                style={{ background: 'linear-gradient(135deg, var(--club-primary), var(--club-secondary))', color: 'var(--club-on-primary)', boxShadow: '0 8px 24px var(--club-glow)' }}
               >
                 🏆 Награды сезона
               </Button>
@@ -676,7 +679,8 @@ export default function SimulationResult() {
                     const confirmed = await showConfirm('Начать новый драфт? Текущий результат будет сохранён.');
                     if (confirmed) resetGame();
                   }}
-                  className="flex-1 h-11 rounded-xl bg-[#00C896] hover:bg-[#00A67A] text-white font-bold shadow-lg shadow-[#00C896]/20"
+                  className="flex-1 h-11 rounded-xl font-bold"
+                  style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-on-primary)', boxShadow: '0 6px 20px var(--club-glow)' }}
                 >
                   🔄 Играть снова
                 </Button>
@@ -721,6 +725,13 @@ export default function SimulationResult() {
               trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
               teamName={config.teamName}
               managerName={null}
+              mode={config.gameMode === 'single_club' ? 'single_club' : 'classic'}
+              clubName={config.clubName}
+              players={slots.filter(slot => slot.playerName).map(slot => ({
+                name: slot.playerName!,
+                position: slot.position,
+                rating: slot.playerRating,
+              }))}
             />
           ) : null
         }
@@ -746,6 +757,13 @@ export default function SimulationResult() {
             trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
             teamName={config.teamName}
             managerName={null}
+            mode={config.gameMode === 'single_club' ? 'single_club' : 'classic'}
+            clubName={config.clubName}
+            players={slots.filter(slot => slot.playerName).map(slot => ({
+              name: slot.playerName!,
+              position: slot.position,
+              rating: slot.playerRating,
+            }))}
           />
         </div>
       )}

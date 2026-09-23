@@ -9,7 +9,7 @@ import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
 
 /* ─── Colors ─── */
-const ACCENT = '#00C896';
+const ACCENT = 'var(--club-primary)';
 const BG_CARD = '#141414';
 
 /* ─── RPL data for slot reels ─── */
@@ -321,7 +321,8 @@ export default function SpinWheel() {
                   className="w-full h-12 text-base font-black text-white rounded-xl transition-all flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: ACCENT,
-                    boxShadow: `0 4px 20px ${ACCENT}40`,
+                    color: 'var(--club-on-primary)',
+                    boxShadow: '0 4px 20px var(--club-glow)',
                   }}
                 >
                   Крутить

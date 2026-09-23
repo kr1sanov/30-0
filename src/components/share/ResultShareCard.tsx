@@ -1,10 +1,10 @@
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
+import { getClubTheme } from '@/lib/clubThemes';
 
 const BG = '#0A0A0A';
 const CARD_BG = '#141414';
-const ACCENT = '#00C896';
 const GOLD = '#FFD700';
 
 interface ResultShareCardProps {
@@ -21,6 +21,9 @@ interface ResultShareCardProps {
   trophies?: Array<{ icon: string; name: string }>;
   teamName?: string | null;
   managerName?: string | null;
+  mode?: 'classic' | 'single_club';
+  clubName?: string | null;
+  players?: Array<{ name: string; position: string; rating?: number }>;
 }
 
 function getPositionSuffix(pos: number): string {
@@ -29,8 +32,9 @@ function getPositionSuffix(pos: number): string {
   return 'е';
 }
 
-export default function ResultShareCard({ data, trophies, teamName, managerName }: ResultShareCardProps) {
+export default function ResultShareCard({ data, trophies, teamName, managerName, mode = 'classic', clubName, players = [] }: ResultShareCardProps) {
   const { profileStats } = useGameStore();
+  const theme = getClubTheme(mode === 'single_club' ? clubName ?? undefined : undefined);
   const posSuffix = getPositionSuffix(data.position);
   const isChampion = data.position === 1;
   const isTop4 = data.position <= 4;
@@ -49,9 +53,9 @@ export default function ResultShareCard({ data, trophies, teamName, managerName 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
           <div style={{
             width: 40, height: 40, borderRadius: 10,
-            background: `linear-gradient(135deg, ${ACCENT} 0%, #00a878 100%)`,
+            background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary} 100%)`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 20, fontWeight: 900, color: '#000',
+            fontSize: 20, fontWeight: 900, color: theme.onPrimary,
           }}>30</div>
           <div>
             <div style={{ color: '#fff', fontSize: 16, fontWeight: 800, letterSpacing: 1 }}>30-0 RPL</div>
@@ -65,12 +69,12 @@ export default function ResultShareCard({ data, trophies, teamName, managerName 
         background: isChampion
           ? `linear-gradient(180deg, ${GOLD}15 0%, ${BG} 100%)`
           : isTop4
-            ? `linear-gradient(180deg, ${ACCENT}10 0%, ${BG} 100%)`
+            ? `linear-gradient(180deg, ${theme.primary}18 0%, ${BG} 100%)`
             : BG,
         padding: '12px 24px 20px',
         textAlign: 'center',
       }}>
-        <div style={{ fontSize: 48, fontWeight: 900, color: isChampion ? GOLD : isTop4 ? ACCENT : '#fff' }}>
+        <div style={{ fontSize: 48, fontWeight: 900, color: isChampion ? GOLD : isTop4 ? theme.primary : '#fff' }}>
           {data.points}
         </div>
         <div style={{ fontSize: 14, color: '#9CA3AF', fontWeight: 600, marginTop: -4 }}>
@@ -80,7 +84,7 @@ export default function ResultShareCard({ data, trophies, teamName, managerName 
         {/* W-D-L */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: ACCENT }}>{data.wins}</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: theme.primary }}>{data.wins}</div>
             <div style={{ fontSize: 10, color: '#64748b' }}>побед</div>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -99,6 +103,25 @@ export default function ResultShareCard({ data, trophies, teamName, managerName 
           <span style={{ color: '#9CA3AF', fontSize: 12 }}>Пропущено <b style={{ color: '#fff' }}>{data.goalsAgainst}</b></span>
         </div>
       </div>
+
+      <div style={{ padding: '0 24px 12px', color: '#9CA3AF', fontSize: 11, fontWeight: 700 }}>
+        {mode === 'single_club' ? `МОЙ КЛУБ · ${clubName ?? 'КЛУБ'}` : 'ОБЫЧНЫЙ РЕЖИМ'}
+      </div>
+
+      {players.length > 0 && (
+        <div style={{ padding: '10px 24px 14px', background: CARD_BG, borderTop: `2px solid ${theme.primary}55` }}>
+          <div style={{ color: '#64748b', fontSize: 9, fontWeight: 800, letterSpacing: 1.4, marginBottom: 8 }}>СОСТАВ</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
+            {players.slice(0, 11).map((player, index) => (
+              <div key={`${player.position}-${player.name}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <span style={{ color: theme.primary, fontSize: 9, fontWeight: 900, width: 24 }}>{player.position}</span>
+                <span style={{ color: '#FFFFFF', fontSize: 10, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>{player.name}</span>
+                {player.rating ? <span style={{ color: '#9CA3AF', fontSize: 9, fontWeight: 800 }}>{player.rating}</span> : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Trophies */}
       {trophies && trophies.length > 0 && (
@@ -138,7 +161,7 @@ export default function ResultShareCard({ data, trophies, teamName, managerName 
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <span style={{ color: '#4a5568', fontSize: 10 }}>Сезонов: {profileStats.totalSeasons} · Титулов: {profileStats.titles}</span>
-        <span style={{ color: ACCENT, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>t.me/RPL30_bot</span>
+        <span style={{ color: theme.primary, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>30-0.рф</span>
       </div>
     </div>
   );

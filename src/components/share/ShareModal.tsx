@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
 import { Metrics } from '@/lib/metrics';
+import { toast } from 'sonner';
 
 const BG = '#0A0A0A';
 
@@ -17,6 +18,15 @@ interface ShareModalProps {
 export default function ShareModal({ isOpen, onClose, shareText, cardContent }: ShareModalProps) {
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   const captureCard = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
@@ -83,6 +93,37 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     URL.revokeObjectURL(url);
   }, [captureCard]);
 
+  const handleTelegramShare = useCallback(() => {
+    const url = `https://t.me/share/url?url=${encodeURIComponent('https://30-0.рф')}&text=${encodeURIComponent(shareText)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    Metrics.shareResult('telegram');
+  }, [shareText]);
+
+  const handleCopyImage = useCallback(async () => {
+    setIsSharing(true);
+    const blob = await captureCard();
+    if (!blob) {
+      toast.error('Не удалось создать изображение');
+      setIsSharing(false);
+      return;
+    }
+    try {
+      if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        Metrics.shareResult('image_clipboard');
+        toast.success('Изображение скопировано');
+      } else {
+        await handleSaveImage();
+        toast.info('Браузер сохранил PNG вместо копирования');
+      }
+    } catch {
+      await handleSaveImage();
+      toast.info('Копирование недоступно — PNG сохранён');
+    } finally {
+      setIsSharing(false);
+    }
+  }, [captureCard, handleSaveImage]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -100,6 +141,9 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
           />
           {/* Modal */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Поделиться результатом"
             initial={{ opacity: 0, y: 60, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 60, scale: 0.95 }}
@@ -142,13 +186,36 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
 
               {/* Action buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button
+                  onClick={handleTelegramShare}
+                  style={{
+                    width: '100%', minHeight: 48, borderRadius: 12,
+                    background: '#229ED9', color: '#fff', fontSize: 15, fontWeight: 700,
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  Поделиться в Telegram
+                </button>
+
+                <button
+                  onClick={handleCopyImage}
+                  disabled={isSharing}
+                  style={{
+                    width: '100%', minHeight: 48, borderRadius: 12,
+                    background: 'var(--club-primary)', color: 'var(--club-on-primary)',
+                    fontSize: 15, fontWeight: 700, border: 'none', cursor: isSharing ? 'wait' : 'pointer',
+                  }}
+                >
+                  {isSharing ? 'Готовим изображение…' : 'Скопировать изображение'}
+                </button>
+
                 {/* Native share */}
                 <button
                   onClick={handleShareNative}
                   disabled={isSharing}
                   style={{
                     width: '100%', padding: '14px 0', borderRadius: 12,
-                    background: 'linear-gradient(135deg, #00C896 0%, #00A67A 100%)',
+                    background: '#1E1E1E',
                     color: '#fff',
                     fontSize: 15, fontWeight: 700,
                     border: 'none', cursor: isSharing ? 'wait' : 'pointer',
@@ -156,7 +223,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                     boxShadow: '0 4px 15px rgba(0, 200, 150, 0.3)',
                   }}
                 >
-                  {isSharing ? 'Делимся...' : 'Поделиться'}
+                  {isSharing ? 'Готовим…' : 'Поделиться через устройство'}
                 </button>
 
                 {/* Save image */}
@@ -168,7 +235,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                     fontSize: 13, border: '1px solid #2a2a2a', cursor: 'pointer',
                   }}
                 >
-                  Сохранить картинку
+                  Сохранить PNG
                 </button>
 
                 {/* Close */}

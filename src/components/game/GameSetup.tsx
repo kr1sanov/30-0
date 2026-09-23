@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
 import {
@@ -21,7 +21,8 @@ import { Metrics } from '@/lib/metrics';
 import { useAuthStore } from '@/store/authStore';
 
 /* ─── Colors ─── */
-const ACCENT = '#00C896';
+const ACCENT = 'var(--club-primary)';
+const accentMix = (percent: number) => `color-mix(in srgb, var(--club-primary) ${percent}%, transparent)`;
 const BG_PAGE = '#0A0A0A';
 const BG_CARD = '#141414';
 
@@ -257,14 +258,16 @@ function PillButton({
 }) {
   return (
     <motion.button
+      type="button"
       onClick={onClick}
+      aria-pressed={isSelected}
       whileTap={{ scale: 0.95 }}
       className="shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 whitespace-nowrap"
       style={{
-        backgroundColor: isSelected ? `${color}20` : 'transparent',
+        backgroundColor: isSelected ? accentMix(14) : 'transparent',
         color: isSelected ? color : '#9CA3AF',
         border: isSelected ? `1.5px solid ${color}` : '1.5px solid #2a2a2a',
-        boxShadow: isSelected ? `0 0 12px ${color}30` : 'none',
+        boxShadow: isSelected ? '0 0 12px var(--club-glow)' : 'none',
       }}
     >
       {label}
@@ -284,14 +287,17 @@ function ClubCard({
 }) {
   return (
     <motion.button
+      type="button"
       onClick={onClick}
+      aria-pressed={isSelected}
+      aria-label={`${isSelected ? 'Выбран клуб' : 'Выбрать клуб'} ${club.nameRu}`}
       whileTap={{ scale: 0.96 }}
       whileHover={{ scale: 1.02 }}
       className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
       style={{
-        backgroundColor: isSelected ? `${ACCENT}15` : BG_CARD,
+        backgroundColor: isSelected ? accentMix(10) : BG_CARD,
         borderColor: isSelected ? ACCENT : '#2a2a2a',
-        boxShadow: isSelected ? `0 0 16px ${ACCENT}30` : 'none',
+        boxShadow: isSelected ? '0 0 16px var(--club-glow)' : 'none',
       }}
     >
       {/* Selected checkmark */}
@@ -311,7 +317,7 @@ function ClubCard({
       <div
         className="w-10 h-10 rounded-lg mx-auto mb-1.5 flex items-center justify-center text-lg"
         style={{
-          backgroundColor: isSelected ? `${ACCENT}20` : '#1f1f1f',
+          backgroundColor: isSelected ? accentMix(14) : '#1f1f1f',
         }}
       >
         ⚽
@@ -340,6 +346,7 @@ export default function GameSetup() {
   // Club list for single_club mode
   const [clubs, setClubs] = useState<ClubData[]>([]);
   const [clubsLoading, setClubsLoading] = useState(false);
+  const [clubsError, setClubsError] = useState<string | null>(null);
   const [clubSearch, setClubSearch] = useState('');
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -347,29 +354,29 @@ export default function GameSetup() {
   // Current game mode
   const currentGameMode: GameModeType = config.gameMode ?? 'classic';
 
-  // Only the classic mode is released. Normalize persisted drafts from older
-  // builds so users cannot get stuck in an unfinished mode.
-  useEffect(() => {
-    if (currentGameMode !== 'classic') {
-      setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+  const loadClubs = useCallback(async () => {
+    setClubsLoading(true);
+    setClubsError(null);
+    try {
+      const response = await fetch('/api/clubs');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) throw new Error('Некорректный ответ');
+      setClubs(data as ClubData[]);
+    } catch (error) {
+      console.error('Failed to load clubs:', error);
+      setClubsError('Не удалось загрузить клубы. Проверьте соединение и повторите.');
+    } finally {
+      setClubsLoading(false);
     }
-  }, [currentGameMode, setConfig]);
+  }, []);
 
   // Fetch clubs when single_club mode is selected
   useEffect(() => {
-    if (currentGameMode === 'single_club' && clubs.length === 0) {
-      setClubsLoading(true);
-      fetch('/api/clubs')
-        .then((res) => res.json())
-        .then((data) => {
-          if (Array.isArray(data)) {
-            setClubs(data);
-          }
-        })
-        .catch(console.error)
-        .finally(() => setClubsLoading(false));
+    if (currentGameMode === 'single_club' && clubs.length === 0 && !clubsLoading && !clubsError) {
+      void loadClubs();
     }
-  }, [currentGameMode, clubs.length]);
+  }, [currentGameMode, clubs.length, clubsLoading, clubsError, loadClubs]);
 
   // Filter clubs by search
   const filteredClubs = clubs.filter((c) =>
@@ -432,7 +439,7 @@ export default function GameSetup() {
   const handleGameModeSelect = (mode: GameModeType) => {
     selectionChanged();
     if (mode === 'classic') {
-      setConfig({ gameMode: 'classic', clubFilter: undefined, nationalityFilter: undefined });
+      setConfig({ gameMode: 'classic', clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
     } else if (mode === 'single_club') {
       setConfig({ gameMode: 'single_club', nationalityFilter: undefined });
     } else if (mode === 'nations_cup') {
@@ -520,16 +527,19 @@ export default function GameSetup() {
             {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
               ([key, val]) => {
                 const isSelected = currentGameMode === key;
-                const isComingSoon = key !== 'classic';
+                const isComingSoon = key !== 'classic' && key !== 'single_club';
                 return (
-                  <motion.div
+                  <motion.button
+                    type="button"
                     key={key}
+                    disabled={isComingSoon}
+                    aria-pressed={isSelected && !isComingSoon}
                     whileTap={!isComingSoon ? { scale: 0.97 } : undefined}
-                    className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden"
+                    className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden disabled:cursor-not-allowed"
                     style={{
-                      backgroundColor: isSelected && !isComingSoon ? `${ACCENT}15` : 'transparent',
+                      backgroundColor: isSelected && !isComingSoon ? accentMix(10) : 'transparent',
                       borderColor: isSelected && !isComingSoon ? ACCENT : '#2a2a2a',
-                      boxShadow: isSelected && !isComingSoon ? `0 0 12px ${ACCENT}25` : 'none',
+                      boxShadow: isSelected && !isComingSoon ? '0 0 12px var(--club-glow)' : 'none',
                       opacity: isComingSoon ? 0.5 : 1,
                       cursor: isComingSoon ? 'not-allowed' : 'pointer',
                     }}
@@ -550,7 +560,7 @@ export default function GameSetup() {
                     <div className={`text-[10px] mt-1 leading-tight ${isComingSoon ? 'text-[#9CA3AF]/40' : 'text-[#9CA3AF]'}`}>
                       {val.description}
                     </div>
-                  </motion.div>
+                  </motion.button>
                 );
               }
             )}
@@ -581,13 +591,13 @@ export default function GameSetup() {
                   animate={{ opacity: 1, y: 0 }}
                   className="mb-3 rounded-xl p-3 flex items-center gap-3"
                   style={{
-                    backgroundColor: `${ACCENT}10`,
-                    border: `1px solid ${ACCENT}30`,
+                    backgroundColor: accentMix(7),
+                    border: `1px solid ${accentMix(22)}`,
                   }}
                 >
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                    style={{ backgroundColor: `${ACCENT}20` }}
+                    style={{ backgroundColor: accentMix(14) }}
                   >
                     🏟️
                   </div>
@@ -631,6 +641,17 @@ export default function GameSetup() {
                   <div className="w-6 h-6 border-2 border-[#2a2a2a] border-t-[#00C896] rounded-full animate-spin" />
                   <span className="ml-2 text-sm text-[#9CA3AF]">Загрузка клубов...</span>
                 </div>
+              ) : clubsError ? (
+                <div role="alert" className="rounded-xl border border-[#ef4444]/30 bg-[#ef4444]/10 p-4 text-center">
+                  <p className="text-sm text-[#ef4444]">{clubsError}</p>
+                  <button
+                    type="button"
+                    onClick={() => void loadClubs()}
+                    className="mt-3 min-h-11 rounded-lg border border-[#ef4444]/40 px-4 text-sm font-bold text-[#FFFFFF]"
+                  >
+                    Повторить
+                  </button>
+                </div>
               ) : (
                 <div className="max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
@@ -642,9 +663,9 @@ export default function GameSetup() {
                         onClick={() => {
                           selectionChanged();
                           if (config.clubFilter === club.id) {
-                            setConfig({ clubFilter: undefined });
+                            setConfig({ clubFilter: undefined, clubName: undefined });
                           } else {
-                            setConfig({ clubFilter: club.id });
+                            setConfig({ clubFilter: club.id, clubName: club.nameRu });
                           }
                         }}
                       />
@@ -860,9 +881,9 @@ export default function GameSetup() {
               className="rounded-xl p-3 text-center transition-all duration-200 border-2"
               style={{
                 backgroundColor:
-                  config.draftMode === key ? `${ACCENT}15` : 'transparent',
+                  config.draftMode === key ? accentMix(10) : 'transparent',
                 borderColor: config.draftMode === key ? ACCENT : '#2a2a2a',
-                boxShadow: config.draftMode === key ? `0 0 12px ${ACCENT}25` : 'none',
+                boxShadow: config.draftMode === key ? '0 0 12px var(--club-glow)' : 'none',
               }}
             >
               <div
@@ -898,9 +919,9 @@ export default function GameSetup() {
               className="rounded-xl p-3 text-center transition-all duration-200 border-2"
               style={{
                 backgroundColor:
-                  config.ratingMode === key ? `${ACCENT}15` : 'transparent',
+                  config.ratingMode === key ? accentMix(10) : 'transparent',
                 borderColor: config.ratingMode === key ? ACCENT : '#2a2a2a',
-                boxShadow: config.ratingMode === key ? `0 0 12px ${ACCENT}25` : 'none',
+                boxShadow: config.ratingMode === key ? '0 0 12px var(--club-glow)' : 'none',
               }}
             >
               <div
@@ -1055,7 +1076,8 @@ export default function GameSetup() {
           className="w-full h-12 text-base font-black text-white rounded-xl transition-all"
           style={{
             backgroundColor: canStart && !isStarting ? ACCENT : '#2a2a2a',
-            boxShadow: canStart && !isStarting ? `0 4px 20px ${ACCENT}40` : 'none',
+            color: canStart && !isStarting ? 'var(--club-on-primary)' : '#64748b',
+            boxShadow: canStart && !isStarting ? '0 4px 20px var(--club-glow)' : 'none',
             opacity: canStart && !isStarting ? 1 : 0.6,
             cursor: canStart && !isStarting ? 'pointer' : 'not-allowed',
           }}
@@ -1074,7 +1096,9 @@ export default function GameSetup() {
           ? 'Выберите нацию'
           : dailyChallenge
           ? 'Начать челлендж →'
-          : 'Начать драфт'}
+          : currentGameMode === 'single_club'
+          ? `Начать драфт · ${selectedClub?.nameRu ?? 'Мой клуб'} →`
+          : 'Начать драфт →'}
         </Button>
     </div>
   );

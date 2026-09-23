@@ -44,6 +44,12 @@
 }
 
 :root {
+  --club-primary: #00C896;
+  --club-secondary: #0F766E;
+  --club-accent: #5EEAD4;
+  --club-on-primary: #07110E;
+  --club-surface: #0D1A17;
+  --club-glow: rgba(0, 200, 150, 0.28);
   --radius: 0.625rem;
   --background: #0A0A0A;
   --foreground: #FFFFFF;
@@ -254,9 +260,30 @@
 
 /* Focus visible styles for accessibility */
 *:focus-visible {
-  outline: 2px solid #00C896;
+  outline: 2px solid var(--club-primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+.club-theme-shell {
+  --game-accent: var(--club-primary);
+  background:
+    radial-gradient(circle at 50% 0%, var(--club-glow), transparent 30rem),
+    #0A0A0A;
+  transition: background 300ms ease;
+}
+
+.club-accent-text { color: var(--club-primary); }
+.club-accent-bg { background-color: var(--club-primary); color: var(--club-on-primary); }
+.club-accent-border { border-color: color-mix(in srgb, var(--club-primary) 45%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 button:focus-visible {
