@@ -360,19 +360,7 @@ for i in $(seq 1 $MAX_RETRIES); do
   fi
 done
 
-if [ "$HEALTHY" = true ]; then
-  # Register the webhook only when the owner has configured both bot secrets.
-  # Missing credentials do not prevent the game itself from being deployed.
-  if node --env-file=.env -e 'process.exit(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_WEBHOOK_SECRET ? 0 : 1)'; then
-    if node --env-file=.env scripts/set-telegram-webhook.mjs; then
-      echo "✅ Telegram webhook configured"
-    else
-      echo "⚠️ Telegram webhook could not be configured; check the bot token and secret"
-    fi
-  else
-    echo "⚠️ Telegram notifications are not active: configure TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET in .env"
-  fi
-fi
+# Telegram webhook is configured by the GitHub runner after this SSH deployment succeeds.
 
 if [ "$HEALTHY" = false ]; then
   echo ""
