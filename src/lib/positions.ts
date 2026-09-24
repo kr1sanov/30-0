@@ -281,7 +281,9 @@ export interface Formation {
   slots: FormationSlot[];
 }
 
-/** All 12 formations available in the game */
+/** All formations available in the game. Flank slots are ordered from the
+ * team's right to left; pitch renderers mirror screen coordinates so the
+ * player's left is shown on the left side of the screen. */
 export const FORMATIONS: Formation[] = [
   // 1. 4-3-3 — Attacking with width
   {
@@ -423,11 +425,11 @@ export const FORMATIONS: Formation[] = [
     ],
   },
 
-  // 8. 4-1-4-1 — Defensive mid shield
+  // 8. 4-1-2-1-2 — Diamond midfield
   {
-    id: '4-1-4-1',
-    name: '4-1-4-1',
-    description: 'С опорным щитом',
+    id: '4-1-2-1-2',
+    name: '4-1-2-1-2',
+    description: 'Ромб в полузащите и два нападающих',
     slots: [
       { position: 'ВР', label: 'ВР' },
       { position: 'ПЗ', label: 'ПЗ' },
@@ -435,10 +437,10 @@ export const FORMATIONS: Formation[] = [
       { position: 'ЦЗ', label: 'ЦЗ' },
       { position: 'ЛЗ', label: 'ЛЗ' },
       { position: 'ОП', label: 'ОП' },
-      { position: 'ПП', label: 'ПП' },
       { position: 'ЦП', label: 'ЦП' },
       { position: 'ЦП', label: 'ЦП' },
-      { position: 'ЛП', label: 'ЛП' },
+      { position: 'АП', label: 'АП' },
+      { position: 'НП', label: 'НП' },
       { position: 'НП', label: 'НП' },
     ],
   },
@@ -523,6 +525,19 @@ export const FORMATIONS: Formation[] = [
     ],
   },
 ];
+
+/** Display order follows the reference setup grid (four rows, three columns). */
+export const FORMATION_DISPLAY_ORDER = [
+  '4-3-3', '4-4-2', '4-2-3-1',
+  '4-5-1', '3-4-3', '3-5-2',
+  '5-4-1', '4-1-2-1-2', '4-4-1-1',
+  '5-3-2', '3-4-1-2', '4-2-2-2',
+] as const;
+
+/** Convert formation data's team-right-first columns into screen columns. */
+export function getPitchColumn(screenColumn: number): number {
+  return 100 - screenColumn;
+}
 
 // ---------------------------------------------------------------------------
 // Formation Lookup Helpers

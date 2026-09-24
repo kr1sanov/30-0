@@ -373,7 +373,9 @@ export const useGameStore = create<GameState>()(
             lastAssignedSlotIndex: null,
             justAssignedSlotIndex: null,
             seasonResult: null,
-            currentManager: null,
+            currentManager: runConfig.enableManagers
+              ? MANAGERS[Math.floor(Math.random() * MANAGERS.length)]
+              : null,
             screen: 'draft',
             lastConfig: { ...runConfig },
             lastDraftError: null,
