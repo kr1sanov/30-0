@@ -13,6 +13,9 @@ const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production',
 export async function GET(request: Request) {
   const userId = sessionUser(request);
   const user = userId ? await db.user.findUnique({ where: { id: userId } }) : null;
+  if (user?.provider === 'telegram') {
+    await db.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } }).catch(() => undefined);
+  }
   const csrf = randomBytes(32).toString('hex');
   const response = NextResponse.json({
     user: user?.provider === 'telegram' ? {
@@ -63,7 +66,7 @@ export async function POST(request: Request) {
     const user = await db.user.upsert({
       where: { providerId: `telegram_${verified.id}` },
       create: { ...data, provider: 'telegram', providerId: `telegram_${verified.id}`, displayName: verified.firstName || verified.username || 'Игрок' },
-      update: data,
+      update: { ...data, lastActiveAt: new Date() },
     });
     const response = NextResponse.json({ user: {
       id: user.id,
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
     } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
-    if (!user.telegramWelcomeSentAt && user.telegramNotificationsEnabled) {
+    if (user.telegramChatStarted && !user.telegramWelcomeSentAt && user.telegramNotificationsEnabled) {
       const chatId = telegramChatId(user.providerId);
       if (chatId) {
         void sendTelegramMessage(chatId, [
