@@ -1,14 +1,47 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { createTelegramLoginPopupUrl } from '@/lib/telegramLoginPopup';
+import { addTelegramLoginOrigin } from '@/lib/telegramLoginPopup';
 
-type TelegramAuthMessage = { event?: unknown; result?: unknown; id_token?: unknown; error?: unknown };
+type TelegramAuthResult = { id_token?: unknown; error?: unknown } | false;
+type TelegramWindow = typeof window & {
+  Telegram?: {
+    Login?: {
+      auth: (
+        options: { client_id: number; scope: Array<'profile'>; nonce: string; lang?: string },
+        callback: (result: TelegramAuthResult) => void,
+      ) => void;
+    };
+  };
+};
 type TelegramConfig = { webConfigured?: boolean; clientId?: string; csrf?: string };
+
+function loadTelegramLoginSdk(): Promise<void> {
+  const telegramWindow = window as TelegramWindow;
+  if (telegramWindow.Telegram?.Login) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    let script = document.querySelector<HTMLScriptElement>('script[data-telegram-login-sdk]');
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://telegram.org/js/telegram-login.js?5';
+      script.async = true;
+      script.dataset.telegramLoginSdk = 'true';
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', () => resolve(), { once: true });
+    script.addEventListener('error', () => reject(new Error('Не удалось загрузить окно входа Telegram.')), { once: true });
+  });
+}
+
+function telegramErrorMessage(error: unknown): string {
+  if (typeof error !== 'string') return 'Telegram не прислал подтверждение. Проверьте настройки URL входа в BotFather и повторите попытку.';
+  if (error === 'popup_closed') return 'Окно Telegram закрылось до завершения входа. Подтвердите вход и дождитесь возврата на сайт.';
+  return `Telegram отклонил вход: ${error.slice(0, 180)}`;
+}
 
 export default function AdminTelegramLogin() {
   const openLogin = useRef<(() => void) | null>(null);
-  const cleanupPopup = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
@@ -23,6 +56,7 @@ export default function AdminTelegramLogin() {
         if (!response.ok || !config.webConfigured || !config.clientId || !config.csrf) {
           throw new Error('Вход через Telegram пока не настроен.');
         }
+        await loadTelegramLoginSdk();
         if (cancelled) return;
 
         const { clientId, csrf } = config;
@@ -45,86 +79,47 @@ export default function AdminTelegramLogin() {
         };
 
         openLogin.current = () => {
-          setError('');
-          setBusy(true);
-
-          const origin = window.location.origin;
-          const authUrl = createTelegramLoginPopupUrl({
-            clientId,
-            origin,
-            redirectUri: `${origin}${window.location.pathname}`,
-            nonce: csrf,
-            lang: 'ru',
-          });
-          const popup = window.open(
-            authUrl,
-            'telegram_oidc_login',
-            'popup,width=550,height=650,resizable=yes,scrollbars=yes',
-          );
-
-          if (!popup) {
-            setError('Не удалось открыть Telegram. Разрешите всплывающие окна и попробуйте снова.');
+          const login = (window as TelegramWindow).Telegram?.Login;
+          if (!login) {
+            setError('Окно входа Telegram не загрузилось. Обновите страницу и попробуйте снова.');
             setBusy(false);
             return;
           }
 
-          let closedCheck: number | undefined;
-          let timeout: number | undefined;
-          let finished = false;
-          const cleanup = () => {
-            window.removeEventListener('message', onMessage);
-            if (closedCheck !== undefined) window.clearInterval(closedCheck);
-            if (timeout !== undefined) window.clearTimeout(timeout);
-            if (cleanupPopup.current === cleanup) cleanupPopup.current = null;
-          };
-          const finishWithError = () => {
-            if (finished) return;
-            finished = true;
-            cleanup();
-            if (!popup.closed) popup.close();
-            if (!cancelled) {
-              setError('Вход не завершён. Подтвердите вход в окне Telegram и попробуйте ещё раз.');
-              setBusy(false);
+          setError('');
+          setBusy(true);
+
+          // Let the official SDK own popup messaging and callback validation;
+          // add only the required application origin to its auth URL.
+          const originalOpen = window.open;
+          window.open = ((url?: string | URL, target?: string, features?: string) => {
+            const authUrl = typeof url === 'string' ? url : url?.toString();
+            let withOrigin = url;
+            if (authUrl) {
+              const parsed = new URL(authUrl, window.location.href);
+              if (parsed.origin === 'https://oauth.telegram.org' && parsed.pathname === '/auth') {
+                withOrigin = addTelegramLoginOrigin(parsed, window.location.origin);
+              }
             }
-          };
-          const onMessage = (event: MessageEvent) => {
-            if (event.origin !== 'https://oauth.telegram.org' || event.source !== popup) return;
+            return originalOpen.call(window, withOrigin, target, features);
+          }) as typeof window.open;
 
-            let message: TelegramAuthMessage;
-            try {
-              message = typeof event.data === 'string' ? JSON.parse(event.data) as TelegramAuthMessage : event.data as TelegramAuthMessage;
-            } catch {
-              return;
-            }
-            if (!message || message.event !== 'auth_result') return;
-
-            const idToken = typeof message.result === 'string'
-              ? message.result
-              : typeof message.id_token === 'string' ? message.id_token : null;
-            if (!idToken) {
-              finishWithError();
-              return;
-            }
-
-            if (finished) return;
-            finished = true;
-            cleanup();
-            if (!popup.closed) popup.close();
-            void exchangeIdToken(idToken);
-          };
-
-          cleanupPopup.current?.();
-          cleanupPopup.current = () => {
-            finished = true;
-            cleanup();
-            if (!popup.closed) popup.close();
-          };
-          window.addEventListener('message', onMessage);
-          closedCheck = window.setInterval(() => {
-            if (popup.closed) finishWithError();
-          }, 300);
-          timeout = window.setTimeout(finishWithError, 3 * 60_000);
-          popup.focus();
+          try {
+            login.auth({ client_id: Number(clientId), scope: ['profile'], nonce: csrf, lang: 'ru' }, result => {
+              if (cancelled) return;
+              if (!result || typeof result.id_token !== 'string') {
+                setError(telegramErrorMessage(result && result.error));
+                setBusy(false);
+                return;
+              }
+              void exchangeIdToken(result.id_token);
+            });
+          } catch (cause) {
+            setError(cause instanceof Error ? cause.message : 'Не удалось открыть Telegram');
+            setBusy(false);
+          } finally {
+            window.open = originalOpen;
+          }
         };
 
         setReady(true);
@@ -141,7 +136,6 @@ export default function AdminTelegramLogin() {
     return () => {
       cancelled = true;
       openLogin.current = null;
-      cleanupPopup.current?.();
     };
   }, []);
 
