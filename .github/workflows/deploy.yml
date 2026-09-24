@@ -230,6 +230,13 @@ jobs:
             "umask 077; set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod 700 /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
             < deploy.tar.gz
 
+      - name: Register Telegram webhook from GitHub runner
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          NEXT_PUBLIC_BASE_URL: https://30-0.xn--p1ai
+        run: node scripts/set-telegram-webhook.mjs
+
   # ─── Stage 4: Post-Deploy Verification ───
   # scripts/deploy-production.sh blocks until /api/health reports status=ok
   # and rolls back the release on failure. Keep verification in the same SSH
