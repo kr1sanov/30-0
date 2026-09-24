@@ -18,6 +18,35 @@ async function callTelegram(method: string, body: BodyInit, headers?: HeadersIni
     return response.ok ? response : null;
   } catch { return null; } finally { clearTimeout(timeout); }
 }
+export type TelegramMessageSendResult =
+  | { ok: true }
+  | { ok: false; reason: 'configuration' | 'start_required' | 'blocked' | 'unavailable' };
+
+export async function sendTelegramMessageDetailed(chatId: string, text: string): Promise<TelegramMessageSendResult> {
+  const token = botToken();
+  if (!token) return { ok: false, reason: 'configuration' };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7_000);
+  try {
+    const response = await fetch(`${API_ROOT}/bot${token}/sendMessage`, {
+      method: 'POST',
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true }),
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    const payload = await response.json().catch(() => null) as { ok?: boolean; description?: string } | null;
+    if (response.ok && payload?.ok === true) return { ok: true };
+    const description = payload?.description?.toLowerCase() ?? '';
+    if (/can't initiate conversation|chat not found|user not found/.test(description)) return { ok: false, reason: 'start_required' };
+    if (/blocked by the user|bot was blocked/.test(description)) return { ok: false, reason: 'blocked' };
+    return { ok: false, reason: 'unavailable' };
+  } catch {
+    return { ok: false, reason: 'unavailable' };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 export async function sendTelegramMessage(chatId: string, text: string, replyMarkup?: unknown): Promise<boolean> {
   const body: Record<string, unknown> = { chat_id: chatId, text, parse_mode: 'HTML', disable_web_page_preview: true };
   if (replyMarkup) body.reply_markup = replyMarkup;
