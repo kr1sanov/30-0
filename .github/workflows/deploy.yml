@@ -133,6 +133,9 @@ jobs:
           path: build-artifact/
 
       - name: Create deployment package
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
         run: |
           # Next.js standalone deployment on Jino (Apache + Phusion Passenger):
           # APP_DIR/app.js                        <- Passenger entrypoint (starts standalone server)
@@ -178,6 +181,16 @@ jobs:
           # hidden files by default, so it is intentionally not read from the build artifact.
           cp public/.htaccess deploy-package/.htaccess
 
+          # Keep bot credentials out of the repository and build artifact.
+          # This short-lived file is included only in the SSH deployment package.
+          if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_WEBHOOK_SECRET:-}" ]; then
+            umask 077
+            printf 'TELEGRAM_BOT_TOKEN=%s\nTELEGRAM_WEBHOOK_SECRET=%s\n' \
+              "$TELEGRAM_BOT_TOKEN" "$TELEGRAM_WEBHOOK_SECRET" > deploy-package/telegram-runtime.env
+          else
+            echo "Telegram runtime secrets are not both configured; existing server values will be kept."
+          fi
+
           # Verify structure
           echo "Deploy package structure:"
           ls -la deploy-package/
@@ -192,6 +205,7 @@ jobs:
 
           # Create tarball
           cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
+          rm -f deploy-package/telegram-runtime.env
           echo "Package size: $(du -sh deploy.tar.gz)"
 
       - name: Setup SSH key
@@ -212,8 +226,8 @@ jobs:
             -o ConnectTimeout=180 \
             -o ServerAliveInterval=30 \
             -o ServerAliveCountMax=10 \
-            "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
-            "set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod +x /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
+          "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
+            "umask 077; set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod 700 /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
             < deploy.tar.gz
 
   # ─── Stage 4: Post-Deploy Verification ───

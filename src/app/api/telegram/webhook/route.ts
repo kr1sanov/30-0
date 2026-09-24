@@ -17,12 +17,35 @@ export async function POST(request: Request) {
       const chatId = String(message.chat.id);
       const match = /^\/start(?:\s|$)/.test(message.text);
       if (match) {
-        const user = await db.user.findUnique({ where: { providerId: `telegram_${chatId}` } });
-        if (user) await db.user.update({ where: { id: user.id }, data: { telegramChatStarted: true } });
+        // Persist /start even when it arrives before the user's first web-app login.
+        // The later Telegram auth upsert reuses this record and keeps chatStarted=true.
+        const firstName = typeof message.from?.first_name === 'string' ? message.from.first_name : null;
+        const lastName = typeof message.from?.last_name === 'string' ? message.from.last_name : null;
+        const username = typeof message.from?.username === 'string' ? message.from.username : null;
+        const now = new Date();
+        const user = await db.user.upsert({
+          where: { providerId: `telegram_${chatId}` },
+          create: {
+            provider: 'telegram', providerId: `telegram_${chatId}`,
+            firstName, lastName, username,
+            displayName: firstName || username || 'Игрок',
+            telegramChatStarted: true, lastActiveAt: now,
+          },
+          update: {
+            telegramChatStarted: true, lastActiveAt: now,
+            ...(firstName ? { firstName } : {}),
+            ...(lastName ? { lastName } : {}),
+            ...(username ? { username } : {}),
+          },
+        });
         const photo = await readFile(`${process.cwd()}/public/telegram-start.png`).catch(() => readFile(`${process.cwd()}/.next/standalone/public/telegram-start.png`).catch(() => null));
         const caption = '<b>30-0 — футбольный драфт РПЛ</b> ⚽\nСобери состав мечты из игроков разных сезонов, пройди чемпионат и попробуй добиться результата 30-0.\n\nНажми «Открыть», чтобы начать игру прямо в Telegram.';
-        if (photo) await sendBotPhoto(chatId, photo, caption, openMarkup);
-        else await sendTelegramMessage(chatId, caption, openMarkup);
+        const sent = photo
+          ? await sendBotPhoto(chatId, photo, caption, openMarkup)
+          : await sendTelegramMessage(chatId, caption, openMarkup);
+        if (sent && !user.telegramWelcomeSentAt) {
+          await db.user.update({ where: { id: user.id }, data: { telegramWelcomeSentAt: now } });
+        }
         return NextResponse.json({ ok: true });
       }
       if (/^\/notifications\b/.test(message.text)) {

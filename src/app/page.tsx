@@ -1233,6 +1233,8 @@ export default function Home() {
         className={`flex-1 w-full mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10 ${
           ['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'].includes(screen)
             ? 'max-w-7xl'
+            : screen === 'setup'
+              ? 'max-w-2xl'
             : 'max-w-4xl'
         }`}
       >

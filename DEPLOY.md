@@ -154,15 +154,23 @@ pm2 save && pm2 startup
 | Переменная | Обязательно | Описание |
 |---|---|---|
 | `DATABASE_URL` | ✅ | MySQL подключение, например `mysql://user:password@localhost:3306/dbname` |
-| `TELEGRAM_BOT_TOKEN` | ✅ | Токен бота от @BotFather |
+| `TELEGRAM_BOT_TOKEN` | ✅ | Токен `@RPL30_bot` от @BotFather; нужен для сообщений, сезонных карточек и одноразовых кодов админки |
+| `TELEGRAM_BOT_USERNAME` | ✅ | Имя бота без `@`, например `RPL30_bot` |
+| `TELEGRAM_CLIENT_ID` | ✅ | Client ID Telegram Login / Mini App, совпадает с текущей настройкой авторизации |
+| `TELEGRAM_SESSION_SECRET` | ✅ | Секрет подписи сессий Telegram, не менее 32 символов |
+| `TELEGRAM_WEBHOOK_SECRET` | ✅ | Секрет вебхука Telegram, от 1 до 256 символов |
+| `NEXT_PUBLIC_BASE_URL` | ✅ | Публичный HTTPS URL приложения, например `https://30-0.xn--p1ai` |
+| `ADMIN_SESSION_SECRET` | ❌ | Рекомендуемый отдельный секрет подписи админ-сессий; если не задан, используется `TELEGRAM_SESSION_SECRET` |
 | `NEXT_TELEMETRY_DISABLED` | ❌ | Установите `1` для отключения телеметрии |
 | `NODE_ENV` | ❌ | Установите `production` |
+
+Сгенерируйте отдельные секреты командой `openssl rand -hex 32` и задайте их для `TELEGRAM_SESSION_SECRET` и `ADMIN_SESSION_SECRET`. `TELEGRAM_WEBHOOK_SECRET` тоже должен быть случайным и храниться только в `.env`. При выкладке скрипт `scripts/set-telegram-webhook.mjs` автоматически регистрирует `/api/telegram/webhook`, если заданы токен и секрет. Владелец админки — Telegram ID `361912433`; другим администраторам доступ выдаётся из панели и подтверждается кнопкой в боте.
 
 ---
 
 ## Настройка Telegram Bot
 
-После деплоя обновите URL Mini App в @BotFather:
+После деплоя проверьте URL Mini App в @BotFather:
 
 1. Откройте @BotFather
 2. Выберите вашего бота (`@RPL30_bot`)

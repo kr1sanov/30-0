@@ -155,6 +155,12 @@ cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wing
 cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
 cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
 
+# The deployment workflow can provide bot credentials as a short-lived file.
+# Keep it private and outside the release tree until the persistent .env is updated.
+if [ -f "$DEPLOY_STAGE/telegram-runtime.env" ]; then
+  install -m 600 "$DEPLOY_STAGE/telegram-runtime.env" "$APP_DIR/.telegram-runtime.env"
+fi
+
 rm -rf .next/standalone
 mv .next/standalone-next .next/standalone
 rm -rf "$DEPLOY_STAGE"
@@ -203,9 +209,30 @@ echo "🔧 Step 5: Checking .env file"
 # Also check if .env exists at APP_DIR for the loadEnvFromFile() fallback.
 
 if [ ! -f .env ] || ! grep -q "^DATABASE_URL=" .env; then
+  rm -f .telegram-runtime.env
   echo "❌ $APP_DIR/.env with DATABASE_URL is required"
   rollback_standalone || true
   exit 1
+fi
+
+# Update only the Telegram keys supplied by GitHub Actions, preserving the
+# server's existing database and other runtime configuration. Values never
+# appear in deployment logs.
+if [ -f .telegram-runtime.env ]; then
+  while IFS='=' read -r key value; do
+    case "$key" in
+      TELEGRAM_BOT_TOKEN|TELEGRAM_WEBHOOK_SECRET) ;;
+      *) continue ;;
+    esac
+    if grep -q "^${key}=" .env; then
+      awk -v key="$key" -v replacement="$key=$value" \
+        'index($0, key "=") == 1 { print replacement; next } { print }' .env > .env.tmp
+      mv .env.tmp .env
+    else
+      printf '%s=%s\n' "$key" "$value" >> .env
+    fi
+  done < .telegram-runtime.env
+  rm -f .telegram-runtime.env
 fi
 
 ensure_env() {
