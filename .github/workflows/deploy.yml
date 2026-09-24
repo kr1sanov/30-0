@@ -230,6 +230,11 @@ jobs:
             "umask 077; set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod 700 /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
             < deploy.tar.gz
 
+      - name: Setup Node.js for webhook registration
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
       - name: Register Telegram webhook from GitHub runner
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
