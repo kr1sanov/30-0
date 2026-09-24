@@ -40,5 +40,9 @@ export async function answerTelegramCallback(callbackQueryId: string, text?: str
   return Boolean(await callTelegram('answerCallbackQuery', JSON.stringify({ callback_query_id: callbackQueryId, text }), { 'Content-Type': 'application/json' }));
 }
 export async function sendTelegramResult(chatId: string, image: Uint8Array, caption: string, appUrl: string) {
-  return sendTelegramPhoto(chatId, image, caption, { inline_keyboard: [[{ text: 'Сыграть в 30-0', web_app: { url: appUrl } }]] });
+  const botUsername = (process.env.TELEGRAM_BOT_USERNAME || 'RPL30_bot').replace(/^@/, '');
+  return sendTelegramPhoto(chatId, image, caption, { inline_keyboard: [
+    [{ text: 'Открыть 30-0', web_app: { url: appUrl } }],
+    [{ text: 'Пригласить друга', url: `https://t.me/${botUsername}?start=season_result` }],
+  ] });
 }
