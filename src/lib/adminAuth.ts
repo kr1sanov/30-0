@@ -1,8 +1,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
+import { ADMIN_OWNER_TELEGRAM_ID } from '@/lib/adminTelegramIdentity';
 
 export const ADMIN_COOKIE = 'rpl_admin_session';
-const OWNER_ID = '361912433';
 function secret() {
   const value = process.env.ADMIN_SESSION_SECRET || process.env.TELEGRAM_SESSION_SECRET;
   if (!value || value.length < 32) throw new Error('Admin session secret is not configured');
@@ -29,7 +29,7 @@ export function adminIdFromRequest(request: Request, now = Date.now()): string |
   } catch { return null; }
 }
 export async function isTrustedAdmin(id: string) {
-  if (id === OWNER_ID) {
+  if (id === ADMIN_OWNER_TELEGRAM_ID) {
     await db.adminAccess.upsert({ where: { telegramId: id }, create: { telegramId: id, role: 'owner', status: 'active' }, update: { role: 'owner', status: 'active' } });
   }
   const row = await db.adminAccess.findUnique({ where: { telegramId: id } });
