@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000 2>&1 | tee dev.log",
+    "dev": "node scripts/dev.mjs",
     "build": "npx prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
     "start": "NODE_ENV=production node .next/standalone/server.js",
     "lint": "eslint .",
@@ -15,6 +15,7 @@
     "db:seed": "node prisma/seed.ts",
     "data:audit": "node scripts/audit-rpl-data.mjs",
     "data:audit:strict": "node scripts/audit-rpl-data.mjs --strict",
+    "data:backfill-wingbacks": "node scripts/backfill-wingback-positions.mjs",
     "db:studio": "prisma studio",
     "schema:sqlite": "cp prisma/schema.sqlite.prisma prisma/schema.prisma && prisma generate",
     "schema:postgres": "cp prisma/schema.postgresql.prisma prisma/schema.prisma && prisma generate",

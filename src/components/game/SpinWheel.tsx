@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
@@ -41,6 +41,7 @@ interface SlotReelProps {
 }
 
 function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
+  const reduceMotion = useReducedMotion();
   const [displayItems, setDisplayItems] = useState<string[]>([items[0]]);
   const [isStopped, setIsStopped] = useState(false);
   const [showGlow, setShowGlow] = useState(false);
@@ -49,16 +50,17 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
 
   // Fast cycling phase: rapidly show random items
   useEffect(() => {
+    if (reduceMotion) return;
     if (isSpinning && !hasResult && phase === 'idle') {
       setPhase('spinning');
       setIsStopped(false);
       setShowGlow(false);
     }
-  }, [isSpinning, hasResult, phase]);
+  }, [isSpinning, hasResult, phase, reduceMotion]);
 
   // Spinning: cycle through items rapidly (60-80ms intervals)
   useEffect(() => {
-    if (phase !== 'spinning') return;
+    if (phase !== 'spinning' || reduceMotion) return;
 
     let interval = 60;
     const cycle = () => {
@@ -75,11 +77,18 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
         timerRef.current = null;
       }
     };
-  }, [phase, items]);
+  }, [phase, items, reduceMotion]);
 
   // Deceleration: slow down and land on target with smooth 600-1200ms roll
   useEffect(() => {
     if (hasResult && targetItem && phase === 'spinning') {
+      if (reduceMotion) {
+        setDisplayItems([targetItem]);
+        setIsStopped(true);
+        setPhase('stopped');
+        setShowGlow(true);
+        return;
+      }
       setPhase('decelerating');
 
       // Clear spinning timer
@@ -124,7 +133,7 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
         timerRef.current = null;
       }
     };
-  }, [hasResult, targetItem, items, phase]);
+  }, [hasResult, targetItem, items, phase, reduceMotion]);
 
   // Reset when idle
   useEffect(() => {
@@ -134,6 +143,17 @@ function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label
       setShowGlow(false);
     }
   }, [isSpinning, hasResult]);
+
+  useEffect(() => {
+    if (reduceMotion && hasResult && targetItem) {
+      setDisplayItems([targetItem]);
+      setIsStopped(true);
+      setPhase('stopped');
+      setShowGlow(true);
+    } else if (reduceMotion && isSpinning) {
+      setDisplayItems([items[0] ?? '—']);
+    }
+  }, [reduceMotion, isSpinning, hasResult, targetItem, items]);
 
   const isAnimating = phase === 'spinning' || phase === 'decelerating';
 

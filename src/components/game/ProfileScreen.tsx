@@ -43,7 +43,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName, updateTelegramNotifications, resetProfile } = useAuthStore();
+  const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
@@ -163,45 +163,6 @@ export default function ProfileScreen() {
         >
           Выйти
         </button>
-      </div>
-
-      <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-lg" aria-hidden="true">🔔</span>
-              <h3 className="text-sm font-bold text-white">Уведомления Telegram</h3>
-            </div>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">
-              Карточка результата после каждого сезона и важные игровые обновления.
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={user?.telegramNotificationsEnabled ?? true}
-            onClick={async () => {
-              const next = !(user?.telegramNotificationsEnabled ?? true);
-              try {
-                await updateTelegramNotifications(next);
-                toast.success(next ? 'Уведомления включены' : 'Уведомления выключены');
-              } catch {
-                toast.error('Не удалось изменить настройки');
-              }
-            }}
-            className={`relative h-7 w-12 shrink-0 rounded-full border transition-colors ${
-              (user?.telegramNotificationsEnabled ?? true)
-                ? 'border-[#00C896] bg-[#00C896]'
-                : 'border-[#333] bg-[#222]'
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                (user?.telegramNotificationsEnabled ?? true) ? 'translate-x-5' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-        </div>
       </div>
 
       {/* Prominent Season Count + Best Result */}

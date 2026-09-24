@@ -42,10 +42,8 @@ const STEPS = [
 
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
-  { emoji: '⚔️', title: 'Обычная', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
+  { emoji: '⚔️', title: 'Обычный драфт', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
   { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
-  { emoji: '⚽', title: 'Ежедневный челлендж', desc: 'Новая головоломка каждый день', active: false, color: '#00C896', gameMode: 'daily' as const },
-  { emoji: '🏆', title: 'Кубок наций', desc: 'Собери сборную одной нации и выиграй кубок', active: false, color: '#f59e0b', gameMode: 'nations_cup' as const },
 ];
 
 interface ChallengeDef {
@@ -398,29 +396,13 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
-                if (mode.gameMode === 'daily') {
-                  setScreen('daily-challenge');
-                } else if (mode.gameMode === 'nations_cup') {
-                  setScreen('nations-cup');
-                } else {
-                  setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
-                  setScreen('setup');
-                }
+                setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
+                setScreen('setup');
               }}
               className="relative w-full rounded-2xl p-5 sm:p-6 text-left transition-all overflow-hidden group bg-[#141414] border border-[#1E1E1E] hover:border-[#00C896]/30 hover:bg-[#1E1E1E] active:scale-[0.98]"
             >
               {mode.gameMode === 'single_club' && (
                 <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
-                  НОВОЕ
-                </span>
-              )}
-              {mode.gameMode === 'daily' && (
-                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
-                  НОВОЕ
-                </span>
-              )}
-              {mode.gameMode === 'nations_cup' && (
-                <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f59e0b]/15 text-[#f59e0b] border border-[#f59e0b]/20">
                   НОВОЕ
                 </span>
               )}
@@ -445,27 +427,6 @@ function HomePage() {
             </motion.button>
           ))}
 
-          {/* Inactive modes with "СКОРО" badge */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {GAME_MODES.filter(m => !m.active).map((mode, i) => (
-              <motion.div
-                key={mode.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 + i * 0.08 }}
-                className="relative rounded-xl p-4 text-left overflow-hidden bg-[#141414]/50 border border-[#1E1E1E]/50 cursor-not-allowed"
-              >
-                <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
-                  СКОРО
-                </span>
-                <div className="text-2xl mb-2 grayscale opacity-50">
-                  {mode.emoji}
-                </div>
-                <div className="text-sm font-semibold text-[#FFFFFF]/40 mb-1">{mode.title}</div>
-                <div className="text-xs text-[#9CA3AF]/40 leading-relaxed">{mode.desc}</div>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </motion.section>
 
@@ -657,17 +618,12 @@ function DraftScreen() {
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="lg:grid lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <div className="lg:grid lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:items-start lg:gap-6">
         <div className="space-y-3 lg:sticky lg:top-20">
       {/* ── Header: Formation + Rerolls + Restart ── */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-black text-[#FFFFFF] tracking-wide bg-[#1E1E1E] px-2 py-1 rounded-lg">{config.formation}</span>
-          {dailyChallenge && (
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20">
-              ⚽ Челлендж
-            </span>
-          )}
           <span className="text-[10px] text-[#64748b]">{openCount} поз. осталось</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -1212,6 +1168,12 @@ export default function Home() {
 
   // Initialize the server-verified Telegram session
   useAutoAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void useGameStore.getState().loadProfileFromCloud();
+    void useGameStore.getState().loadActiveRunFromCloud();
+  }, [isAuthenticated]);
 
   // ── Yandex.Metrika SPA navigation tracking ──
   useEffect(() => {

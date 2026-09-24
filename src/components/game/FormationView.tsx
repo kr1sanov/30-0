@@ -398,7 +398,7 @@ export default function FormationView() {
       {/* ===== Green Pitch with White Lines ===== */}
       <div
         className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
-        style={{ maxWidth: '400px', paddingBottom: '68%' }}
+        style={{ maxWidth: 'min(100%, 520px)', paddingBottom: '145%' }}
       >
         {/* Pitch base — green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />

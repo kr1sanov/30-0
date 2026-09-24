@@ -164,6 +164,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => void;
+  loadActiveRunFromCloud: () => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -1177,6 +1178,7 @@ export const useGameStore = create<GameState>()(
 
           return { profileStats: stats, newAchievements };
         });
+        void get().syncProfileToCloud();
       },
 
       // -------------------------------------------------------------------
@@ -1282,6 +1284,60 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      loadActiveRunFromCloud: async () => {
+        try {
+          const response = await fetch('/api/runs/active', { cache: 'no-store' });
+          if (!response.ok) return;
+          const { activeRun } = await response.json();
+          if (!activeRun || get().runId) return;
+          const formation = FORMATIONS.find((item) => item.id === activeRun.formation);
+          if (!formation) return;
+          const config: GameConfig = {
+            ...defaultConfig,
+            formation: activeRun.formation,
+            difficulty: activeRun.difficulty,
+            draftMode: activeRun.draftMode,
+            ratingMode: activeRun.ratingMode,
+            eraFilter: activeRun.eraFilter,
+            eraStartYear: activeRun.eraStartYear,
+            eraEndYear: activeRun.eraEndYear,
+            clubFilter: activeRun.clubFilter ?? undefined,
+            nationalityFilter: activeRun.nationalityFilter ?? undefined,
+            teamName: activeRun.teamName ?? undefined,
+            gameMode: activeRun.clubFilter ? 'single_club' : 'classic',
+          };
+          const savedByIndex = new Map<number, (typeof activeRun.slots)[number]>();
+          for (const saved of activeRun.slots) {
+            const index = Number(saved.slotPosition.slice(saved.slotPosition.lastIndexOf('_') + 1));
+            if (Number.isInteger(index)) savedByIndex.set(index, saved);
+          }
+          const slots: DraftSlot[] = formation.slots.map((slot, index) => {
+            const saved = savedByIndex.get(index);
+            return {
+              position: slot.position,
+              positionLabel: slot.label,
+              category: POSITION_CATEGORY[slot.position],
+              ...(saved?.playerId ? {
+                playerId: saved.playerId,
+                playerName: saved.playerName,
+                playerLastName: saved.playerLastName,
+                playerRating: saved.playerRating,
+                playerPosition: saved.playerPosition,
+                playerOtherPositions: saved.playerOtherPositions,
+                playerNationality: saved.playerNationality,
+                isCompatible: saved.isCompatible,
+              } : {}),
+            };
+          });
+          set({ runId: activeRun.id, config, lastConfig: config, slots,
+            rerollsLeft: Math.max(0, activeRun.rerollsTotal - activeRun.rerollsUsed),
+            rerollsUsed: activeRun.rerollsUsed,
+            screen: slots.every((slot) => !!slot.playerId) ? 'squad-complete' : 'draft' });
+        } catch (error) {
+          console.error('Failed to restore active run:', error);
+        }
+      },
+
       loadLeaderboard: async () => {
         try {
           const res = await fetch('/api/leaderboard');
@@ -1303,14 +1359,22 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      // Cloud sync — no longer needed (local profiles only)
       syncProfileToCloud: async () => {
-        // No-op: all data is stored locally
+        try {
+          await fetch('/api/users/profile', {
+            method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileStats: get().profileStats }),
+          });
+        } catch (error) { console.error('Failed to sync profile progress:', error); }
       },
 
-      // Load profile from cloud — no longer needed (local profiles only)
       loadProfileFromCloud: async () => {
-        // No-op: all data is stored locally
+        try {
+          const response = await fetch('/api/users/profile', { cache: 'no-store' });
+          if (!response.ok) return;
+          const data = await response.json();
+          if (data.user?.profileStats) set({ profileStats: data.user.profileStats });
+        } catch (error) { console.error('Failed to load profile progress:', error); }
       },
 
       // Start a daily challenge — transition to setup screen with challenge data

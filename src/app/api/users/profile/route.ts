@@ -82,11 +82,17 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
-    const { displayName } = body as {
-      displayName: string;
-    };
+    const { displayName, profileStats } = body as { displayName?: string; profileStats?: unknown };
 
-    if (!displayName || displayName.trim().length < 2) {
+    if (profileStats !== undefined && (!profileStats || typeof profileStats !== 'object' || JSON.stringify(profileStats).length > 200_000)) {
+      return NextResponse.json({ error: 'Некорректный прогресс' }, { status: 400 });
+    }
+
+    if (displayName === undefined && profileStats === undefined) {
+      return NextResponse.json({ error: 'Нет данных для сохранения' }, { status: 400 });
+    }
+
+    if (displayName !== undefined && (!displayName || displayName.trim().length < 2)) {
       return NextResponse.json(
         { error: 'userId and displayName (min 2 chars) are required' },
         { status: 400 },
@@ -95,7 +101,10 @@ export async function PATCH(request: Request) {
 
     const user = await db.user.update({
       where: { id: userId },
-      data: { displayName: displayName.trim() },
+      data: {
+        ...(displayName !== undefined ? { displayName: displayName.trim() } : {}),
+        ...(profileStats !== undefined ? { profileStatsJson: JSON.stringify(profileStats) } : {}),
+      },
     });
 
     return NextResponse.json({

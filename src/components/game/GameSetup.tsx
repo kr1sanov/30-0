@@ -23,7 +23,6 @@ import { useAuthStore } from '@/store/authStore';
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
 const accentMix = (percent: number) => `color-mix(in srgb, var(--club-primary) ${percent}%, transparent)`;
-const BG_PAGE = '#0A0A0A';
 const BG_CARD = '#141414';
 
 /* ─── Club type for fetching ─── */
@@ -36,12 +35,12 @@ interface ClubData {
 }
 
 /* ─── Game Mode Config ─── */
-const GAME_MODE_CONFIG: Record<
+const GAME_MODE_CONFIG: Partial<Record<
   GameModeType,
   { label: string; description: string; icon: string }
-> = {
+>> = {
   classic: {
-    label: 'Обычная',
+    label: 'Обычный драфт',
     description: 'Крутите колесо — случайный клуб и сезон РПЛ',
     icon: '⚔️',
   },
@@ -49,16 +48,6 @@ const GAME_MODE_CONFIG: Record<
     label: 'Мой клуб',
     description: 'Выберите клуб — все спины только его сезоны',
     icon: '🏟️',
-  },
-  daily: {
-    label: 'Челлендж',
-    description: 'Ежедневный челлендж с ограничениями',
-    icon: '⚽',
-  },
-  nations_cup: {
-    label: 'Кубок наций',
-    description: 'Выберите нацию — все спины только с игроками этой нации',
-    icon: '🏆',
   },
 };
 
@@ -395,12 +384,6 @@ export default function GameSetup() {
       setStartError('Выберите клуб для режима "Один клуб".');
       return;
     }
-    // In nations_cup mode, require a nationality selection
-    if (currentGameMode === 'nations_cup' && !config.nationalityFilter) {
-      setStartError('Выберите национальность для режима "Кубок наций".');
-      return;
-    }
-
     haptic('medium');
     setStartError(null);
     setIsStarting(true);
@@ -458,10 +441,10 @@ export default function GameSetup() {
       : DIFFICULTY_CONFIG[config.difficulty].showRatings;
 
   // Can start? In single_club mode, need a club selected. In nations_cup mode, need a nationality selected.
-  const canStart = currentGameMode === 'single_club' ? !!config.clubFilter : currentGameMode === 'nations_cup' ? !!config.nationalityFilter : true;
+  const canStart = currentGameMode === 'single_club' ? !!config.clubFilter : true;
 
   return (
-    <div className="space-y-6 animate-fade-in-up" style={{ background: BG_PAGE }}>
+    <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-black text-white inline-block">
@@ -527,7 +510,7 @@ export default function GameSetup() {
             {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
               ([key, val]) => {
                 const isSelected = currentGameMode === key;
-                const isComingSoon = key !== 'classic' && key !== 'single_club';
+                const isComingSoon = false;
                 return (
                   <motion.button
                     type="button"

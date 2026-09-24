@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
 import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { sessionUser } from '@/lib/telegramSession';
 
 /**
  * GET /api/runs/active?userId=xxx
@@ -8,17 +10,10 @@ import { NextResponse } from 'next/server';
  * Used for cross-device sync: when a user logs in from a new device,
  * they can resume their current draft.
  */
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId query parameter is required' },
-        { status: 400 },
-      );
-    }
+    const userId = sessionUser(request);
+    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
 
     // Find the latest in-progress run for this user
     const run = await db.gameRun.findFirst({
@@ -39,9 +34,10 @@ export async function GET(request: Request) {
     // Build the response in a format the frontend can use
     const formation = FORMATIONS.find((f) => f.id === run.formation);
 
-    const slots = run.slots.map((slot, index) => {
+    const slots = run.slots.map((slot) => {
       const slotPos = slot.slotPosition.split('_')[0];
-      const formationSlot = formation?.slots[index];
+      const formationIndex = Number(slot.slotPosition.slice(slot.slotPosition.lastIndexOf('_') + 1));
+      const formationSlot = Number.isInteger(formationIndex) ? formation?.slots[formationIndex] : undefined;
 
       return {
         slotPosition: slot.slotPosition,
@@ -74,6 +70,7 @@ export async function GET(request: Request) {
         rerollsTotal: run.rerollsTotal,
         rerollsUsed: run.rerollsUsed,
         teamName: run.teamName,
+        nationalityFilter: run.nationalityFilter,
         slots,
         createdAt: run.createdAt,
       },

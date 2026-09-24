@@ -151,6 +151,7 @@ cp "$DEPLOY_STAGE/.htaccess" .htaccess
 cp "$DEPLOY_STAGE/package.json" package.json
 cp -r "$DEPLOY_STAGE/prisma/." prisma/
 cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
+cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wingback-positions.mjs
 
 rm -rf .next/standalone
 mv .next/standalone-next .next/standalone
@@ -266,6 +267,13 @@ if [ -f .env ]; then
     echo "✅ Database schema synced"
   else
     echo "❌ Database schema sync failed; refusing to restart the application"
+    rollback_standalone || true
+    exit 1
+  fi
+  if node --env-file=.env scripts/backfill-wingback-positions.mjs; then
+    echo "✅ Existing fullback position data updated"
+  else
+    echo "❌ Wing-back position backfill failed"
     rollback_standalone || true
     exit 1
   fi
