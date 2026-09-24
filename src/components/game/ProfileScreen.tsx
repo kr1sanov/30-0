@@ -52,11 +52,14 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen, setAvatarEmoji } = useGameStore();
-  const { user, updateDisplayName, resetProfile } = useAuthStore();
+  const { user, updateDisplayName, resetProfile, updateNotificationCadence } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
+  const [botUsername, setBotUsername] = useState<string | null>(null);
+  const [notificationCadence, setNotificationCadence] = useState(user?.notificationCadence || 'weekly');
+  useEffect(() => { fetch('/api/auth/telegram').then(r => r.json()).then(data => { if (typeof data.botUsername === 'string') setBotUsername(data.botUsername); }).catch(() => undefined); }, []);
 
   // Track profile open in Metrika
   useEffect(() => { Metrics.profileOpen(); }, []);
@@ -244,6 +247,36 @@ export default function ProfileScreen() {
           })}
         </div>
       </div>
+
+      {/* Telegram notifications */}
+      {user && (
+        <section className="rounded-2xl border border-[#242424] bg-[#141414] p-4 space-y-3">
+          <div>
+            <h3 className="font-bold">Уведомления в Telegram</h3>
+            <p className="text-xs text-[#9CA3AF] mt-1">Результаты сезона и редкие напоминания. Чтобы получать сообщения, сначала нажмите «Старт» у бота.</p>
+          </div>
+          {!user.telegramChatStarted && botUsername && (
+            <a href={`https://t.me/${botUsername}?start=notifications`} target="_blank" rel="noreferrer" className="inline-flex rounded-lg bg-[#229ED9] px-4 py-2 text-sm font-bold text-white">Открыть бота</a>
+          )}
+          <label className="flex items-center justify-between gap-3 rounded-xl bg-[#0A0A0A] p-3 text-sm">
+            <span>Присылать уведомления</span>
+            <input type="checkbox" checked={user.telegramNotificationsEnabled} onChange={async (event) => {
+              const enabled = event.currentTarget.checked;
+              try { await useAuthStore.getState().updateTelegramNotifications(enabled); }
+              catch { toast.error('Не удалось сохранить настройки'); }
+            }} className="h-5 w-5 accent-[#00C896]" />
+          </label>
+          <label className="flex items-center justify-between gap-3 text-sm text-[#9CA3AF]">
+            <span>Частота напоминаний</span>
+            <select value={notificationCadence} onChange={async (event) => {
+              const cadence = event.currentTarget.value; setNotificationCadence(cadence);
+              try { await updateNotificationCadence(cadence); } catch { setNotificationCadence(user.notificationCadence || 'weekly'); toast.error('Не удалось сохранить частоту'); }
+            }} className="rounded-lg border border-[#333] bg-[#0A0A0A] px-3 py-2 text-white">
+              <option value="daily">Ежедневно</option><option value="weekly">Раз в неделю</option><option value="monthly">Раз в месяц</option>
+            </select>
+          </label>
+        </section>
+      )}
 
       {/* History */}
       {profileStats.history.length > 0 && (

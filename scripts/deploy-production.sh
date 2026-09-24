@@ -153,6 +153,7 @@ cp -r "$DEPLOY_STAGE/prisma/." prisma/
 cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
 cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wingback-positions.mjs
 cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
+cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
 
 rm -rf .next/standalone
 mv .next/standalone-next .next/standalone
@@ -331,6 +332,20 @@ for i in $(seq 1 $MAX_RETRIES); do
     sleep $RETRY_INTERVAL
   fi
 done
+
+if [ "$HEALTHY" = true ]; then
+  # Register the webhook only when the owner has configured both bot secrets.
+  # Missing credentials do not prevent the game itself from being deployed.
+  if node --env-file=.env -e 'process.exit(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_WEBHOOK_SECRET ? 0 : 1)'; then
+    if node --env-file=.env scripts/set-telegram-webhook.mjs; then
+      echo "✅ Telegram webhook configured"
+    else
+      echo "⚠️ Telegram webhook could not be configured; check the bot token and secret"
+    fi
+  else
+    echo "⚠️ Telegram notifications are not active: configure TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET in .env"
+  fi
+fi
 
 if [ "$HEALTHY" = false ]; then
   echo ""

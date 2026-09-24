@@ -98,6 +98,9 @@ model User {
   displayName      String   @default("Игрок")
   profileStatsJson String?
   telegramNotificationsEnabled Boolean @default(true)
+  telegramChatStarted Boolean @default(false)
+  notificationCadence String @default("weekly")
+  lastActiveAt DateTime?
   telegramWelcomeSentAt DateTime?
 
   createdAt        DateTime @default(now())
@@ -108,6 +111,46 @@ model User {
   referralCount    Int      @default(0)
 
   runs             GameRun[]
+}
+
+model AdminAccess {
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  role       String   @default("admin")
+  status     String   @default("pending")
+  addedBy    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AdminLoginChallenge {
+  id         String   @id @default(cuid())
+  telegramId String
+  codeHash   String
+  expiresAt  DateTime
+  attempts   Int      @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+  @@index([telegramId, expiresAt])
+}
+
+model NotificationCampaign {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  cadence   String   @default("weekly")
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NotificationDispatch {
+  id          String   @id @default(cuid())
+  campaignKey String
+  userId      String
+  sentAt      DateTime @default(now())
+  @@unique([campaignKey, userId])
+  @@index([sentAt])
 }
 
 model GameRun {

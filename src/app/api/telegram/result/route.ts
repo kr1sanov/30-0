@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { enforceRateLimit } from '@/lib/rateLimit';
-import { sendTelegramPhoto, telegramChatId } from '@/lib/telegramBot';
+import { sendTelegramResult, telegramChatId } from '@/lib/telegramBot';
 import { sessionUser } from '@/lib/telegramSession';
 import { NextResponse } from 'next/server';
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       include: { user: true },
     });
     if (!run?.user) return NextResponse.json({ error: 'Результат не найден' }, { status: 404 });
-    if (!run.user.telegramNotificationsEnabled) return NextResponse.json({ ok: true, skipped: true });
+    if (!run.user.telegramNotificationsEnabled || !run.user.telegramChatStarted) return NextResponse.json({ ok: true, skipped: true });
     const chatId = telegramChatId(run.user.providerId);
     if (!chatId) return NextResponse.json({ error: 'Telegram не подключён' }, { status: 409 });
 
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
       '',
       'Сможете улучшить результат? Откройте 30-0 и сыграйте ещё раз.',
     ].join('\n');
-    const sent = await sendTelegramPhoto(chatId, image, caption);
+    const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://30-0.xn--p1ai';
+    const sent = await sendTelegramResult(chatId, image, caption, appUrl);
     if (!sent) return NextResponse.json({ error: 'Telegram не принял сообщение' }, { status: 502 });
     return NextResponse.json({ ok: true });
   } catch {

@@ -275,13 +275,6 @@ function ClubCard({
   onClick: () => void;
 }) {
   const theme = getClubTheme(club.nameRu);
-  const monogram = club.nameRu
-    .split(/[\s-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
 
   return (
     <motion.button
@@ -311,7 +304,7 @@ function ClubCard({
           </svg>
         </motion.div>
       )}
-      {/* Club crest when provided; otherwise a two-colour club monogram */}
+      {/* Colour-only club shield */}
       <div className="w-10 h-10 mx-auto mb-1.5 flex items-center justify-center">
         <svg viewBox="0 0 40 44" className="w-9 h-10 drop-shadow" aria-hidden="true">
           <defs>
@@ -321,7 +314,6 @@ function ClubCard({
             </linearGradient>
           </defs>
           <path d="M20 2 37 8v14c0 9-7 16-17 20C10 38 3 31 3 22V8L20 2Z" fill={`url(#crest-${club.id})`} stroke="rgba(255,255,255,.75)" strokeWidth="1.5" />
-          <text x="20" y="25" textAnchor="middle" fontSize="11" fontWeight="900" fill={theme.onPrimary}>{monogram}</text>
         </svg>
       </div>
       {/* Club name */}
@@ -584,12 +576,10 @@ export default function GameSetup() {
                     border: `1px solid ${accentMix(22)}`,
                   }}
                 >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-black" style={{
-                    background: `linear-gradient(135deg, ${getClubTheme(selectedClub.nameRu).primary} 0 50%, ${getClubTheme(selectedClub.nameRu).secondary} 50% 100%)`,
-                    color: getClubTheme(selectedClub.nameRu).onPrimary,
-                  }}>
-                    {selectedClub.nameRu.split(/[\s-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
-                  </div>
+                  <svg viewBox="0 0 40 44" className="w-10 h-11 shrink-0" aria-hidden="true">
+                    <defs><linearGradient id={`selected-crest-${selectedClub.id}`} x1="0" y1="0" x2="1" y2="1"><stop offset="50%" stopColor={getClubTheme(selectedClub.nameRu).primary} /><stop offset="50%" stopColor={getClubTheme(selectedClub.nameRu).secondary} /></linearGradient></defs>
+                    <path d="M20 2 37 8v14c0 9-7 16-17 20C10 38 3 31 3 22V8L20 2Z" fill={`url(#selected-crest-${selectedClub.id})`} stroke="rgba(255,255,255,.75)" strokeWidth="1.5" />
+                  </svg>
                   <div>
                     <div className="text-sm font-bold" style={{ color: ACCENT }}>
                       {selectedClub.nameRu}
@@ -734,8 +724,10 @@ export default function GameSetup() {
         {/* Formation preview */}
         <AnimatePresence mode="wait">
           {selectedFormation && (
-            <div className="mt-3">
-              <FormationPitch formationId={config.formation} />
+            <div className="mt-3 mx-auto w-full md:max-w-[620px]">
+              <div className="[&>div]:md:!pb-[30%]">
+                <FormationPitch formationId={config.formation} />
+              </div>
             </div>
           )}
         </AnimatePresence>

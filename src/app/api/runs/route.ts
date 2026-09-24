@@ -106,6 +106,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await db.user.update({ where: { id: userId }, data: { lastActiveAt: new Date() } }).catch(() => undefined);
+
     // Create the game run
     const run = await db.gameRun.create({
       data: {

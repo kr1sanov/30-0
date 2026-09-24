@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 
-export interface AppUser { id: string; provider: 'telegram'; displayName: string; createdAt: number; telegramNotificationsEnabled: boolean; }
+export interface AppUser { id: string; provider: 'telegram'; displayName: string; createdAt: number; telegramNotificationsEnabled: boolean; notificationCadence?: string; telegramChatStarted?: boolean; }
 interface AuthState {
   user: AppUser | null; isAuthenticated: boolean; _hasHydrated: boolean;
   setUser: (user: AppUser | null) => void;
   updateDisplayName: (name: string) => Promise<void>;
   updateTelegramNotifications: (enabled: boolean) => Promise<void>;
+  updateNotificationCadence: (cadence: string) => Promise<void>;
   resetProfile: () => Promise<void>;
 }
 // Identity is restored only by the server, never from localStorage.
@@ -21,6 +22,13 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     if (!response.ok) throw new Error('Не удалось сохранить имя');
     set({ user: { ...user, displayName: name } });
+  },
+  updateNotificationCadence: async (cadence) => {
+    const user = useAuthStore.getState().user;
+    if (!user || !['daily', 'weekly', 'monthly'].includes(cadence)) throw new Error('Некорректная частота');
+    const response = await fetch('/api/auth/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notificationCadence: cadence }) });
+    if (!response.ok) throw new Error('Не удалось сохранить настройки');
+    set({ user: { ...user, notificationCadence: cadence } });
   },
   updateTelegramNotifications: async (enabled) => {
     const user = useAuthStore.getState().user;

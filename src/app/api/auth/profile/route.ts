@@ -1,9 +1,10 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { sessionUser } from '@/lib/telegramSession';
+import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 
 export async function PATCH(request: Request) {
   try {
+    if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
     const body = await request.json();
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
@@ -11,7 +12,8 @@ export async function PATCH(request: Request) {
     const telegramNotificationsEnabled = typeof body.telegramNotificationsEnabled === 'boolean'
       ? body.telegramNotificationsEnabled
       : undefined;
-    if (displayName === undefined && telegramNotificationsEnabled === undefined) {
+    const notificationCadence = ['daily', 'weekly', 'monthly'].includes(body.notificationCadence) ? body.notificationCadence as string : undefined;
+    if (displayName === undefined && telegramNotificationsEnabled === undefined && notificationCadence === undefined) {
       return NextResponse.json({ error: 'Нет изменений' }, { status: 400 });
     }
     if (displayName !== undefined && (displayName.length < 2 || displayName.length > 30)) {
@@ -23,6 +25,7 @@ export async function PATCH(request: Request) {
       data: {
         ...(displayName !== undefined ? { displayName } : {}),
         ...(telegramNotificationsEnabled !== undefined ? { telegramNotificationsEnabled } : {}),
+        ...(notificationCadence !== undefined ? { notificationCadence } : {}),
       },
     });
 
@@ -32,6 +35,7 @@ export async function PATCH(request: Request) {
       displayName: user.displayName,
       createdAt: user.createdAt.getTime(),
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
+      notificationCadence: user.notificationCadence,
     } });
   } catch (error) {
     console.error('Profile update error:', error);

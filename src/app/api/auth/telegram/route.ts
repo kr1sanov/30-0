@@ -21,6 +21,8 @@ export async function GET(request: Request) {
       displayName: user.displayName,
       createdAt: user.createdAt.getTime(),
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
+      notificationCadence: user.notificationCadence,
+      telegramChatStarted: user.telegramChatStarted,
     } : null,
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? null,
     clientId: process.env.TELEGRAM_CLIENT_ID ?? null,
@@ -69,6 +71,8 @@ export async function POST(request: Request) {
       displayName: user.displayName,
       createdAt: user.createdAt.getTime(),
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
+      notificationCadence: user.notificationCadence,
+      telegramChatStarted: user.telegramChatStarted,
     } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
