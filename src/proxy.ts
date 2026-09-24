@@ -8,10 +8,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.json({ error: 'Доступен только вход через Telegram' }, { status: 410 });
   }
   if (path === '/api/auth/telegram') return NextResponse.next();
-  if (path.startsWith('/api/daily') || path.startsWith('/api/referrals')) {
+  if (path.startsWith('/api/daily')) {
     return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 403 });
   }
-  const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path.startsWith('/api/telegram') || path === '/api/auth/profile';
+  const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path.startsWith('/api/telegram') || path.startsWith('/api/referrals') || path === '/api/auth/profile';
   if (!protectedPath) return NextResponse.next();
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
