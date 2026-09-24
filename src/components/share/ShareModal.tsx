@@ -149,11 +149,12 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
             exit={{ opacity: 0, y: 60, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0,
-              zIndex: 101, maxHeight: '90vh', overflow: 'auto',
+              position: 'fixed', bottom: 12, left: 0, right: 0, margin: '0 auto',
+              width: 'min(560px, calc(100vw - 20px))', boxSizing: 'border-box',
+              zIndex: 101, maxHeight: '90dvh', overflowY: 'auto', overflowX: 'hidden',
               background: '#141414',
-              borderRadius: '20px 20px 0 0',
-              borderTop: '1px solid #1f1f1f',
+              borderRadius: 20,
+              border: '1px solid #1f1f1f',
             }}
           >
             {/* Handle */}
@@ -161,7 +162,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
               <div style={{ width: 36, height: 4, borderRadius: 2, background: '#333' }} />
             </div>
 
-            <div style={{ padding: '0 20px 20px' }}>
+            <div style={{ width: '100%', maxWidth: 560, boxSizing: 'border-box', padding: '0 16px 20px', margin: '0 auto' }}>
               {/* Title */}
               <h3 style={{ color: '#fff', fontSize: 16, fontWeight: 800, marginBottom: 16, textAlign: 'center' }}>
                 Поделиться
@@ -170,28 +171,34 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
               {/* Card preview */}
               <div
                 style={{
-                  maxHeight: '190px',
+                  height: 230,
                   borderRadius: 12,
                   overflow: 'hidden',
                   border: '1px solid #1f1f1f',
-                  marginBottom: 16,
+                  marginBottom: 12,
                   display: 'flex',
                   justifyContent: 'center',
+                  alignItems: 'flex-start',
                   background: BG,
                 }}
               >
-                <div ref={cardRef} style={{ width: 400, maxWidth: '100%' }}>
+                <div style={{ width: 208, height: 228, overflow: 'hidden', position: 'relative', flex: '0 0 auto' }}>
+                  <div aria-hidden="true" style={{ width: 400, transform: 'scale(.52)', transformOrigin: 'top left' }}>
                   {cardContent}
+                  </div>
                 </div>
+              </div>
+              <div ref={cardRef} aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, width: 400, pointerEvents: 'none' }}>
+                {cardContent}
               </div>
 
               {/* Action buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 <button
                   onClick={handleTelegramShare}
                   style={{
-                    width: '100%', minHeight: 42, borderRadius: 10,
-                    background: '#229ED9', color: '#fff', fontSize: 15, fontWeight: 700,
+                    width: '100%', minWidth: 0, minHeight: 42, borderRadius: 10, padding: '8px 10px', boxSizing: 'border-box',
+                    background: '#229ED9', color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1.25,
                     border: 'none', cursor: 'pointer',
                   }}
                 >
@@ -202,9 +209,9 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                   onClick={handleCopyImage}
                   disabled={isSharing}
                   style={{
-                    width: '100%', minHeight: 42, borderRadius: 10,
+                    width: '100%', minWidth: 0, minHeight: 42, borderRadius: 10, padding: '8px 10px', boxSizing: 'border-box',
                     background: 'var(--club-primary)', color: 'var(--club-on-primary)',
-                    fontSize: 15, fontWeight: 700, border: 'none', cursor: isSharing ? 'wait' : 'pointer',
+                    fontSize: 14, fontWeight: 700, lineHeight: 1.25, border: 'none', cursor: isSharing ? 'wait' : 'pointer',
                   }}
                 >
                   {isSharing ? 'Готовим изображение…' : 'Скопировать изображение'}
@@ -215,7 +222,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                   onClick={handleShareNative}
                   disabled={isSharing}
                   style={{
-                    width: '100%', padding: '10px 0', borderRadius: 10,
+                    width: '100%', minWidth: 0, padding: '10px', borderRadius: 10, boxSizing: 'border-box',
                     background: '#1E1E1E',
                     color: '#fff',
                     fontSize: 15, fontWeight: 700,
@@ -243,7 +250,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 <button
                   onClick={onClose}
                   style={{
-                    gridColumn: '1 / -1', width: '100%', padding: '8px 0', borderRadius: 10,
+                    gridColumn: '1 / -1', width: '100%', minWidth: 0, padding: '8px 0', borderRadius: 10, boxSizing: 'border-box',
                     background: 'transparent', color: '#4a5568',
                     fontSize: 13, border: 'none', cursor: 'pointer',
                   }}
