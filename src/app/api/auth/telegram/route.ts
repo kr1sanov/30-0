@@ -63,10 +63,51 @@ export async function POST(request: Request) {
           : null;
     if (!verified) return NextResponse.json({ error: 'Не удалось подтвердить вход через Telegram' }, { status: 401 });
     const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null };
-    const user = await db.user.upsert({
-      where: { providerId: `telegram_${verified.id}` },
-      create: { ...data, provider: 'telegram', providerId: `telegram_${verified.id}`, displayName: verified.firstName || verified.username || 'Игрок' },
-      update: { ...data, lastActiveAt: new Date() },
+    // Telegram signs start_param inside initData. Only attribute a referral after
+    // the initData signature above has been verified.
+    const referralCode = typeof body.initData === 'string'
+      ? new URLSearchParams(body.initData).get('start_param')
+      : null;
+    const safeReferralCode = referralCode && /^[a-z0-9]{6,32}$/i.test(referralCode) ? referralCode : null;
+    const user = await db.$transaction(async (tx) => {
+      const providerId = `telegram_${verified.id}`;
+      const existing = await tx.user.findUnique({ where: { providerId } });
+      if (existing) {
+        const referrer = !existing.referredBy && safeReferralCode && safeReferralCode !== existing.referralCode
+          ? await tx.user.findUnique({ where: { referralCode: safeReferralCode }, select: { id: true } })
+          : null;
+        const updated = await tx.user.update({
+          where: { id: existing.id },
+          data: {
+            ...data,
+            lastActiveAt: new Date(),
+            ...(!existing.referralCode ? { referralCode: `rpl${randomBytes(6).toString('hex')}` } : {}),
+            ...(referrer ? { referredBy: safeReferralCode } : {}),
+          },
+        });
+        if (referrer) {
+          await tx.user.update({ where: { id: referrer.id }, data: { referralCount: { increment: 1 } } });
+        }
+        return updated;
+      }
+
+      const referrer = safeReferralCode
+        ? await tx.user.findUnique({ where: { referralCode: safeReferralCode }, select: { id: true } })
+        : null;
+      const created = await tx.user.create({
+        data: {
+          ...data,
+          provider: 'telegram',
+          providerId,
+          displayName: verified.firstName || verified.username || 'Игрок',
+          referralCode: `rpl${randomBytes(6).toString('hex')}`,
+          ...(referrer ? { referredBy: safeReferralCode } : {}),
+        },
+      });
+      if (referrer) {
+        await tx.user.update({ where: { id: referrer.id }, data: { referralCount: { increment: 1 } } });
+      }
+      return created;
     });
     const response = NextResponse.json({ user: {
       id: user.id,
@@ -76,6 +117,7 @@ export async function POST(request: Request) {
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
       notificationCadence: user.notificationCadence,
       telegramChatStarted: user.telegramChatStarted,
+      referralCount: user.referralCount,
     } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
