@@ -8,6 +8,7 @@ import {
   POSITION_CATEGORY,
   POSITION_COLOR,
   getFormationById,
+  getPitchColumn,
 } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 
@@ -84,12 +85,12 @@ const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
     { row: 42, col: 20 }, { row: 42, col: 40 }, { row: 42, col: 60 }, { row: 42, col: 80 },
     { row: 20, col: 50 },
   ],
-  '4-1-4-1': [
+  '4-1-2-1-2': [
     { row: 90, col: 50 },
     { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 55, col: 50 },
-    { row: 38, col: 20 }, { row: 38, col: 40 }, { row: 38, col: 60 }, { row: 38, col: 80 },
-    { row: 18, col: 50 },
+    { row: 54, col: 50 },
+    { row: 40, col: 38 }, { row: 40, col: 62 }, { row: 27, col: 50 },
+    { row: 16, col: 35 }, { row: 16, col: 65 },
   ],
   '4-5-1': [
     { row: 90, col: 50 },
@@ -343,7 +344,7 @@ export default function PreMatchAnalysis() {
                 className="absolute flex flex-col items-center"
                 style={{
                   top: `${pos.row}%`,
-                  left: `${pos.col}%`,
+                  left: `${getPitchColumn(pos.col)}%`,
                   transform: 'translate(-50%, -50%)',
                 }}
               >

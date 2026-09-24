@@ -11,7 +11,6 @@ import SpinWheel from '@/components/game/SpinWheel';
 import PlayerList from '@/components/game/PlayerList';
 import SquadStats from '@/components/game/SquadStats';
 import SimulationResult from '@/components/game/SimulationResult';
-import ManagerChoice from '@/components/game/ManagerChoice';
 import SeasonAwards from '@/components/game/SeasonAwards';
 import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
 import DailyChallengeScreen from '@/components/game/DailyChallengeScreen';
@@ -844,7 +843,7 @@ function DraftScreen() {
 
 /* ─── Squad Complete Screen ─── */
 function SquadCompleteScreen() {
-  const { slots, config, simulate, currentManager, resetGame } = useGameStore();
+  const { slots, config, currentManager, setScreen } = useGameStore();
 
   // Calculate squad stats for pre-season odds
   const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
@@ -878,8 +877,8 @@ function SquadCompleteScreen() {
   const relegationPct = Math.max(0, Math.round(100 - top10Pct - 20));
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      <div className="text-center">
+    <div className="space-y-4 animate-fade-in-up lg:grid lg:grid-cols-[minmax(300px,380px)_minmax(0,760px)] lg:items-start lg:justify-center lg:gap-6 lg:space-y-0">
+      <div className="text-center lg:col-span-2">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -892,7 +891,9 @@ function SquadCompleteScreen() {
         <p className="text-sm text-[#9CA3AF] mt-1">Все 11 позиций заполнены</p>
       </div>
 
-      <FormationView compact />
+      <div className="lg:row-span-3 lg:sticky lg:top-20">
+        <FormationView compact />
+      </div>
 
       {/* Pre-season odds — 38-0 style */}
       <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 space-y-4">
@@ -940,8 +941,24 @@ function SquadCompleteScreen() {
         </p>
       </div>
 
+      <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-bold text-white">{currentManager ? `Тренер: ${currentManager.name}` : 'Без тренера'}</div>
+          <div className="mt-1 text-xs text-[#9CA3AF]">
+            {currentManager
+              ? `Случайный выбор · бонус +2 к силе состава · рейтинг ${currentManager.rating}/10`
+              : 'Тренер отключён в настройках игры.'}
+          </div>
+        </div>
+        <Button
+          onClick={() => setScreen('pre-match')}
+          className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
+          style={{ backgroundColor: '#00C896' }}
+        >
+          Перейти к сезону →
+        </Button>
+      </div>
       <SquadStats />
-      <ManagerChoice />
     </div>
   );
 }
@@ -1207,7 +1224,15 @@ export default function Home() {
       case 'simulation':
         return <SimulationScreen />;
       case 'result':
-        return <SimulationResult />;
+        return (
+          <div className="lg:grid lg:grid-cols-[minmax(300px,380px)_minmax(0,760px)] lg:items-start lg:justify-center lg:gap-6">
+            <aside className="hidden lg:block lg:sticky lg:top-20 space-y-3">
+              <FormationView compact />
+              <SquadStats />
+            </aside>
+            <SimulationResult />
+          </div>
+        );
       case 'awards':
         return <SeasonAwards />;
       case 'profile':
@@ -1234,7 +1259,7 @@ export default function Home() {
           ['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'].includes(screen)
             ? 'max-w-7xl'
             : screen === 'setup'
-              ? 'max-w-2xl'
+              ? 'max-w-4xl'
             : 'max-w-4xl'
         }`}
       >

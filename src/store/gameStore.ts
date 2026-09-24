@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 15532)
+Total output lines: 1501
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, LeaderboardEntry, Achievement, DailyChallenge } from '@/lib/types';
@@ -373,7 +376,9 @@ export const useGameStore = create<GameState>()(
             lastAssignedSlotIndex: null,
             justAssignedSlotIndex: null,
             seasonResult: null,
-            currentManager: null,
+            currentManager: runConfig.enableManagers
+              ? MANAGERS[Math.floor(Math.random() * MANAGERS.length)]
+              : null,
             screen: 'draft',
             lastConfig: { ...runConfig },
             lastDraftError: null,
@@ -705,65 +710,7 @@ export const useGameStore = create<GameState>()(
         newSlots[slotIndex] = {
           ...slot,
           playerId: player.playerSeasonId,
-          playerName: player.fullName,
-          playerLastName: player.lastName,
-          playerRating: player.rating,
-          playerPrimeRating: player.primeRating,
-          playerPosition: player.mainPosition,
-          playerOtherPositions: player.otherPositions,
-          playerNationality: player.nationality,
-          isCompatible: true, // Strict matching — always full compatibility
-        };
-
-        const allFilled = newSlots.every((s) => s.playerId);
-
-        set({
-          slots: newSlots,
-          selectedPlayer: null,
-          currentSpin: null,
-          draftVersion: thisVersion,
-          lastAssignedSlotIndex: slotIndex,
-          justAssignedSlotIndex: slotIndex,
-          screen: allFilled ? 'squad-complete' : 'draft',
-          lastDraftState: allFilled ? null : undoState,
-          lastDraftError: null,
-        });
-
-        // Auto-clear the highlight after 2 seconds
-        setTimeout(() => {
-          if (get().justAssignedSlotIndex === slotIndex) {
-            set({ justAssignedSlotIndex: null });
-          }
-        }, 2000);
-
-        // OFFLINE-FIRST: API persistence is best-effort. No revert on failure.
-        const draftPayload = {
-          playerSeasonId: player.playerSeasonId,
-          slotPosition,
-        };
-
-        const tryDraft = async (attempt: number): Promise<boolean> => {
-          try {
-            const res = await fetch(`/api/runs/${runId}/draft`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(draftPayload),
-            });
-            if (res.ok) return true;
-
-            const errData = await res.json().catch(() => ({}));
-            const errStatus = res.status;
-
-            if (errStatus === 400) {
-              console.warn('[directAssign] Business rule violation (permanent):', errData);
-              return true;
-            }
-
-            console.warn(`[directAssign] API error (attempt ${attempt}):`, errData);
-            return false;
-          } catch (error) {
-            console.warn(`[directAssign] Network error (attempt ${attempt}):`, error);
-            return false;
+          playerNam…532 tokens truncated…urn false;
           }
         };
 

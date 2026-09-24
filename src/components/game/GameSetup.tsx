@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { FORMATIONS, POSITION_CATEGORY } from '@/lib/positions';
+import { FORMATIONS, FORMATION_DISPLAY_ORDER, POSITION_CATEGORY, getPitchColumn } from '@/lib/positions';
 import {
   DIFFICULTY_CONFIG,
   ERA_CONFIG,
@@ -91,11 +91,9 @@ const PITCH_LAYOUTS: Record<string, { row: number; col: number }[]> = {
     { row: 38, col: 15 }, { row: 38, col: 38 }, { row: 38, col: 62 }, { row: 38, col: 85 },
     { row: 14, col: 50 },
   ],
-  '4-1-4-1': [
+  '4-1-2-1-2': [
     { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
-    { row: 48, col: 50 },
-    { row: 30, col: 15 }, { row: 30, col: 38 }, { row: 30, col: 62 }, { row: 30, col: 85 },
-    { row: 14, col: 50 },
+    { row: 50, col: 50 }, { row: 38, col: 38 }, { row: 38, col: 62 }, { row: 25, col: 50 }, { row: 12, col: 35 }, { row: 12, col: 65 },
   ],
   '4-5-1': [
     { row: 85, col: 50 }, { row: 65, col: 18 }, { row: 65, col: 38 }, { row: 65, col: 62 }, { row: 65, col: 82 },
@@ -199,7 +197,7 @@ function FormationPitch({ formationId }: { formationId: string }) {
             className="absolute flex flex-col items-center"
             style={{
               top: `${pos.row}%`,
-              left: `${pos.col}%`,
+              left: `${getPitchColumn(pos.col)}%`,
               transform: 'translate(-50%, -50%)',
             }}
           >
@@ -445,7 +443,7 @@ export default function GameSetup() {
   const canStart = currentGameMode === 'single_club' ? !!config.clubFilter : true;
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up">
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-black text-white inline-block">
@@ -697,16 +695,28 @@ export default function GameSetup() {
           </div>
         ) : (
           <>
-            {/* Horizontal scrollable pills */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-              {FORMATIONS.map((f) => (
-                <PillButton
-                  key={f.id}
-                  label={f.id}
-                  isSelected={config.formation === f.id}
-                  onClick={() => handleFormationSelect(f.id)}
-                />
-              ))}
+            <div className="grid grid-cols-3 gap-2">
+              {FORMATION_DISPLAY_ORDER.map((id) => {
+                const f = FORMATIONS.find((candidate) => candidate.id === id);
+                if (!f) return null;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    aria-pressed={config.formation === f.id}
+                    onClick={() => handleFormationSelect(f.id)}
+                    className="min-h-12 rounded-xl border px-2 py-2 text-sm font-bold transition-colors"
+                    style={{
+                      backgroundColor: config.formation === f.id ? accentMix(14) : '#141414',
+                      borderColor: config.formation === f.id ? ACCENT : '#2a2a2a',
+                      color: config.formation === f.id ? ACCENT : '#9CA3AF',
+                      boxShadow: config.formation === f.id ? '0 0 12px var(--club-glow)' : 'none',
+                    }}
+                  >
+                    {f.id}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Formation description when selected */}
@@ -811,6 +821,34 @@ export default function GameSetup() {
               onCheckedChange={(checked) => {
                 setConfig({ showRatings: checked });
               }}
+              className="data-[state=checked]:bg-[#00C896]"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ─── OPTIONAL RANDOM MANAGER ─── */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <SectionHeader>Тренер</SectionHeader>
+            <p className="-mt-1 text-xs text-[#64748b]">
+              {config.enableManagers
+                ? 'Случайный тренер выберется автоматически и добавит +2 к силе команды.'
+                : 'Игра без тренера и бонуса.'}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="text-xs font-bold" style={{ color: config.enableManagers ? ACCENT : '#64748b' }}>
+              {config.enableManagers ? 'Вкл' : 'Выкл'}
+            </span>
+            <Switch
+              checked={config.enableManagers ?? false}
+              onCheckedChange={(checked) => setConfig({ enableManagers: checked })}
+              aria-label="Включить тренера"
               className="data-[state=checked]:bg-[#00C896]"
             />
           </div>

@@ -6,6 +6,7 @@ import {
   POSITION_CATEGORY,
   POSITION_COLOR,
   canFillSlotStrict,
+  getPitchColumn,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,7 +31,7 @@ const SLOT_COLORS: Record<PositionCategory, string> = {
 const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
   '4-3-3': [
     { row: 88, col: 50 },  // ВР
-    { row: 68, col: 18 },  // ПЗ
+    { row: 68, col: 18 },  // крайний защитник команды справа; координаты зеркалятся при выводе
     { row: 68, col: 39 },  // ЦЗ
     { row: 68, col: 61 },  // ЦЗ
     { row: 68, col: 82 },  // ЛЗ
@@ -119,18 +120,18 @@ const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
     { row: 44, col: 85 },
     { row: 18, col: 50 },
   ],
-  '4-1-4-1': [
+  '4-1-2-1-2': [
     { row: 88, col: 50 },
     { row: 68, col: 18 },
     { row: 68, col: 39 },
     { row: 68, col: 61 },
     { row: 68, col: 82 },
     { row: 52, col: 50 },
-    { row: 36, col: 15 },
-    { row: 36, col: 38 },
-    { row: 36, col: 62 },
-    { row: 36, col: 85 },
-    { row: 16, col: 50 },
+    { row: 39, col: 38 },
+    { row: 39, col: 62 },
+    { row: 25, col: 50 },
+    { row: 14, col: 35 },
+    { row: 14, col: 65 },
   ],
   '4-5-1': [
     { row: 88, col: 50 },
@@ -475,7 +476,7 @@ export default function FormationView({ compact = false }: { compact?: boolean }
               } ${isShaking ? 'animate-shake' : ''} ${isJustAssigned ? 'z-30' : ''}`}
               style={{
                 top: `${pos.row}%`,
-                left: `${pos.col}%`,
+                left: `${getPitchColumn(pos.col)}%`,
               }}
               whileTap={isFilled || isCompatible || isMoveTarget ? { scale: 0.9 } : undefined}
               aria-label={
