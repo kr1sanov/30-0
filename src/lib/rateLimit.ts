@@ -32,6 +32,11 @@ export function enforceRateLimit(
   { limit, windowMs }: RateLimitOptions,
 ): NextResponse | null {
   const now = Date.now();
+  // Drop expired address keys instead of retaining old IPs for the life of
+  // a warm server process.
+  for (const [key, entry] of store) {
+    if (entry.resetAt <= now) store.delete(key);
+  }
   const key = `${scope}:${clientAddress(request)}`;
   const current = store.get(key);
 

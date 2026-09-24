@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import ShareModal from '@/components/share/ShareModal';
 import ResultShareCard from '@/components/share/ResultShareCard';
+import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
 import html2canvas from 'html2canvas-pro';
@@ -121,7 +122,7 @@ export default function SimulationResult() {
   const { seasonResult, resetGame, goHome, slots, setScreen, config } = useGameStore();
   const { haptic, notify, showConfirm } = useTelegram();
   const [currentMatchweek, setCurrentMatchweek] = useState(0);
-  const [showTable, setShowTable] = useState(false);
+  const [showTable, setShowTable] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const telegramCardRef = useRef<HTMLDivElement | null>(null);
@@ -304,16 +305,18 @@ export default function SimulationResult() {
     return matches.slice(Math.max(0, upTo - 5), upTo).reverse();
   }, [matches, currentMatchweek]);
 
-  // Share text
+  // Share text is concise and ready to paste as a Telegram invitation.
   const shareText = useMemo(() => {
     if (!data) return '';
     const pos = getPositionOrdinal(data.position);
     const lines = [
-      `⚽ 30-0 RPL`,
-      config.gameMode === 'single_club' ? `🏟️ Мой клуб: ${config.clubName ?? 'выбранный клуб'}` : '⚔️ Обычный режим',
-      `${data.points} оч · ${pos} место`,
-      `${data.wins}В ${data.draws}Н ${data.losses}П`,
-      `Забито ${data.goalsFor} · Пропущено ${data.goalsAgainst}`,
+      `⚽ МОЙ СЕЗОН В 30–0`,
+      config.gameMode === 'single_club' ? `🏟️ Клуб: ${config.clubName ?? 'выбранный клуб'}` : `🏟️ Обычный драфт · ${config.formation}`,
+      `🏆 Итог: ${pos} место · ${data.points} очков`,
+      `✅ ${data.wins} побед · 🤝 ${data.draws} ничьих · ❌ ${data.losses} поражений`,
+      `⚽ Голы: ${data.goalsFor}–${data.goalsAgainst}`,
+      '',
+      'Собери свой состав и попробуй обойти мой результат 👇',
     ];
     if (earnedTrophies.length > 0) {
       lines.push('');
@@ -325,10 +328,10 @@ export default function SimulationResult() {
     if (data.formation) {
       lines.push(`📐 ${data.formation}`);
     }
-    lines.push('#30п0 #РПЛ');
-    lines.push('https://30-0.рф');
+    lines.push('🎮 Играть: https://30-0.рф');
+    lines.push('#30п0 #ФутбольныйДрафт');
     return lines.join('\n');
-  }, [data, earnedTrophies, config.gameMode, config.clubName]);
+  }, [data, earnedTrophies, config.gameMode, config.clubName, config.formation]);
 
   if (!data) return null;
 
@@ -504,7 +507,7 @@ export default function SimulationResult() {
             </motion.div>
 
             {/* ── Trophy Cabinet ── */}
-            {earnedTrophies.length > 0 && (
+            {false && earnedTrophies.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -705,6 +708,7 @@ export default function SimulationResult() {
       </AnimatePresence>
 
       {/* Share Modal */}
+      {isComplete && <AchievementUnlocked />}
       <ShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}

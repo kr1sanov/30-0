@@ -27,6 +27,15 @@ const TROPHIES = [
   { id: 'globetrotter', icon: '🌍', name: 'Путешественник', desc: 'Игроки 5+ национальностей' },
   { id: 'veteran', icon: '🎖️', name: 'Ветеран', desc: '10+ сезонов сыграно' },
   { id: 'legend', icon: '🌟', name: 'Легенда', desc: '3+ чемпионских титула' },
+  { id: 'marathon_5', icon: '🏃', name: 'Пятая дистанция', desc: 'Сыграть 5 сезонов' },
+  { id: 'marathon_25', icon: '🦁', name: 'Главный ветеран', desc: 'Сыграть 25 сезонов' },
+  { id: 'hundred_wins', icon: '💯', name: 'Клуб ста побед', desc: '100 побед за карьеру' },
+  { id: 'three_hundred_wins', icon: '🏅', name: 'Победитель', desc: '300 побед за карьеру' },
+  { id: 'goal_collector', icon: '🥅', name: 'Коллекционер голов', desc: '500 голов за карьеру' },
+  { id: 'three_titles', icon: '👑', name: 'Династия', desc: '5 чемпионских титулов' },
+  { id: 'points_1000', icon: '📊', name: 'Тысяча очков', desc: '1 000 очков за карьеру' },
+  { id: 'perfect_twice', icon: '✨', name: 'Безупречная серия', desc: 'Два идеальных сезона' },
+  { id: 'top_four_10', icon: '🎖️', name: 'Постоянство', desc: '10 раз попасть в топ-4' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -42,11 +51,12 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 export default function ProfileScreen() {
-  const { profileStats, resetGame, setScreen } = useGameStore();
+  const { profileStats, resetGame, setScreen, setAvatarEmoji } = useGameStore();
   const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
+  const [showAvatarChoices, setShowAvatarChoices] = useState(false);
 
   // Track profile open in Metrika
   useEffect(() => { Metrics.profileOpen(); }, []);
@@ -90,15 +100,29 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden">
-            ⚽
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAvatarChoices((open) => !open)}
+            aria-label="Выбрать аватар"
+            className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden"
+          >
+            {profileStats.avatarEmoji || '⚽'}
+          </button>
           {profileStats.titles > 0 && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
               🏆
             </div>
           )}
         </motion.div>
+        {showAvatarChoices && (
+          <div className="mx-auto mt-3 grid max-w-xs grid-cols-8 gap-1 rounded-xl border border-[#1E1E1E] bg-[#141414] p-2" aria-label="Выберите эмодзи">
+            {['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🥊', '🏆', '🏅', '🤸', '🏋️', '🚴', '🏃', '🤾', '🧑', '👨', '👩', '🙂', '😎', '🤩', '🥳', '😄', '🧔'].map((emoji) => (
+              <button key={emoji} type="button" onClick={() => { setAvatarEmoji(emoji); setShowAvatarChoices(false); }} className="rounded-lg p-1.5 text-xl hover:bg-[#00C896]/15" aria-label={`Выбрать ${emoji}`}>
+                {emoji}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Display name with edit button */}
         <div className="flex items-center justify-center gap-2 mt-3">
@@ -109,7 +133,7 @@ export default function ProfileScreen() {
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                className="bg-[#141414] border border-[#00C896]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#FFFFFF] focus:outline-none focus:border-[#00C896] w-40"
+                className="ym-disable-keys bg-[#141414] border border-[#00C896]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#FFFFFF] focus:outline-none focus:border-[#00C896] w-40"
                 autoFocus
                 maxLength={20}
               />
@@ -151,8 +175,8 @@ export default function ProfileScreen() {
       {/* Local profile info + reset button */}
       <div className="flex items-center justify-center gap-3 py-2">
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00C896]/10 border border-[#00C896]/20">
-          <span className="text-xs">💾</span>
-          <span className="text-xs font-medium text-[#00C896]">Профиль Telegram</span>
+          <span className="text-xs" aria-hidden="true">✈️</span>
+          <span className="text-xs font-medium text-[#00C896]">Авторизован через Telegram</span>
         </div>
         <button
           onClick={async () => {
@@ -419,7 +443,11 @@ export default function ProfileScreen() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.03 }}
-                    className={`rounded-xl bg-[#0A0A0A]/30 p-3 border ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => { localStorage.setItem('30-0-selected-run', h.id); setScreen('history'); }}
+                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { localStorage.setItem('30-0-selected-run', h.id); setScreen('history'); } }}
+                    className={`rounded-xl bg-[#0A0A0A]/30 p-3 border cursor-pointer hover:bg-[#1b1b1b] transition-colors ${
                       h.position === 1
                         ? 'history-border-gold border-[#141414]'
                         : h.position === 2
@@ -467,6 +495,7 @@ export default function ProfileScreen() {
                         ⚽ {h.teamName}
                       </div>
                     )}
+                    <div className="mt-2 text-[10px] font-semibold text-[#00C896]">Открыть сезон и поделиться →</div>
                   </motion.div>
                 ))}
               </div>

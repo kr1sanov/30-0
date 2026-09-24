@@ -170,6 +170,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
               {/* Card preview */}
               <div
                 style={{
+                  maxHeight: '190px',
                   borderRadius: 12,
                   overflow: 'hidden',
                   border: '1px solid #1f1f1f',
@@ -185,11 +186,11 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
               </div>
 
               {/* Action buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <button
                   onClick={handleTelegramShare}
                   style={{
-                    width: '100%', minHeight: 48, borderRadius: 12,
+                    width: '100%', minHeight: 42, borderRadius: 10,
                     background: '#229ED9', color: '#fff', fontSize: 15, fontWeight: 700,
                     border: 'none', cursor: 'pointer',
                   }}
@@ -201,7 +202,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                   onClick={handleCopyImage}
                   disabled={isSharing}
                   style={{
-                    width: '100%', minHeight: 48, borderRadius: 12,
+                    width: '100%', minHeight: 42, borderRadius: 10,
                     background: 'var(--club-primary)', color: 'var(--club-on-primary)',
                     fontSize: 15, fontWeight: 700, border: 'none', cursor: isSharing ? 'wait' : 'pointer',
                   }}
@@ -214,7 +215,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                   onClick={handleShareNative}
                   disabled={isSharing}
                   style={{
-                    width: '100%', padding: '14px 0', borderRadius: 12,
+                    width: '100%', padding: '10px 0', borderRadius: 10,
                     background: '#1E1E1E',
                     color: '#fff',
                     fontSize: 15, fontWeight: 700,
@@ -230,7 +231,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 <button
                   onClick={handleSaveImage}
                   style={{
-                    width: '100%', padding: '10px 0', borderRadius: 12,
+                    width: '100%', padding: '10px 0', borderRadius: 10,
                     background: 'transparent', color: '#9CA3AF',
                     fontSize: 13, border: '1px solid #2a2a2a', cursor: 'pointer',
                   }}
@@ -242,7 +243,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 <button
                   onClick={onClose}
                   style={{
-                    width: '100%', padding: '10px 0', borderRadius: 12,
+                    gridColumn: '1 / -1', width: '100%', padding: '8px 0', borderRadius: 10,
                     background: 'transparent', color: '#4a5568',
                     fontSize: 13, border: 'none', cursor: 'pointer',
                   }}

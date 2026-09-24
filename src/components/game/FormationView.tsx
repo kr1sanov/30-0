@@ -207,7 +207,7 @@ function getPlayerSurname(lastName?: string): string {
 // ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
-export default function FormationView() {
+export default function FormationView({ compact = false }: { compact?: boolean }) {
   const {
     config,
     slots,
@@ -397,8 +397,8 @@ export default function FormationView() {
 
       {/* ===== Green Pitch with White Lines ===== */}
       <div
-        className="relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50"
-        style={{ maxWidth: 'min(100%, 520px)', paddingBottom: '145%' }}
+        className={`relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50 ${compact ? 'aspect-[3/4]' : ''}`}
+        style={compact ? { maxWidth: 'min(100%, 280px)' } : { maxWidth: 'min(100%, 520px)', paddingBottom: '145%' }}
       >
         {/* Pitch base — green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
@@ -548,14 +548,15 @@ export default function FormationView() {
                       {getInitials(slot.playerName)}
                     </span>
                   </div>
-                  {/* Player name below circle */}
+                  {/* Surname and squad number on the compact completed-lineup view */}
                   <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
                     <span
-                      className="text-[6px] sm:text-[7px] font-bold text-white/80 leading-none truncate"
+                      className={`${compact ? 'text-[8px]' : 'text-[6px] sm:text-[7px]'} font-bold text-white/80 leading-none truncate`}
                       style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
                     >
                       {getPlayerSurname(slot.playerLastName)}
                     </span>
+                    {compact && <span className="text-[7px] text-white/70 shrink-0">№{index + 1}</span>}
                     {getNationalityFlag(slot.playerNationality) && (
                       <span className="text-[7px] sm:text-[8px] leading-none shrink-0">
                         {getNationalityFlag(slot.playerNationality)}

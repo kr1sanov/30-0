@@ -104,15 +104,18 @@ export default function PlayerList() {
       return { ...player, canFillAny, compatibleSlots };
     });
 
-    // Sort by selected mode
+    // Keep valid picks first; selected sort is a tie-breaker only.
     return [...players].sort((a, b) => {
+      if (a.canFillAny !== b.canFillAny) return a.canFillAny ? -1 : 1;
+      const ratingA = isPrimeMode && a.primeRating ? a.primeRating : a.rating;
+      const ratingB = isPrimeMode && b.primeRating ? b.primeRating : b.rating;
       if (sortMode === 'rating') {
-        if (b.rating !== a.rating) return b.rating - a.rating;
+        if (ratingB !== ratingA) return ratingB - ratingA;
         return a.fullName.localeCompare(b.fullName, 'ru');
       }
       return a.fullName.localeCompare(b.fullName, 'ru');
     });
-  }, [currentSpin, slots, sortMode]);
+  }, [currentSpin, slots, sortMode, isPrimeMode]);
 
   // Show soft warning toast when draft API fails (non-blocking — game continues)
   useEffect(() => {
@@ -263,7 +266,7 @@ export default function PlayerList() {
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    {[player.mainPosition, ...player.otherPositions].map((pos, posIdx) => {
+                    {[...new Set([player.mainPosition, ...player.otherPositions])].map((pos, posIdx) => {
                       const cat = getCategory(pos);
                       return (
                         <span

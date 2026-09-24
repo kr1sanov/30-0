@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
+import ShareModal from '@/components/share/ShareModal';
 import {
   ChevronDown,
   ChevronUp,
@@ -193,6 +194,7 @@ export default function HistoryScreen() {
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
   const [sortMode, setSortMode] = useState<SortMode>('date');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [shareRun, setShareRun] = useState<GameRunData | null>(null);
 
   const fetchRuns = useCallback(async () => {
     setLoading(true);
@@ -210,6 +212,11 @@ export default function HistoryScreen() {
       if (!res.ok) throw new Error('Ошибка загрузки');
       const data = await res.json();
       setRuns(data);
+      const requestedRun = localStorage.getItem('30-0-selected-run');
+      if (requestedRun && Array.isArray(data) && data.some((run: GameRunData) => run.id === requestedRun)) {
+        setExpandedId(requestedRun);
+        localStorage.removeItem('30-0-selected-run');
+      }
     } catch (err) {
       console.error('Failed to fetch history:', err);
       setError('Не удалось загрузить историю');
@@ -541,6 +548,13 @@ export default function HistoryScreen() {
                           {run.teamName && <span> · {run.teamName}</span>}
                         </div>
 
+                        <button
+                          onClick={() => setShareRun(run)}
+                          className="w-full rounded-lg border border-[#00C896]/25 bg-[#00C896]/10 py-2 text-xs font-bold text-[#00C896]"
+                        >
+                          Поделиться сезоном — текст и карточка
+                        </button>
+
                         {/* Squad */}
                         <div>
                           <div className="text-xs font-bold text-[#9CA3AF] mb-2 uppercase tracking-wider">
@@ -601,6 +615,39 @@ export default function HistoryScreen() {
       >
         ⚽ Сыграть сезон
       </Button>
+
+      {shareRun && (
+        <ShareModal
+          isOpen
+          onClose={() => setShareRun(null)}
+          shareText={[
+            '⚽ МОЙ СЕЗОН В 30–0',
+            `🏟️ ${shareRun.teamName || 'Обычный драфт'} · ${shareRun.formation}`,
+            `🏆 ${shareRun.position ?? '—'} место · ${shareRun.points ?? 0} очков`,
+            `✅ ${shareRun.wins ?? 0} побед · 🤝 ${shareRun.draws ?? 0} ничьих · ❌ ${shareRun.losses ?? 0} поражений`,
+            `⚽ Голы: ${shareRun.goalsFor ?? 0}–${shareRun.goalsAgainst ?? 0}`,
+            `⭐ Средний рейтинг: ${shareRun.overallRating ?? getAvgRating(shareRun.slots)}`,
+            '', 'Собери свой состав и попробуй превзойти мой результат!', '🎮 Играть: https://30-0.рф',
+          ].join('\n')}
+          cardContent={(
+            <div style={{ background: '#0a0a0a', color: '#fff', padding: 24, fontFamily: 'Arial, sans-serif' }}>
+              <div style={{ color: '#00c896', fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>30–0 · ИТОГ СЕЗОНА</div>
+              <h2 style={{ fontSize: 26, margin: '10px 0' }}>{shareRun.teamName || 'Обычный драфт'}</h2>
+              <div style={{ color: '#00c896', fontSize: 38, fontWeight: 900 }}>{shareRun.points ?? 0} очков</div>
+              <div style={{ color: '#cbd5e1', margin: '6px 0 18px' }}>{shareRun.position ?? '—'} место · {shareRun.formation} · {shareRun.wins ?? 0}В {shareRun.draws ?? 0}Н {shareRun.losses ?? 0}П</div>
+              <div style={{ borderTop: '1px solid #263238', paddingTop: 12, fontSize: 13, color: '#cbd5e1' }}>Забито {shareRun.goalsFor ?? 0} · Пропущено {shareRun.goalsAgainst ?? 0}</div>
+              <div style={{ marginTop: 18, color: '#64748b', fontSize: 12 }}>Состав</div>
+              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                {shareRun.slots.filter((slot) => slot.playerName).map((slot) => (
+                  <div key={slot.id} style={{ background: '#141a1a', borderRadius: 8, padding: '7px 9px', fontSize: 12 }}>
+                    <span style={{ color: '#00c896', marginRight: 7 }}>{getPositionLabel(slot.playerPosition)}</span>{slot.playerLastName || slot.playerName}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        />
+      )}
     </div>
   );
 }

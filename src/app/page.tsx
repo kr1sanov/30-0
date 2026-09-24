@@ -21,7 +21,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import ProfileScreen from '@/components/game/ProfileScreen';
 import HistoryScreen from '@/components/game/HistoryScreen';
-import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { toast } from 'sonner';
 import { canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
@@ -893,7 +892,7 @@ function SquadCompleteScreen() {
         <p className="text-sm text-[#9CA3AF] mt-1">Все 11 позиций заполнены</p>
       </div>
 
-      <FormationView />
+      <FormationView compact />
 
       {/* Pre-season odds — 38-0 style */}
       <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 space-y-4">
@@ -1242,7 +1241,6 @@ export default function Home() {
         </ErrorBoundary>
       </main>
       <Footer />
-      <AchievementUnlocked />
     </div>
   );
 }

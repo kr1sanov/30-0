@@ -390,6 +390,13 @@ export default function SeasonAwards() {
         className="space-y-3 pt-2"
       >
         <Button
+          onClick={() => { haptic('light'); setScreen('result'); }}
+          variant="outline"
+          className="w-full h-11 rounded-xl border-[#1E1E1E] text-[#9CA3AF] hover:bg-[#141414] hover:text-[#FFFFFF]"
+        >
+          ← К итогам сезона
+        </Button>
+        <Button
           onClick={() => {
             haptic('light');
             resetGame();

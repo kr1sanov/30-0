@@ -2,6 +2,7 @@
 
 import { useGameStore } from '@/store/gameStore';
 import { Home, Play, User } from 'lucide-react';
+import Link from 'next/link';
 
 interface FooterNavLink {
   label: string;
@@ -43,8 +44,8 @@ export default function Footer() {
   ];
 
   const legalLinks = [
-    { label: 'Политика конфиденциальности', href: '#' },
-    { label: 'Условия использования', href: '#' },
+    { label: 'Политика конфиденциальности', href: '/privacy' },
+    { label: 'Условия использования', href: '/terms' },
   ];
 
   const handleLinkClick = (link: FooterNavLink) => {
@@ -81,13 +82,13 @@ export default function Footer() {
           <div className="flex flex-col items-center gap-3">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 justify-center">
               {legalLinks.map((link) => (
-                <a
+                <Link
                   key={link.label}
                   href={link.href}
                   className="text-xs text-[#9CA3AF]/40 hover:text-[#9CA3AF]/70 transition-colors duration-200"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </div>
             <p className="text-xs text-[#9CA3AF]/30">
