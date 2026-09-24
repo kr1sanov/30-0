@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { selectOneClubCandidates } from '@/lib/rplClubSelection';
 import { FORMATIONS } from '@/lib/positions';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
@@ -67,8 +68,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Выберите клуб' }, { status: 400 });
     }
     if (clubFilter) {
-      const clubExists = await db.club.findUnique({ where: { id: clubFilter }, select: { id: true } });
-      if (!clubExists) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
+      const club = await db.club.findUnique({
+        where: { id: clubFilter },
+        select: {
+          id: true, nameRu: true, nameEn: true, city: true,
+          seasons: {
+            where: { season: { startYear: { gte: 2000, lte: 2025 }, endYear: { lte: 2026 } } },
+            select: { players: { select: { playerId: true, mainPosition: true } } },
+          },
+        },
+      });
+      if (!club) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
+      if (gameMode === 'single_club' && !selectOneClubCandidates([club]).length) {
+        return NextResponse.json({ error: 'Выберите клуб с достаточной историей и составом РПЛ за 2000–2026 годы' }, { status: 400 });
+      }
     }
 
     // Validate formation exists
