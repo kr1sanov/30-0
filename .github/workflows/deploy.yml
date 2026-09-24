@@ -59,6 +59,7 @@ jobs:
           bash -n scripts/deploy-production.sh
           node --check scripts/prepare-production-users.cjs
           node --check scripts/backfill-wingback-positions.mjs
+          node --check scripts/backfill-2026-rpl-data.mjs
 
   # ─── Stage 2: Build ───
   build:
@@ -163,6 +164,7 @@ jobs:
           cp scripts/prepare-production-users.cjs deploy-package/scripts/
           cp scripts/deploy-production.sh deploy-package/scripts/
           cp scripts/backfill-wingback-positions.mjs deploy-package/scripts/
+          cp scripts/backfill-2026-rpl-data.mjs deploy-package/scripts/
 
           # Copy package.json for reference
           cp build-artifact/package.json deploy-package/

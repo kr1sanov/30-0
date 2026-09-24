@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
 import { useAuthStore } from '@/store/authStore';
+import { getClubTheme } from '@/lib/clubThemes';
 
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
@@ -31,7 +32,6 @@ interface ClubData {
   nameRu: string;
   nameEn?: string;
   city?: string;
-  logoUrl?: string;
 }
 
 /* ─── Game Mode Config ─── */
@@ -274,6 +274,15 @@ function ClubCard({
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const theme = getClubTheme(club.nameRu);
+  const monogram = club.nameRu
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
   return (
     <motion.button
       type="button"
@@ -285,8 +294,8 @@ function ClubCard({
       className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
       style={{
         backgroundColor: isSelected ? accentMix(10) : BG_CARD,
-        borderColor: isSelected ? ACCENT : '#2a2a2a',
-        boxShadow: isSelected ? '0 0 16px var(--club-glow)' : 'none',
+        borderColor: isSelected ? theme.primary : '#2a2a2a',
+        boxShadow: isSelected ? `0 0 16px ${theme.glow}` : 'none',
       }}
     >
       {/* Selected checkmark */}
@@ -302,19 +311,23 @@ function ClubCard({
           </svg>
         </motion.div>
       )}
-      {/* Club icon */}
-      <div
-        className="w-10 h-10 rounded-lg mx-auto mb-1.5 flex items-center justify-center text-lg"
-        style={{
-          backgroundColor: isSelected ? accentMix(14) : '#1f1f1f',
-        }}
-      >
-        ⚽
+      {/* Club crest when provided; otherwise a two-colour club monogram */}
+      <div className="w-10 h-10 mx-auto mb-1.5 flex items-center justify-center">
+        <svg viewBox="0 0 40 44" className="w-9 h-10 drop-shadow" aria-hidden="true">
+          <defs>
+            <linearGradient id={`crest-${club.id}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="50%" stopColor={theme.primary} />
+              <stop offset="50%" stopColor={theme.secondary} />
+            </linearGradient>
+          </defs>
+          <path d="M20 2 37 8v14c0 9-7 16-17 20C10 38 3 31 3 22V8L20 2Z" fill={`url(#crest-${club.id})`} stroke="rgba(255,255,255,.75)" strokeWidth="1.5" />
+          <text x="20" y="25" textAnchor="middle" fontSize="11" fontWeight="900" fill={theme.onPrimary}>{monogram}</text>
+        </svg>
       </div>
       {/* Club name */}
       <div
         className="text-xs font-bold leading-tight"
-        style={{ color: isSelected ? ACCENT : '#FFFFFF' }}
+        style={{ color: isSelected ? theme.primary : '#FFFFFF' }}
       >
         {club.nameRu}
       </div>
@@ -336,7 +349,6 @@ export default function GameSetup() {
   const [clubs, setClubs] = useState<ClubData[]>([]);
   const [clubsLoading, setClubsLoading] = useState(false);
   const [clubsError, setClubsError] = useState<string | null>(null);
-  const [clubSearch, setClubSearch] = useState('');
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
@@ -366,12 +378,6 @@ export default function GameSetup() {
       void loadClubs();
     }
   }, [currentGameMode, clubs.length, clubsLoading, clubsError, loadClubs]);
-
-  // Filter clubs by search
-  const filteredClubs = clubs.filter((c) =>
-    c.nameRu.toLowerCase().includes(clubSearch.toLowerCase()) ||
-    (c.city && c.city.toLowerCase().includes(clubSearch.toLowerCase()))
-  );
 
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
@@ -578,11 +584,11 @@ export default function GameSetup() {
                     border: `1px solid ${accentMix(22)}`,
                   }}
                 >
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
-                    style={{ backgroundColor: accentMix(14) }}
-                  >
-                    🏟️
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-black" style={{
+                    background: `linear-gradient(135deg, ${getClubTheme(selectedClub.nameRu).primary} 0 50%, ${getClubTheme(selectedClub.nameRu).secondary} 50% 100%)`,
+                    color: getClubTheme(selectedClub.nameRu).onPrimary,
+                  }}>
+                    {selectedClub.nameRu.split(/[\s-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join('').toUpperCase()}
                   </div>
                   <div>
                     <div className="text-sm font-bold" style={{ color: ACCENT }}>
@@ -594,29 +600,6 @@ export default function GameSetup() {
                   </div>
                 </motion.div>
               )}
-
-              {/* Search input */}
-              <div className="mb-3 relative">
-                <input
-                  type="text"
-                  placeholder="Поиск клуба..."
-                  value={clubSearch}
-                  onChange={(e) => setClubSearch(e.target.value)}
-                  className="w-full rounded-xl px-4 py-2.5 text-sm text-white placeholder-[#64748b] outline-none transition-all"
-                  style={{
-                    backgroundColor: '#1f1f1f',
-                    border: '1px solid #2a2a2a',
-                  }}
-                />
-                {clubSearch && (
-                  <button
-                    onClick={() => setClubSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748b] hover:text-white transition-colors"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
 
               {/* Club grid */}
               {clubsLoading ? (
@@ -638,7 +621,7 @@ export default function GameSetup() {
               ) : (
                 <div className="max-h-72 overflow-y-auto pr-1 custom-scrollbar">
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {filteredClubs.map((club) => (
+                    {clubs.map((club) => (
                       <ClubCard
                         key={club.id}
                         club={club}
@@ -654,11 +637,6 @@ export default function GameSetup() {
                       />
                     ))}
                   </div>
-                  {filteredClubs.length === 0 && (
-                    <div className="text-center py-6 text-sm text-[#64748b]">
-                      Клубы не найдены
-                    </div>
-                  )}
                 </div>
               )}
             </div>

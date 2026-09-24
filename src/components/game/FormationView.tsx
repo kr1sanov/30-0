@@ -8,7 +8,6 @@ import {
   canFillSlotStrict,
 } from '@/lib/positions';
 import type { PositionCategory, Position } from '@/lib/positions';
-import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTelegram } from '@/hooks/use-telegram';
@@ -358,25 +357,6 @@ export default function FormationView({ compact = false }: { compact?: boolean }
 
   return (
     <div className="relative w-full flex flex-col items-center">
-      {/* Selected player indicator */}
-      <AnimatePresence>
-        {selectedPlayer && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
-            style={{ backgroundColor: '#0a0a0a', border: `1px solid ${accentMix(20)}` }}
-          >
-            <span className="text-[10px] text-[#94a3b8]">Выберите позицию для</span>
-            <span className="text-[10px] font-bold text-white">
-              {selectedPlayer.fullName}
-            </span>
-            <span className="text-[10px] text-[#94a3b8]">({isPrimeMode && selectedPlayer.primeRating ? selectedPlayer.primeRating : selectedPlayer.rating})</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Moving player prompt */}
       <AnimatePresence>
         {movingPlayerSlotIndex !== null && movingPlayerSlotIndex >= 0 && (
@@ -544,11 +524,13 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                       boxShadow: `0 0 0 2px ${slotColor}88, 0 2px 8px rgba(0,0,0,0.5)`,
                     }}
                   >
-                    <span className="text-[10px] font-black text-white leading-none">
-                      {getInitials(slot.playerName)}
-                    </span>
+                    {!compact && (
+                      <span className="text-[10px] font-black text-white leading-none">
+                        {getInitials(slot.playerName)}
+                      </span>
+                    )}
                   </div>
-                  {/* Surname and squad number on the compact completed-lineup view */}
+                  {/* Only the surname is shown on the completed lineup */}
                   <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
                     <span
                       className={`${compact ? 'text-[8px]' : 'text-[6px] sm:text-[7px]'} font-bold text-white/80 leading-none truncate`}
@@ -556,12 +538,6 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                     >
                       {getPlayerSurname(slot.playerLastName)}
                     </span>
-                    {compact && <span className="text-[7px] text-white/70 shrink-0">№{index + 1}</span>}
-                    {getNationalityFlag(slot.playerNationality) && (
-                      <span className="text-[7px] sm:text-[8px] leading-none shrink-0">
-                        {getNationalityFlag(slot.playerNationality)}
-                      </span>
-                    )}
                   </div>
 
                   {/* Moving indicator ring */}

@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY, POSITION_COLOR, canFillSlotStrict } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
-import { getNationalityFlag } from '@/lib/nationality';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
@@ -92,6 +91,10 @@ export default function PlayerList() {
           slot.position as Position,
         )) {
           canFillAny = true;
+          // Identical slots (for example two НП places in 4-4-2) are interchangeable.
+          // Offer one position button; the first open slot is filled, then the
+          // next spin can fill the remaining slot of the same type.
+          if (compatibleSlots.some((candidate) => candidate.position === slot.position)) continue;
           compatibleSlots.push({
             slotIndex: i,
             position: slot.position,
@@ -220,7 +223,6 @@ export default function PlayerList() {
           const isExpanded = selectedPlayer?.playerSeasonId === player.playerSeasonId;
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
-          const flagEmoji = getNationalityFlag(player.nationality);
           const displayRating = isPrimeMode && player.primeRating ? player.primeRating : player.rating;
           const ratingBg = getRatingBgColor(displayRating);
 
@@ -257,12 +259,11 @@ export default function PlayerList() {
                   {effectiveShowRatings ? displayRating : '?'}
                 </div>
 
-                {/* Name, flag, positions */}
+                {/* Name and positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm leading-tight truncate">
                     <span className="font-bold text-[#FFFFFF]">{getLastName(player.fullName)}</span>{' '}
                     <span className="font-normal text-[#9CA3AF]">{getFirstName(player.fullName)}</span>
-                    {flagEmoji && <span className="ml-1 text-[#64748b]">{flagEmoji}</span>}
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -321,11 +322,6 @@ export default function PlayerList() {
                         boxShadow: '0 0 20px var(--club-glow)',
                       }}
                     >
-                      {/* PLACE IN section header */}
-                      <p className="text-[11px] text-[#9CA3AF] font-medium">
-                        Поставить <span className="text-[#FFFFFF] font-bold">{getLastName(player.fullName)}</span> на:
-                      </p>
-
                       {/* Position buttons grid */}
                       <div className="flex flex-wrap gap-2">
                         {player.compatibleSlots.map((slot) => {

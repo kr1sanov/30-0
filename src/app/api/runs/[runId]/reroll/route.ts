@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
-import { canFillSlot } from '@/lib/positions';
 import { filterCompatibleClubSeasons, spinWheel } from '@/lib/wheel';
-import type { ClubSeasonWithPlayers } from '@/lib/wheel';
+import { getClubSeasonOptions } from '@/lib/clubAvailability';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
@@ -71,7 +70,7 @@ export async function POST(
 
     // Determine era range from run config
     const startYear = run.eraStartYear ?? 2000;
-    const endYear = run.eraEndYear ?? 2025;
+    const endYear = run.eraEndYear ?? 2026;
 
     // Build the where clause for ClubSeasons
     // If clubFilter is set (single_club mode), only return club-seasons for that club
@@ -99,60 +98,21 @@ export async function POST(
       },
     });
 
-    // Build club-season options with available positions
-    const clubSeasonOptions: ClubSeasonWithPlayers[] = [];
+    let clubSeasonOptions = getClubSeasonOptions(
+      clubSeasons, openPositions, draftedPlayerNames, draftedPlayerSeasonIds, run.nationalityFilter,
+    );
+    let compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
 
-    for (const cs of clubSeasons) {
-      const availablePositions = new Set<string>();
-
-      for (const ps of cs.players) {
-        if (draftedPlayerSeasonIds.has(ps.id)) continue;
-        if (draftedPlayerNames.has(ps.player.fullName)) continue;
-
-        // In nations_cup mode, skip players whose nationality doesn't match
-        if (run.nationalityFilter && ps.player.nationality !== run.nationalityFilter) continue;
-
-        for (const slotPos of openPositions) {
-          const { canFill } = canFillSlot(
-            ps.mainPosition as Parameters<typeof canFillSlot>[0],
-            (ps.otherPositions ? ps.otherPositions.split(',') : []) as Parameters<typeof canFillSlot>[1],
-            slotPos as Parameters<typeof canFillSlot>[2],
-          );
-          if (canFill) {
-            availablePositions.add(ps.mainPosition);
-            break;
-          }
-        }
-
-        if (ps.otherPositions) {
-          const otherPositions = ps.otherPositions.split(',');
-          for (const otherPos of otherPositions) {
-            for (const slotPos of openPositions) {
-              const { canFill } = canFillSlot(
-                otherPos.trim() as Parameters<typeof canFillSlot>[0],
-                [],
-                slotPos as Parameters<typeof canFillSlot>[2],
-              );
-              if (canFill) {
-                availablePositions.add(otherPos.trim());
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if (availablePositions.size > 0) {
-        clubSeasonOptions.push({
-          clubSeasonId: cs.id,
-          clubName: cs.club.nameRu,
-          seasonLabel: cs.season.label,
-          availablePositions: Array.from(availablePositions) as ClubSeasonWithPlayers['availablePositions'],
-        });
-      }
+    if (compatible.length === 0 && run.clubFilter) {
+      const historicalClubSeasons = await db.clubSeason.findMany({
+        where: { clubId: run.clubFilter },
+        include: { club: true, season: true, players: { include: { player: true } } },
+      });
+      clubSeasonOptions = getClubSeasonOptions(
+        historicalClubSeasons, openPositions, draftedPlayerNames, draftedPlayerSeasonIds, run.nationalityFilter,
+      );
+      compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
     }
-
-    const compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
 
     if (compatible.length === 0) {
       return NextResponse.json(

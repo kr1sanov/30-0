@@ -43,6 +43,9 @@ export const MANAGERS: Manager[] = [
   { id: 'tedesco', name: 'Доменико Тедеско', rating: 7, nationality: 'Германия', era: '2020s', specialAbility: 'Прессинг' },
   { id: 'bilyaletdinov', name: 'Ринат Билялетдинов', rating: 7, nationality: 'Россия', era: '2010s', specialAbility: 'Оборона' },
   { id: 'stankovic', name: 'Деян Станкович', rating: 7, nationality: 'Сербия', era: '2020s', specialAbility: 'Воля к победе' },
+  { id: 'evseev', name: 'Вадим Евсеев', rating: 6, nationality: 'Россия', era: '2020s', specialAbility: 'Боевой характер' },
+  { id: 'blagojevic', name: 'Срджан Благоевич', rating: 6, nationality: 'Сербия', era: '2020s', specialAbility: 'Организация' },
+  { id: 'juan-diaz', name: 'Хуан Диас Кинта', rating: 6, nationality: 'Испания', era: '2020s', specialAbility: 'Тактика' },
 
   // === SOLID (5-6) ===
   { id: 'kobolev', name: 'Андрей Кобелев', rating: 6, nationality: 'Россия', era: '2000-2010s' },

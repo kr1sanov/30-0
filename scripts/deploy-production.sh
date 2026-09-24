@@ -152,6 +152,7 @@ cp "$DEPLOY_STAGE/package.json" package.json
 cp -r "$DEPLOY_STAGE/prisma/." prisma/
 cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
 cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wingback-positions.mjs
+cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
 
 rm -rf .next/standalone
 mv .next/standalone-next .next/standalone
@@ -274,6 +275,13 @@ if [ -f .env ]; then
     echo "✅ Existing fullback position data updated"
   else
     echo "❌ Wing-back position backfill failed"
+    rollback_standalone || true
+    exit 1
+  fi
+  if node --env-file=.env scripts/backfill-2026-rpl-data.mjs; then
+    echo "✅ Current RPL club and roster data updated"
+  else
+    echo "❌ Current RPL data backfill failed"
     rollback_standalone || true
     exit 1
   fi

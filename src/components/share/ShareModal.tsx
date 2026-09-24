@@ -95,7 +95,14 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
 
   const handleTelegramShare = useCallback(() => {
     const url = `https://t.me/share/url?url=${encodeURIComponent('https://30-0.рф')}&text=${encodeURIComponent(shareText)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const telegram = (window as Window & {
+      Telegram?: { WebApp?: { openTelegramLink?: (link: string) => void } };
+    }).Telegram;
+    if (telegram?.WebApp?.openTelegramLink) {
+      telegram.WebApp.openTelegramLink(url);
+    } else {
+      window.location.assign(url);
+    }
     Metrics.shareResult('telegram');
   }, [shareText]);
 

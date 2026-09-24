@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         ratingMode: ratingMode || 'season',
         eraFilter: eraFilter || 'all',
         eraStartYear: eraStartYear ?? 2000,
-        eraEndYear: eraEndYear ?? 2025,
+        eraEndYear: eraEndYear ?? 2026,
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,

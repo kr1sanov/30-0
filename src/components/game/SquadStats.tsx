@@ -3,7 +3,7 @@
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
-import { getNationalityFlag, isForeignPlayer } from '@/lib/nationality';
+import { isForeignPlayer } from '@/lib/nationality';
 import { motion } from 'framer-motion';
 
 /* ─── Colors ─── */
@@ -220,9 +220,6 @@ export default function SquadStats() {
                   {isForeignPlayer(slot.playerNationality)
                     ? slot.playerName
                     : (slot.playerLastName || slot.playerName)}
-                  {getNationalityFlag(slot.playerNationality) && (
-                    <span className="ml-1">{getNationalityFlag(slot.playerNationality)}</span>
-                  )}
                 </span>
               </div>
               <span className="text-xs font-bold text-[#9CA3AF]">
