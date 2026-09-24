@@ -42,7 +42,7 @@ const STEPS = [
 /* ─── Game Modes data ─── */
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычный драфт', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
-  { emoji: '🏟️', title: 'Мой клуб', desc: 'Собери лучшую сборную из истории одного клуба', active: true, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '🏟️', title: 'Один клуб', desc: 'Собери состав из игроков одного клуба РПЛ', active: true, color: '#00C896', gameMode: 'single_club' as const },
 ];
 
 interface ChallengeDef {

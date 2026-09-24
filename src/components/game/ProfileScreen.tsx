@@ -36,6 +36,7 @@ const TROPHIES = [
   { id: 'points_1000', icon: '📊', name: 'Тысяча очков', desc: '1 000 очков за карьеру' },
   { id: 'perfect_twice', icon: '✨', name: 'Безупречная серия', desc: 'Два идеальных сезона' },
   { id: 'top_four_10', icon: '🎖️', name: 'Постоянство', desc: '10 раз попасть в топ-4' },
+  { id: 'referral_invite', icon: '🤝', name: 'Первый приглашённый', desc: 'Пригласить первого игрока в 30-0' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -59,7 +60,9 @@ export default function ProfileScreen() {
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
   const [botUsername, setBotUsername] = useState<string | null>(null);
   const [notificationCadence, setNotificationCadence] = useState(user?.notificationCadence || 'weekly');
+  const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
   useEffect(() => { fetch('/api/auth/telegram').then(r => r.json()).then(data => { if (typeof data.botUsername === 'string') setBotUsername(data.botUsername); }).catch(() => undefined); }, []);
+  useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
 
   // Track profile open in Metrika
   useEffect(() => { Metrics.profileOpen(); }, []);
@@ -73,7 +76,9 @@ export default function ProfileScreen() {
     : 0;
 
   // Total earned trophies
-  const earnedTrophies = TROPHIES.filter(t => profileStats.achievements.includes(t.id)).length;
+  const hasReferralAchievement = (referrals?.referralCount ?? 0) > 0;
+  const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : profileStats.achievements.includes(id);
+  const earnedTrophies = TROPHIES.filter(t => hasTrophy(t.id)).length;
 
   const handleSaveName = async () => {
     if (editName.trim().length >= 2) {
@@ -209,6 +214,28 @@ export default function ProfileScreen() {
         ))}
       </div>
 
+      {/* Referrals */}
+      <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-white">🤝 Приглашай игроков</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделитесь ссылкой. Здесь будет расти статистика приглашённых; за первого игрока открывается ачивка.</p>
+          </div>
+          <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
+            <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
+            <div className="text-[10px] text-[#9CA3AF]">игроков пришло</div>
+          </div>
+        </div>
+        {referrals?.inviteUrl ? (
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input readOnly aria-label="Реферальная ссылка" value={referrals.inviteUrl} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
+            <Button onClick={async () => { try { await navigator.clipboard.writeText(referrals.inviteUrl!); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
+          </div>
+        ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем вашу ссылку…</p>}
+        {referrals?.referredUsers.length ? <div className="mt-4 border-t border-[#252525] pt-3"><p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Последние приглашённые</p><ul className="space-y-1">{referrals.referredUsers.map((invite, index) => <li key={`${invite.username ?? invite.displayName}-${index}`} className="text-xs text-[#9CA3AF]">{invite.displayName}{invite.username ? ` · @${invite.username}` : ''}</li>)}</ul></div> : null}
+        <p className="mt-3 text-[10px] text-[#64748b]">Награды за приглашения пока не начисляются.</p>
+      </section>
+
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
         <div className="flex items-center justify-between mb-3">
@@ -217,7 +244,7 @@ export default function ProfileScreen() {
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {TROPHIES.map((trophy) => {
-            const earned = profileStats.achievements.includes(trophy.id);
+            const earned = hasTrophy(trophy.id);
             return (
               <motion.div
                 key={trophy.id}

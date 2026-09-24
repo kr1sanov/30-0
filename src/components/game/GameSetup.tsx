@@ -32,6 +32,8 @@ interface ClubData {
   nameRu: string;
   nameEn?: string;
   city?: string;
+  seasonCount: number;
+  playerCount: number;
 }
 
 /* ─── Game Mode Config ─── */
@@ -45,8 +47,8 @@ const GAME_MODE_CONFIG: Partial<Record<
     icon: '⚔️',
   },
   single_club: {
-    label: 'Мой клуб',
-    description: 'Выберите клуб — все спины только его сезоны',
+    label: 'Один клуб',
+    description: 'Выберите клуб РПЛ — все спины будут только из его истории',
     icon: '🏟️',
   },
 };
@@ -286,9 +288,9 @@ function ClubCard({
       whileHover={{ scale: 1.02 }}
       className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
       style={{
-        backgroundColor: isSelected ? accentMix(10) : BG_CARD,
-        borderColor: isSelected ? theme.primary : '#2a2a2a',
-        boxShadow: isSelected ? `0 0 16px ${theme.glow}` : 'none',
+        backgroundColor: theme.primary,
+        borderColor: isSelected ? '#FFFFFF' : `${theme.primary}99`,
+        boxShadow: isSelected ? `0 0 18px ${theme.glow}` : '0 6px 16px rgba(0,0,0,.18)',
       }}
     >
       {/* Selected checkmark */}
@@ -319,15 +321,16 @@ function ClubCard({
       {/* Club name */}
       <div
         className="text-xs font-bold leading-tight"
-        style={{ color: isSelected ? theme.primary : '#FFFFFF' }}
+        style={{ color: theme.onPrimary }}
       >
         {club.nameRu}
       </div>
       {club.city && (
-        <div className="text-[9px] text-[#64748b] mt-0.5 leading-tight">
+        <div className="text-[9px] text-white/75 mt-0.5 leading-tight">
           {club.city}
         </div>
       )}
+      <div className="mt-1 text-[9px] font-medium text-white/80">{club.seasonCount} сезонов · {club.playerCount} игроков</div>
     </motion.button>
   );
 }
@@ -563,7 +566,8 @@ export default function GameSetup() {
               className="rounded-2xl p-4"
               style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
             >
-              <SectionHeader>Выберите клуб</SectionHeader>
+              <SectionHeader>Один клуб</SectionHeader>
+              <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Выберите клуб, который чаще всего играл в РПЛ с 2000 по 2026 год. В пул вошли команды с полной историей и составом, достаточным для драфта из 11 игроков.</p>
 
               {/* Selected club indicator */}
               {selectedClub && (
@@ -585,7 +589,7 @@ export default function GameSetup() {
                       {selectedClub.nameRu}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      Все спины будут только с сезонами этого клуба
+                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2000–2026)
                     </div>
                   </div>
                 </motion.div>
@@ -610,7 +614,7 @@ export default function GameSetup() {
                 </div>
               ) : (
                 <div className="max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {clubs.map((club) => (
                       <ClubCard
                         key={club.id}
@@ -1050,7 +1054,7 @@ export default function GameSetup() {
           : dailyChallenge
           ? 'Начать челлендж →'
           : currentGameMode === 'single_club'
-          ? `Начать драфт · ${selectedClub?.nameRu ?? 'Мой клуб'} →`
+          ? `Начать драфт · ${selectedClub?.nameRu ?? 'Один клуб'} →`
           : 'Начать драфт →'}
         </Button>
     </div>
