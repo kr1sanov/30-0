@@ -1,52 +1,40 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createTelegramLoginPopupUrl } from '@/lib/telegramLoginPopup';
 
-type TelegramWindow = typeof window & {
-  Telegram?: {
-    Login?: {
-      auth: (options: { client_id: number; scope: Array<'profile' | 'phone' | 'write'>; nonce: string; lang?: string }, callback: (data: { id_token?: unknown; error?: unknown } | false) => void) => void;
-    };
-  };
-};
+type TelegramAuthMessage = { event?: unknown; result?: unknown; id_token?: unknown; error?: unknown };
+type TelegramConfig = { webConfigured?: boolean; clientId?: string; csrf?: string };
 
 export default function AdminTelegramLogin() {
   const openLogin = useRef<(() => void) | null>(null);
+  const cleanupPopup = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    let csrf = '';
-    let clientId = '';
-    const telegramWindow = window as TelegramWindow;
-    const enableLogin = () => {
-      if (cancelled) return;
-      const login = telegramWindow.Telegram?.Login;
-      if (!login || !clientId) {
-        setError('Не удалось загрузить вход Telegram. Обновите страницу.');
-        setBusy(false);
-        return;
-      }
-      openLogin.current = () => {
-        setError('');
-        setBusy(true);
-        login.auth({ client_id: Number(clientId), scope: ['profile'], nonce: csrf, lang: 'ru' }, async payload => {
-          if (cancelled) return;
-          if (!payload || typeof payload.id_token !== 'string') {
-            setError('Вход не завершён. Подтвердите вход в окне Telegram и попробуйте ещё раз.');
-            setBusy(false);
-            return;
-          }
+
+    async function setup() {
+      try {
+        const response = await fetch('/api/auth/telegram', { cache: 'no-store' });
+        const config = await response.json() as TelegramConfig;
+        if (!response.ok || !config.webConfigured || !config.clientId || !config.csrf) {
+          throw new Error('Вход через Telegram пока не настроен.');
+        }
+        if (cancelled) return;
+
+        const { clientId, csrf } = config;
+        const exchangeIdToken = async (idToken: string) => {
           try {
-            const response = await fetch('/api/admin/auth/telegram', {
+            const loginResponse = await fetch('/api/admin/auth/telegram', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ idToken: payload.id_token, csrf }),
+              body: JSON.stringify({ idToken, csrf }),
             });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.error || 'Не удалось войти');
+            const data = await loginResponse.json().catch(() => ({}));
+            if (!loginResponse.ok) throw new Error(data.error || 'Не удалось войти');
             window.location.reload();
           } catch (cause) {
             if (!cancelled) {
@@ -54,37 +42,93 @@ export default function AdminTelegramLogin() {
               setBusy(false);
             }
           }
-        });
-      };
-      setReady(true);
-      setBusy(false);
-    };
-
-    async function setup() {
-      try {
-        const response = await fetch('/api/auth/telegram', { cache: 'no-store' });
-        const config = await response.json();
-        if (!response.ok || !config.webConfigured || !config.clientId || !config.csrf) {
-          throw new Error('Вход через Telegram пока не настроен.');
-        }
-        if (cancelled) return;
-        csrf = config.csrf;
-        clientId = String(config.clientId);
-        if (telegramWindow.Telegram?.Login) {
-          enableLogin();
-          return;
-        }
-        const script = document.createElement('script');
-        script.src = 'https://telegram.org/js/telegram-login.js?5';
-        script.async = true;
-        script.onload = enableLogin;
-        script.onerror = () => {
-          if (!cancelled) {
-            setError('Не удалось загрузить Telegram. Проверьте соединение и обновите страницу.');
-            setBusy(false);
-          }
         };
-        document.head.appendChild(script);
+
+        openLogin.current = () => {
+          setError('');
+          setBusy(true);
+
+          const origin = window.location.origin;
+          const authUrl = createTelegramLoginPopupUrl({
+            clientId,
+            origin,
+            redirectUri: `${origin}${window.location.pathname}`,
+            nonce: csrf,
+            lang: 'ru',
+          });
+          const popup = window.open(
+            authUrl,
+            'telegram_oidc_login',
+            'popup,width=550,height=650,resizable=yes,scrollbars=yes',
+          );
+
+          if (!popup) {
+            setError('Не удалось открыть Telegram. Разрешите всплывающие окна и попробуйте снова.');
+            setBusy(false);
+            return;
+          }
+
+          let closedCheck: number | undefined;
+          let timeout: number | undefined;
+          let finished = false;
+          const cleanup = () => {
+            window.removeEventListener('message', onMessage);
+            if (closedCheck !== undefined) window.clearInterval(closedCheck);
+            if (timeout !== undefined) window.clearTimeout(timeout);
+            if (cleanupPopup.current === cleanup) cleanupPopup.current = null;
+          };
+          const finishWithError = () => {
+            if (finished) return;
+            finished = true;
+            cleanup();
+            if (!popup.closed) popup.close();
+            if (!cancelled) {
+              setError('Вход не завершён. Подтвердите вход в окне Telegram и попробуйте ещё раз.');
+              setBusy(false);
+            }
+          };
+          const onMessage = (event: MessageEvent) => {
+            if (event.origin !== 'https://oauth.telegram.org' || event.source !== popup) return;
+
+            let message: TelegramAuthMessage;
+            try {
+              message = typeof event.data === 'string' ? JSON.parse(event.data) as TelegramAuthMessage : event.data as TelegramAuthMessage;
+            } catch {
+              return;
+            }
+            if (!message || message.event !== 'auth_result') return;
+
+            const idToken = typeof message.result === 'string'
+              ? message.result
+              : typeof message.id_token === 'string' ? message.id_token : null;
+            if (!idToken) {
+              finishWithError();
+              return;
+            }
+
+            if (finished) return;
+            finished = true;
+            cleanup();
+            if (!popup.closed) popup.close();
+            void exchangeIdToken(idToken);
+          };
+
+          cleanupPopup.current?.();
+          cleanupPopup.current = () => {
+            finished = true;
+            cleanup();
+            if (!popup.closed) popup.close();
+          };
+          window.addEventListener('message', onMessage);
+          closedCheck = window.setInterval(() => {
+            if (popup.closed) finishWithError();
+          }, 300);
+          timeout = window.setTimeout(finishWithError, 3 * 60_000);
+          popup.focus();
+        };
+
+        setReady(true);
+        setBusy(false);
       } catch (cause) {
         if (!cancelled) {
           setError(cause instanceof Error ? cause.message : 'Не удалось загрузить вход');
@@ -94,7 +138,11 @@ export default function AdminTelegramLogin() {
     }
 
     void setup();
-    return () => { cancelled = true; openLogin.current = null; };
+    return () => {
+      cancelled = true;
+      openLogin.current = null;
+      cleanupPopup.current?.();
+    };
   }, []);
 
   return <section className="mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center text-white">
