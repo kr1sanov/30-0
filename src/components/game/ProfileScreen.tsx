@@ -4,7 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Metrics } from '@/lib/metrics';
 
@@ -68,10 +68,6 @@ export default function ProfileScreen() {
   const avgGoals = profileStats.totalSeasons > 0
     ? Math.round(profileStats.totalGoals / profileStats.totalSeasons)
     : 0;
-
-  // Points chart data (last 10 seasons)
-  const recentHistory = profileStats.history.slice(-10);
-  const maxPoints = useMemo(() => Math.max(...recentHistory.map(h => h.points), 90), [recentHistory]);
 
   // Total earned trophies
   const earnedTrophies = TROPHIES.filter(t => profileStats.achievements.includes(t.id)).length;
@@ -164,12 +160,7 @@ export default function ProfileScreen() {
           )}
         </div>
 
-        <p className="text-sm text-[#9CA3AF] mt-1">
-          {profileStats.totalSeasons > 0
-            ? `${profileStats.totalSeasons} ${profileStats.totalSeasons === 1 ? 'сезон' : profileStats.totalSeasons < 5 ? 'сезона' : 'сезонов'} · ${winRate}% побед`
-            : 'Сыграйте первый сезон!'
-          }
-        </p>
+        <p className="text-sm text-[#9CA3AF] mt-1">Игрок 30-0</p>
       </div>
 
       {/* Local profile info + reset button */}
@@ -189,43 +180,24 @@ export default function ProfileScreen() {
         </button>
       </div>
 
-      {/* Prominent Season Count + Best Result */}
-      {profileStats.totalSeasons > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-gradient-to-r from-[#00C896]/10 to-[#3b82f6]/10 p-5 border border-[#00C896]/20 flex items-center justify-between"
-        >
-          <div className="text-center flex-1">
-            <div className="text-3xl font-black text-[#00C896]">{profileStats.totalSeasons}</div>
-            <div className="text-xs text-[#9CA3AF]">Сезонов</div>
-          </div>
-          <div className="w-px h-10 bg-[#141414]" />
-          <div className="text-center flex-1">
-            <div className="text-3xl font-black text-[#FFFFFF]">{profileStats.bestPoints}</div>
-            <div className="text-xs text-[#9CA3AF]">Лучший результат</div>
-          </div>
-          <div className="w-px h-10 bg-[#141414]" />
-          <div className="text-center flex-1">
-            <div className="text-3xl font-black text-[#f97316]">{profileStats.titles}</div>
-            <div className="text-xs text-[#9CA3AF]">Титулов</div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+      {/* Карьерная статистика: каждый показатель показывается один раз */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
         {[
           { value: profileStats.totalSeasons, label: 'Сезоны', color: '#00C896' },
-          { value: profileStats.bestPoints, label: 'Очки', color: '#FFFFFF' },
+          { value: profileStats.bestPoints, label: 'Лучший результат', color: '#FFFFFF' },
           { value: profileStats.titles, label: 'Титулы', color: '#f97316' },
           { value: profileStats.perfect, label: '30-0', color: '#fbbf24' },
+          { value: `${winRate}%`, label: 'Процент побед', color: '#00C896' },
+          { value: profileStats.totalWins, label: 'Всего побед', color: '#3b82f6' },
+          { value: profileStats.totalGoals, label: 'Всего голов', color: '#8b5cf6' },
+          { value: avgGoals, label: 'Среднее голов за сезон', color: '#f97316' },
+          { value: profileStats.favoriteFormation || '—', label: 'Часто используемая схема', color: '#FFFFFF' },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ delay: i * 0.04 }}
             className="rounded-2xl bg-[#141414] p-3 text-center border border-[#141414] card-glow stat-card-hover"
           >
             <div className="text-2xl font-black" style={{ color: stat.color }}>{stat.value}</div>
@@ -233,151 +205,6 @@ export default function ProfileScreen() {
           </motion.div>
         ))}
       </div>
-
-      {/* Win Rate Ring + Stats */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {/* Win rate ring */}
-        <div className="rounded-2xl bg-[#141414] p-4 flex flex-col items-center justify-center border border-[#141414]">
-          <div className="relative w-20 h-20">
-            <svg className="w-20 h-20 -rotate-90" viewBox="0 0 36 36">
-              <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#141414" strokeWidth="3" />
-              <path
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                fill="none"
-                stroke="#00C896"
-                strokeWidth="3"
-                strokeDasharray={`${winRate}, 100`}
-                strokeLinecap="round"
-                className="transition-all duration-1000"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-black text-[#00C896]">{winRate}%</span>
-            </div>
-          </div>
-          <div className="text-xs text-[#9CA3AF] mt-2">Процент побед</div>
-        </div>
-
-        {/* Extra stats */}
-        <div className="rounded-2xl bg-[#141414] p-4 space-y-3 border border-[#141414]">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">Всего побед</span>
-            <span className="text-sm font-bold text-[#3b82f6]">{profileStats.totalWins}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">Всего голов</span>
-            <span className="text-sm font-bold text-[#8b5cf6]">{profileStats.totalGoals}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">Ср. голов/сезон</span>
-            <span className="text-sm font-bold text-[#f97316]">{avgGoals}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-[#9CA3AF]">Формация</span>
-            <span className="text-sm font-bold text-[#FFFFFF]">{profileStats.favoriteFormation}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Points per Season Chart (last 10) */}
-      {recentHistory.length > 0 && (
-        <div className="rounded-2xl bg-[#141414] p-4 border border-[#141414]">
-          <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider mb-3">Очки за сезон</h4>
-          <div className="flex items-end gap-1.5 h-24">
-            {recentHistory.map((h, i) => {
-              const height = Math.max((h.points / maxPoints) * 100, 5);
-              const isChampion = h.position === 1;
-              return (
-                <motion.div
-                  key={h.id}
-                  initial={{ height: 0 }}
-                  animate={{ height: `${height}%` }}
-                  transition={{ delay: i * 0.05, duration: 0.5 }}
-                  className="flex-1 rounded-t-sm relative group cursor-default"
-                  style={{ backgroundColor: isChampion ? '#00C896' : '#3b82f6' }}
-                >
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#FFFFFF] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    {h.points}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-          <div className="flex gap-1.5 mt-1">
-            {recentHistory.map((h, i) => (
-              <div key={h.id} className="flex-1 text-center text-[8px] text-[#9CA3AF]/50">
-                {i + 1}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Season Form Indicator (last season) */}
-      {profileStats.history.length > 0 && (
-        <div className="rounded-2xl bg-[#141414] p-4 border border-[#141414]">
-          <h4 className="text-xs font-bold text-[#9CA3AF] uppercase tracking-wider mb-2">Форма (последний сезон)</h4>
-          {(() => {
-            const lastSeason = profileStats.history[profileStats.history.length - 1];
-            const total = lastSeason.wins + lastSeason.draws + lastSeason.losses;
-            const ordered: string[] = [];
-            const ratio = total > 0 ? 10 / total : 0;
-            let wRemain = lastSeason.wins;
-            let dRemain = lastSeason.draws;
-            let lRemain = lastSeason.losses;
-            for (let i = 0; i < 10 && (wRemain + dRemain + lRemain) > 0; i++) {
-              const wShare = wRemain / (wRemain + dRemain + lRemain);
-              const dShare = dRemain / (wRemain + dRemain + lRemain);
-              const lShare = lRemain / (wRemain + dRemain + lRemain);
-              if (wShare >= dShare && wShare >= lShare && wRemain > 0) {
-                ordered.push('W');
-                wRemain--;
-              } else if (dShare >= lShare && dRemain > 0) {
-                ordered.push('D');
-                dRemain--;
-              } else if (lRemain > 0) {
-                ordered.push('L');
-                lRemain--;
-              } else if (wRemain > 0) {
-                ordered.push('W');
-                wRemain--;
-              } else if (dRemain > 0) {
-                ordered.push('D');
-                dRemain--;
-              } else {
-                ordered.push('L');
-                lRemain--;
-              }
-            }
-            return (
-              <div className="flex items-center gap-3">
-                <div className="flex gap-1">
-                  {ordered.map((dot, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: i * 0.05 }}
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white"
-                      style={{
-                        backgroundColor: dot === 'W' ? '#00C896' : dot === 'D' ? '#f97316' : '#ef4444',
-                      }}
-                      title={dot === 'W' ? 'Победа' : dot === 'D' ? 'Ничья' : 'Поражение'}
-                    >
-                      {dot}
-                    </motion.div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#9CA3AF]">
-                  <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#00C896]" />В</span>
-                  <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#f97316]" />Н</span>
-                  <span className="flex items-center gap-0.5"><span className="w-2 h-2 rounded-full bg-[#ef4444]" />П</span>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      )}
 
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
