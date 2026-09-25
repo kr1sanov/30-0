@@ -1224,15 +1224,7 @@ export default function Home() {
       case 'simulation':
         return <SimulationScreen />;
       case 'result':
-        return (
-          <div className="lg:grid lg:grid-cols-[minmax(300px,380px)_minmax(0,760px)] lg:items-start lg:justify-center lg:gap-6">
-            <aside className="hidden lg:block lg:sticky lg:top-20 space-y-3">
-              <FormationView compact />
-              <SquadStats />
-            </aside>
-            <SimulationResult />
-          </div>
-        );
+        return <SimulationResult />;
       case 'awards':
         return <SeasonAwards />;
       case 'profile':
