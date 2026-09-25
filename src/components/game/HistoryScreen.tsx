@@ -8,15 +8,12 @@ import ShareModal from '@/components/share/ShareModal';
 import {
   ChevronDown,
   ChevronUp,
-  Trophy,
   Calendar,
-  Filter,
-  ArrowUpDown,
-  Frown,
   Shield,
   Swords,
   Target,
 } from 'lucide-react';
+import ResultShareCard from '@/components/share/ResultShareCard';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -47,12 +44,12 @@ interface GameRunData {
   overallRating: number | null;
   managerName: string | null;
   teamName: string | null;
+  gameMode?: 'classic' | 'single_club';
+  clubName?: string | null;
   createdAt: string;
   slots: GameSlotData[];
 }
 
-type DifficultyFilter = 'all' | 'easy' | 'normal' | 'hard';
-type SortMode = 'date' | 'points' | 'position';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -191,8 +188,6 @@ export default function HistoryScreen() {
   const [runs, setRuns] = useState<GameRunData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>('all');
-  const [sortMode, setSortMode] = useState<SortMode>('date');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [shareRun, setShareRun] = useState<GameRunData | null>(null);
 
@@ -202,12 +197,9 @@ export default function HistoryScreen() {
     try {
       const params = new URLSearchParams({
         completed: 'true',
-        sort: sortMode,
-        limit: '50',
+        sort: 'date',
+        limit: '100',
       });
-      if (difficultyFilter !== 'all') {
-        params.set('difficulty', difficultyFilter);
-      }
       const res = await fetch(`/api/runs?${params.toString()}`);
       if (!res.ok) throw new Error('Ошибка загрузки');
       const data = await res.json();
@@ -223,7 +215,7 @@ export default function HistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [difficultyFilter, sortMode]);
+  }, []);
 
   useEffect(() => {
     fetchRuns();
@@ -303,58 +295,6 @@ export default function HistoryScreen() {
         <p className="text-sm text-[#9CA3AF] mt-1">
           {runs.length > 0 ? `${runs.length} ${runs.length === 1 ? 'сезон' : runs.length < 5 ? 'сезона' : 'сезонов'}` : 'Прошедшие сезоны'}
         </p>
-      </div>
-
-      {/* Filters */}
-      <div className="space-y-3">
-        {/* Difficulty tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <Filter className="w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
-          {([
-            { key: 'all', label: 'Все' },
-            { key: 'easy', label: 'Легко' },
-            { key: 'normal', label: 'Нормально' },
-            { key: 'hard', label: 'Сложно' },
-          ] as const).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setDifficultyFilter(tab.key)}
-              className={`
-                px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200
-                ${difficultyFilter === tab.key
-                  ? 'bg-[#00C896] text-white shadow-md shadow-[#00C896]/20'
-                  : 'bg-[#1E1E1E] text-[#9CA3AF] hover:bg-[#2A2A2A] hover:text-white'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Sort */}
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
-          {([
-            { key: 'date' as const, label: 'По дате' },
-            { key: 'points' as const, label: 'По очкам' },
-            { key: 'position' as const, label: 'По позиции' },
-          ]).map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setSortMode(s.key)}
-              className={`
-                px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200
-                ${sortMode === s.key
-                  ? 'bg-[#00C896] text-white shadow-md shadow-[#00C896]/20'
-                  : 'bg-[#1E1E1E] text-[#9CA3AF] hover:bg-[#2A2A2A] hover:text-white'
-                }
-              `}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Empty state */}
@@ -630,21 +570,29 @@ export default function HistoryScreen() {
             '', 'Собери свой состав и попробуй превзойти мой результат!', '🎮 Играть: https://30-0.рф',
           ].join('\n')}
           cardContent={(
-            <div style={{ background: '#0a0a0a', color: '#fff', padding: 24, fontFamily: 'Arial, sans-serif' }}>
-              <div style={{ color: '#00c896', fontSize: 12, fontWeight: 700, letterSpacing: 2 }}>30–0 · ИТОГ СЕЗОНА</div>
-              <h2 style={{ fontSize: 26, margin: '10px 0' }}>{shareRun.teamName || 'Обычный драфт'}</h2>
-              <div style={{ color: '#00c896', fontSize: 38, fontWeight: 900 }}>{shareRun.points ?? 0} очков</div>
-              <div style={{ color: '#cbd5e1', margin: '6px 0 18px' }}>{shareRun.position ?? '—'} место · {shareRun.formation} · {shareRun.wins ?? 0}В {shareRun.draws ?? 0}Н {shareRun.losses ?? 0}П</div>
-              <div style={{ borderTop: '1px solid #263238', paddingTop: 12, fontSize: 13, color: '#cbd5e1' }}>Забито {shareRun.goalsFor ?? 0} · Пропущено {shareRun.goalsAgainst ?? 0}</div>
-              <div style={{ marginTop: 18, color: '#64748b', fontSize: 12 }}>Состав</div>
-              <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {shareRun.slots.filter((slot) => slot.playerName).map((slot) => (
-                  <div key={slot.id} style={{ background: '#141a1a', borderRadius: 8, padding: '7px 9px', fontSize: 12 }}>
-                    <span style={{ color: '#00c896', marginRight: 7 }}>{getPositionLabel(slot.playerPosition)}</span>{slot.playerLastName || slot.playerName}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ResultShareCard
+              data={{
+                points: shareRun.points ?? 0,
+                wins: shareRun.wins ?? 0,
+                draws: shareRun.draws ?? 0,
+                losses: shareRun.losses ?? 0,
+                goalsFor: shareRun.goalsFor ?? 0,
+                goalsAgainst: shareRun.goalsAgainst ?? 0,
+                position: shareRun.position ?? 0,
+                formation: shareRun.formation,
+              }}
+              teamName={shareRun.teamName}
+              managerName={shareRun.managerName}
+              mode={shareRun.gameMode ?? 'classic'}
+              clubName={shareRun.clubName}
+              players={shareRun.slots
+                .filter((slot) => slot.playerName)
+                .map((slot) => ({
+                  name: slot.playerName!,
+                  position: getPositionLabel(slot.slotPosition.split('_')[0]),
+                  rating: slot.playerRating ?? undefined,
+                }))}
+            />
           )}
         />
       )}

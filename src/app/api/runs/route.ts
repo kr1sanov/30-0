@@ -40,7 +40,17 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    return NextResponse.json(runs);
+    const clubIds = [...new Set(runs.flatMap((run) => run.clubFilter ? [run.clubFilter] : []))];
+    const clubs = clubIds.length
+      ? await db.club.findMany({ where: { id: { in: clubIds } }, select: { id: true, nameRu: true } })
+      : [];
+    const clubNames = new Map(clubs.map((club) => [club.id, club.nameRu]));
+
+    return NextResponse.json(runs.map((run) => ({
+      ...run,
+      gameMode: run.clubFilter ? 'single_club' : 'classic',
+      clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
+    })));
   } catch (error) {
     console.error('Failed to fetch runs:', error);
     return NextResponse.json(

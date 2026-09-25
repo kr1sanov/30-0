@@ -53,15 +53,12 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen, setAvatarEmoji } = useGameStore();
-  const { user, updateDisplayName, resetProfile, updateNotificationCadence } = useAuthStore();
+  const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
-  const [botUsername, setBotUsername] = useState<string | null>(null);
-  const [notificationCadence, setNotificationCadence] = useState(user?.notificationCadence || 'weekly');
   const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
-  useEffect(() => { fetch('/api/auth/telegram').then(r => r.json()).then(data => { if (typeof data.botUsername === 'string') setBotUsername(data.botUsername); }).catch(() => undefined); }, []);
   useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
 
   // Track profile open in Metrika
@@ -173,10 +170,13 @@ export default function ProfileScreen() {
 
       {/* Local profile info + reset button */}
       <div className="flex items-center justify-center gap-3 py-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#00C896]/10 border border-[#00C896]/20">
-          <span className="text-xs" aria-hidden="true">✈️</span>
-          <span className="text-xs font-medium text-[#00C896]">Авторизован через Telegram</span>
-        </div>
+        <span role="status" className="inline-flex items-center gap-2 rounded-lg bg-[#229ED9] px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-[#229ED9]/20">
+          <svg aria-hidden="true" viewBox="0 0 240 240" className="h-5 w-5 shrink-0">
+            <circle cx="120" cy="120" r="120" fill="#229ED9" />
+            <path fill="#fff" d="m49 116 137-53c7-3 13 2 10 11l-23 111c-2 8-7 10-14 6l-38-28-18 18c-3 3-6 3-7 0l4-40 73-66c3-3-1-4-5-2l-90 57-39-12c-9-3-9-9 2-12Z" />
+          </svg>
+          <span>Авторизован через Telegram</span>
+        </span>
         <button
           onClick={async () => {
             try { await resetProfile(); }
@@ -218,8 +218,8 @@ export default function ProfileScreen() {
       <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">🤝 Приглашай игроков</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделитесь ссылкой. Здесь будет расти статистика приглашённых; за первого игрока открывается ачивка.</p>
+            <h3 className="text-sm font-bold text-white">Пригласить игроков</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Приглашённые по ссылке появятся здесь.</p>
           </div>
           <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
             <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
@@ -232,8 +232,19 @@ export default function ProfileScreen() {
             <Button onClick={async () => { try { await navigator.clipboard.writeText(referrals.inviteUrl!); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
           </div>
         ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем вашу ссылку…</p>}
-        {referrals?.referredUsers.length ? <div className="mt-4 border-t border-[#252525] pt-3"><p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Последние приглашённые</p><ul className="space-y-1">{referrals.referredUsers.map((invite, index) => <li key={`${invite.username ?? invite.displayName}-${index}`} className="text-xs text-[#9CA3AF]">{invite.displayName}{invite.username ? ` · @${invite.username}` : ''}</li>)}</ul></div> : null}
-        <p className="mt-3 text-[10px] text-[#64748b]">Награды за приглашения пока не начисляются.</p>
+        {referrals?.referredUsers.length ? (
+          <div className="mt-4 border-t border-[#252525] pt-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Присоединились по ссылке</p>
+            <ul className="space-y-1.5">
+              {referrals.referredUsers.map((invite, index) => (
+                <li key={`${invite.username ?? invite.displayName}-${index}`} className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]">
+                  <span className="truncate">{invite.displayName || 'Игрок'}{invite.username ? ` · @${invite.username}` : ''}</span>
+                  <span className="shrink-0 text-[#64748b]">{new Date(invite.createdAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
 
       {/* Trophy Cabinet */}
@@ -274,36 +285,6 @@ export default function ProfileScreen() {
           })}
         </div>
       </div>
-
-      {/* Telegram notifications */}
-      {user && (
-        <section className="rounded-2xl border border-[#242424] bg-[#141414] p-4 space-y-3">
-          <div>
-            <h3 className="font-bold">Уведомления в Telegram</h3>
-            <p className="text-xs text-[#9CA3AF] mt-1">Результаты сезона и редкие напоминания. Чтобы получать сообщения, сначала нажмите «Старт» у бота.</p>
-          </div>
-          {!user.telegramChatStarted && botUsername && (
-            <a href={`https://t.me/${botUsername}?start=notifications`} target="_blank" rel="noreferrer" className="inline-flex rounded-lg bg-[#229ED9] px-4 py-2 text-sm font-bold text-white">Открыть бота</a>
-          )}
-          <label className="flex items-center justify-between gap-3 rounded-xl bg-[#0A0A0A] p-3 text-sm">
-            <span>Присылать уведомления</span>
-            <input type="checkbox" checked={user.telegramNotificationsEnabled} onChange={async (event) => {
-              const enabled = event.currentTarget.checked;
-              try { await useAuthStore.getState().updateTelegramNotifications(enabled); }
-              catch { toast.error('Не удалось сохранить настройки'); }
-            }} className="h-5 w-5 accent-[#00C896]" />
-          </label>
-          <label className="flex items-center justify-between gap-3 text-sm text-[#9CA3AF]">
-            <span>Частота напоминаний</span>
-            <select value={notificationCadence} onChange={async (event) => {
-              const cadence = event.currentTarget.value; setNotificationCadence(cadence);
-              try { await updateNotificationCadence(cadence); } catch { setNotificationCadence(user.notificationCadence || 'weekly'); toast.error('Не удалось сохранить частоту'); }
-            }} className="rounded-lg border border-[#333] bg-[#0A0A0A] px-3 py-2 text-white">
-              <option value="daily">Ежедневно</option><option value="weekly">Раз в неделю</option><option value="monthly">Раз в месяц</option>
-            </select>
-          </label>
-        </section>
-      )}
 
       {/* History */}
       {profileStats.history.length > 0 && (
