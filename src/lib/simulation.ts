@@ -11,6 +11,7 @@
 
 import type { PositionCategory } from './positions';
 import { getCategoryForPosition } from './positions';
+import { buildSeasonSchedule, type LeagueOpponent } from './seasonSchedule';
 
 // ---------------------------------------------------------------------------
 // Public Types
@@ -83,27 +84,10 @@ export interface SquadStrength {
 }
 
 // ---------------------------------------------------------------------------
-// RPL Team Names (used for generating opponents)
+// Clubs for a single real league season are supplied by the API.
 // ---------------------------------------------------------------------------
 
-const RPL_TEAMS = [
-  'Зенит',
-  'Спартак',
-  'ЦСКА',
-  'Локомотив',
-  'Краснодар',
-  'Динамо М',
-  'Ростов',
-  'Рубин',
-  'Ахмат',
-  'Урал',
-  'Оренбург',
-  'Факел',
-  'Крылья Советов',
-  'Торпедо',
-  'Химки',
-  'Пари НН',
-] as const;
+export type Opponent = LeagueOpponent;
 
 // ---------------------------------------------------------------------------
 // calculateImbalancePenalty
@@ -297,21 +281,6 @@ export function simulateMatch(
 // generateOpponent
 // ---------------------------------------------------------------------------
 
-interface Opponent {
-  name: string;
-  strength: number;
-}
-
-/**
- * Generates a random RPL opponent with strength uniformly sampled
- * from [55, 85].
- */
-function generateOpponent(): Opponent {
-  const name = RPL_TEAMS[Math.floor(Math.random() * RPL_TEAMS.length)];
-  const strength = 55 + Math.random() * 30; // 55–85
-  return { name, strength: Math.round(strength * 10) / 10 };
-}
-
 // ---------------------------------------------------------------------------
 // calculateTrophies
 // ---------------------------------------------------------------------------
@@ -407,9 +376,8 @@ export function calculateTrophies(
 /**
  * Simulates a full 30-match RPL season.
  *
- * For each matchday the player's team faces a randomly generated opponent.
- * The final league table is built from 16 teams: the player + 15 generated
- * "other" teams whose results are derived statistically.
+ * The squad plays the 15 database-backed clubs from one season home and away.
+ * The final table includes those same clubs and the player's team.
  *
  * January Transfer Window: on match 15, if enabled, a random +/- 2
  * strength modifier is applied.
@@ -424,7 +392,9 @@ export function simulateSeason(
   managerRating?: number,
   januaryTransfer?: boolean,
   previousBestPoints?: number,
+  opponents: Opponent[] = [],
 ): SeasonResult {
+  const schedule = buildSeasonSchedule(opponents);
   const strength = calculateSquadStrength(slots, managerRating);
   const teamName = 'Моя команда';
 
@@ -452,8 +422,8 @@ export function simulateSeason(
       januaryTransferModifier = modifier;
     }
 
-    const opponent = generateOpponent();
-    const isHome = i % 2 === 0; // alternate home/away
+    // One home and one away match against each club from the same season.
+    const { opponent, isHome } = schedule[i];
 
     const result = simulateMatch(currentStrength, opponent.strength, isHome);
 
@@ -536,21 +506,13 @@ export function simulateSeason(
 
   // Generate realistic stats for other teams using a simple model
   const otherTeams: TableEntry[] = [];
-  const usedNames = new Set<string>();
-
-  for (let i = 0; i < 15; i++) {
-    let name: string;
-    do {
-      name = RPL_TEAMS[Math.floor(Math.random() * RPL_TEAMS.length)];
-    } while (usedNames.has(name));
-    usedNames.add(name);
-
+  for (const opponent of opponents) {
     // Generate a strength for this team and simulate their season
-    const teamStr = 55 + Math.random() * 30;
+    const teamStr = opponent.strength;
     let tW = 0, tD = 0, tL = 0, tGF = 0, tGA = 0;
 
     for (let j = 0; j < 30; j++) {
-      const oppStr = 55 + Math.random() * 30;
+      const oppStr = opponents[Math.floor(Math.random() * opponents.length)].strength;
       const matchResult = simulateMatch(teamStr, oppStr, j % 2 === 0);
 
       const myGoals = j % 2 === 0 ? matchResult.homeGoals : matchResult.awayGoals;
@@ -566,7 +528,7 @@ export function simulateSeason(
 
     otherTeams.push({
       position: 0,
-      name,
+      name: opponent.name,
       played: 30,
       won: tW,
       drawn: tD,

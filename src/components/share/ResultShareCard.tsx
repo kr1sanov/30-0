@@ -78,7 +78,7 @@ export default function ResultShareCard({ data, trophies, teamName, managerName,
           {data.points}
         </div>
         <div style={{ fontSize: 14, color: '#9CA3AF', fontWeight: 600, marginTop: -4 }}>
-          очков · {data.position}-{posSuffix} место
+          {`очков · ${data.position}-${posSuffix} место`}
         </div>
 
         {/* W-D-L */}

@@ -286,7 +286,7 @@ function ClubCard({
       whileHover={{ scale: 1.02 }}
       className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
       style={{
-        backgroundColor: theme.primary,
+        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primary} 49%, ${theme.secondary} 51%, ${theme.secondary} 100%)`,
         borderColor: isSelected ? '#FFFFFF' : `${theme.primary}99`,
         boxShadow: isSelected ? `0 0 18px ${theme.glow}` : '0 6px 16px rgba(0,0,0,.18)',
       }}

@@ -201,7 +201,7 @@ function getInitials(name?: string): string {
 function getPlayerSurname(lastName?: string): string {
   if (!lastName) return '';
   const parts = lastName.trim().split(/\s+/);
-  return parts[0];
+  return parts[parts.length - 1];
 }
 
 // ---------------------------------------------------------------------------
@@ -379,7 +379,7 @@ export default function FormationView({ compact = false }: { compact?: boolean }
       {/* ===== Green Pitch with White Lines ===== */}
       <div
         className={`relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50 ${compact ? 'aspect-[3/4]' : ''}`}
-        style={compact ? { maxWidth: 'min(100%, 280px)' } : { maxWidth: 'min(100%, 520px)', paddingBottom: '145%' }}
+        style={compact ? { maxWidth: 'min(100%, 280px)', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined } : { maxWidth: 'min(100%, 520px)', paddingBottom: '145%', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined }}
       >
         {/* Pitch base — green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
@@ -525,9 +525,11 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                       boxShadow: `0 0 0 2px ${slotColor}88, 0 2px 8px rgba(0,0,0,0.5)`,
                     }}
                   >
-                    {!compact && (
+                    {(!compact || config.gameMode === 'single_club') && (
                       <span className="text-[10px] font-black text-white leading-none">
-                        {getInitials(slot.playerName)}
+                        {config.gameMode === 'single_club'
+                          ? (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating)
+                          : getInitials(slot.playerName)}
                       </span>
                     )}
                   </div>
@@ -541,7 +543,7 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                     </span>
                   </div>
 
-                  {slot.playerSeasonYear && !compact && (
+                  {slot.playerSeasonYear && !compact && config.gameMode !== 'single_club' && (
                     <span className="text-[7px] font-semibold text-white/70 leading-none mt-0.5">{slot.playerSeasonYear}</span>
                   )}
 

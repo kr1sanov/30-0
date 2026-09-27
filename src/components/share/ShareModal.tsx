@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas-pro';
 import { Metrics } from '@/lib/metrics';
 import { toast } from 'sonner';
+import { localizeShareText } from '@/lib/enTranslations';
 
 const BG = '#0A0A0A';
 
@@ -52,7 +53,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     const blob = await captureCard();
     if (blob && typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
       const file = new File([blob], '30-0-rpl.png', { type: 'image/png' });
-      const shareData = { text: shareText, files: [file] };
+      const shareData = { text: localizeShareText(shareText), files: [file] };
       if (navigator.canShare(shareData)) {
         try {
           await navigator.share(shareData);
@@ -69,7 +70,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     // Fallback: copy text to clipboard
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       try {
-        await navigator.clipboard.writeText(shareText);
+        await navigator.clipboard.writeText(localizeShareText(shareText));
         Metrics.shareResult('clipboard');
       } catch {
         // Clipboard failed
@@ -94,7 +95,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
   }, [captureCard]);
 
   const handleTelegramShare = useCallback(() => {
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://30-0.рф')}&text=${encodeURIComponent(shareText)}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent('https://30-0.рф')}&text=${encodeURIComponent(localizeShareText(shareText))}`;
     const telegram = (window as Window & {
       Telegram?: { WebApp?: { openTelegramLink?: (link: string) => void } };
     }).Telegram;

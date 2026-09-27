@@ -1394,7 +1394,7 @@ export const useGameStore = create<GameState>()(
         try {
           await fetch('/api/users/profile', {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profileStats: get().profileStats }),
+            body: JSON.stringify({ profileStats: get().profileStats, progressEpoch: '2026-09-27' }),
           });
         } catch (error) { console.error('Failed to sync profile progress:', error); }
       },
@@ -1455,7 +1455,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 4,
+      version: 5,
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
@@ -1483,12 +1483,14 @@ export const useGameStore = create<GameState>()(
         };
       },
       migrate: (persistedState: unknown, version: number) => {
-        // Version 3: full reset — clear all progress, only Yandex auth users keep data
-        // Version 2: reset all profileStats to start fresh
-        if (version < 3) {
+        // Every older browser cache must discard runs and achievements from
+        // before the server-side roster migration, regardless of its version.
+        if (version < 5) {
           return {
             ...(persistedState as Record<string, unknown>),
             profileStats: defaultProfileStats,
+            config: { ...defaultConfig },
+            lastConfig: { ...defaultConfig },
             runId: null,
             slots: [],
             rerollsLeft: 0,
@@ -1497,19 +1499,6 @@ export const useGameStore = create<GameState>()(
             selectedPlayer: null,
             currentManager: null,
             seasonResult: null,
-            screen: 'home',
-          };
-        }
-        if (version < 4) {
-          const previous = persistedState as Record<string, unknown>;
-          return {
-            ...previous,
-            config: { ...defaultConfig },
-            lastConfig: { ...defaultConfig },
-            runId: null,
-            slots: [],
-            currentSpin: null,
-            selectedPlayer: null,
             screen: 'home',
           };
         }

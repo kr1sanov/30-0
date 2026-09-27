@@ -21,7 +21,9 @@ export default function TelegramLogin() {
     } };
     async function setup() {
       try {
-        const response = await fetch('/api/auth/telegram', { cache: 'no-store' });
+        const ref = new URLSearchParams(window.location.search).get('ref');
+        const path = ref && /^[a-z0-9]{6,32}$/i.test(ref) ? `/api/auth/telegram?ref=${encodeURIComponent(ref)}` : '/api/auth/telegram';
+        const response = await fetch(path, { cache: 'no-store' });
         if (!response.ok) throw new Error('Не удалось загрузить вход. Обновите страницу.');
         const config = await response.json();
         if (cancelled) return;
