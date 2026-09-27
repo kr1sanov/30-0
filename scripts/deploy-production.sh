@@ -268,24 +268,18 @@ echo "🔧 Step 6: Ensuring Prisma client modules"
 STANDALONE_NM=".next/standalone/node_modules"
 mkdir -p "$STANDALONE_NM"
 
-# Copy Prisma client from existing node_modules if available
-if [ -d node_modules/.prisma ]; then
-  cp -r node_modules/.prisma "$STANDALONE_NM/" 2>/dev/null || true
-  echo "✅ .prisma client copied from node_modules"
-fi
-if [ -d node_modules/@prisma ]; then
-  cp -r node_modules/@prisma "$STANDALONE_NM/" 2>/dev/null || true
-  echo "✅ @prisma client copied from node_modules"
-fi
-
-# If Prisma client still missing, generate it
-if [ ! -d "$STANDALONE_NM/.prisma" ]; then
-  echo "⚠️ Prisma client not found, generating..."
+# The release already contains its generated Prisma client. Never copy the
+# previous site's node_modules over it: an old client lacks newly added models.
+if [ ! -f "$STANDALONE_NM/.prisma/client/index.js" ] || \
+   [ ! -f "$STANDALONE_NM/@prisma/client/index.js" ]; then
+  echo "⚠️ Packaged Prisma client incomplete, generating a fresh one..."
   cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
   npx prisma generate
   cp -r node_modules/.prisma "$STANDALONE_NM/" 2>/dev/null || true
   cp -r node_modules/@prisma "$STANDALONE_NM/" 2>/dev/null || true
   echo "✅ Prisma client generated and copied"
+else
+  echo "✅ Packaged Prisma client preserved"
 fi
 
 # ─── Step 7: Database migration ───
