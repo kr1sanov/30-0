@@ -15,8 +15,8 @@ function club(id: string, seasons: number, playerCount = 30, includeKeeper = tru
 }
 
 test('keeps well represented clubs and ranks them by RPL seasons', () => {
-  const result = selectOneClubCandidates([club('15 seasons', 15), club('20 seasons', 20), club('14 seasons', 14)]);
-  assert.deepEqual(result.map((item) => item.nameRu), ['20 seasons', '15 seasons']);
+  const result = selectOneClubCandidates([club('5 seasons', 5), club('9 seasons', 9), club('4 seasons', 4)]);
+  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '5 seasons']);
   assert.equal(result[0].playerCount, 30);
 });
 
@@ -32,8 +32,6 @@ test('counts distinct players across seasons, not every player-season row', () =
   assert.deepEqual(selectOneClubCandidates([onePlayerPool]), []);
 });
 
-test('keeps a playable club when the verified archive has a single season', () => {
-  const result = selectOneClubCandidates([club('FIFA 10', 1, 25)]);
-  assert.equal(result.length, 1);
-  assert.equal(result[0].playerCount, 25);
+test('excludes an otherwise playable club appearing in only four of nine seasons', () => {
+  assert.equal(selectOneClubCandidates([club('rare club', 4, 35)]).length, 0);
 });

@@ -34,6 +34,7 @@ model ClubSeason {
   id           String   @id @default(cuid())
   clubId       String
   seasonId     String
+  sourceName   String?  @db.VarChar(255)
   position     Int?
   points       Int?
   played       Int?
@@ -74,6 +75,10 @@ model PlayerSeason {
   mainPosition   String
   otherPositions String?
   age            Int?
+  shirtNumber    Int?
+  sourceName     String?  @db.VarChar(255)
+  sourcePosition String?  @db.VarChar(50)
+  nationality    String?  @db.VarChar(255)
   matches        Int?
   goals          Int?
   assists        Int?
@@ -200,6 +205,7 @@ model GameSlot {
   runId                String
   slotPosition         String
   playerSeasonId       String?
+  playerSeasonYear     Int?
   playerName           String?
   playerLastName       String?
   playerRating         Int?

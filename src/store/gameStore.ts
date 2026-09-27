@@ -194,8 +194,8 @@ const defaultConfig: GameConfig = {
   draftMode: 'squad_first',
   ratingMode: 'season',
   eraFilter: 'all',
-  eraStartYear: 2000,
-  eraEndYear: 2026,
+  eraStartYear: 2010,
+  eraEndYear: 2018,
   gameMode: 'classic',
   clubFilter: undefined,
   nationalityFilter: undefined,
@@ -343,6 +343,7 @@ export const useGameStore = create<GameState>()(
                   ? dbSlot.playerOtherPositions.split(',').map((p: string) => p.trim())
                   : undefined,
                 playerNationality: dbSlot.playerNationality ?? undefined,
+                playerSeasonYear: dbSlot.playerSeasonYear ?? undefined,
                 category,
                 isCompatible: dbSlot.isCompatible ?? true,
               };
@@ -564,6 +565,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: selectedPlayer.mainPosition,
           playerOtherPositions: selectedPlayer.otherPositions,
           playerNationality: selectedPlayer.nationality,
+          playerSeasonYear: Number(currentSpin?.seasonLabel) || undefined,
           isCompatible: true, // Strict matching — always full compatibility
         };
 
@@ -714,6 +716,7 @@ export const useGameStore = create<GameState>()(
           playerPosition: player.mainPosition,
           playerOtherPositions: player.otherPositions,
           playerNationality: player.nationality,
+          playerSeasonYear: Number(currentSpin?.seasonLabel) || undefined,
           isCompatible: true, // Strict matching — always full compatibility
         };
 
@@ -919,7 +922,7 @@ export const useGameStore = create<GameState>()(
           }
 
           const run = await res.json();
-          const dbSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = run.slots || [];
+          const dbSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerSeasonYear: number | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = run.slots || [];
 
           // Check which slots are missing from DB but present locally
           const missingSlots: Array<{ slotIndex: number; slot: DraftSlot }> = [];
@@ -971,7 +974,7 @@ export const useGameStore = create<GameState>()(
             const refreshRes = await fetch(`/api/runs/${runId}`);
             if (refreshRes.ok) {
               const refreshedRun = await refreshRes.json();
-              const refreshedSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = refreshedRun.slots || [];
+              const refreshedSlots: Array<{ slotPosition: string; playerSeasonId: string | null; playerSeasonYear: number | null; playerName: string | null; playerLastName: string | null; playerRating: number | null; playerPrimeRating: number | null; playerPosition: string | null; playerOtherPositions: string | null; playerNationality: string | null; isCompatible: boolean | null }> = refreshedRun.slots || [];
 
               const formation = FORMATIONS.find((f) => f.id === get().config.formation);
               if (formation) {
@@ -993,6 +996,7 @@ export const useGameStore = create<GameState>()(
                         ? dbSlot.playerOtherPositions.split(',').map((p: string) => p.trim())
                         : undefined,
                       playerNationality: dbSlot.playerNationality ?? undefined,
+                      playerSeasonYear: dbSlot.playerSeasonYear ?? undefined,
                       category,
                       isCompatible: dbSlot.isCompatible ?? true,
                     };
@@ -1449,7 +1453,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 3,
+      version: 4,
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
@@ -1491,6 +1495,19 @@ export const useGameStore = create<GameState>()(
             selectedPlayer: null,
             currentManager: null,
             seasonResult: null,
+            screen: 'home',
+          };
+        }
+        if (version < 4) {
+          const previous = persistedState as Record<string, unknown>;
+          return {
+            ...previous,
+            config: { ...defaultConfig },
+            lastConfig: { ...defaultConfig },
+            runId: null,
+            slots: [],
+            currentSpin: null,
+            selectedPlayer: null,
             screen: 'home',
           };
         }

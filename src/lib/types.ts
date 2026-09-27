@@ -13,7 +13,7 @@ export interface GameConfig {
   difficulty: 'easy' | 'normal' | 'hard';
   draftMode: 'squad_first' | 'position_first';
   ratingMode: 'season' | 'prime';
-  eraFilter: 'all' | '2000s' | '2010s' | 'modern' | 'custom';
+  eraFilter: 'all' | 'early' | 'late' | 'custom';
   eraStartYear: number;
   eraEndYear: number;
   showRatings?: boolean; // overrides difficulty default; undefined = follow difficulty
@@ -41,6 +41,7 @@ export interface DraftSlot {
   playerPosition?: string;
   playerOtherPositions?: string[];
   playerNationality?: string;
+  playerSeasonYear?: number;
   isCompatible?: boolean;
   category: 'gk' | 'def' | 'mid' | 'att';
 }
@@ -115,17 +116,16 @@ export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
 // Era presets with year ranges
 export const ERA_CONFIG = {
-  all:    { label: 'Все',    minYear: 2000, maxYear: 2026 },
-  '2000s': { label: '2000-е', minYear: 2000, maxYear: 2009 },
-  '2010s': { label: '2010-е', minYear: 2010, maxYear: 2019 },
-  modern: { label: '2020+',  minYear: 2020, maxYear: 2026 },
-  custom: { label: 'Свой',   minYear: 2000, maxYear: 2026 },
+  all:    { label: 'Все',    minYear: 2010, maxYear: 2018 },
+  early:  { label: '2010–2014', minYear: 2010, maxYear: 2014 },
+  late:   { label: '2015–2018', minYear: 2015, maxYear: 2018 },
+  custom: { label: 'Свой',   minYear: 2010, maxYear: 2018 },
 } as const;
 
 export type EraFilter = keyof typeof ERA_CONFIG;
 
-export const ERA_MIN_YEAR = 2000;
-export const ERA_MAX_YEAR = 2026;
+export const ERA_MIN_YEAR = 2010;
+export const ERA_MAX_YEAR = 2018;
 
 // ---------------------------------------------------------------------------
 // Draft Mode & Rating Mode
@@ -138,7 +138,7 @@ export const DRAFT_MODE_CONFIG = {
 
 export const RATING_MODE_CONFIG = {
   season: { label: 'Сезонный рейтинг', description: 'Рейтинг игрока в конкретном сезоне' },
-  prime: { label: 'Прайм-рейтинг', description: 'Лучший рейтинг игрока за карьеру' },
+  prime: { label: 'Прайм-рейтинг', description: 'Потенциал игрока в выбранном сезоне' },
 } as const;
 
 // ---------------------------------------------------------------------------

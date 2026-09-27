@@ -279,7 +279,9 @@ export default function PlayerList() {
                         </span>
                       );
                     })}
-                    {/* No prime season badge */}
+                    <span className="rounded bg-[#263328] px-1.5 py-0.5 text-[9px] font-bold text-[#00C896]">
+                      {currentSpin?.seasonLabel}
+                    </span>
                   </div>
                 </div>
 
