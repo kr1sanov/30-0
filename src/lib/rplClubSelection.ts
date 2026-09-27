@@ -8,6 +8,8 @@ export interface OneClubCandidate {
 
 /** Rank clubs by RPL appearances in 2000–2026 and keep clubs with draft-ready player pools. */
 export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[]) {
+  const minSeasons = Math.min(15, Math.max(1, ...clubs.map((club) => club.seasons.length)));
+  const minPlayers = minSeasons === 1 ? 25 : 30;
   return clubs.map((club) => {
     const players = new Map<string, string>();
     for (const season of club.seasons) {
@@ -25,6 +27,6 @@ export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[]) 
       seasonCount: club.seasons.length, playerCount: players.size,
       hasGoalkeeper, hasDefenders, hasMidfielders, hasAttackers,
     };
-  }).filter((club) => club.seasonCount >= 15 && club.playerCount >= 30 && club.hasGoalkeeper && club.hasDefenders && club.hasMidfielders && club.hasAttackers)
+  }).filter((club) => club.seasonCount >= minSeasons && club.playerCount >= minPlayers && club.hasGoalkeeper && club.hasDefenders && club.hasMidfielders && club.hasAttackers)
     .sort((a, b) => b.seasonCount - a.seasonCount || b.playerCount - a.playerCount || a.nameRu.localeCompare(b.nameRu, 'ru'));
 }

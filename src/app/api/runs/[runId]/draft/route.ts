@@ -68,12 +68,13 @@ export async function POST(
       );
     }
 
-    // Check unique person rule - can't draft same person twice
+    // Check unique person rule by ID. Distinct people may share a name.
     const draftedSlots = run.slots.filter((s) => s.playerSeasonId);
-    const alreadyDraftedName = draftedSlots.find(
-      (s) => s.playerName === playerSeason.player.fullName,
-    );
-    if (alreadyDraftedName) {
+    const draftedPlayerSeasons = await db.playerSeason.findMany({
+      where: { id: { in: draftedSlots.map((s) => s.playerSeasonId!).filter(Boolean) } },
+      select: { playerId: true },
+    });
+    if (draftedPlayerSeasons.some((s) => s.playerId === playerSeason.playerId)) {
       return NextResponse.json(
         { error: 'This player has already been drafted (unique person rule)' },
         { status: 400 },

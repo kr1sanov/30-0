@@ -47,16 +47,14 @@ export async function POST(
     // slotPosition format is "POSITION_INDEX" e.g. "ВР_0", "ЦЗ_1"
     const openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
 
-    // Get already drafted player names (unique person rule)
+    // Identify people by stable player ID; names can legitimately coincide.
     const draftedSlots = run.slots.filter((s) => s.playerSeasonId);
-    const draftedPlayerNames = new Set(
-      draftedSlots.map((s) => s.playerName).filter(Boolean) as string[],
-    );
-
-    // Get already drafted playerSeasonIds
     const draftedPlayerSeasonIds = new Set(
       draftedSlots.map((s) => s.playerSeasonId).filter(Boolean) as string[],
     );
+    const draftedPlayerIds = new Set((await db.playerSeason.findMany({
+      where: { id: { in: [...draftedPlayerSeasonIds] } }, select: { playerId: true },
+    })).map((ps) => ps.playerId));
 
     const startYear = run.eraStartYear ?? 2000;
     const endYear = run.eraEndYear ?? 2026;
@@ -88,7 +86,7 @@ export async function POST(
     });
 
     let clubSeasonOptions = getClubSeasonOptions(
-      clubSeasons, openPositions, draftedPlayerNames, draftedPlayerSeasonIds, run.nationalityFilter,
+      clubSeasons, openPositions, draftedPlayerIds, draftedPlayerSeasonIds, run.nationalityFilter,
     );
     let compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
 
@@ -101,7 +99,7 @@ export async function POST(
         include: { club: true, season: true, players: { include: { player: true } } },
       });
       clubSeasonOptions = getClubSeasonOptions(
-        historicalClubSeasons, openPositions, draftedPlayerNames, draftedPlayerSeasonIds, run.nationalityFilter,
+        historicalClubSeasons, openPositions, draftedPlayerIds, draftedPlayerSeasonIds, run.nationalityFilter,
       );
       compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
     }
@@ -148,7 +146,7 @@ export async function POST(
     // Filter players - exclude already drafted, unique person rule, and nationality filter
     const eligiblePlayers = selectedClubSeason.players.filter((ps) => {
       if (draftedPlayerSeasonIds.has(ps.id)) return false;
-      if (draftedPlayerNames.has(ps.player.fullName)) return false;
+      if (draftedPlayerIds.has(ps.playerId)) return false;
       // In nations_cup mode, only include players of the selected nationality
       if (run.nationalityFilter && ps.player.nationality !== run.nationalityFilter) return false;
       return true;

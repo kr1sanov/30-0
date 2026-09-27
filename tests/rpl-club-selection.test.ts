@@ -31,3 +31,9 @@ test('counts distinct players across seasons, not every player-season row', () =
   const onePlayerPool = club('same players', 25, 1);
   assert.deepEqual(selectOneClubCandidates([onePlayerPool]), []);
 });
+
+test('keeps a playable club when the verified archive has a single season', () => {
+  const result = selectOneClubCandidates([club('FIFA 10', 1, 25)]);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].playerCount, 25);
+});

@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const [clubs, seasons, players, playerSeasons, gameRuns] = await Promise.all([
-      db.club.count(),
-      db.season.count(),
-      db.player.count(),
+      db.club.count({ where: { seasons: { some: { players: { some: {} } } } } }),
+      db.season.count({ where: { clubSeasons: { some: { players: { some: {} } } } } }),
+      db.player.count({ where: { seasons: { some: {} } } }),
       db.playerSeason.count(),
       db.gameRun.count(),
     ]);

@@ -60,7 +60,7 @@ model Player {
 
   seasons     PlayerSeason[]
 
-  @@unique([fullName])
+  @@index([fullName])
 }
 
 model PlayerSeason {

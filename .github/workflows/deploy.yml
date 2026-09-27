@@ -60,7 +60,11 @@ jobs:
           node --check scripts/prepare-production-users.cjs
           node --check scripts/backfill-wingback-positions.mjs
           node --check scripts/backfill-2026-rpl-data.mjs
+          node --check scripts/import-fifa10-rpl.mjs
           node --check scripts/set-telegram-webhook.mjs
+
+      - name: Verify FIFA 10 source roster
+        run: node scripts/import-fifa10-rpl.mjs
 
   # ─── Stage 2: Build ───
   build:
@@ -169,6 +173,9 @@ jobs:
           cp scripts/deploy-production.sh deploy-package/scripts/
           cp scripts/backfill-wingback-positions.mjs deploy-package/scripts/
           cp scripts/backfill-2026-rpl-data.mjs deploy-package/scripts/
+          cp scripts/import-fifa10-rpl.mjs deploy-package/scripts/
+          mkdir -p deploy-package/docs/research
+          cp docs/research/verified-fifa10-rpl.json deploy-package/docs/research/
           cp scripts/set-telegram-webhook.mjs deploy-package/scripts/
 
           # Copy package.json for reference
