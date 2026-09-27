@@ -3,13 +3,15 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    const activeYears = { startYear: { gte: 2010, lte: 2018 } };
+    const activePlayers = { clubSeason: { season: activeYears } };
     const [clubs, seasons, players, playerSeasons, gameRuns, years] = await Promise.all([
-      db.club.count({ where: { seasons: { some: { players: { some: {} } } } } }),
-      db.season.count({ where: { clubSeasons: { some: { players: { some: {} } } } } }),
-      db.player.count({ where: { seasons: { some: {} } } }),
-      db.playerSeason.count(),
+      db.club.count({ where: { seasons: { some: { season: activeYears, players: { some: {} } } } } }),
+      db.season.count({ where: { ...activeYears, clubSeasons: { some: { players: { some: {} } } } } }),
+      db.player.count({ where: { seasons: { some: activePlayers } } }),
+      db.playerSeason.count({ where: activePlayers }),
       db.gameRun.count(),
-      db.season.aggregate({ _min: { startYear: true }, _max: { endYear: true } }),
+      db.season.aggregate({ where: activeYears, _min: { startYear: true }, _max: { endYear: true } }),
     ]);
 
     return NextResponse.json({

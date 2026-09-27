@@ -1351,6 +1351,8 @@ export const useGameStore = create<GameState>()(
                 playerName: saved.playerName,
                 playerLastName: saved.playerLastName,
                 playerRating: saved.playerRating,
+                playerPrimeRating: saved.playerPrimeRating,
+                playerSeasonYear: saved.playerSeasonYear ?? undefined,
                 playerPosition: saved.playerPosition,
                 playerOtherPositions: saved.playerOtherPositions,
                 playerNationality: saved.playerNationality,

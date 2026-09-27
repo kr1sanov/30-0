@@ -47,21 +47,42 @@ if (existsSync(backupPath)) throw new Error('Backup already exists');
 
 const db = new PrismaClient();
 try {
-  // A subsequent code release must not interrupt a draft or undo editorial edits.
-  if (await db.season.count() === 9 && await db.club.count() === 29 &&
-      await db.player.count() === 1822 && await db.playerSeason.count() === 4991) {
-    const installedYears = await db.season.findMany({ select: { startYear: true } });
-    if (unique(installedYears.map(s => s.startYear)) &&
-        installedYears.every(s => years.includes(s.startYear))) {
+  // A transitional 2009 archive may remain while existing drafts finish.
+  const installedYears = await db.season.findMany({
+    where: { startYear: { gte: 2010, lte: 2018 } },
+    select: { startYear: true },
+  });
+  if (installedYears.length) {
+    const scopedSeasons = years.map(year => `rpl-${year}`);
+    const scopedCards = { clubSeason: { seasonId: { in: scopedSeasons } } };
+    const scopedCounts = await Promise.all([
+      db.clubSeason.count({ where: { seasonId: { in: scopedSeasons } } }),
+      db.playerSeason.count({ where: scopedCards }),
+      db.club.count({ where: { seasons: { some: { seasonId: { in: scopedSeasons } } } } }),
+      db.player.count({ where: { seasons: { some: scopedCards } } }),
+    ]);
+    if (installedYears.length === 9 && unique(installedYears.map(s => s.startYear)) &&
+        JSON.stringify(scopedCounts) === JSON.stringify([144, 4991, 29, 1822])) {
       console.log('All nine seasons already installed; no database changes.');
       await db.$disconnect();
       process.exit(0);
     }
+    throw new Error('Обнаружен неполный исторический импорт; требуется ручная проверка');
   }
   const recentRuns = await db.gameRun.count({ where: {
     completed: false, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
   } });
-  if (recentRuns) throw new Error(`${recentRuns} активных драфтов за последние сутки; импорт прерван`);
+  const preserveLegacy = recentRuns > 0;
+  if (preserveLegacy) {
+    const legacy = await Promise.all([
+      db.season.count(), db.club.count(), db.clubSeason.count(),
+      db.player.count(), db.playerSeason.count(),
+    ]);
+    if (JSON.stringify(legacy) !== JSON.stringify([1, 16, 16, 469, 469])) {
+      throw new Error(`Активные драфты с неожиданным составом старой базы: ${legacy.join('/')}`);
+    }
+    console.log(`Preserving the 2009 archive for ${recentRuns} recent unfinished drafts.`);
+  }
 
   const backup = {
     clubs: await db.club.findMany(), seasons: await db.season.findMany(),
@@ -73,28 +94,53 @@ try {
   console.log(`Private backup saved: ${backupPath}`);
 
   await db.$transaction(async tx => {
-    await tx.playerSeason.deleteMany();
-    await tx.clubSeason.deleteMany();
-    await tx.player.deleteMany();
-    await tx.club.deleteMany();
-    await tx.season.deleteMany();
+    if (!preserveLegacy) {
+      await tx.playerSeason.deleteMany();
+      await tx.clubSeason.deleteMany();
+      await tx.player.deleteMany();
+      await tx.club.deleteMany();
+      await tx.season.deleteMany();
+    }
 
     await tx.season.createMany({ data: years.map(year => ({
       id: `rpl-${year}`, startYear: year, endYear: year, label: String(year), matchesPerTeam: 30,
     })) });
-    await tx.club.createMany({ data: clubEntries.map(([id, c]) => ({
+    const existingClubs = preserveLegacy
+      ? new Map((await tx.club.findMany()).map(c => [c.id, c]))
+      : new Map();
+    await tx.club.createMany({ data: clubEntries.filter(([id]) => !existingClubs.has(`fifaindex-club-${id}`)).map(([id, c]) => ({
       id: `fifaindex-club-${id}`, nameRu: c.canonicalName, nameEn: c.canonicalName,
     })) });
+    for (const [id, club] of clubEntries) {
+      const old = existingClubs.get(`fifaindex-club-${id}`);
+      if (old && (old.nameRu !== club.canonicalName || old.nameEn !== club.canonicalName || old.logoUrl)) {
+        await tx.club.update({ where: { id: old.id }, data: {
+          nameRu: club.canonicalName, nameEn: club.canonicalName, logoUrl: null,
+        } });
+      }
+    }
     await tx.clubSeason.createMany({ data: seasons.flatMap(s => s.clubs.map(c => ({
       id: `rpl-${s.year}-club-${c.sourceClubId}`, clubId: `fifaindex-club-${c.sourceClubId}`,
       seasonId: `rpl-${s.year}`, sourceName: c.sourceName,
     }))) });
+    const existingPlayers = preserveLegacy
+      ? new Map((await tx.player.findMany()).map(p => [p.id, p]))
+      : new Map();
     for (let offset = 0; offset < playerEntries.length; offset += 100) {
-      await tx.player.createMany({ data: playerEntries.slice(offset, offset + 100).map(([id, p]) => ({
+      await tx.player.createMany({ data: playerEntries.slice(offset, offset + 100)
+        .filter(([id]) => !existingPlayers.has(`fifaindex-player-${id}`)).map(([id, p]) => ({
         id: `fifaindex-player-${id}`, fullName: p.canonicalName,
         lastName: p.canonicalName,
         nationality: cards.find(c => c.player.sourcePlayerId === id)?.player.nationality ?? null,
       })) });
+    }
+    for (const [id, player] of playerEntries) {
+      const old = existingPlayers.get(`fifaindex-player-${id}`);
+      if (old && (old.fullName !== player.canonicalName || old.lastName !== player.canonicalName)) {
+        await tx.player.update({ where: { id: old.id }, data: {
+          fullName: player.canonicalName, lastName: player.canonicalName,
+        } });
+      }
     }
     for (let offset = 0; offset < cards.length; offset += 100) {
       await tx.playerSeason.createMany({ data: cards.slice(offset, offset + 100).map(({ year, club, player: p }) => ({
@@ -107,9 +153,14 @@ try {
         primeSeason: String(year),
       })) });
     }
+    const scopedSeasons = years.map(year => `rpl-${year}`);
+    const scopedCards = { clubSeason: { seasonId: { in: scopedSeasons } } };
     const counts = await Promise.all([
-      tx.season.count(), tx.club.count(), tx.clubSeason.count(),
-      tx.player.count(), tx.playerSeason.count(),
+      tx.season.count({ where: { id: { in: scopedSeasons } } }),
+      tx.club.count({ where: { seasons: { some: { seasonId: { in: scopedSeasons } } } } }),
+      tx.clubSeason.count({ where: { seasonId: { in: scopedSeasons } } }),
+      tx.player.count({ where: { seasons: { some: scopedCards } } }),
+      tx.playerSeason.count({ where: scopedCards }),
     ]);
     if (JSON.stringify(counts) !== JSON.stringify([9, 29, 144, 1822, 4991])) {
       throw new Error(`Импорт неполный: ${counts.join('/')}`);
