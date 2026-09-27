@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const seasons = await db.season.findMany({
+      where: { startYear: { gte: 2010, lte: 2018 } },
       orderBy: { startYear: 'desc' },
     });
     return NextResponse.json(seasons);

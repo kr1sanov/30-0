@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
         playerName: slot.playerName ?? undefined,
         playerLastName: slot.playerLastName ?? undefined,
         playerRating: slot.playerRating ?? undefined,
+        playerPrimeRating: slot.playerPrimeRating ?? undefined,
+        playerSeasonYear: slot.playerSeasonYear ?? undefined,
         playerPosition: slot.playerPosition ?? undefined,
         playerOtherPositions: slot.playerOtherPositions
           ? slot.playerOtherPositions.split(',').map((p) => p.trim())
