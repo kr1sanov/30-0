@@ -153,6 +153,9 @@ cp -r "$DEPLOY_STAGE/prisma/." prisma/
 cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
 cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wingback-positions.mjs
 cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
+cp "$DEPLOY_STAGE/scripts/import-fifa10-rpl.mjs" scripts/import-fifa10-rpl.mjs
+mkdir -p docs/research
+cp "$DEPLOY_STAGE/docs/research/verified-fifa10-rpl.json" docs/research/verified-fifa10-rpl.json
 cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
 
 # The deployment workflow can provide bot credentials as a short-lived file.
@@ -306,13 +309,7 @@ if [ -f .env ]; then
     rollback_standalone || true
     exit 1
   fi
-  if node --env-file=.env scripts/backfill-2026-rpl-data.mjs; then
-    echo "✅ Current RPL club and roster data updated"
-  else
-    echo "❌ Current RPL data backfill failed"
-    rollback_standalone || true
-    exit 1
-  fi
+  echo "ℹ️  Historical generated roster backfill skipped; verified FIFA 10 import follows health check"
 else
   echo "❌ No .env file found; refusing to deploy without a database connection"
   rollback_standalone || true
@@ -374,6 +371,23 @@ if [ "$HEALTHY" = false ]; then
   echo "❌ DEPLOY FAILED — see logs above"
   exit 1
 fi
+
+# Import only after the new application has passed its health check. The
+# importer stores a private snapshot and replaces roster tables atomically.
+echo "📋 Verifying and importing the historical roster"
+if ! node scripts/import-fifa10-rpl.mjs; then
+  echo "❌ Roster preflight failed"
+  rollback_standalone || true
+  exit 1
+fi
+mkdir -p backups/private
+ROSTER_BACKUP="$APP_DIR/backups/private/roster-before-fifa10-$(date +%Y%m%d%H%M%S).json"
+if ! node --env-file=.env scripts/import-fifa10-rpl.mjs --apply "--backup=$ROSTER_BACKUP"; then
+  echo "❌ Roster import failed; previous standalone restored"
+  rollback_standalone || true
+  exit 1
+fi
+echo "✅ FIFA 10 roster imported with private backup"
 
 # ─── Step 10: Deploy summary ───
 echo ""

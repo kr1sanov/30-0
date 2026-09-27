@@ -281,6 +281,19 @@ function HomePage() {
   const { setScreen, setConfig, profileStats, runId, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number } | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/stats', { signal: controller.signal })
+      .then(response => {
+        if (!response.ok) throw new Error('Database stats request failed');
+        return response.json();
+      })
+      .then(stats => setDatabaseStats(stats))
+      .catch(error => { if (error.name !== 'AbortError') console.error(error); });
+    return () => controller.abort();
+  }, []);
 
   return (
     <div className="pb-8">
@@ -469,9 +482,9 @@ function HomePage() {
       >
         <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E] p-6">
           <div className="grid grid-cols-3 gap-6">
-            <StatsCounter value="41" label="клубов" color="text-[#00C896]" />
-            <StatsCounter value="1604" label="игроков" color="text-[#FFFFFF]" />
-            <StatsCounter value="2000-2026" label="сезонов" color="text-[#00C896]" />
+            <StatsCounter value={databaseStats ? String(databaseStats.clubs) : '…'} label="клубов" color="text-[#00C896]" />
+            <StatsCounter value={databaseStats ? String(databaseStats.players) : '…'} label="игроков" color="text-[#FFFFFF]" />
+            <StatsCounter value={databaseStats ? String(databaseStats.seasons) : '…'} label="сезонов" color="text-[#00C896]" />
           </div>
         </div>
       </motion.section>

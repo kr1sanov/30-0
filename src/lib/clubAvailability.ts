@@ -7,6 +7,7 @@ type ClubSeasonRecord = {
   season: { label: string };
   players: Array<{
     id: string;
+    playerId: string;
     mainPosition: string;
     otherPositions: string | null;
     player: { fullName: string; nationality: string | null };
@@ -17,7 +18,7 @@ type ClubSeasonRecord = {
 export function getClubSeasonOptions(
   clubSeasons: ClubSeasonRecord[],
   openPositions: string[],
-  draftedPlayerNames: Set<string>,
+  draftedPlayerIds: Set<string>,
   draftedPlayerSeasonIds: Set<string>,
   nationalityFilter?: string | null,
 ): ClubSeasonWithPlayers[] {
@@ -27,7 +28,7 @@ export function getClubSeasonOptions(
     const availablePositions = new Set<string>();
     for (const playerSeason of clubSeason.players) {
       if (draftedPlayerSeasonIds.has(playerSeason.id)) continue;
-      if (draftedPlayerNames.has(playerSeason.player.fullName)) continue;
+      if (draftedPlayerIds.has(playerSeason.playerId)) continue;
       if (nationalityFilter && playerSeason.player.nationality !== nationalityFilter) continue;
 
       const positions = [playerSeason.mainPosition, ...(playerSeason.otherPositions ?? '').split(',')]
