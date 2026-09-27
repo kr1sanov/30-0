@@ -541,6 +541,10 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                     </span>
                   </div>
 
+                  {slot.playerSeasonYear && !compact && (
+                    <span className="text-[7px] font-semibold text-white/70 leading-none mt-0.5">{slot.playerSeasonYear}</span>
+                  )}
+
                   {/* Moving indicator ring */}
                   {isMoving && (
                     <div

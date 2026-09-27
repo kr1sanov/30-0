@@ -83,14 +83,14 @@ export async function POST(request: NextRequest) {
         select: {
           id: true, nameRu: true, nameEn: true, city: true,
           seasons: {
-            where: { season: { startYear: { gte: 2000, lte: 2025 }, endYear: { lte: 2026 } } },
+            where: { season: { startYear: { gte: 2010, lte: 2018 }, endYear: { lte: 2018 } } },
             select: { players: { select: { playerId: true, mainPosition: true } } },
           },
         },
       });
       if (!club) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
       if (gameMode === 'single_club' && !selectOneClubCandidates([club]).length) {
-        return NextResponse.json({ error: 'Выберите клуб с достаточной историей и составом РПЛ за 2000–2026 годы' }, { status: 400 });
+        return NextResponse.json({ error: 'Выберите клуб, участвовавший минимум в 5 сезонах 2010–2018' }, { status: 400 });
       }
     }
 
@@ -139,8 +139,8 @@ export async function POST(request: NextRequest) {
         draftMode: draftMode || 'squad_first',
         ratingMode: ratingMode || 'season',
         eraFilter: eraFilter || 'all',
-        eraStartYear: eraStartYear ?? 2000,
-        eraEndYear: eraEndYear ?? 2026,
+        eraStartYear: eraStartYear ?? 2010,
+        eraEndYear: eraEndYear ?? 2018,
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,

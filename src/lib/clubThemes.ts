@@ -45,9 +45,22 @@ const CLUB_THEMES: Record<string, ClubTheme> = {
   'ЦСКА Москва': { primary: '#DC2626', secondary: '#1D4ED8', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#210F12', glow: 'rgba(220, 38, 38, 0.3)' },
 };
 
+// The historical archive uses English club names. Reuse the existing colours
+// rather than deriving new colours from those names or a remote crest.
+const HISTORICAL_CLUB_THEMES: Record<string, string> = {
+  'Akhmat Grozny': 'Ахмат', 'Amkar Perm': 'Амкар',
+  'CSKA Moscow': 'ЦСКА Москва', 'Dynamo Moscow': 'Динамо Москва',
+  'Zenit St. Petersburg': 'Зенит', 'FC Krasnodar': 'Краснодар',
+  'FC Rostov': 'Ростов', 'Krylya Sovetov Samara': 'Крылья Советов',
+  'Kuban Krasnodar': 'Кубань', 'Lokomotiv Moscow': 'Локомотив Москва',
+  'Rubin Kazan': 'Рубин Казань', 'Spartak Moscow': 'Спартак Москва',
+  'Ural Ekaterinburg': 'Урал', 'Torpedo Moskva': 'Торпедо Москва',
+  'FC Khimki': 'Химки', 'FC Orenburg': 'Оренбург',
+};
+
 export function getClubTheme(clubName?: string): ClubTheme {
   if (!clubName) return DEFAULT_CLUB_THEME;
-  return CLUB_THEMES[clubName] ?? DEFAULT_CLUB_THEME;
+  return CLUB_THEMES[HISTORICAL_CLUB_THEMES[clubName] ?? clubName] ?? DEFAULT_CLUB_THEME;
 }
 
 export type ClubThemeStyle = CSSProperties & Record<`--${string}`, string>;

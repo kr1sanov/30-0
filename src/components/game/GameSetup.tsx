@@ -304,7 +304,7 @@ function ClubCard({
           </svg>
         </motion.div>
       )}
-      {/* Colour-only club shield */}
+      {/* Club colours */}
       <div className="w-10 h-10 mx-auto mb-1.5 flex items-center justify-center">
         <svg viewBox="0 0 40 44" className="w-9 h-10 drop-shadow" aria-hidden="true">
           <defs>
@@ -565,7 +565,7 @@ export default function GameSetup() {
               style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
             >
               <SectionHeader>Один клуб</SectionHeader>
-              <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Выберите клуб, который чаще всего играл в РПЛ с 2000 по 2026 год. В пул вошли команды с полной историей и составом, достаточным для драфта из 11 игроков.</p>
+              <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы минимум с 5 сезонами в РПЛ за 2010–2018 годы и достаточным составом для драфта.</p>
 
               {/* Selected club indicator */}
               {selectedClub && (
@@ -587,7 +587,7 @@ export default function GameSetup() {
                       {selectedClub.nameRu}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2000–2026)
+                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2010–2018)
                     </div>
                   </div>
                 </motion.div>

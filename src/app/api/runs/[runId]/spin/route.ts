@@ -56,8 +56,8 @@ export async function POST(
       where: { id: { in: [...draftedPlayerSeasonIds] } }, select: { playerId: true },
     })).map((ps) => ps.playerId));
 
-    const startYear = run.eraStartYear ?? 2000;
-    const endYear = run.eraEndYear ?? 2026;
+    const startYear = run.eraStartYear ?? 2010;
+    const endYear = run.eraEndYear ?? 2018;
 
     // Build the where clause for ClubSeasons
     // If clubFilter is set (single_club mode), only return club-seasons for that club
@@ -148,7 +148,7 @@ export async function POST(
       if (draftedPlayerSeasonIds.has(ps.id)) return false;
       if (draftedPlayerIds.has(ps.playerId)) return false;
       // In nations_cup mode, only include players of the selected nationality
-      if (run.nationalityFilter && ps.player.nationality !== run.nationalityFilter) return false;
+      if (run.nationalityFilter && (ps.nationality ?? ps.player.nationality) !== run.nationalityFilter) return false;
       return true;
     });
 
@@ -162,7 +162,7 @@ export async function POST(
       primeSeason: ps.primeSeason || selectedClubSeason.season.label,
       mainPosition: ps.mainPosition,
       otherPositions: ps.otherPositions ? ps.otherPositions.split(',').map((p) => p.trim()) : [],
-      nationality: ps.player.nationality,
+      nationality: ps.nationality ?? ps.player.nationality,
     }));
 
     return NextResponse.json({

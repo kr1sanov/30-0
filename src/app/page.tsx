@@ -110,7 +110,7 @@ const FAQ_ITEMS = [
   { q: 'Что такое 30-0?', a: '30-0 — это футбольный драфт-симулятор РПЛ. Вы крутите колесо, получаете случайный клуб и сезон, выбираете игрока в свой состав, а затем симулируете сезон. Цель — выиграть все 30 матчей и достичь идеального результата 30-0.' },
   { q: 'Как работают позиции?', a: 'У каждого игрока есть основная и дополнительные позиции. Игрок может играть на совместимых позициях без штрафов, на частично совместимых — с понижением рейтинга на 20%, а на несовместимых — не может быть поставлен вообще.' },
   { q: 'Что такое перебросы?', a: 'Перебросы позволяют вам крутить колесо заново, если вам не понравился выпавший клуб. На лёгкой сложности — 3 переброса, на нормальной — 1, на сложной — 0.' },
-  { q: 'Как считается рейтинг состава?', a: 'Рейтинг каждого игрока зависит от выбранного режима: сезонный (рейтинг в конкретном сезоне) или прайм (лучший рейтинг за карьеру). Общий рейтинг команды — среднее всех игроков.' },
+  { q: 'Как считается рейтинг состава?', a: 'Обычный рейтинг — оценка игрока в выбранном сезоне. Прайм — потенциал той же сезонной карточки. Общий рейтинг команды — среднее всех игроков.' },
   { q: 'Сложно ли достичь 30-0?', a: 'Очень сложно! Это требует идеального подбора игроков и немного удачи. Даже с лучшим составом РПЛ есть вероятность неожиданных результатов. Это и делает игру увлекательной!' },
 ];
 
@@ -281,7 +281,7 @@ function HomePage() {
   const { setScreen, setConfig, profileStats, runId, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number } | null>(null);
+  const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number; firstYear: number | null; lastYear: number | null } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -486,6 +486,9 @@ function HomePage() {
             <StatsCounter value={databaseStats ? String(databaseStats.players) : '…'} label="игроков" color="text-[#FFFFFF]" />
             <StatsCounter value={databaseStats ? String(databaseStats.seasons) : '…'} label="сезонов" color="text-[#00C896]" />
           </div>
+          {databaseStats?.firstYear && databaseStats?.lastYear && (
+            <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
+          )}
         </div>
       </motion.section>
 

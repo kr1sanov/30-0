@@ -201,8 +201,8 @@ const TEMPLATES: ChallengeTemplate[] = [
     },
     reqsFn: (rng) => {
       const eras: Array<{ label: string; start: number; end: number }> = [
-        { label: '2000-х', start: 2000, end: 2009 },
-        { label: '2010-х', start: 2010, end: 2019 },
+        { label: '2010–2014', start: 2010, end: 2014 },
+        { label: '2015–2018', start: 2015, end: 2018 },
       ];
       const era = eras[Math.floor(rng() * eras.length)];
 
@@ -376,12 +376,12 @@ const TEMPLATES: ChallengeTemplate[] = [
     rerollsAllowed: 1,
     ratingCap: 72,
   },
-  // Template 7: Советская школа — 2000-2005 era only
+  // Template 7: early seasons in the verified archive
   {
-    title: 'Советская школа',
+    title: 'Ранние сезоны',
     descriptionFn: (reqs) => {
       const natPart = reqs.length > 0 ? ` + ${reqs.map(r => `${r.count} из ${r.flag} ${r.nationality}`).join(', ')}` : '';
-      return `Соберите состав из эпохи 2000-2005${natPart}`;
+      return `Соберите состав из сезонов 2010–2012${natPart}`;
     },
     reqsFn: (rng) => {
       const requirements: NationalityRequirement[] = [];
@@ -398,7 +398,7 @@ const TEMPLATES: ChallengeTemplate[] = [
 
       return {
         requirements,
-        extra: { era: '2000-2005', eraStart: 2000, eraEnd: 2005 },
+        extra: { era: '2010–2012', eraStart: 2010, eraEnd: 2012 },
       };
     },
     difficulty: 'hard',
@@ -406,7 +406,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     completionOdds: 18,
     bonusMultiplier: 2.0,
     rerollsAllowed: 1,
-    eraRestriction: { start: 2000, end: 2005 },
+    eraRestriction: { start: 2010, end: 2012 },
   },
   // Template 8: Сборная Бразилии — must include N Brazilian players
   {

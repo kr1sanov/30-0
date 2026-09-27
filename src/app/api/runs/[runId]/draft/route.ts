@@ -58,7 +58,7 @@ export async function POST(
     // Get the player season data
     const playerSeason = await db.playerSeason.findUnique({
       where: { id: playerSeasonId },
-      include: { player: true },
+      include: { player: true, clubSeason: { include: { season: true } } },
     });
 
     if (!playerSeason) {
@@ -120,13 +120,14 @@ export async function POST(
       where: { id: slot.id },
       data: {
         playerSeasonId,
+        playerSeasonYear: playerSeason.clubSeason.season.startYear,
         playerName: playerSeason.player.fullName,
         playerLastName: playerSeason.player.lastName,
         playerRating: playerSeason.rating,
         playerPrimeRating: playerSeason.primeRating || playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
         playerOtherPositions: playerSeason.otherPositions ?? null,
-        playerNationality: playerSeason.player.nationality ?? null,
+        playerNationality: playerSeason.nationality ?? playerSeason.player.nationality ?? null,
         isCompatible,
       },
     });

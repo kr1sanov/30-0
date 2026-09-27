@@ -9,6 +9,7 @@ type ClubSeasonRecord = {
     id: string;
     playerId: string;
     mainPosition: string;
+    nationality?: string | null;
     otherPositions: string | null;
     player: { fullName: string; nationality: string | null };
   }>;
@@ -29,7 +30,7 @@ export function getClubSeasonOptions(
     for (const playerSeason of clubSeason.players) {
       if (draftedPlayerSeasonIds.has(playerSeason.id)) continue;
       if (draftedPlayerIds.has(playerSeason.playerId)) continue;
-      if (nationalityFilter && playerSeason.player.nationality !== nationalityFilter) continue;
+      if (nationalityFilter && (playerSeason.nationality ?? playerSeason.player.nationality) !== nationalityFilter) continue;
 
       const positions = [playerSeason.mainPosition, ...(playerSeason.otherPositions ?? '').split(',')]
         .map((position) => position.trim())

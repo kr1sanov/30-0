@@ -6,10 +6,10 @@ export interface OneClubCandidate {
   seasons: Array<{ players: Array<{ playerId: string; mainPosition: string }> }>;
 }
 
-/** Rank clubs by RPL appearances in 2000–2026 and keep clubs with draft-ready player pools. */
+/** Rank clubs by unique season appearances across the supplied 2010–2018 editions. */
 export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[]) {
-  const minSeasons = Math.min(15, Math.max(1, ...clubs.map((club) => club.seasons.length)));
-  const minPlayers = minSeasons === 1 ? 25 : 30;
+  const minSeasons = 5;
+  const minPlayers = 30;
   return clubs.map((club) => {
     const players = new Map<string, string>();
     for (const season of club.seasons) {
