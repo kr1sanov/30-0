@@ -3,6 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Toaster as SonnerToaster } from "sonner";
 import { Toaster } from "@/components/ui/toaster";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 
 export const metadata: Metadata = {
   title: "30-0 | Драфт РПЛ",
@@ -52,6 +53,7 @@ ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLa
           </div>
         </noscript>
         <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <LanguageSwitcher />
         {children}
         <Toaster />
         <SonnerToaster

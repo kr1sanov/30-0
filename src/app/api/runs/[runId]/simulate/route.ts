@@ -75,12 +75,31 @@ export async function POST(
       }
     }
 
+    // Keep all opponents and the league table within one imported season.
+    const season = await db.season.findFirst({
+      where: { startYear: { gte: run.eraStartYear, lte: run.eraEndYear }, clubSeasons: { some: { players: { some: {} } } } },
+      orderBy: { startYear: 'desc' },
+      include: { clubSeasons: { include: { club: true, players: { select: { rating: true } } } } },
+    });
+    const participants = season?.clubSeasons.filter(c => c.players.length > 0) ?? [];
+    if (participants.length < 16) {
+      return NextResponse.json({ error: 'Для симуляции нужен сезон с 16 клубами в базе' }, { status: 503 });
+    }
+    const ordered = [...participants].sort((a, b) => (a.position ?? 99) - (b.position ?? 99));
+    const otherClubs = ordered.filter(c => c.clubId !== run.clubFilter).slice(0, 15);
+    const opponents = otherClubs.map(c => ({
+      name: c.club.nameEn || c.club.nameRu,
+      strength: Math.round(c.players.map(p => p.rating).sort((a, b) => b - a).slice(0, 11)
+        .reduce((sum, rating) => sum + rating, 0) / Math.min(11, c.players.length) * 10) / 10,
+    }));
+
     // Run the improved simulation
     const result = simulateSeason(
       squadSlots,
       managerRating ?? undefined,
       januaryTransfer,
       previousBestPoints,
+      opponents,
     );
 
     // Calculate squad strength for overall rating

@@ -13,6 +13,17 @@ const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production',
 export async function GET(request: Request) {
   const userId = sessionUser(request);
   const user = userId ? await db.user.findUnique({ where: { id: userId } }) : null;
+  const siteReferral = new URL(request.url).searchParams.get('ref');
+  const safeSiteReferral = siteReferral && /^[a-z0-9]{6,32}$/i.test(siteReferral) ? siteReferral : null;
+  if (user && safeSiteReferral && !user.referredBy && safeSiteReferral !== user.referralCode) {
+    await db.$transaction(async tx => {
+      const referrer = await tx.user.findUnique({ where: { referralCode: safeSiteReferral }, select: { id: true } });
+      if (referrer && referrer.id !== user.id) {
+        const changed = await tx.user.updateMany({ where: { id: user.id, referredBy: null }, data: { referredBy: safeSiteReferral } });
+        if (changed.count) await tx.user.update({ where: { id: referrer.id }, data: { referralCount: { increment: 1 } } });
+      }
+    });
+  }
   if (user?.provider === 'telegram') {
     await db.user.update({ where: { id: user.id }, data: { lastActiveAt: new Date() } }).catch(() => undefined);
   }
@@ -34,6 +45,7 @@ export async function GET(request: Request) {
     csrf,
   }, { headers: { 'Cache-Control': 'no-store' } });
   response.cookies.set('rpl_login_csrf', csrf, { ...options, maxAge: 600 });
+  if (safeSiteReferral) response.cookies.set('rpl_site_ref', safeSiteReferral, { ...options, maxAge: 7 * 24 * 60 * 60 });
   return response;
 }
 
@@ -65,9 +77,11 @@ export async function POST(request: Request) {
     const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null };
     // Telegram signs start_param inside initData. Only attribute a referral after
     // the initData signature above has been verified.
-    const referralCode = typeof body.initData === 'string'
+    const signedReferralCode = typeof body.initData === 'string'
       ? new URLSearchParams(body.initData).get('start_param')
       : null;
+    const siteReferral = (request.headers.get('cookie') ?? '').split(';').map(p => p.trim()).find(p => p.startsWith('rpl_site_ref='))?.slice('rpl_site_ref='.length);
+    const referralCode = signedReferralCode || siteReferral;
     const safeReferralCode = referralCode && /^[a-z0-9]{6,32}$/i.test(referralCode) ? referralCode : null;
     const user = await db.$transaction(async (tx) => {
       const providerId = `telegram_${verified.id}`;
@@ -121,6 +135,7 @@ export async function POST(request: Request) {
     } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
+    response.cookies.set('rpl_site_ref', '', { ...options, maxAge: 0 });
     if (user.telegramChatStarted && !user.telegramWelcomeSentAt && user.telegramNotificationsEnabled) {
       const chatId = telegramChatId(user.providerId);
       if (chatId) {

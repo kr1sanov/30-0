@@ -82,7 +82,11 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
-    const { displayName, profileStats } = body as { displayName?: string; profileStats?: unknown };
+    const { displayName, profileStats, progressEpoch } = body as { displayName?: string; profileStats?: unknown; progressEpoch?: string };
+
+    if (profileStats !== undefined && progressEpoch !== '2026-09-27') {
+      return NextResponse.json({ error: 'Обновите страницу: прежний прогресс сброшен' }, { status: 409 });
+    }
 
     if (profileStats !== undefined && (!profileStats || typeof profileStats !== 'object' || JSON.stringify(profileStats).length > 200_000)) {
       return NextResponse.json({ error: 'Некорректный прогресс' }, { status: 400 });

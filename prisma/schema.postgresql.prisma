@@ -118,6 +118,15 @@ model User {
   runs             GameRun[]
 }
 
+model AdminCredential {
+  id                 String   @id @default(cuid())
+  username           String   @unique
+  passwordHash       String
+  mustChangePassword Boolean  @default(true)
+  sessionVersion     Int      @default(1)
+  updatedAt          DateTime @updatedAt
+}
+
 model AdminAccess {
   id         String   @id @default(cuid())
   telegramId String   @unique

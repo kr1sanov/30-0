@@ -62,6 +62,7 @@ jobs:
           node --check scripts/backfill-2026-rpl-data.mjs
           node --check scripts/import-fifa10-rpl.mjs
           node --check scripts/import-rpl-2010-2018.mjs
+          node --check scripts/reset-legacy-progress.mjs
           node --check scripts/set-telegram-webhook.mjs
 
       - name: Verify FIFA 10 source roster
@@ -179,8 +180,10 @@ jobs:
           cp scripts/backfill-2026-rpl-data.mjs deploy-package/scripts/
           cp scripts/import-fifa10-rpl.mjs deploy-package/scripts/
           cp scripts/import-rpl-2010-2018.mjs deploy-package/scripts/
+          cp scripts/reset-legacy-progress.mjs deploy-package/scripts/
           mkdir -p deploy-package/.next/standalone/scripts
           cp scripts/import-rpl-2010-2018.mjs deploy-package/.next/standalone/scripts/
+          cp scripts/reset-legacy-progress.mjs deploy-package/.next/standalone/scripts/
           mkdir -p deploy-package/docs/research
           cp docs/research/verified-fifa10-rpl.json deploy-package/docs/research/
           cp -r docs/research/rpl-2010-2018 deploy-package/docs/research/

@@ -1363,3 +1363,33 @@ html {
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* Immediate site-wide language and theme switch. */
+.language-switcher {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  background: rgba(18, 24, 29, .94);
+  box-shadow: 0 4px 18px rgba(0,0,0,.3);
+}
+.language-switcher button {
+  padding: 5px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #9ca3af;
+}
+.language-switcher button[aria-pressed="true"] { background: #30c8a2; color: #031a17; }
+html[data-language="en"] body,
+html[data-language="en"] .club-theme-shell {
+  background: radial-gradient(ellipse at 55% 4%, #104c54 0%, #0b272f 28%, #07171e 58%, #071118 100%) fixed !important;
+}
+html[data-language="en"] .football-field-bg { opacity: .18; }
+html[data-language="en"] .club-theme-shell > header { background-color: rgba(7, 23, 30, .83); }

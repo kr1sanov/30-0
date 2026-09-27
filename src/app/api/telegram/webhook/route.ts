@@ -63,17 +63,7 @@ export async function POST(request: Request) {
     if (query?.id && query?.message?.chat?.type === 'private') {
       const actorId = String(query.from?.id ?? '');
       const data = String(query.data ?? '');
-      if (data.startsWith('admin-accept:')) {
-        const targetId = data.slice('admin-accept:'.length);
-        if (targetId === actorId) {
-          const access = await db.adminAccess.findUnique({ where: { telegramId: targetId } });
-          if (access?.status === 'pending') {
-            await db.adminAccess.update({ where: { id: access.id }, data: { status: 'active' } });
-            await answerTelegramCallback(query.id, 'Доступ к админке подтверждён');
-            await sendTelegramMessage(targetId, 'Доступ к админ-панели 30-0 активирован.');
-          } else await answerTelegramCallback(query.id, 'Запрос уже не активен');
-        } else await answerTelegramCallback(query.id, 'Подтвердить может только владелец этого Telegram ID');
-      } else if (data === 'notifications-off' || data === 'notifications-on') {
+      if (data === 'notifications-off' || data === 'notifications-on') {
         const user = await db.user.findUnique({ where: { providerId: `telegram_${actorId}` } });
         if (user) await db.user.update({ where: { id: user.id }, data: { telegramNotificationsEnabled: data === 'notifications-on' } });
         await answerTelegramCallback(query.id, data === 'notifications-on' ? 'Уведомления включены' : 'Уведомления отключены');

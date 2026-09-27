@@ -50,6 +50,7 @@ APP_DIR="${APP_DIR:-$HOME/domains/30-0.xn--p1ai}"
 APP_NAME="30-0-app"
 HEALTH_URL="https://30-0.xn--p1ai/api/health"
 BACKUP_COUNT=3
+PRIVATE_BACKUP_DIR="$HOME/30-0-private-backups"
 
 rollback_standalone() {
   local latest_backup
@@ -155,6 +156,7 @@ cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wing
 cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
 cp "$DEPLOY_STAGE/scripts/import-fifa10-rpl.mjs" scripts/import-fifa10-rpl.mjs
 cp "$DEPLOY_STAGE/scripts/import-rpl-2010-2018.mjs" scripts/import-rpl-2010-2018.mjs
+cp "$DEPLOY_STAGE/scripts/reset-legacy-progress.mjs" scripts/reset-legacy-progress.mjs
 mkdir -p docs/research
 cp "$DEPLOY_STAGE/docs/research/verified-fifa10-rpl.json" docs/research/verified-fifa10-rpl.json
 mkdir -p docs/research/rpl-2010-2018
@@ -255,6 +257,7 @@ ensure_env "TELEGRAM_CLIENT_ID" "8197702906"
 ensure_env "TELEGRAM_BOT_USERNAME" "RPL30_bot"
 ensure_env "TELEGRAM_SESSION_SECRET" "$(openssl rand -hex 32)"
 ensure_env "RUN_SESSION_SECRET" "$(openssl rand -hex 32)"
+ensure_env "ADMIN_SESSION_SECRET" "$(openssl rand -hex 32)"
 chmod 600 .env
 echo "✅ Required production variables are present (values are not printed)"
 
@@ -290,7 +293,7 @@ echo ""
 echo "🗄️ Step 7: Running database sync"
 cp prisma/schema.mysql.prisma prisma/schema.prisma 2>/dev/null || true
 if [ -f .env ]; then
-  export MIGRATION_BACKUP_DIR="$APP_DIR/backups/private"
+  export MIGRATION_BACKUP_DIR="$PRIVATE_BACKUP_DIR"
   if ! node --env-file=.env scripts/prepare-production-users.cjs; then
     echo "❌ Legacy user preflight failed; database schema was not changed"
     rollback_standalone || true
@@ -383,14 +386,24 @@ if ! node .next/standalone/scripts/import-rpl-2010-2018.mjs; then
   rollback_standalone || true
   exit 1
 fi
-mkdir -p backups/private
-ROSTER_BACKUP="$APP_DIR/backups/private/roster-before-rpl-2010-2018-$(date +%Y%m%d%H%M%S).json"
+mkdir -p "$PRIVATE_BACKUP_DIR"
+chmod 700 "$PRIVATE_BACKUP_DIR"
+ROSTER_BACKUP="$PRIVATE_BACKUP_DIR/roster-before-rpl-2010-2018-$(date +%Y%m%d%H%M%S).json"
 if ! node --env-file=.env .next/standalone/scripts/import-rpl-2010-2018.mjs --apply "--backup=$ROSTER_BACKUP"; then
   echo "❌ Roster import failed; previous standalone restored"
   rollback_standalone || true
   exit 1
 fi
 echo "✅ 2010–2018 roster imported with private backup"
+
+# Run once, only after the application and source-backed roster have passed
+# verification. The reset script keeps a private snapshot and marker.
+export MIGRATION_BACKUP_DIR="$PRIVATE_BACKUP_DIR"
+if ! node --env-file=.env .next/standalone/scripts/reset-legacy-progress.mjs --apply; then
+  echo "❌ Progress reset failed"
+  exit 1
+fi
+echo "✅ Legacy runs and profile achievements reset"
 
 # ─── Step 10: Deploy summary ───
 echo ""
