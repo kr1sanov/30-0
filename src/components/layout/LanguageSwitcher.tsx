@@ -51,12 +51,12 @@ function translatePage(language: Language) {
   }
 }
 
-export default function LanguageSwitcher() {
-  const [language, setLanguage] = useState<Language>('ru');
+const LANGUAGE_EVENT = '30-0-language-change';
+
+export function LanguageController() {
   useEffect(() => {
     const saved = localStorage.getItem('30-0-language');
     const selected: Language = saved === 'en' ? 'en' : 'ru';
-    setLanguage(selected);
     document.documentElement.lang = selected;
     document.documentElement.dataset.language = selected;
     translatePage(selected);
@@ -70,14 +70,30 @@ export default function LanguageSwitcher() {
       });
     });
     observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: attributeNames });
-    return () => observer.disconnect();
+    const onLanguageChange = (event: Event) => {
+      const next = (event as CustomEvent<Language>).detail;
+      document.documentElement.lang = next;
+      document.documentElement.dataset.language = next;
+      translatePage(next);
+    };
+    window.addEventListener(LANGUAGE_EVENT, onLanguageChange);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener(LANGUAGE_EVENT, onLanguageChange);
+    };
+  }, []);
+  return null;
+}
+
+export default function LanguageSwitcher() {
+  const [language, setLanguage] = useState<Language>('ru');
+  useEffect(() => {
+    setLanguage(localStorage.getItem('30-0-language') === 'en' ? 'en' : 'ru');
   }, []);
   function choose(next: Language) {
     localStorage.setItem('30-0-language', next);
-    document.documentElement.lang = next;
-    document.documentElement.dataset.language = next;
     setLanguage(next);
-    translatePage(next);
+    window.dispatchEvent(new CustomEvent(LANGUAGE_EVENT, { detail: next }));
   }
   return <div data-no-translate className="language-switcher" role="group" aria-label="Language / Язык">
     <button type="button" onClick={() => choose('ru')} aria-pressed={language === 'ru'}>🇷🇺 RU</button>

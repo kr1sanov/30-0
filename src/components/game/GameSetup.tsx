@@ -316,19 +316,13 @@ function ClubCard({
           <path d="M20 2 37 8v14c0 9-7 16-17 20C10 38 3 31 3 22V8L20 2Z" fill={`url(#crest-${club.id})`} stroke="rgba(255,255,255,.75)" strokeWidth="1.5" />
         </svg>
       </div>
-      {/* Club name */}
-      <div
-        className="text-xs font-bold leading-tight"
-        style={{ color: theme.onPrimary }}
-      >
-        {club.nameRu}
+      <div className="relative rounded-md bg-[#08131e]/90 px-1.5 py-1.5 text-white shadow-sm">
+        <div className="text-xs font-bold leading-tight">{club.nameRu}</div>
+        {club.city && (
+          <div className="text-[9px] text-white/85 mt-0.5 leading-tight">{club.city}</div>
+        )}
+        <div className="mt-1 text-[9px] font-medium text-white/85">{club.seasonCount} сезонов · {club.playerCount} игроков</div>
       </div>
-      {club.city && (
-        <div className="text-[9px] text-white/75 mt-0.5 leading-tight">
-          {club.city}
-        </div>
-      )}
-      <div className="mt-1 text-[9px] font-medium text-white/80">{club.seasonCount} сезонов · {club.playerCount} игроков</div>
     </motion.button>
   );
 }

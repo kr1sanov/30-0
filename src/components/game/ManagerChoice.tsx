@@ -4,7 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
-import { MANAGERS, Manager } from '@/lib/managers';
+import { MANAGERS, getManagersForClub, Manager } from '@/lib/managers';
 import { RotateCw, Sparkles, Zap, Dices } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 
@@ -32,6 +32,10 @@ const NATIONALITY_FLAGS: Record<string, string> = {
   'Бельгия': '🇧🇪',
   'Венгрия': '🇭🇺',
   'Литва': '🇱🇹',
+  'Таджикистан': '🇹🇯',
+  'Узбекистан': '🇺🇿',
+  'Швейцария': '🇨🇭',
+  'Молдова': '🇲🇩',
 };
 
 function getFlag(nationality: string): string {
@@ -95,18 +99,18 @@ function valueForManager(m: Manager, mode: ReelMode): string {
  * placed at `length - 2` so a "next" item remains visible below it,
  * giving the reel a natural stopping position.
  */
-function buildReelItems(target: Manager, mode: ReelMode, length: number): string[] {
+function buildReelItems(target: Manager, mode: ReelMode, length: number, pool: Manager[]): string[] {
   const items: string[] = [];
   const targetValue = valueForManager(target, mode);
   // Fill the bulk of the reel with random manager values.
   for (let i = 0; i < length - 2; i++) {
-    const m = MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+    const m = pool[Math.floor(Math.random() * pool.length)];
     items.push(valueForManager(m, mode));
   }
   // Place target second-to-last so the row beneath it is the "next".
   items.push(targetValue);
   // Append one trailing item so the "next" slot is filled.
-  const trailing = MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+  const trailing = pool[Math.floor(Math.random() * pool.length)];
   items.push(valueForManager(trailing, mode));
   return items;
 }
@@ -240,9 +244,9 @@ function Reel({
 /*  Manager pool preview (before first spin)                          */
 /* ------------------------------------------------------------------ */
 
-function ManagerPoolPreview() {
-  const previewManagers = useMemo(() => MANAGERS.slice(0, 5), []);
-  const remaining = MANAGERS.length - previewManagers.length;
+function ManagerPoolPreview({ pool }: { pool: Manager[] }) {
+  const previewManagers = pool.slice(0, 5);
+  const remaining = pool.length - previewManagers.length;
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -250,7 +254,7 @@ function ManagerPoolPreview() {
       className="flex flex-col items-center gap-3"
     >
       <div className="text-xs font-semibold uppercase tracking-wider text-[#9CA3AF]">
-        {MANAGERS.length} тренеров доступны
+        {pool.length} тренеров доступны
       </div>
       <div className="flex items-center -space-x-2">
         {previewManagers.map((m) => {
@@ -289,9 +293,10 @@ function ManagerPoolPreview() {
 interface SlotMachineProps {
   target: Manager;
   spinKey: number;
+  pool: Manager[];
 }
 
-function SlotMachine({ target, spinKey }: SlotMachineProps) {
+function SlotMachine({ target, spinKey, pool }: SlotMachineProps) {
   // Each reel has a different length so they appear to spin at
   // different speeds and stop in sequence: left → middle → right.
   const len1 = 22;
@@ -299,16 +304,16 @@ function SlotMachine({ target, spinKey }: SlotMachineProps) {
   const len3 = 40;
 
   const reel1 = useMemo(
-    () => buildReelItems(target, 'initial', len1),
-    [target, spinKey],
+    () => buildReelItems(target, 'initial', len1, pool),
+    [target, spinKey, pool],
   );
   const reel2 = useMemo(
-    () => buildReelItems(target, 'rating', len2),
-    [target, spinKey],
+    () => buildReelItems(target, 'rating', len2, pool),
+    [target, spinKey, pool],
   );
   const reel3 = useMemo(
-    () => buildReelItems(target, 'flag', len3),
-    [target, spinKey],
+    () => buildReelItems(target, 'flag', len3, pool),
+    [target, spinKey, pool],
   );
 
   // Durations: reel 1 stops at 0.8s, reel 2 at 1.3s, reel 3 at 1.8s.
@@ -422,7 +427,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
         border: `1.5px solid ${color}55`,
         boxShadow: isJackpot
           ? `0 0 40px ${color}55, 0 0 90px ${color}25, inset 0 0 30px ${color}10`
-          : manager.rating >= 83
+          : manager.rating >= 7
             ? `0 0 25px ${color}40, inset 0 0 20px ${color}08`
             : `0 4px 12px rgba(0,0,0,0.35), inset 0 0 12px ${color}06`,
       }}
@@ -592,8 +597,11 @@ function ManagerCard({ manager }: { manager: Manager }) {
 /* ------------------------------------------------------------------ */
 
 export default function ManagerChoice() {
-  const { spinManager, currentManager, isSpinningManager, setScreen } =
+  const { config, spinManager, currentManager, isSpinningManager, setScreen } =
     useGameStore();
+  const pool = useMemo(() => config.gameMode === 'single_club'
+    ? getManagersForClub(config.clubFilter)
+    : MANAGERS, [config.gameMode, config.clubFilter]);
   const { haptic, notify } = useTelegram();
 
   const [showSpinAnimation, setShowSpinAnimation] = useState(false);
@@ -603,11 +611,10 @@ export default function ManagerChoice() {
   const [reelTarget, setReelTarget] = useState<Manager | null>(null);
 
   const handleSpinManager = async () => {
-    if (isSpinningManager) return;
+    if (isSpinningManager || pool.length === 0) return;
     haptic('medium'); // Haptic when spinning manager
     // Pick the manager locally so we can drive the reel animation toward it.
-    const target =
-      MANAGERS[Math.floor(Math.random() * MANAGERS.length)] || MANAGERS[0];
+    const target = pool[Math.floor(Math.random() * pool.length)];
     setReelTarget(target);
     setShowSpinAnimation(true);
     setSpinKey((k) => k + 1);
@@ -629,7 +636,8 @@ export default function ManagerChoice() {
 
   // Which target should the reels use? Prefer the explicit reelTarget
   // (so reroll animations line up), fall back to currentManager.
-  const activeTarget = reelTarget || currentManager;
+  const activeTarget = reelTarget && pool.some(manager => manager.id === reelTarget.id)
+    ? reelTarget : currentManager;
 
   return (
     <div className="rounded-2xl bg-[#141414] p-5 space-y-4 border border-[#141414]">
@@ -651,6 +659,7 @@ export default function ManagerChoice() {
             key={`slot-${spinKey}`}
             target={activeTarget}
             spinKey={spinKey}
+            pool={pool}
           />
         ) : currentManager ? (
           <ManagerCard key="card" manager={currentManager} />
@@ -661,7 +670,7 @@ export default function ManagerChoice() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <ManagerPoolPreview />
+            <ManagerPoolPreview pool={pool} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -672,6 +681,7 @@ export default function ManagerChoice() {
         {!currentManager && !isSpinningManager && (
           <Button
             onClick={handleSpinManager}
+            disabled={pool.length === 0}
             className="w-full h-14 text-base font-black bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/30 transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group"
           >
             Крутить тренера
@@ -691,7 +701,7 @@ export default function ManagerChoice() {
         {currentManager && !isSpinningManager && (
           <Button
             onClick={handleSpinManager}
-            disabled={isSpinningManager}
+            disabled={isSpinningManager || pool.length === 0}
             variant="outline"
             className="w-full h-11 text-sm font-bold border-[#00C896]/40 text-[#00C896] hover:bg-[#00C896]/10 hover:border-[#00C896]/60 rounded-xl transition-colors"
           >
