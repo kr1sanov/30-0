@@ -336,7 +336,7 @@ export default function SimulationResult() {
   if (!data) return null;
 
   return (
-    <div className="space-y-4 animate-fade-in pb-20 sm:pb-4">
+    <div className="mx-auto max-w-4xl space-y-4 animate-fade-in pb-20 sm:pb-4">
       {/* ── Live Matchweek Progress ── */}
       {!isComplete && (
         <div className="flex items-center justify-between">
@@ -459,6 +459,11 @@ export default function SimulationResult() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="space-y-5"
           >
+            <div className="text-center">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-[#00C896]">Сезон завершён</div>
+              <h1 className="mt-2 text-2xl font-black text-white sm:text-4xl">Ваш результат</h1>
+              {config.gameMode === 'single_club' && config.clubName && <p className="mt-1 text-sm text-[#9CA3AF]">{config.clubName}</p>}
+            </div>
             {/* ── Hero Stat: Points & Position ── */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -480,34 +485,22 @@ export default function SimulationResult() {
               )}
             </motion.div>
 
-            {/* ── W-D-L Banner ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex items-center justify-center gap-1 text-lg font-black"
-            >
-              <span style={{ color: 'var(--club-primary)' }}>{data.wins}В</span>
-              <span className="text-[#64748b] mx-1">·</span>
-              <span className="text-[#9CA3AF]">{data.draws}Н</span>
-              <span className="text-[#64748b] mx-1">·</span>
-              <span className="text-[#ef4444]">{data.losses}П</span>
-            </motion.div>
-
-            {/* ── Goals Banner ── */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-center justify-center gap-2 text-sm font-bold"
-            >
-              <span style={{ color: 'var(--club-primary)' }}>Забито {data.goalsFor}</span>
-              <span className="text-[#64748b]">·</span>
-              <span className="text-[#ef4444]">Пропущено {data.goalsAgainst}</span>
-            </motion.div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+              {[
+                { value: data.wins, label: 'Победы', color: '#00C896' },
+                { value: data.draws, label: 'Ничьи', color: '#FFFFFF' },
+                { value: data.losses, label: 'Поражения', color: '#ef4444' },
+                { value: data.points, label: 'Очки', color: '#fbbf24' },
+                { value: data.goalsFor, label: 'Забито', color: '#00C896' },
+                { value: data.goalsAgainst, label: 'Пропущено', color: '#ef4444' },
+              ].map(stat => <div key={stat.label} className="rounded-xl border border-white/10 bg-[#141414] p-3 text-center sm:p-4">
+                <div className="text-2xl font-black sm:text-3xl" style={{ color: stat.color }}>{stat.value}</div>
+                <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-[#9CA3AF]">{stat.label}</div>
+              </div>)}
+            </div>
 
             {/* ── Trophy Cabinet ── */}
-            {false && earnedTrophies.length > 0 && (
+            {earnedTrophies.length > 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -519,7 +512,7 @@ export default function SimulationResult() {
                   <span className="text-xs text-[#9CA3AF]">{earnedTrophies.length}/{trophies.length}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  {trophies.map((trophy, idx) => (
+                  {earnedTrophies.map((trophy, idx) => (
                     <motion.div
                       key={trophy.id}
                       custom={idx}
@@ -579,6 +572,22 @@ export default function SimulationResult() {
                   </motion.div>
                 ))}
               </div>
+            )}
+
+            {matches.length > 0 && (
+              <details className="rounded-2xl border border-white/10 bg-[#141414] p-4">
+                <summary className="cursor-pointer text-sm font-bold text-white">⚽ Все матчи сезона · {matches.length}</summary>
+                <div className="mt-3 grid max-h-80 gap-2 overflow-y-auto sm:grid-cols-2">
+                  {matches.map(match => {
+                    const scored = match.isHome ? match.homeGoals : match.awayGoals;
+                    const conceded = match.isHome ? match.awayGoals : match.homeGoals;
+                    return <div key={match.matchday} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#0A0A0A] px-3 py-2 text-xs">
+                      <div className="min-w-0 truncate text-[#9CA3AF]">{match.matchday}. {match.opponent} ({match.isHome ? 'д' : 'в'})</div>
+                      <strong className={match.result === 'W' ? 'text-[#00C896]' : match.result === 'L' ? 'text-[#ef4444]' : 'text-white'}>{scored}–{conceded}</strong>
+                    </div>;
+                  })}
+                </div>
+              </details>
             )}
 
             {/* ── Final League Table ── */}

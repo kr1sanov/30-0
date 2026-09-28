@@ -2,14 +2,39 @@
 export interface Manager {
   id: string;
   name: string;
+  nameEn: string;
   rating: number; // Game balance (1–10), not a sourced historical statistic.
   nationality: string;
   era: string;
   specialAbility?: string;
 }
 
+const ENGLISH_NAMES: Record<string, string> = {
+  syomin: 'Yuri Semin', berdyev: 'Kurban Berdyev', spalletti: 'Luciano Spalletti', lucescu: 'Mircea Lucescu',
+  semak: 'Sergei Semak', hiddink: 'Guus Hiddink', slutsky: 'Leonid Slutsky', carrera: 'Massimo Carrera',
+  mancini: 'Roberto Mancini', karpin: 'Valery Karpin', chertchesov: 'Stanislav Cherchesov',
+  goncharenko: 'Viktor Goncharenko', petresku: 'Dan Petrescu', 'vilas-boas': 'André Villas-Boas',
+  bilyaletdinov: 'Rinat Bilyaletdinov', kobolev: 'Andrey Kobelev', shalimov: 'Igor Shalimov',
+  osinkin: 'Igor Osinkin', bojovic: 'Miodrag Božović', kononov: 'Oleg Kononov', rahimov: 'Rashid Rakhimov',
+  gadzhiev: 'Gadzhi Gadzhiyev', kuchuk: 'Leonid Kuchuk', khokhlov: 'Dmitry Khokhlov',
+  muslin: 'Slavoljub Muslin', cherevchenko: 'Igor Cherevchenko', tarkhanov: 'Aleksandr Tarkhanov',
+  grigoryan: 'Aleksandr Grigoryan', vercauteren: 'Franky Vercauteren', evseev: 'Vadim Evseev',
+  musayev: 'Murad Musayev', krasnozhan: 'Yuri Krasnozhan', maminov: 'Vladimir Maminov',
+  couceiro: 'José Couceiro', bilic: 'Slaven Bilić', pashinin: 'Oleg Pashinin', vrba: 'Pavel Vrba',
+  skripchenko: 'Vadim Skripchenko', adiev: 'Magomed Adiev', tikhonov: 'Andrey Tikhonov',
+  riancho: 'Raúl Riancho', alenichev: 'Dmitry Alenichev', yakin: 'Murat Yakin', gunko: 'Dmitry Gunko',
+  emery: 'Unai Emery', tashuev: 'Sergey Tashuev', munteanu: 'Dorinel Munteanu',
+  galaktionov: 'Mikhail Galaktionov', ledyakhov: 'Igor Ledyakhov', gullit: 'Ruud Gullit',
+  baydachny: 'Anatoly Baidachny', gracia: 'Javi Gracia', chaly: 'Valery Chaly',
+  protasov: 'Oleg Protasov', balakhnin: 'Sergey Balakhnin', gamula: 'Igor Gamula',
+  daniliants: 'Ivan Danilyants', nepomnyashchiy: 'Valery Nepomnyashchy', perednya: 'Sergey Perednya',
+  davydov: 'Anatoly Davydov', baskakov: 'Vasily Baskakov', petrakov: 'Valery Petrakov',
+  khuzin: 'Rustem Khuzin', parfenov: 'Dmitry Parfenov', silkin: 'Sergey Silkin',
+  kalitvintsev: 'Yuri Kalitvintsev',
+};
+
 function coach(id: string, name: string, rating: number, nationality = 'Россия'): Manager {
-  return { id, name, rating, nationality, era: '2010–2018' };
+  return { id, name, nameEn: ENGLISH_NAMES[id], rating, nationality, era: '2010–2018' };
 }
 
 export const MANAGERS: Manager[] = [

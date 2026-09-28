@@ -200,8 +200,7 @@ function getInitials(name?: string): string {
 // Get player surname for label below circle
 function getPlayerSurname(lastName?: string): string {
   if (!lastName) return '';
-  const parts = lastName.trim().split(/\s+/);
-  return parts[parts.length - 1];
+  return lastName.trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -569,8 +568,8 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                   <div
                     className="rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer select-none"
                     style={{
-                      width: '28px',
-                      height: '28px',
+                      width: '30px',
+                      height: '30px',
                       backgroundColor: isIncompatible
                         ? 'rgba(239,68,68,0.05)'
                         : isCompatible || isMoveTarget
@@ -592,12 +591,12 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                     }}
                   >
                     <span
-                      className={`text-[8px] font-bold leading-none ${
+                      className={`text-[9px] font-black leading-none ${
                         isCompatible || isMoveTarget
                           ? ''
                           : isIncompatible
-                          ? 'text-[#ef4444]/40'
-                          : 'text-white/30'
+                          ? 'text-[#ef4444]/60'
+                          : 'text-white/80'
                       }`}
                       style={{
                         color: isCompatible || isMoveTarget ? ACCENT : undefined,
@@ -608,9 +607,9 @@ export default function FormationView({ compact = false }: { compact?: boolean }
                   </div>
                   {/* Position label below circle */}
                   <span
-                    className="text-[6px] sm:text-[7px] font-bold leading-none mt-0.5"
+                    className="max-w-[70px] text-center text-[8px] sm:text-[9px] font-bold leading-tight mt-0.5"
                     style={{
-                      color: isCompatible || isMoveTarget ? ACCENT : isIncompatible ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.25)',
+                      color: isCompatible || isMoveTarget ? ACCENT : isIncompatible ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.8)',
                       textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                     }}
                   >
