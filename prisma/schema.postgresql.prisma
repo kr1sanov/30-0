@@ -116,6 +116,7 @@ model User {
   referralCount    Int      @default(0)
 
   runs             GameRun[]
+  multiplayerSeats MultiplayerSeat[]
 }
 
 model AdminCredential {
@@ -207,6 +208,7 @@ model GameRun {
   nationalityFilter String?
 
   slots        GameSlot[]
+  multiplayerSeat MultiplayerSeat?
 
   @@index([userId])
   @@index([completed])
@@ -234,4 +236,35 @@ model GameSlot {
   @@unique([runId, slotPosition])
   @@index([runId])
   @@index([playerSeasonId])
+}
+
+model MultiplayerRoom {
+  code         String   @id
+  hostUserId   String
+  status       String   @default("lobby")
+  maxPlayers   Int      @default(2)
+  seatCount    Int      @default(1)
+  ratingMode   String   @default("season")
+  eraStartYear Int      @default(2010)
+  eraEndYear   Int      @default(2026)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  seats        MultiplayerSeat[]
+}
+
+model MultiplayerSeat {
+  id        String   @id @default(cuid())
+  roomCode  String
+  userId    String
+  name      String
+  formation String   @default("4-3-3")
+  ready     Boolean  @default(false)
+  runId     String?  @unique
+  joinedAt  DateTime @default(now())
+  room      MultiplayerRoom @relation(fields: [roomCode], references: [code], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  run       GameRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@unique([roomCode, userId])
+  @@index([roomCode])
 }

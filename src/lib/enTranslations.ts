@@ -411,6 +411,26 @@ Object.assign(TEXT, {
   'Некорректный прогресс':'Invalid progress', 'Нет данных для сохранения':'Nothing to save',
 });
 
+Object.assign(TEXT, {
+  'Мультиплеер': 'Multiplayer', 'Играй с друзьями: живой драфт и лиги': 'Play with friends: live draft and leagues',
+  'Многопользовательский режим': 'Multiplayer', 'Три способа определить, кто создаст лучшую команду.': 'Three ways to find out who builds the best team.',
+  '🔴 Живой драфт': '🔴 Live draft', 'До шести менеджеров собирают составы одновременно и сравнивают результаты сезонов.': 'Up to six managers draft simultaneously and compare season results.',
+  'Лиги': 'Leagues', 'Асинхронные драфты и общая турнирная таблица.': 'Asynchronous drafts and a shared leaderboard.',
+  'Скоро': 'Coming soon', 'Многопользовательский режим · Бета': 'Multiplayer · Beta', 'Сыграй с другом': 'Play a friend',
+  'Соберите команды из 11 игроков, сыграйте сезон и сравните очки.': 'Build an XI, play a season and compare points.',
+  'Ваше имя': 'Your name', 'Для живого драфта войдите через Telegram.': 'Sign in with Telegram to play live draft.',
+  '🔴 Новая игра в прямом эфире': '🔴 New live game', 'Создать комнату': 'Create room',
+  'Присоединиться по коду': 'Join with a code', 'Код из 6 символов': 'Six-character code',
+  'Войти в комнату': 'Join room', 'Комната ожидания': 'Lobby', 'Драфт с друзьями': 'Draft with friends',
+  'Скопировать приглашение': 'Copy invite', 'Участники': 'Players', 'Готов': 'Ready', 'Ожидает': 'Waiting',
+  'Ваша схема': 'Your formation', 'Отменить готовность': 'Cancel ready', 'Я готов': 'I am ready',
+  'Мест': 'Seats', 'Период': 'Era', 'Прайм': 'Prime', 'Рейтинг сезона': 'Season rating',
+  'Начать драфт': 'Start draft', 'Пригласи друзей': 'Invite friends',
+  'Отправь код': 'Share the code', 'Ваш состав': 'Your XI', '🎰 Крутить колесо': '🎰 Spin the wheel',
+  'Сезон сыгран. Ожидаем результаты остальных.': 'Season played. Waiting for the other players.',
+  'Итоги сезона': 'Season results', 'Загружаем состав…': 'Loading squad…',
+});
+
 export function translateInterface(value: string): string {
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';

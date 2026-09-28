@@ -8,29 +8,29 @@ datasource db {
 }
 
 model Club {
-  id        String   @id @default(cuid())
-  nameRu    String
-  nameEn    String?
-  city      String?
-  logoUrl   String?
-  seasons   ClubSeason[]
+  id      String       @id @default(cuid())
+  nameRu  String
+  nameEn  String?
+  city    String?
+  logoUrl String?
+  seasons ClubSeason[]
 
   @@unique([nameRu])
 }
 
 model Season {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   startYear      Int
   endYear        Int
   label          String
-  matchesPerTeam Int      @default(30)
+  matchesPerTeam Int          @default(30)
   clubSeasons    ClubSeason[]
 
   @@unique([startYear, endYear])
 }
 
 model ClubSeason {
-  id           String   @id @default(cuid())
+  id           String  @id @default(cuid())
   clubId       String
   seasonId     String
   sourceName   String?
@@ -43,16 +43,16 @@ model ClubSeason {
   goalsFor     Int?
   goalsAgainst Int?
 
-  club         Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  season       Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  players      PlayerSeason[]
+  club    Club           @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  season  Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  players PlayerSeason[]
 
   @@unique([clubId, seasonId])
   @@index([seasonId])
 }
 
 model Player {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   lastName    String
   firstName   String?
   fullName    String
@@ -60,17 +60,17 @@ model Player {
   nationality String?
   birthYear   Int?
 
-  seasons     PlayerSeason[]
+  seasons PlayerSeason[]
 
   @@index([fullName])
 }
 
 model PlayerSeason {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   playerId       String
   clubSeasonId   String
   rating         Int
-  primeRating    Int      @default(0)
+  primeRating    Int     @default(0)
   primeSeason    String?
   mainPosition   String
   otherPositions String?
@@ -83,8 +83,8 @@ model PlayerSeason {
   goals          Int?
   assists        Int?
 
-  player         Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  clubSeason     ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  clubSeason ClubSeason @relation(fields: [clubSeasonId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, clubSeasonId])
   @@index([clubSeasonId])
@@ -92,30 +92,31 @@ model PlayerSeason {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  provider         String   @default("guest")
-  providerId       String   @unique
-  username         String?
-  firstName        String?
-  lastName         String?
-  photoUrl         String?
-  email            String?
-  displayName      String   @default("Игрок")
-  profileStatsJson String?
-  telegramNotificationsEnabled Boolean @default(true)
-  telegramChatStarted Boolean @default(false)
-  notificationCadence String @default("weekly")
-  lastActiveAt DateTime?
-  telegramWelcomeSentAt DateTime?
+  id                           String    @id @default(cuid())
+  provider                     String    @default("guest")
+  providerId                   String    @unique
+  username                     String?
+  firstName                    String?
+  lastName                     String?
+  photoUrl                     String?
+  email                        String?
+  displayName                  String    @default("Игрок")
+  profileStatsJson             String?
+  telegramNotificationsEnabled Boolean   @default(true)
+  telegramChatStarted          Boolean   @default(false)
+  notificationCadence          String    @default("weekly")
+  lastActiveAt                 DateTime?
+  telegramWelcomeSentAt        DateTime?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  referralCode     String?  @unique
-  referredBy       String?
-  referralCount    Int      @default(0)
+  referralCode  String? @unique
+  referredBy    String?
+  referralCount Int     @default(0)
 
   runs             GameRun[]
+  multiplayerSeats MultiplayerSeat[]
 }
 
 model AdminCredential {
@@ -144,13 +145,14 @@ model AdminAccess {
 }
 
 model AdminLoginChallenge {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   telegramId String
   codeHash   String
   expiresAt  DateTime
-  attempts   Int      @default(0)
+  attempts   Int       @default(0)
   consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
+
   @@index([telegramId, expiresAt])
 }
 
@@ -169,45 +171,47 @@ model NotificationDispatch {
   campaignKey String
   userId      String
   sentAt      DateTime @default(now())
+
   @@unique([campaignKey, userId])
   @@index([sentAt])
 }
 
 model GameRun {
-  id           String   @id @default(cuid())
-  formation    String   @default("4-3-3")
-  difficulty   String   @default("normal")
-  draftMode    String   @default("squad_first")
-  ratingMode   String   @default("season")
-  eraFilter    String   @default("all")
-  rerollsTotal Int      @default(1)
-  rerollsUsed  Int      @default(0)
+  id           String @id @default(cuid())
+  formation    String @default("4-3-3")
+  difficulty   String @default("normal")
+  draftMode    String @default("squad_first")
+  ratingMode   String @default("season")
+  eraFilter    String @default("all")
+  rerollsTotal Int    @default(1)
+  rerollsUsed  Int    @default(0)
 
-  completed    Boolean  @default(false)
-  wins         Int?
-  draws        Int?
-  losses       Int?
-  points       Int?
-  position     Int?
-  goalsFor     Int?
-  goalsAgainst Int?
+  completed     Boolean @default(false)
+  wins          Int?
+  draws         Int?
+  losses        Int?
+  points        Int?
+  position      Int?
+  goalsFor      Int?
+  goalsAgainst  Int?
   overallRating Int?
 
   managerName   String?
   managerRating Int?
   teamName      String?
 
-  userId       String?
-  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  createdAt    DateTime @default(now())
+  createdAt DateTime @default(now())
 
   eraStartYear      Int     @default(2000)
   eraEndYear        Int     @default(2025)
   clubFilter        String?
   nationalityFilter String?
 
-  slots        GameSlot[]
+  slots           GameSlot[]
+  multiplayerSeat MultiplayerSeat?
 
   @@index([userId])
   @@index([completed])
@@ -216,7 +220,7 @@ model GameRun {
 }
 
 model GameSlot {
-  id                   String   @id @default(cuid())
+  id                   String  @id @default(cuid())
   runId                String
   slotPosition         String
   playerSeasonId       String?
@@ -228,11 +232,42 @@ model GameSlot {
   playerPosition       String?
   playerOtherPositions String?
   playerNationality    String?
-  isCompatible         Boolean  @default(true)
+  isCompatible         Boolean @default(true)
 
-  run                  GameRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run GameRun @relation(fields: [runId], references: [id], onDelete: Cascade)
 
   @@unique([runId, slotPosition])
   @@index([runId])
   @@index([playerSeasonId])
+}
+
+model MultiplayerRoom {
+  code         String            @id
+  hostUserId   String
+  status       String            @default("lobby")
+  maxPlayers   Int               @default(2)
+  seatCount    Int               @default(1)
+  ratingMode   String            @default("season")
+  eraStartYear Int               @default(2010)
+  eraEndYear   Int               @default(2026)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  seats        MultiplayerSeat[]
+}
+
+model MultiplayerSeat {
+  id        String          @id @default(cuid())
+  roomCode  String
+  userId    String
+  name      String
+  formation String          @default("4-3-3")
+  ready     Boolean         @default(false)
+  runId     String?         @unique
+  joinedAt  DateTime        @default(now())
+  room      MultiplayerRoom @relation(fields: [roomCode], references: [code], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  run       GameRun?        @relation(fields: [runId], references: [id], onDelete: SetNull)
+
+  @@unique([roomCode, userId])
+  @@index([roomCode])
 }
