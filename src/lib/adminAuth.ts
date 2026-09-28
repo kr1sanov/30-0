@@ -4,6 +4,8 @@ import { db } from '@/lib/db';
 
 export const ADMIN_COOKIE = 'rpl_admin_session';
 export const ADMIN_USERNAME = 'kr1sanov';
+export type AdminRole = 'owner' | 'admin' | 'moderator' | 'viewer';
+const allowedRoles = new Set<AdminRole>(['owner', 'admin', 'moderator', 'viewer']);
 // The random temporary credential is delivered to the owner separately.
 // Only its salted, one-way hash is included in the application.
 const INITIAL_HASH = 'c5289ab8523af743d45522ea29cde321:bb73dcdf96f13c441f9ab49c8dc2151df0c06ca85d31f0be00e243f5b08451ba8d8939b440ce81a72b1a08042b5a2c01ae8077012c274619227fab564e82efba';
@@ -17,8 +19,9 @@ function secret() {
 export async function adminCredential() {
   return db.adminCredential.upsert({
     where: { username: ADMIN_USERNAME },
-    create: { username: ADMIN_USERNAME, passwordHash: INITIAL_HASH, mustChangePassword: true },
-    update: {},
+    create: { username: ADMIN_USERNAME, passwordHash: INITIAL_HASH, mustChangePassword: true, role: 'owner' },
+    // Existing owner credentials predate the role column. Keep that account as owner after schema sync.
+    update: { role: 'owner' },
   });
 }
 export function createAdminSession(username: string, version: number, now = Date.now()) {
@@ -34,16 +37,29 @@ function claimsFromRequest(request: Request, now = Date.now()): { sub: string; v
     const expected = createHmac('sha256', secret()).update(payload).digest('base64url');
     if (expected.length !== signature.length || !timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) return null;
     const claims = JSON.parse(Buffer.from(payload, 'base64url').toString());
-    return claims.sub === ADMIN_USERNAME && Number.isInteger(claims.ver) && claims.exp > now ? claims : null;
+    return typeof claims.sub === 'string' && claims.sub.length <= 100 && Number.isInteger(claims.ver) && claims.exp > now ? claims : null;
   } catch { return null; }
 }
 export async function adminSession(request: Request) {
   const claims = claimsFromRequest(request);
   if (!claims) return null;
   const credential = await db.adminCredential.findUnique({ where: { username: claims.sub } });
-  return credential?.sessionVersion === claims.ver ? credential : null;
+  if (!credential || credential.sessionVersion !== claims.ver) return null;
+  if (credential.username === ADMIN_USERNAME && credential.role !== 'owner') {
+    return db.adminCredential.update({ where: { id: credential.id }, data: { role: 'owner' } });
+  }
+  return credential;
 }
 export async function requireAdmin(request: Request) {
   const credential = await adminSession(request);
-  return credential && !credential.mustChangePassword ? { role: 'owner' as const, username: credential.username } : null;
+  return credential && !credential.mustChangePassword && allowedRoles.has(credential.role as AdminRole)
+    ? { role: credential.role as AdminRole, username: credential.username } : null;
+}
+
+export function canAdminWrite(role: AdminRole, area: 'players' | 'rosters' | 'campaigns' | 'access' | 'reset') {
+  if (role === 'owner') return true;
+  if (area === 'reset') return false;
+  if (area === 'access') return role === 'admin';
+  if (area === 'players') return role === 'admin' || role === 'moderator';
+  return role === 'admin';
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { Home, User } from 'lucide-react';
-import Image from 'next/image';
 
 const GAME_SCREENS = new Set([
   'setup',
@@ -45,7 +44,6 @@ export default function Header() {
       <>
         <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/70 backdrop-blur-xl border-b border-white/[0.04]">
           <div className="mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
-            <Image src="/brand-30-0.png" alt="30-0" width={42} height={42} className="absolute left-1/2 -translate-x-1/2 rounded-md" />
             {/* Left: Home button */}
             <button
               onClick={handleHome}
@@ -78,7 +76,6 @@ export default function Header() {
       {/* Semi-transparent header with football field background */}
       <header className="sticky top-0 z-50 w-full bg-[#0A0A0A]/70 backdrop-blur-xl border-b border-white/[0.04]">
         <div className="mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
-          <Image src="/brand-30-0.png" alt="30-0" width={42} height={42} className="absolute left-1/2 -translate-x-1/2 rounded-md" />
           {/* Left: Home button (38-0 style) */}
           <button
             onClick={handleHome}

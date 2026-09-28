@@ -1,19 +1,63 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/adminAuth';
+
+export const runtime = 'nodejs';
+
 export async function GET(request: Request) {
-  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
+  const admin = await requireAdmin(request);
+  if (!admin) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
   try {
-    const [complete, activeToday, totalUsers, totalRuns, activeRuns, topRuns, recentRuns, campaigns] = await Promise.all([
-      db.gameRun.count({ where: { completed: true } }),
-      db.user.count({ where: { updatedAt: { gte: new Date(Date.now() - 86400000) } } }),
-      db.user.count(),
-      db.gameRun.count(),
-      db.gameRun.count({ where: { completed: false } }),
-      db.gameRun.findMany({ where: { completed: true }, orderBy: { points: 'desc' }, take: 5, select: { points: true, wins: true, position: true, user: { select: { displayName: true, username: true } } } }),
-      db.gameRun.findMany({ orderBy: { createdAt: 'desc' }, take: 10, select: { id: true, createdAt: true, completed: true, points: true, position: true, user: { select: { displayName: true, username: true } } } }),
-      db.notificationCampaign.findMany({ orderBy: { updatedAt: 'desc' } }),
+    const now = new Date();
+    const ago = (days: number) => new Date(now.getTime() - days * 86_400_000);
+    const activity = (days: number) => ({
+      OR: [{ lastActiveAt: { gte: ago(days) } }, { runs: { some: { createdAt: { gte: ago(days) } } } }],
+    });
+    const perfect = { completed: true, wins: 30, draws: 0, losses: 0 };
+    const days = Array.from({ length: 14 }, (_, index) => {
+      const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 13 + index));
+      return { date: start.toISOString().slice(0, 10), start, end: new Date(start.getTime() + 86_400_000) };
+    });
+    const [totalUsers, activeToday, activeWeek, activeMonth, totalRuns, completedRuns, activeRuns,
+      classicRuns, clubRuns, classicCompleted, clubCompleted, perfectRuns, perfectUsers,
+      recentRuns, dailyRuns] = await Promise.all([
+      db.user.count(), db.user.count({ where: activity(1) }), db.user.count({ where: activity(7) }),
+      db.user.count({ where: activity(30) }), db.gameRun.count(),
+      db.gameRun.count({ where: { completed: true } }), db.gameRun.count({ where: { completed: false } }),
+      db.gameRun.count({ where: { clubFilter: null } }), db.gameRun.count({ where: { clubFilter: { not: null } } }),
+      db.gameRun.count({ where: { clubFilter: null, completed: true } }),
+      db.gameRun.count({ where: { clubFilter: { not: null }, completed: true } }),
+      db.gameRun.count({ where: perfect }),
+      db.gameRun.groupBy({ by: ['userId'], where: { ...perfect, userId: { not: null } },
+        _count: { _all: true }, _max: { createdAt: true, points: true } }),
+      db.gameRun.findMany({ orderBy: { createdAt: 'desc' }, take: 25,
+        select: { id: true, createdAt: true, completed: true, points: true, wins: true, position: true, clubFilter: true,
+          user: { select: { id: true, displayName: true, username: true } } } }),
+      Promise.all(days.map(day => db.gameRun.count({ where: { createdAt: { gte: day.start, lt: day.end } } }))),
     ]);
-    return NextResponse.json({ metrics: { totalUsers, totalRuns, completedRuns: complete, activeRuns, activeToday, completionRate: totalRuns ? Math.round(complete / totalRuns * 100) : 0 }, topRuns, recentRuns, campaigns });
-  } catch { return NextResponse.json({ error: 'Не удалось загрузить аналитику' }, { status: 500 }); }
+    const winnerIds = perfectUsers.flatMap(row => row.userId ? [row.userId] : []);
+    const people = winnerIds.length ? await db.user.findMany({ where: { id: { in: winnerIds } },
+      select: { id: true, displayName: true, username: true, provider: true } }) : [];
+    const byId = new Map(people.map(person => [person.id, person]));
+    const winners = perfectUsers.flatMap(row => {
+      const user = row.userId ? byId.get(row.userId) : null;
+      return user ? [{ user, runs: row._count._all, bestPoints: row._max.points,
+        lastPerfectAt: row._max.createdAt }] : [];
+    }).sort((a, b) => (b.lastPerfectAt?.getTime() ?? 0) - (a.lastPerfectAt?.getTime() ?? 0));
+    return NextResponse.json({
+      role: admin.role, username: admin.username,
+      metrics: { totalUsers, activeToday, activeWeek, activeMonth, totalRuns, completedRuns, activeRuns,
+        completionRate: totalRuns ? Math.round(completedRuns / totalRuns * 100) : 0,
+        perfectRuns, perfectUsers: winners.length },
+      modes: [
+        { id: 'classic', label: 'Обычный драфт', runs: classicRuns, completed: classicCompleted },
+        { id: 'single_club', label: 'Один клуб', runs: clubRuns, completed: clubCompleted },
+      ],
+      activity: days.map((day, index) => ({ date: day.date, runs: dailyRuns[index] })),
+      winners, recentRuns,
+    }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) {
+    console.error('Admin dashboard:', error);
+    return NextResponse.json({ error: 'Не удалось загрузить аналитику' }, { status: 500 });
+  }
 }

@@ -37,7 +37,9 @@ export async function GET(request: Request) {
       .filter((r): r is number => r !== null)
       .sort((a, b) => b - a)[0] ?? null;
 
+    const progressEpoch = (await db.appSetting.findUnique({ where: { key: 'progressEpoch' } }))?.value ?? '2026-09-27';
     return NextResponse.json({
+      progressEpoch,
       user: {
         id: user.id,
         username: user.username,
@@ -84,7 +86,8 @@ export async function PATCH(request: Request) {
     if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
     const { displayName, profileStats, progressEpoch } = body as { displayName?: string; profileStats?: unknown; progressEpoch?: string };
 
-    if (profileStats !== undefined && progressEpoch !== '2026-09-27') {
+    const currentEpoch = (await db.appSetting.findUnique({ where: { key: 'progressEpoch' } }))?.value ?? '2026-09-27';
+    if (profileStats !== undefined && progressEpoch !== currentEpoch) {
       return NextResponse.json({ error: 'Обновите страницу: прежний прогресс сброшен' }, { status: 409 });
     }
 

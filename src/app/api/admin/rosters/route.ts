@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { requireAdmin } from '@/lib/adminAuth';
+import { canAdminWrite, requireAdmin } from '@/lib/adminAuth';
+import { sameOrigin } from '@/lib/telegramSession';
 export async function GET(request: Request) {
  if (!await requireAdmin(request)) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
  try {
@@ -9,7 +10,9 @@ export async function GET(request: Request) {
  } catch { return NextResponse.json({ error: 'Не удалось загрузить составы' }, { status: 500 }); }
 }
 export async function PATCH(request: Request) {
- if (!await requireAdmin(request)) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
+ const admin = await requireAdmin(request);
+ if (!admin || !canAdminWrite(admin.role, 'rosters')) return NextResponse.json({ error: 'Нет прав на изменение составов' }, { status: 403 });
+ if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник' }, { status: 403 });
  try {
   const b = await request.json(); const id = String(b.id ?? '');
   const rating = Number(b.rating); const mainPosition = String(b.mainPosition ?? '').trim(); const otherPositions = String(b.otherPositions ?? '').trim();

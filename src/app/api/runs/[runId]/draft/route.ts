@@ -121,8 +121,8 @@ export async function POST(
       data: {
         playerSeasonId,
         playerSeasonYear: playerSeason.clubSeason.season.startYear,
-        playerName: playerSeason.player.fullName,
-        playerLastName: playerSeason.player.lastName,
+        playerName: playerSeason.player.alias || playerSeason.player.fullName,
+        playerLastName: playerSeason.player.alias || playerSeason.player.lastName,
         playerRating: playerSeason.rating,
         playerPrimeRating: playerSeason.primeRating || playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
