@@ -20,7 +20,8 @@ export async function adminCredential() {
   return db.adminCredential.upsert({
     where: { username: ADMIN_USERNAME },
     create: { username: ADMIN_USERNAME, passwordHash: INITIAL_HASH, mustChangePassword: true, role: 'owner' },
-    update: {},
+    // Existing owner credentials predate the role column. Keep that account as owner after schema sync.
+    update: { role: 'owner' },
   });
 }
 export function createAdminSession(username: string, version: number, now = Date.now()) {
