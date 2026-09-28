@@ -1,4 +1,4 @@
-import { MANAGERS } from './managers';
+import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
