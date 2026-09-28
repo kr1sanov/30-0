@@ -1211,15 +1211,29 @@ export default function Home() {
   const { isAuthenticated, _hasHydrated } = useAuthStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
+  const [epochChecked, setEpochChecked] = useState(false);
 
   // Initialize the server-verified Telegram session
   useAutoAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
-    void useGameStore.getState().loadProfileFromCloud();
-    void useGameStore.getState().loadActiveRunFromCloud();
-  }, [isAuthenticated]);
+    if (!_hasHydrated) return;
+    fetch('/api/progress-epoch', { cache: 'no-store' }).then(async response => {
+      if (!response.ok) return;
+      const { epoch } = await response.json();
+      const previous = localStorage.getItem('30-0-progress-epoch') ?? '2026-09-27';
+      if (epoch !== previous) useGameStore.getState().resetProgress();
+      localStorage.setItem('30-0-progress-epoch', epoch);
+    }).catch(() => undefined).finally(() => setEpochChecked(true));
+  }, [_hasHydrated]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !epochChecked) return;
+    void (async () => {
+      await useGameStore.getState().loadProfileFromCloud();
+      await useGameStore.getState().loadActiveRunFromCloud();
+    })();
+  }, [isAuthenticated, epochChecked]);
 
   // ── Yandex.Metrika SPA navigation tracking ──
   useEffect(() => {

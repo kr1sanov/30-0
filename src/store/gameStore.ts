@@ -180,6 +180,7 @@ interface GameState {
   undoLastPick: () => Promise<void>;
   skipSpin: () => void;
   dismissAchievement: () => void;
+  resetProgress: () => void;
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
   setAvatarEmoji: (emoji: string) => void;
@@ -1395,11 +1396,17 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+      resetProgress: () => {
+        get().resetGame();
+        set({ profileStats: defaultProfileStats, config: { ...defaultConfig }, lastConfig: { ...defaultConfig },
+          leaderboard: [], dailyChallenge: null });
+      },
+
       syncProfileToCloud: async () => {
         try {
           await fetch('/api/users/profile', {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ profileStats: get().profileStats, progressEpoch: '2026-09-27' }),
+            body: JSON.stringify({ profileStats: get().profileStats, progressEpoch: localStorage.getItem('30-0-progress-epoch') ?? '2026-09-27' }),
           });
         } catch (error) { console.error('Failed to sync profile progress:', error); }
       },
@@ -1409,7 +1416,15 @@ export const useGameStore = create<GameState>()(
           const response = await fetch('/api/users/profile', { cache: 'no-store' });
           if (!response.ok) return;
           const data = await response.json();
-          if (data.user?.profileStats) set({ profileStats: data.user.profileStats });
+          const epoch = data.progressEpoch ?? '2026-09-27';
+          const previous = localStorage.getItem('30-0-progress-epoch') ?? '2026-09-27';
+          if (epoch !== previous) {
+            get().resetProgress();
+            if (data.user?.profileStats) set({ profileStats: data.user.profileStats });
+          } else {
+            set({ profileStats: data.user?.profileStats ?? defaultProfileStats });
+          }
+          localStorage.setItem('30-0-progress-epoch', epoch);
         } catch (error) { console.error('Failed to load profile progress:', error); }
       },
 

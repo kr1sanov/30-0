@@ -155,8 +155,8 @@ export async function POST(
     // Build player options — include primeRating and primeSeason for prime mode
     const players = eligiblePlayers.map((ps) => ({
       playerSeasonId: ps.id,
-      fullName: ps.player.fullName,
-      lastName: ps.player.lastName,
+      fullName: ps.player.alias || ps.player.fullName,
+      lastName: ps.player.alias || ps.player.lastName,
       rating: run.difficulty === 'hard' ? 0 : ps.rating,
       primeRating: ps.primeRating || ps.rating,
       primeSeason: ps.primeSeason || selectedClubSeason.season.label,

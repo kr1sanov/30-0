@@ -8,7 +8,7 @@ export const runtime = 'nodejs';
 const cookieOptions = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const, path: '/', maxAge: 8 * 60 * 60 };
 export async function GET(request: Request) {
   const admin = await adminSession(request);
-  return NextResponse.json({ authenticated: Boolean(admin), mustChangePassword: admin?.mustChangePassword ?? false }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ authenticated: Boolean(admin), mustChangePassword: admin?.mustChangePassword ?? false, username: admin?.username ?? null, role: admin?.role ?? null }, { headers: { 'Cache-Control': 'no-store' } });
 }
 export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
@@ -17,11 +17,12 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const username = typeof body.username === 'string' ? body.username.trim() : '';
   const password = typeof body.password === 'string' ? body.password : '';
-  if (username !== ADMIN_USERNAME || password.length > 256 || !password) {
+  if (!username || username.length > 100 || password.length > 256 || !password) {
     return NextResponse.json({ error: 'Неверный логин или пароль' }, { status: 401 });
   }
-  const admin = await adminCredential();
-  if (!verifyAdminPassword(password, admin.passwordHash)) {
+  if (username === ADMIN_USERNAME) await adminCredential();
+  const admin = await db.adminCredential.findUnique({ where: { username } });
+  if (!admin || !verifyAdminPassword(password, admin.passwordHash)) {
     return NextResponse.json({ error: 'Неверный логин или пароль' }, { status: 401 });
   }
   const response = NextResponse.json({ ok: true, mustChangePassword: admin.mustChangePassword });

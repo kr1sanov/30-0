@@ -127,6 +127,11 @@ model AdminCredential {
   updatedAt          DateTime @updatedAt
 }
 
+model AppSetting {
+  key   String @id @db.VarChar(100)
+  value String @db.VarChar(255)
+}
+
 model AdminAccess {
   id         String   @id @default(cuid())
   telegramId String   @unique
