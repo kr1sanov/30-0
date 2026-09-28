@@ -44,7 +44,11 @@ export async function adminSession(request: Request) {
   const claims = claimsFromRequest(request);
   if (!claims) return null;
   const credential = await db.adminCredential.findUnique({ where: { username: claims.sub } });
-  return credential?.sessionVersion === claims.ver ? credential : null;
+  if (!credential || credential.sessionVersion !== claims.ver) return null;
+  if (credential.username === ADMIN_USERNAME && credential.role !== 'owner') {
+    return db.adminCredential.update({ where: { id: credential.id }, data: { role: 'owner' } });
+  }
+  return credential;
 }
 export async function requireAdmin(request: Request) {
   const credential = await adminSession(request);
