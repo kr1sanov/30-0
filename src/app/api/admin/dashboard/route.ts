@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     });
     const [totalUsers, activeToday, activeWeek, activeMonth, totalRuns, completedRuns, activeRuns,
       classicRuns, clubRuns, classicCompleted, clubCompleted, perfectRuns, perfectUsers,
-      recentRuns, dailyRuns] = await Promise.all([
+      recentRuns, dailyRuns, totalSeasons, playableSeasons, totalClubs, playableClubs, totalPlayers, playablePlayers, playerCards] = await Promise.all([
       db.user.count(), db.user.count({ where: activity(1) }), db.user.count({ where: activity(7) }),
       db.user.count({ where: activity(30) }), db.gameRun.count(),
       db.gameRun.count({ where: { completed: true } }), db.gameRun.count({ where: { completed: false } }),
@@ -34,6 +34,9 @@ export async function GET(request: Request) {
         select: { id: true, createdAt: true, completed: true, points: true, wins: true, position: true, clubFilter: true,
           user: { select: { id: true, displayName: true, username: true } } } }),
       Promise.all(days.map(day => db.gameRun.count({ where: { createdAt: { gte: day.start, lt: day.end } } }))),
+      db.season.count(), db.season.count({ where: { clubSeasons: { some: { players: { some: {} } } } } }),
+      db.club.count(), db.club.count({ where: { seasons: { some: { players: { some: {} } } } } }),
+      db.player.count(), db.player.count({ where: { seasons: { some: {} } } }), db.playerSeason.count(),
     ]);
     const winnerIds = perfectUsers.flatMap(row => row.userId ? [row.userId] : []);
     const people = winnerIds.length ? await db.user.findMany({ where: { id: { in: winnerIds } },
@@ -48,7 +51,8 @@ export async function GET(request: Request) {
       role: admin.role, username: admin.username,
       metrics: { totalUsers, activeToday, activeWeek, activeMonth, totalRuns, completedRuns, activeRuns,
         completionRate: totalRuns ? Math.round(completedRuns / totalRuns * 100) : 0,
-        perfectRuns, perfectUsers: winners.length },
+        perfectRuns, perfectUsers: winners.length,
+        totalSeasons, playableSeasons, totalClubs, playableClubs, totalPlayers, playablePlayers, playerCards },
       modes: [
         { id: 'classic', label: 'Обычный драфт', runs: classicRuns, completed: classicCompleted },
         { id: 'single_club', label: 'Один клуб', runs: clubRuns, completed: clubCompleted },

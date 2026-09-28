@@ -203,6 +203,34 @@ Object.assign(TEXT, {
 });
 
 Object.assign(TEXT, {
+  'Сезонов с составами': 'Seasons with squads', 'Клубов с игроками': 'Clubs with players',
+  'Игроков в базе игры': 'Players in the game', 'Карточек игроков': 'Player season cards',
+  'Новый сезон': 'New season', 'Создайте сезон, затем добавьте клубы и игроков вручную или загрузите CSV.': 'Create a season, then add clubs and players manually or upload a CSV.',
+  'Начало': 'Start year', 'Конец': 'End year', 'Название': 'Name', 'Матчей на команду': 'Matches per team',
+  'Создать сезон': 'Create season', 'Импорт составов': 'Import squads', 'Сезон для импорта': 'Target season',
+  'CSV-файл': 'CSV file', 'Проверить файл': 'Validate file', 'Подтвердить импорт': 'Confirm import',
+  'Проверка пройдена': 'Validation passed', 'Новых карточек': 'New player cards', 'Обновятся': 'Will update',
+  'До подтверждения база не меняется. Повторная загрузка обновит существующие карточки того же сезона.': 'Validation does not change the database. Re-import updates existing cards in the same season.',
+  'Добавить игрока вручную': 'Add a player manually', 'Сохранение оставит выбранный клуб и сезон, чтобы вводить игроков по очереди.': 'The selected club and season stay in place so you can add players one by one.',
+  'Новый клуб': 'New club', 'Название клуба': 'Club name', 'Название клуба на английском': 'English club name',
+  'Полное имя': 'Full name', 'Фамилия или имя на форме': 'Surname or shirt name', 'Имя': 'First name',
+  'Страна': 'Nationality', 'Год рождения': 'Birth year', 'Основная позиция': 'Main position',
+  'Другие позиции через |': 'Other positions separated by |', 'Рейтинг сезона': 'Season rating',
+  'Рейтинг прайм': 'Prime rating', 'Ссылка на источник данных': 'Source link', 'Сохранить игрока': 'Save player',
+  'Игроки сезона': 'Season players', 'В этом клубе пока нет игроков.': 'No players in this club yet.',
+  'Правила заполнения': 'Import rules', '↓ Скачать заполненный CSV-образец': '↓ Download filled CSV example',
+  'Образец: подтверждённые строки FIFA 10 за 2009 год. Для нового сезона замените их актуальными проверенными данными.': 'The example contains verified FIFA 10 rows from 2009. Replace them with current verified data for a new season.',
+  'Выберите сезон перед импортом. Один файл может содержать несколько клубов.': 'Select a season before importing. One file can contain multiple clubs.',
+  'Сохраните CSV в UTF‑8. Не переименовывайте столбцы образца. Поля с запятой заключайте в двойные кавычки.': 'Save the CSV as UTF-8. Keep the sample headers. Wrap comma-containing values in double quotes.',
+  'Обязательны клуб, полное имя, фамилия, основная позиция и рейтинг от 1 до 100.': 'Club, full name, surname, main position and a rating from 1 to 100 are required.',
+  'Дополнительные позиции указывайте через вертикальную черту:': 'Separate other positions with a vertical bar:',
+  'Прайм не может быть ниже рейтинга сезона.': 'Prime rating cannot be lower than season rating.',
+  'Добавляйте ссылку на источник рейтинга. Если имя совпадает с несколькими игроками, укажите существующий': 'Provide a source for the rating. If multiple players share a name, enter the existing',
+  'в файле.': 'in the file.',
+  'Сначала проверьте файл, потом подтвердите импорт. При ошибке ни одна строка не сохранится; повторный импорт обновит те же карточки.': 'Validate first, then confirm import. Any error cancels the entire file; re-import updates existing cards.',
+});
+
+Object.assign(TEXT, {
   '24 сентября 2026 года':'September 24, 2026', 'Редакция от':'Updated',
   'Политика конфиденциальности — 30–0':'Privacy policy — 30–0',
   'Условия использования — 30–0':'Terms of use — 30–0',
