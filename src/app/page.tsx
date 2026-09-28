@@ -402,10 +402,6 @@ function HomePage() {
         </h2>
 
         <div className="space-y-3">
-          <a href="/multiplayer" className="flex items-center gap-4 w-full rounded-2xl p-5 sm:p-6 text-left bg-[#141414] border border-[#1E1E1E] hover:border-[#00C896]/40 transition-colors">
-            <span className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl bg-[#00C896]/10">👥</span>
-            <span><strong className="block text-lg sm:text-xl text-white">Мультиплеер</strong><span className="text-sm text-[#9CA3AF]">Играй с друзьями: живой драфт и лиги</span></span>
-          </a>
           {/* Active modes */}
           {GAME_MODES.filter(m => m.active).map((mode, i) => (
             <motion.button
