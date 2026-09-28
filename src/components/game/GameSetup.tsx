@@ -36,23 +36,6 @@ interface ClubData {
   playerCount: number;
 }
 
-/* ─── Game Mode Config ─── */
-const GAME_MODE_CONFIG: Partial<Record<
-  GameModeType,
-  { label: string; description: string; icon: string }
->> = {
-  classic: {
-    label: 'Обычный драфт',
-    description: 'Крутите колесо — случайный клуб и сезон РПЛ',
-    icon: '⚔️',
-  },
-  single_club: {
-    label: 'Один клуб',
-    description: 'Выберите клуб РПЛ — все спины будут только из его истории',
-    icon: '🏟️',
-  },
-};
-
 /* ─── Pitch dot layout for formation preview ─── */
 const PITCH_LAYOUTS: Record<string, { row: number; col: number }[]> = {
   '4-3-3': [
@@ -412,19 +395,6 @@ export default function GameSetup() {
     setConfig({ formation: formationId });
   };
 
-  const handleGameModeSelect = (mode: GameModeType) => {
-    selectionChanged();
-    if (mode === 'classic') {
-      setConfig({ gameMode: 'classic', clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
-    } else if (mode === 'single_club') {
-      setConfig({ gameMode: 'single_club', nationalityFilter: undefined });
-    } else if (mode === 'nations_cup') {
-      setConfig({ gameMode: 'nations_cup', clubFilter: undefined });
-    } else {
-      setConfig({ gameMode: mode });
-    }
-  };
-
   const selectedFormation = FORMATIONS.find((f) => f.id === config.formation);
 
   // Derive effective showRatings: if explicitly set use that, otherwise follow difficulty
@@ -441,10 +411,10 @@ export default function GameSetup() {
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl sm:text-3xl font-black text-white inline-block">
-          {dailyChallenge ? 'Ежедневный челлендж' : 'Настройка игры'}
+          {dailyChallenge ? 'Ежедневный челлендж' : currentGameMode === 'single_club' ? (selectedClub ? 'Настройка · Один клуб' : 'Один клуб') : 'Обычный драфт'}
         </h2>
         <p className="text-sm text-[#9CA3AF] mt-1">
-          {dailyChallenge ? dailyChallenge.title : 'Выберите параметры драфта'}
+          {dailyChallenge ? dailyChallenge.title : currentGameMode === 'single_club' && !selectedClub ? 'Сначала выберите клуб' : 'Выберите параметры драфта'}
         </p>
       </div>
 
@@ -492,58 +462,6 @@ export default function GameSetup() {
         </motion.div>
       )}
 
-      {/* ─── GAME MODE ─── */}
-      {!dailyChallenge && (
-        <div
-          className="rounded-2xl p-4"
-          style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
-        >
-          <SectionHeader>Режим игры</SectionHeader>
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.entries(GAME_MODE_CONFIG) as [GameModeType, { label: string; description: string; icon: string }][]).map(
-              ([key, val]) => {
-                const isSelected = currentGameMode === key;
-                const isComingSoon = false;
-                return (
-                  <motion.button
-                    type="button"
-                    key={key}
-                    disabled={isComingSoon}
-                    aria-pressed={isSelected && !isComingSoon}
-                    whileTap={!isComingSoon ? { scale: 0.97 } : undefined}
-                    className="rounded-xl p-3 text-center transition-all duration-200 border-2 relative overflow-hidden disabled:cursor-not-allowed"
-                    style={{
-                      backgroundColor: isSelected && !isComingSoon ? accentMix(10) : 'transparent',
-                      borderColor: isSelected && !isComingSoon ? ACCENT : '#2a2a2a',
-                      boxShadow: isSelected && !isComingSoon ? '0 0 12px var(--club-glow)' : 'none',
-                      opacity: isComingSoon ? 0.5 : 1,
-                      cursor: isComingSoon ? 'not-allowed' : 'pointer',
-                    }}
-                    onClick={() => !isComingSoon && handleGameModeSelect(key)}
-                  >
-                    {isComingSoon && (
-                      <span className="absolute top-1.5 right-1.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-[#00C896]/15 text-[#00C896] border border-[#00C896]/20 z-10">
-                        СКОРО
-                      </span>
-                    )}
-                    <div className={`text-xl mb-1 ${isComingSoon ? 'grayscale' : ''}`}>{val.icon}</div>
-                    <div
-                      className="text-sm font-bold"
-                      style={{ color: isSelected && !isComingSoon ? ACCENT : '#FFFFFF' }}
-                    >
-                      {val.label}
-                    </div>
-                    <div className={`text-[10px] mt-1 leading-tight ${isComingSoon ? 'text-[#9CA3AF]/40' : 'text-[#9CA3AF]'}`}>
-                      {val.description}
-                    </div>
-                  </motion.button>
-                );
-              }
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ─── CLUB SELECTION (only for single_club mode) ─── */}
       <AnimatePresence>
         {currentGameMode === 'single_club' && (
@@ -558,8 +476,18 @@ export default function GameSetup() {
               className="rounded-2xl p-4"
               style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
             >
-              <SectionHeader>Один клуб</SectionHeader>
-              <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы минимум с 5 сезонами в РПЛ за 2010–2018 годы и достаточным составом для драфта.</p>
+              {!selectedClub && (
+                <div className="mb-5 space-y-3 rounded-xl border border-[#00C896]/25 bg-[#00C896]/[0.06] p-4 text-sm leading-relaxed text-[#cbd5e1]">
+                  <h3 className="font-black uppercase tracking-widest text-[#00C896]">Как это работает</h3>
+                  <p>Выберите клуб и соберите 11 игроков, выступавших за него в доступных сезонах РПЛ (2010–2018). Каждому игроку соответствует рейтинг сезона его выступления: режим Prime здесь недоступен. Затем сыграйте сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
+                  <h3 className="font-black uppercase tracking-widest text-[#00C896]">Трофеи</h3>
+                  <p>Охотьтесь за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.</p>
+                  <h3 className="font-black uppercase tracking-widest text-[#00C896]">Полезно знать</h3>
+                  <p>Все прокрутки берутся из выбранного клуба. Режим рассчитан на одиночную игру.</p>
+                </div>
+              )}
+              <SectionHeader>{selectedClub ? 'Выбранный клуб' : 'Выберите клуб'}</SectionHeader>
+              {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы с достаточным составом в базе сезонов 2010–2018.</p>}
 
               {/* Selected club indicator */}
               {selectedClub && (
@@ -584,11 +512,12 @@ export default function GameSetup() {
                       {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2010–2018)
                     </div>
                   </div>
+                  <button type="button" onClick={() => setConfig({ clubFilter: undefined, clubName: undefined })} className="ml-auto shrink-0 rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896]">Сменить клуб</button>
                 </motion.div>
               )}
 
               {/* Club grid */}
-              {clubsLoading ? (
+              {selectedClub ? null : clubsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-[#2a2a2a] border-t-[#00C896] rounded-full animate-spin" />
                   <span className="ml-2 text-sm text-[#9CA3AF]">Загрузка клубов...</span>
@@ -614,11 +543,7 @@ export default function GameSetup() {
                         isSelected={config.clubFilter === club.id}
                         onClick={() => {
                           selectionChanged();
-                          if (config.clubFilter === club.id) {
-                            setConfig({ clubFilter: undefined, clubName: undefined });
-                          } else {
-                            setConfig({ clubFilter: club.id, clubName: club.nameRu });
-                          }
+                          setConfig({ clubFilter: club.id, clubName: club.nameRu, ratingMode: 'season' });
                         }}
                       />
                     ))}
@@ -630,6 +555,7 @@ export default function GameSetup() {
         )}
       </AnimatePresence>
 
+      {(currentGameMode !== 'single_club' || !!selectedClub) && (<>
       {/* ─── NATIONALITY INDICATOR (for nations_cup mode) ─── */}
       <AnimatePresence>
         {currentGameMode === 'nations_cup' && config.nationalityFilter && (
@@ -890,7 +816,7 @@ export default function GameSetup() {
       </div>
 
       {/* ─── PLAYER RATINGS ─── */}
-      <div
+      {currentGameMode !== 'single_club' && <div
         className="rounded-2xl p-4"
         style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
       >
@@ -925,7 +851,7 @@ export default function GameSetup() {
             </button>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* ─── ERA ─── */}
       <div
@@ -1089,6 +1015,7 @@ export default function GameSetup() {
           ? `Начать драфт · ${selectedClub?.nameRu ?? 'Один клуб'} →`
           : 'Начать драфт →'}
         </Button>
+      </>)}
     </div>
   );
 }

@@ -1,4 +1,6 @@
-/** Russian source text → English UI copy. Source names of people/clubs remain intact. */
+import { MANAGERS } from './managers';
+
+/** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
   'Домой':'Home', 'Мой профиль':'My profile', 'Главная':'Home', 'Играть':'Play',
   '© 2026 30-0. Все права защищены.':'© 2026 30–0. All rights reserved.',
@@ -21,6 +23,17 @@ const TEXT: Record<string, string> = {
   'Сыграй сезон':'Play a season', 'Симулируй 30 матчей — сможешь ли добиться 30-0?':'Simulate 30 matches. Can you go 30–0?',
   'Обычный драфт':'Classic draft', 'Собери величайшую сборную РПЛ всех времён':'Build the ultimate all-time RPL team',
   'Один клуб':'One club', 'Собери состав из игроков одного клуба РПЛ':'Build a team from one RPL club',
+  'Настройка · Один клуб':'Setup · One club', 'Сначала выберите клуб':'Choose a club first',
+  'Выбранный клуб':'Selected club', 'Сменить клуб':'Change club',
+  'Клубы с достаточным составом в базе сезонов 2010–2018.':'Clubs with enough players in the 2010–2018 season database.',
+  'Как это работает':'How it works', 'Трофеи':'Trophies', 'Полезно знать':'Good to know',
+  'Выберите клуб и соберите 11 игроков, выступавших за него в доступных сезонах РПЛ (2010–2018). Каждому игроку соответствует рейтинг сезона его выступления: режим Prime здесь недоступен. Затем сыграйте сезон из 30 матчей. Цель — 30 побед и ни одного поражения.':'Choose a club and draft 11 players from its available RPL seasons (2010–2018). Each player uses their rating from that club season; Prime is unavailable. Play a 30-match season and chase 30 wins without a loss.',
+  'Охотьтесь за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.':'Chase 30–0, an unbeaten season and other result trophies. Your runs and awards are saved to your profile.',
+  'Все прокрутки берутся из выбранного клуба. Режим рассчитан на одиночную игру.':'Every spin uses your chosen club. This is a single-player mode.',
+  '🎰 Крутить':'🎰 Spin',
+  'Сезон завершён':'Season complete', 'Ваш результат':'Your result',
+  'Победы':'Wins', 'Ничьи':'Draws', 'Поражения':'Losses', 'Очки':'Points',
+  'Забито':'Goals for', 'Пропущено':'Goals against',
   'Выиграйте все 30 матчей сезона':'Win all 30 matches in a season', 'Железная защита':'Iron defence',
   'Пропустите менее 15 голов за сезон':'Concede fewer than 15 goals in a season', 'Голая атака':'Goal machine',
   'Забейте 60+ голов за сезон':'Score 60+ goals in a season', 'Минималист':'Minimalist',
@@ -404,11 +417,13 @@ export function translateInterface(value: string): string {
   const core = value.trim();
   if (!/[А-Яа-яЁё]/.test(core)) return value;
   const normalized = core.replace(/\s+/g, ' ');
-  const exact = TEXT[core] || TEXT[normalized];
+  const exact = TEXT[core] || TEXT[normalized] || MANAGERS.find(manager => manager.name === normalized)?.nameEn;
   if (exact) return leading + exact + trailing;
   const patterns: Array<[RegExp, string]> = [
     [/^(\d+) поз\. осталось$/, '$1 positions left'],
     [/^(\d+) сезонов · (\d+) игроков$/, '$1 seasons · $2 players'],
+    [/^(\d+) сезонов РПЛ · (\d+) игроков в базе \(2010–2018\)$/, '$1 RPL seasons · $2 players in the 2010–2018 database'],
+    [/^⚽ Все матчи сезона · (\d+)$/, '⚽ All season matches · $1'],
     [/^Сезоны (\d+)–(\d+)$/, 'Seasons $1–$2'],
     [/^(\d+) мин назад$/, '$1 min ago'], [/^(\d+) ч назад$/, '$1 hr ago'], [/^(\d+) дн назад$/, '$1 days ago'],
     [/^(\d+) очков$/, '$1 points'],
@@ -443,11 +458,16 @@ export function translateInterface(value: string): string {
     [/^\+ (\d+) бонус тренера$/, '+ $1 manager bonus'],
   ];
   for (const [pattern, replacement] of patterns) {
-    if (pattern.test(normalized)) return leading + normalized.replace(pattern, replacement).replace(/\b(\d+)th\b/g, (_, value: string) => {
+    if (pattern.test(normalized)) return leading + localizeManagerNames(normalized.replace(pattern, replacement)).replace(/\b(\d+)th\b/g, (_, value: string) => {
       const n = Number(value);
       return `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : n % 10 === 1 ? 'st' : n % 10 === 2 ? 'nd' : n % 10 === 3 ? 'rd' : 'th'}`;
     }) + trailing;
   }
+  return localizeManagerNames(value);
+}
+
+function localizeManagerNames(value: string): string {
+  for (const manager of MANAGERS) value = value.replaceAll(manager.name, manager.nameEn);
   return value;
 }
 

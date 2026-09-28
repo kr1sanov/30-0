@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption } from '@/lib/types';
 import { useTelegram } from '@/hooks/use-telegram';
+import { playerDisplayName } from '@/lib/playerNames';
 
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
@@ -31,20 +32,6 @@ const CATEGORY_BG: Record<PositionCategory, string> = {
 
 function getCategory(pos: string): PositionCategory {
   return POSITION_CATEGORY[pos as Position] ?? 'mid';
-}
-
-/** Get player's last name from full name (Russian convention: Фамилия Имя) */
-function getLastName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/);
-  return parts[0];
-}
-
-function getFirstName(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return parts.slice(1).join(' ');
-  }
-  return '';
 }
 
 interface CompatibleSlot {
@@ -262,8 +249,8 @@ export default function PlayerList() {
                 {/* Name and positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm leading-tight truncate">
-                    <span className="font-bold text-[#FFFFFF]">{getLastName(player.fullName)}</span>{' '}
-                    <span className="font-normal text-[#9CA3AF]">{getFirstName(player.fullName)}</span>
+                    <span className="font-bold text-[#FFFFFF]">{playerDisplayName(player.fullName, player.lastName).surname}</span>{' '}
+                    <span className="font-normal text-[#9CA3AF]">{playerDisplayName(player.fullName, player.lastName).given}</span>
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">

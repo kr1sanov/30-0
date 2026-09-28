@@ -373,7 +373,7 @@ export default function SpinWheel() {
                     boxShadow: '0 4px 20px var(--club-glow)',
                   }}
                 >
-                  Крутить
+                  🎰 Крутить
                 </Button>
               </motion.div>
               <p className="text-[11px] text-[#64748b] text-center mt-2">
