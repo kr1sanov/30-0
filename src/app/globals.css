@@ -1366,13 +1366,9 @@ html {
 
 /* Immediate site-wide language and theme switch. */
 .language-switcher {
-  position: fixed;
-  top: calc(env(safe-area-inset-top) + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
   display: flex;
   gap: 2px;
+  margin: 0 auto 12px;
   padding: 3px;
   border: 1px solid rgba(255,255,255,.16);
   border-radius: 999px;

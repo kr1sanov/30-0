@@ -13,6 +13,7 @@ import SquadStats from '@/components/game/SquadStats';
 import SimulationResult from '@/components/game/SimulationResult';
 import SeasonAwards from '@/components/game/SeasonAwards';
 import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
+import ManagerChoice from '@/components/game/ManagerChoice';
 import DailyChallengeScreen from '@/components/game/DailyChallengeScreen';
 import NationsCupScreen from '@/components/game/NationsCupScreen';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ import { Metrics } from '@/lib/metrics';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import TelegramLogin from '@/components/game/TelegramLogin';
 import { clubThemeStyle } from '@/lib/clubThemes';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -305,6 +307,7 @@ function HomePage() {
         className="flex flex-col items-center justify-center text-center px-4 pt-8 sm:pt-16 pb-8"
       >
         {/* Badge */}
+        <LanguageSwitcher />
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -966,13 +969,24 @@ function SquadCompleteScreen() {
               : 'Тренер отключён в настройках игры.'}
           </div>
         </div>
-        <Button
-          onClick={() => setScreen('pre-match')}
-          className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
-          style={{ backgroundColor: '#00C896' }}
-        >
-          Перейти к сезону →
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {config.enableManagers && (
+            <Button
+              variant="outline"
+              onClick={() => setScreen('manager-choice')}
+              className="h-11 rounded-xl border-[#00C896]/50 text-[#00C896] hover:bg-[#00C896]/10"
+            >
+              Крутить тренера
+            </Button>
+          )}
+          <Button
+            onClick={() => setScreen('pre-match')}
+            className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
+            style={{ backgroundColor: '#00C896' }}
+          >
+            Перейти к сезону →
+          </Button>
+        </div>
       </div>
       <SquadStats />
     </div>
@@ -1237,6 +1251,8 @@ export default function Home() {
         return <SquadCompleteScreen />;
       case 'pre-match':
         return <PreMatchAnalysis />;
+      case 'manager-choice':
+        return <ManagerChoice />;
       case 'simulation':
         return <SimulationScreen />;
       case 'result':

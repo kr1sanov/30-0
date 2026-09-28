@@ -1,101 +1,124 @@
-// Russian football managers/coaches for the manager spin feature
+/** First-team coaches with a tenure intersecting 2010–2018. */
 export interface Manager {
   id: string;
   name: string;
-  rating: number; // 1-10 scale
+  rating: number; // Game balance (1–10), not a sourced historical statistic.
   nationality: string;
-  era: string; // when they were active
+  era: string;
   specialAbility?: string;
 }
 
-// Rating guidelines:
-// 9-10: Champions League/Europa League winners, multiple RPL titles, legendary status
-// 7-8: RPL title winners, consistent top-4 finishers, cup winners
-// 5-6: Mid-table managers, solid professionals
-// 3-4: Lower-table managers, limited success
+function coach(id: string, name: string, rating: number, nationality = 'Россия'): Manager {
+  return { id, name, rating, nationality, era: '2010–2018' };
+}
 
 export const MANAGERS: Manager[] = [
-  // === LEGENDS (9-10) ===
-  { id: 'gazzaev', name: 'Валерий Газзаев', rating: 9, nationality: 'Россия', era: '2000s', specialAbility: 'Атакующий стиль' },
-  { id: 'romantsev', name: 'Олег Романцев', rating: 9, nationality: 'Россия', era: '2000s', specialAbility: 'Мотивация' },
-  { id: 'syomin', name: 'Юрий Сёмин', rating: 9, nationality: 'Россия', era: '2000-2010s', specialAbility: 'Кубковый гений' },
-  { id: 'berdyev', name: 'Курбан Бердыев', rating: 9, nationality: 'Туркменистан', era: '2000-2010s', specialAbility: 'Дисциплина' },
-  { id: 'spalletti', name: 'Лучано Спаллетти', rating: 9, nationality: 'Италия', era: '2010s', specialAbility: 'Атака' },
-  { id: 'luchesku', name: 'Мирча Луческу', rating: 9, nationality: 'Румыния', era: '2010s', specialAbility: 'Опыт' },
-  { id: 'semak', name: 'Сергей Семак', rating: 9, nationality: 'Россия', era: '2010-2020s', specialAbility: 'Сбалансированность' },
-  { id: 'hiddink', name: 'Гус Хиддинк', rating: 9, nationality: 'Нидерланды', era: '2010s', specialAbility: 'Тактик' },
-  { id: 'advocaat', name: 'Дик Адвокат', rating: 9, nationality: 'Нидерланды', era: '2000s', specialAbility: 'Мотивация' },
-
-  // === ELITE (7-8) ===
-  { id: 'slutsky', name: 'Леонид Слуцкий', rating: 8, nationality: 'Россия', era: '2010s', specialAbility: 'Тактик' },
-  { id: 'carrera', name: 'Массимо Каррера', rating: 8, nationality: 'Италия', era: '2010s', specialAbility: 'Оборона' },
-  { id: 'capello', name: 'Фабио Капелло', rating: 8, nationality: 'Италия', era: '2010s', specialAbility: 'Оборона' },
-  { id: 'mancini', name: 'Роберто Манчини', rating: 8, nationality: 'Италия', era: '2010s', specialAbility: 'Стратег' },
-  { id: 'karpin', name: 'Валерий Карпин', rating: 7, nationality: 'Россия', era: '2010-2020s', specialAbility: 'Боевой характер' },
-  { id: 'chertchesov', name: 'Станислав Черчесов', rating: 7, nationality: 'Россия', era: '2000-2010s', specialAbility: 'Дисциплина' },
-  { id: 'goncharenko', name: 'Виктор Гончаренко', rating: 7, nationality: 'Беларусь', era: '2010-2020s', specialAbility: 'Аналитик' },
-  { id: 'musayev', name: 'Мурад Муссаев', rating: 7, nationality: 'Россия', era: '2020s', specialAbility: 'Молодёжь' },
-  { id: 'fedotov', name: 'Владимир Федотов', rating: 7, nationality: 'Россия', era: '2020s', specialAbility: 'Стабильность' },
-  { id: 'nikolic', name: 'Марко Николич', rating: 7, nationality: 'Сербия', era: '2020s', specialAbility: 'Организация' },
-  { id: 'petresku', name: 'Дан Петреску', rating: 7, nationality: 'Румыния', era: '2010s', specialAbility: 'Боевой характер' },
-  { id: 'byshovets', name: 'Анатолий Бышовец', rating: 7, nationality: 'Россия', era: '2000s' },
-  { id: 'vilas-boas', name: 'Андре Виллаш-Боаш', rating: 7, nationality: 'Португалия', era: '2010s', specialAbility: 'Атака' },
-  { id: 'tedesco', name: 'Доменико Тедеско', rating: 7, nationality: 'Германия', era: '2020s', specialAbility: 'Прессинг' },
-  { id: 'bilyaletdinov', name: 'Ринат Билялетдинов', rating: 7, nationality: 'Россия', era: '2010s', specialAbility: 'Оборона' },
-  { id: 'stankovic', name: 'Деян Станкович', rating: 7, nationality: 'Сербия', era: '2020s', specialAbility: 'Воля к победе' },
-  { id: 'evseev', name: 'Вадим Евсеев', rating: 6, nationality: 'Россия', era: '2020s', specialAbility: 'Боевой характер' },
-  { id: 'blagojevic', name: 'Срджан Благоевич', rating: 6, nationality: 'Сербия', era: '2020s', specialAbility: 'Организация' },
-  { id: 'juan-diaz', name: 'Хуан Диас Кинта', rating: 6, nationality: 'Испания', era: '2020s', specialAbility: 'Тактика' },
-
-  // === SOLID (5-6) ===
-  { id: 'kobolev', name: 'Андрей Кобелев', rating: 6, nationality: 'Россия', era: '2000-2010s' },
-  { id: 'shalimov', name: 'Игорь Шалимов', rating: 6, nationality: 'Россия', era: '2010-2020s' },
-  { id: 'osinkin', name: 'Игорь Осинькин', rating: 6, nationality: 'Россия', era: '2020s' },
-  { id: 'bojovic', name: 'Миодраг Божович', rating: 6, nationality: 'Черногория', era: '2010-2020s' },
-  { id: 'kononov', name: 'Олег Кононов', rating: 6, nationality: 'Беларусь', era: '2010s' },
-  { id: 'rahimov', name: 'Рашид Рахимов', rating: 6, nationality: 'Россия', era: '2000-2020s' },
-  { id: 'yartsev', name: 'Александр Ярцев', rating: 6, nationality: 'Россия', era: '2000s' },
-  { id: 'gadzhiev', name: 'Гаджи Гаджиев', rating: 6, nationality: 'Россия', era: '2000-2010s' },
-  { id: 'kuchuk', name: 'Леонид Кучук', rating: 6, nationality: 'Украина', era: '2010s' },
-  { id: 'berezutski', name: 'Алексей Березуцкий', rating: 5, nationality: 'Россия', era: '2020s' },
-  { id: 'abascal', name: 'Гильермо Абаскаль', rating: 5, nationality: 'Испания', era: '2020s' },
-  { id: 'vitoria', name: 'Руй Витория', rating: 6, nationality: 'Португалия', era: '2020s' },
-  { id: 'liczka', name: 'Марцель Личка', rating: 6, nationality: 'Чехия', era: '2020s' },
-  { id: 'khokhlov', name: 'Дмитрий Хохлов', rating: 5, nationality: 'Россия', era: '2010s' },
-  { id: 'muslin', name: 'Славолюб Муслин', rating: 6, nationality: 'Сербия', era: '2010s' },
-  { id: 'cherevchenko', name: 'Игорь Черевченко', rating: 5, nationality: 'Россия', era: '2010s' },
-  { id: 'ivich', name: 'Владимир Ивич', rating: 6, nationality: 'Сербия', era: '2020s' },
-  { id: 'talalaev', name: 'Андрей Талалаев', rating: 5, nationality: 'Россия', era: '2020s' },
-  { id: 'farke', name: 'Даниэль Фарке', rating: 5, nationality: 'Германия', era: '2020s' },
-  { id: 'schwarts', name: 'Сандор Шварц', rating: 5, nationality: 'Венгрия', era: '2020s' },
-  { id: 'jokanovic', name: 'Славиша Йоканович', rating: 5, nationality: 'Сербия', era: '2020s' },
-  { id: 'galitsky', name: 'Михаил Галкин', rating: 5, nationality: 'Россия', era: '2020s' },
-  { id: 'starkov', name: 'Александр Старков', rating: 5, nationality: 'Россия', era: '2000s' },
-  { id: 'laudrup', name: 'Микаэль Лаудруп', rating: 5, nationality: 'Дания', era: '2000s' },
-  { id: 'prokopenko', name: 'Виктор Прокопенко', rating: 5, nationality: 'Украина', era: '2000s' },
-  { id: 'zico', name: 'Зико', rating: 5, nationality: 'Бразилия', era: '2000s' },
-  { id: 'kalechnik', name: 'Виктор Кале', rating: 5, nationality: 'Россия', era: '2000s' },
-  { id: 'vercauteren', name: 'Франк Веркаутерен', rating: 5, nationality: 'Бельгия', era: '2010s' },
-  { id: 'rober', name: 'Юрген Рёбер', rating: 5, nationality: 'Германия', era: '2000s' },
-  { id: 'scala', name: 'Невио Скала', rating: 5, nationality: 'Италия', era: '2000s' },
-
-  // === LOWER TABLE (3-4) ===
-  { id: 'tarkhanov', name: 'Александр Тарханов', rating: 4, nationality: 'Россия', era: '2000s' },
-  { id: 'ivanov', name: 'Александр Иванов', rating: 4, nationality: 'Россия', era: '2000s' },
-  { id: 'pobegalov', name: 'Александр Побегалов', rating: 4, nationality: 'Россия', era: '2000-2010s' },
-  { id: 'grigoryan', name: 'Александр Григорян', rating: 4, nationality: 'Россия', era: '2010-2020s' },
-  { id: 'evdokimov', name: 'Роберт Евдокимов', rating: 4, nationality: 'Россия', era: '2010-2020s' },
-  { id: 'pavlov', name: 'Сергей Павлов', rating: 4, nationality: 'Россия', era: '2000s' },
-  { id: 'baydachny', name: 'Анатолий Байдачный', rating: 4, nationality: 'Россия', era: '2000s' },
-  { id: 'gromov', name: 'Вячеслав Грозный', rating: 4, nationality: 'Россия', era: '2000-2010s' },
-  { id: 'shevchuk', name: 'Владимир Шевчук', rating: 3, nationality: 'Россия', era: '2000s' },
-  { id: 'astyashev', name: 'Михаил Асташёв', rating: 3, nationality: 'Россия', era: '2000-2010s' },
+  coach('syomin', 'Юрий Сёмин', 9),
+  coach('berdyev', 'Курбан Бердыев', 9, 'Туркменистан'),
+  coach('spalletti', 'Лучано Спаллетти', 9, 'Италия'),
+  coach('lucescu', 'Мирча Луческу', 9, 'Румыния'),
+  coach('semak', 'Сергей Семак', 9),
+  coach('hiddink', 'Гус Хиддинк', 9, 'Нидерланды'),
+  coach('slutsky', 'Леонид Слуцкий', 8),
+  coach('carrera', 'Массимо Каррера', 8, 'Италия'),
+  coach('mancini', 'Роберто Манчини', 8, 'Италия'),
+  coach('karpin', 'Валерий Карпин', 7),
+  coach('chertchesov', 'Станислав Черчесов', 7),
+  coach('goncharenko', 'Виктор Гончаренко', 7, 'Беларусь'),
+  coach('petresku', 'Дан Петреску', 7, 'Румыния'),
+  coach('vilas-boas', 'Андре Виллаш-Боаш', 7, 'Португалия'),
+  coach('bilyaletdinov', 'Ринат Билялетдинов', 7),
+  coach('kobolev', 'Андрей Кобелев', 6),
+  coach('shalimov', 'Игорь Шалимов', 6),
+  coach('osinkin', 'Игорь Осинькин', 6),
+  coach('bojovic', 'Миодраг Божович', 6, 'Черногория'),
+  coach('kononov', 'Олег Кононов', 6, 'Беларусь'),
+  coach('rahimov', 'Рашид Рахимов', 6, 'Таджикистан'),
+  coach('gadzhiev', 'Гаджи Гаджиев', 6),
+  coach('kuchuk', 'Леонид Кучук', 6, 'Беларусь'),
+  coach('khokhlov', 'Дмитрий Хохлов', 5),
+  coach('muslin', 'Славолюб Муслин', 6, 'Сербия'),
+  coach('cherevchenko', 'Игорь Черевченко', 5, 'Таджикистан'),
+  coach('tarkhanov', 'Александр Тарханов', 5),
+  coach('grigoryan', 'Александр Григорян', 4),
+  coach('vercauteren', 'Франк Веркаутерен', 5, 'Бельгия'),
+  coach('evseev', 'Вадим Евсеев', 5),
+  coach('musayev', 'Мурад Мусаев', 6),
+  coach('krasnozhan', 'Юрий Красножан', 6),
+  coach('maminov', 'Владимир Маминов', 5, 'Узбекистан'),
+  coach('couceiro', 'Жозе Коусейру', 6, 'Португалия'),
+  coach('bilic', 'Славен Билич', 6, 'Хорватия'),
+  coach('pashinin', 'Олег Пашинин', 5, 'Узбекистан'),
+  coach('vrba', 'Павел Врба', 6, 'Чехия'),
+  coach('skripchenko', 'Вадим Скрипченко', 5, 'Беларусь'),
+  coach('adiev', 'Магомед Адиев', 5),
+  coach('tikhonov', 'Андрей Тихонов', 5),
+  coach('riancho', 'Рауль Рианчо', 5, 'Испания'),
+  coach('alenichev', 'Дмитрий Аленичев', 5),
+  coach('yakin', 'Мурат Якин', 6, 'Швейцария'),
+  coach('gunko', 'Дмитрий Гунько', 4),
+  coach('emery', 'Унаи Эмери', 8, 'Испания'),
+  coach('tashuev', 'Сергей Ташуев', 5),
+  coach('munteanu', 'Доринел Мунтяну', 5, 'Румыния'),
+  coach('galaktionov', 'Михаил Галактионов', 5),
+  coach('ledyakhov', 'Игорь Ледяхов', 4),
+  coach('gullit', 'Рууд Гуллит', 6, 'Нидерланды'),
+  coach('baydachny', 'Анатолий Байдачный', 4),
+  coach('gracia', 'Хави Грасия', 6, 'Испания'),
+  coach('chaly', 'Валерий Чалый', 4),
+  coach('protasov', 'Олег Протасов', 5, 'Украина'),
+  coach('balakhnin', 'Сергей Балахнин', 4),
+  coach('gamula', 'Игорь Гамула', 4, 'Украина'),
+  coach('daniliants', 'Иван Данильянц', 5, 'Молдова'),
+  coach('nepomnyashchiy', 'Валерий Непомнящий', 6),
+  coach('perednya', 'Сергей Передня', 4),
+  coach('davydov', 'Анатолий Давыдов', 5),
+  coach('baskakov', 'Василий Баскаков', 4),
+  coach('petrakov', 'Валерий Петраков', 5),
+  coach('khuzin', 'Рустем Хузин', 4),
+  coach('parfenov', 'Дмитрий Парфёнов', 5),
+  coach('silkin', 'Сергей Силкин', 5),
+  coach('kalitvintsev', 'Юрий Калитвинцев', 5, 'Украина'),
 ];
 
-export function getRandomManager(): Manager {
-  return MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+/**
+ * FIFAIndex club source IDs in the 2010–2018 RPL registry.
+ * Tenures and per-club sources: docs/research/rpl-managers-2010-2018.md
+ */
+export const CLUB_MANAGER_IDS: Record<string, readonly string[]> = {
+  '100764': ['vercauteren', 'skripchenko', 'tikhonov', 'bojovic'],
+  '100765': ['syomin', 'krasnozhan', 'maminov', 'couceiro', 'bilic', 'kuchuk', 'bojovic', 'cherevchenko', 'pashinin'],
+  '100766': ['gadzhiev', 'hiddink', 'syomin', 'vrba', 'grigoryan', 'skripchenko', 'adiev'],
+  '100767': ['karpin', 'emery', 'gunko', 'yakin', 'alenichev', 'carrera', 'riancho', 'kononov'],
+  '100769': ['spalletti', 'semak', 'vilas-boas', 'lucescu', 'mancini'],
+  '110089': ['petresku', 'osinkin', 'tashuev', 'khokhlov', 'kuchuk', 'goncharenko', 'munteanu', 'krasnozhan'],
+  '110109': ['baydachny', 'gullit', 'chertchesov', 'krasnozhan', 'rahimov', 'kononov', 'galaktionov', 'ledyakhov'],
+  '110227': ['berdyev', 'maminov', 'bilyaletdinov', 'chaly', 'gracia'],
+  '110231': ['protasov', 'balakhnin', 'baydachny', 'bojovic', 'gamula', 'berdyev', 'daniliants', 'kuchuk', 'karpin'],
+  '110233': ['nepomnyashchiy', 'perednya', 'davydov', 'baskakov', 'petrakov'],
+  '110234': ['rahimov', 'bojovic', 'khuzin', 'chertchesov', 'muslin', 'gadzhiev', 'evseev'],
+  '111264': ['tarkhanov', 'goncharenko', 'skripchenko', 'parfenov'],
+  '112218': ['muslin', 'kononov', 'shalimov', 'musayev'],
+  '312': ['kobolev', 'bojovic', 'silkin', 'khokhlov', 'petresku', 'chertchesov', 'kalitvintsev'],
+  '315': ['slutsky', 'goncharenko'],
+};
+
+const managersById = new Map(MANAGERS.map(manager => [manager.id, manager]));
+
+export function getManagersForClub(clubId: string | undefined): Manager[] {
+  if (!clubId) return [];
+  const sourceId = clubId.replace(/^fifaindex-club-/, '');
+  return (CLUB_MANAGER_IDS[sourceId] ?? []).flatMap(id => {
+    const manager = managersById.get(id);
+    return manager ? [manager] : [];
+  });
+}
+
+export function getRandomManager(clubId?: string): Manager | undefined {
+  const pool = clubId ? getManagersForClub(clubId) : MANAGERS;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 export function getManagerById(id: string): Manager | undefined {
-  return MANAGERS.find((m) => m.id === id);
+  return managersById.get(id);
 }

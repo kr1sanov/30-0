@@ -4,7 +4,7 @@ import type { GameScreen, GameConfig, DraftSlot, SpinResult, PlayerOption, Leade
 import { FORMATIONS, POSITION_CATEGORY, canFillSlot, canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
 import { DIFFICULTY_CONFIG } from '@/lib/types';
-import { MANAGERS } from '@/lib/managers';
+import { getManagersForClub, getRandomManager } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
 import { useAuthStore } from './authStore';
 
@@ -375,7 +375,7 @@ export const useGameStore = create<GameState>()(
             justAssignedSlotIndex: null,
             seasonResult: null,
             currentManager: runConfig.enableManagers
-              ? MANAGERS[Math.floor(Math.random() * MANAGERS.length)]
+              ? getRandomManager(runConfig.gameMode === 'single_club' ? runConfig.clubFilter : undefined) ?? null
               : null,
             screen: 'draft',
             lastConfig: { ...runConfig },
@@ -899,7 +899,12 @@ export const useGameStore = create<GameState>()(
       spinManager: async (manager?: Manager) => {
         // Pick the manager immediately so the UI can render reel targets
         // while the spin animation plays out.
-        const m = manager ?? MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+        const { config } = get();
+        const clubPool = config.gameMode === 'single_club' ? getManagersForClub(config.clubFilter) : null;
+        const m = manager && (!clubPool || clubPool.some(coach => coach.id === manager.id))
+          ? manager
+          : getRandomManager(clubPool ? config.clubFilter : undefined);
+        if (!m) return;
         set({ isSpinningManager: true, currentManager: m });
         // Simulate spinning delay (reels animate during this window)
         await new Promise((resolve) => setTimeout(resolve, 1500));
