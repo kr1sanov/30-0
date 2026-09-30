@@ -61,8 +61,14 @@ try {
     const byCard = new Map(stored.map(p => [`${p.clubSeasonId}:${p.playerId}`, p]));
     const exact = stored.length === playerCards.length && playerCards.every(p => {
       const card = byCard.get(`rpl-${p.year}-club-${p.clubId}:fifaindex-player-${p.sourcePlayerId}`);
+      const originalOtherPositions = p.positions.slice(1).join(',');
+      const wingback = p.positions[0] === 'ПЗ' ? 'ПФЗ' : p.positions[0] === 'ЛЗ' ? 'ЛФЗ' : null;
+      // The production position backfill adds the matching wing-back role to
+      // fullbacks before each import preflight. Both states are source-equivalent.
+      const backfilledOtherPositions = wingback && !p.positions.slice(1).includes(wingback)
+        ? [...p.positions.slice(1), wingback].join(',') : originalOtherPositions;
       return card && card.rating === p.rating && card.primeRating === p.potential &&
-        card.mainPosition === p.positions[0] && (card.otherPositions || '') === p.positions.slice(1).join(',') &&
+        card.mainPosition === p.positions[0] && [originalOtherPositions, backfilledOtherPositions].includes(card.otherPositions || '') &&
         card.shirtNumber === p.number;
     });
     if (exact) { console.log('All three editions already installed; no changes.'); process.exit(0); }
