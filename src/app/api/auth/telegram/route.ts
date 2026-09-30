@@ -6,11 +6,13 @@ import { verifyLoginWidget, verifyMiniAppPublic } from '@/lib/telegramVerificati
 import { verifyTelegramIdToken } from '@/lib/telegramOidc';
 import { createSession, sessionUser, sameOrigin, SESSION_COOKIE, SESSION_SECONDS } from '@/lib/telegramSession';
 import { sendTelegramMessage, telegramChatId } from '@/lib/telegramBot';
+import { purgeExpiredProfiles } from '@/lib/profileDeletion';
 
 export const dynamic = 'force-dynamic';
 const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/' };
 
 export async function GET(request: Request) {
+  await purgeExpiredProfiles();
   const userId = sessionUser(request);
   const user = userId ? await db.user.findUnique({ where: { id: userId } }) : null;
   const siteReferral = new URL(request.url).searchParams.get('ref');
@@ -52,6 +54,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  await purgeExpiredProfiles();
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
   const limited = enforceRateLimit(request, 'telegram:login', { limit: 15, windowMs: 60_000 });
   if (limited) return limited;

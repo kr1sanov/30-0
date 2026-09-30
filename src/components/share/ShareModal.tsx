@@ -13,10 +13,11 @@ interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
   shareText: string;
+  runId?: string;
   cardContent: React.ReactNode;
 }
 
-export default function ShareModal({ isOpen, onClose, shareText, cardContent }: ShareModalProps) {
+export default function ShareModal({ isOpen, onClose, shareText, cardContent, runId }: ShareModalProps) {
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -47,39 +48,18 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     }
   }, []);
 
-  const handleShareNative = useCallback(async () => {
-    setIsSharing(true);
-
-    const blob = await captureCard();
-    if (blob && typeof navigator !== 'undefined' && navigator.share && navigator.canShare) {
-      const file = new File([blob], '30-0-rpl.png', { type: 'image/png' });
-      const shareData = { text: localizeShareText(shareText), files: [file] };
-      if (navigator.canShare(shareData)) {
-        try {
-          await navigator.share(shareData);
-          Metrics.shareResult('native');
-          setIsSharing(false);
-          onClose();
-          return;
-        } catch {
-          // Cancelled or failed
-        }
-      }
-    }
-
-    // Fallback: copy text to clipboard
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(localizeShareText(shareText));
-        Metrics.shareResult('clipboard');
-      } catch {
-        // Clipboard failed
-      }
-    }
-
-    setIsSharing(false);
-    onClose();
-  }, [captureCard, shareText, onClose]);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => setInviteUrl(data?.inviteUrl ?? null)).catch(() => setInviteUrl(null));
+  }, [isOpen]);
+  const ref = inviteUrl ? new URL(inviteUrl).searchParams.get('ref') : null;
+  const resultUrl = runId ? `${typeof window !== 'undefined' ? window.location.origin : 'https://30-0.рф'}/share/${runId}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}` : (inviteUrl || 'https://30-0.рф');
+  const fullText = `${localizeShareText(shareText).replace(/🎮 Играть: https:\/\/30-0\.рф/g, '').trim()}\n\n${resultUrl}\n🎮 https://t.me/RPL30_bot?startapp`;
+  const handleCopyText = useCallback(async () => {
+    try { await navigator.clipboard.writeText(fullText); Metrics.shareResult('clipboard'); toast.success('Текст скопирован'); }
+    catch { toast.error('Не удалось скопировать текст'); }
+  }, [fullText]);
 
   const handleSaveImage = useCallback(async () => {
     const blob = await captureCard();
@@ -94,18 +74,28 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
     URL.revokeObjectURL(url);
   }, [captureCard]);
 
-  const handleTelegramShare = useCallback(() => {
-    const url = `https://t.me/share/url?url=${encodeURIComponent('https://30-0.рф')}&text=${encodeURIComponent(localizeShareText(shareText))}`;
+  const handleTelegramShare = useCallback(async () => {
     const telegram = (window as Window & {
-      Telegram?: { WebApp?: { openTelegramLink?: (link: string) => void } };
+      Telegram?: { WebApp?: { shareMessage?: (id: string) => void; openTelegramLink?: (link: string) => void } };
     }).Telegram;
-    if (telegram?.WebApp?.openTelegramLink) {
-      telegram.WebApp.openTelegramLink(url);
-    } else {
-      window.location.assign(url);
+    if (runId && telegram?.WebApp?.shareMessage) {
+      setIsSharing(true);
+      try {
+        const response = await fetch('/api/share/telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId }) });
+        if (response.ok) {
+          const { messageId } = await response.json();
+          telegram.WebApp.shareMessage(messageId);
+          Metrics.shareResult('telegram');
+          return;
+        }
+      } catch { /* fall through to link sharing */ }
+      finally { setIsSharing(false); }
     }
+    const url = `https://t.me/share/url?url=${encodeURIComponent(resultUrl)}&text=${encodeURIComponent(fullText)}`;
+    if (telegram?.WebApp?.openTelegramLink) telegram.WebApp.openTelegramLink(url);
+    else window.location.assign(url);
     Metrics.shareResult('telegram');
-  }, [shareText]);
+  }, [runId, resultUrl, fullText]);
 
   const handleCopyImage = useCallback(async () => {
     setIsSharing(true);
@@ -200,71 +190,12 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent }: 
                 {cardContent}
               </div>
 
-              {/* Action buttons */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                <button
-                  onClick={handleTelegramShare}
-                  style={{
-                    width: '100%', minWidth: 0, minHeight: 42, borderRadius: 10, padding: '8px 10px', boxSizing: 'border-box',
-                    background: '#229ED9', color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1.25,
-                    border: 'none', cursor: 'pointer',
-                  }}
-                >
-                  Поделиться в Telegram
-                </button>
-
-                <button
-                  onClick={handleCopyImage}
-                  disabled={isSharing}
-                  style={{
-                    width: '100%', minWidth: 0, minHeight: 42, borderRadius: 10, padding: '8px 10px', boxSizing: 'border-box',
-                    background: 'var(--club-primary)', color: 'var(--club-on-primary)',
-                    fontSize: 14, fontWeight: 700, lineHeight: 1.25, border: 'none', cursor: isSharing ? 'wait' : 'pointer',
-                  }}
-                >
-                  {isSharing ? 'Готовим изображение…' : 'Скопировать изображение'}
-                </button>
-
-                {/* Native share */}
-                <button
-                  onClick={handleShareNative}
-                  disabled={isSharing}
-                  style={{
-                    width: '100%', minWidth: 0, padding: '10px', borderRadius: 10, boxSizing: 'border-box',
-                    background: '#1E1E1E',
-                    color: '#fff',
-                    fontSize: 15, fontWeight: 700,
-                    border: 'none', cursor: isSharing ? 'wait' : 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    boxShadow: '0 4px 15px rgba(0, 200, 150, 0.3)',
-                  }}
-                >
-                  {isSharing ? 'Готовим…' : 'Поделиться через устройство'}
-                </button>
-
-                {/* Save image */}
-                <button
-                  onClick={handleSaveImage}
-                  style={{
-                    width: '100%', padding: '10px 0', borderRadius: 10,
-                    background: 'transparent', color: '#9CA3AF',
-                    fontSize: 13, border: '1px solid #2a2a2a', cursor: 'pointer',
-                  }}
-                >
-                  Сохранить PNG
-                </button>
-
-                {/* Close */}
-                <button
-                  onClick={onClose}
-                  style={{
-                    gridColumn: '1 / -1', width: '100%', minWidth: 0, padding: '8px 0', borderRadius: 10, boxSizing: 'border-box',
-                    background: 'transparent', color: '#4a5568',
-                    fontSize: 13, border: 'none', cursor: 'pointer',
-                  }}
-                >
-                  Отмена
-                </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
+                <button onClick={handleTelegramShare} disabled={isSharing} style={{ width: '100%', minHeight: 46, borderRadius: 10, background: '#229ED9', color: '#fff', border: 0, fontWeight: 700, cursor: 'pointer' }}>Поделиться в Telegram</button>
+                <button onClick={handleCopyText} style={{ width: '100%', minHeight: 46, borderRadius: 10, background: 'var(--club-primary)', color: 'var(--club-on-primary)', border: 0, fontWeight: 700, cursor: 'pointer' }}>Скопировать текст и ссылку</button>
+                <button onClick={handleCopyImage} disabled={isSharing} style={{ width: '100%', minHeight: 44, borderRadius: 10, background: '#1E1E1E', color: '#fff', border: 0, cursor: 'pointer' }}>{isSharing ? 'Готовим изображение…' : 'Скопировать изображение'}</button>
+                <button onClick={handleSaveImage} style={{ width: '100%', minHeight: 42, borderRadius: 10, background: 'transparent', color: '#9CA3AF', border: '1px solid #2a2a2a', cursor: 'pointer' }}>Сохранить PNG</button>
+                <button onClick={onClose} style={{ width: '100%', minHeight: 36, background: 'transparent', color: '#9CA3AF', border: 0, cursor: 'pointer' }}>Отмена</button>
               </div>
             </div>
           </motion.div>

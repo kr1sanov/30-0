@@ -1,6 +1,7 @@
 'use client';
 
 import { useGameStore } from '@/store/gameStore';
+import HistoryScreen from '@/components/game/HistoryScreen';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -55,6 +56,15 @@ export default function ProfileScreen() {
   const { profileStats, resetGame, setScreen, setAvatarEmoji } = useGameStore();
   const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
+  const [showTrophies, setShowTrophies] = useState(false);
+  const [deleteAfterAt, setDeleteAfterAt] = useState<string | null>(null);
+  const [clock, setClock] = useState(Date.now());
+  const [deletionBusy, setDeletionBusy] = useState(false);
+  useEffect(() => {
+    fetch('/api/users/deletion').then(r => r.ok ? r.json() : null).then(data => setDeleteAfterAt(data?.deleteAfterAt ?? null)).catch(() => undefined);
+    const timer = window.setInterval(() => setClock(Date.now()), 60000);
+    return () => clearInterval(timer);
+  }, []);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
@@ -218,8 +228,8 @@ export default function ProfileScreen() {
       <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">Пригласить игроков</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Приглашённые по ссылке появятся здесь.</p>
+            <h3 className="text-sm font-bold text-white">Приглашайте друзей</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделитесь ссылкой — здесь появятся ваши друзья.</p>
           </div>
           <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
             <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
@@ -249,10 +259,11 @@ export default function ProfileScreen() {
 
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
-        <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={() => setShowTrophies(open => !open)} aria-expanded={showTrophies} className="flex w-full items-center justify-between text-left">
           <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Витрина трофеев</h3>
-          <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length}</span>
-        </div>
+          <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length} {showTrophies ? '▲' : '▼'}</span>
+        </button>
+        {showTrophies && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {TROPHIES.map((trophy) => {
             const earned = hasTrophy(trophy.id);
@@ -284,6 +295,7 @@ export default function ProfileScreen() {
             );
           })}
         </div>
+        )}
       </div>
 
       {/* History */}
@@ -298,79 +310,31 @@ export default function ProfileScreen() {
               ▼
             </motion.span>
           </button>
-          {showHistory && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              className="px-3 pb-3 max-h-96 overflow-y-auto custom-scrollbar"
-            >
-              <div className="space-y-2">
-                {[...profileStats.history].reverse().map((h, i) => (
-                  <motion.div
-                    key={h.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => { localStorage.setItem('30-0-selected-run', h.id); setScreen('history'); }}
-                    onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { localStorage.setItem('30-0-selected-run', h.id); setScreen('history'); } }}
-                    className={`rounded-xl bg-[#0A0A0A]/30 p-3 border cursor-pointer hover:bg-[#1b1b1b] transition-colors ${
-                      h.position === 1
-                        ? 'history-border-gold border-[#141414]'
-                        : h.position === 2
-                        ? 'history-border-silver border-[#141414]'
-                        : h.position === 3
-                        ? 'history-border-bronze border-[#141414]'
-                        : 'history-border-gray border-[#141414]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#FFFFFF]">{h.formation}</span>
-                        <span
-                          className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                          style={{
-                            color: DIFFICULTY_COLORS[h.difficulty] || '#9CA3AF',
-                            backgroundColor: `${DIFFICULTY_COLORS[h.difficulty] || '#9CA3AF'}20`,
-                          }}
-                        >
-                          {DIFFICULTY_LABELS[h.difficulty] || h.difficulty}
-                        </span>
-                      </div>
-                      <span className={`text-xs font-bold ${
-                        h.position === 1 ? 'text-[#00C896]' :
-                        h.position <= 3 ? 'text-[#3b82f6]' : 'text-[#9CA3AF]'
-                      }`}>
-                        {h.position === 1 ? '🥇' : h.position === 2 ? '🥈' : h.position === 3 ? '🥉' : ''} {h.position} место
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00C896]/15 text-[#00C896] font-bold">{h.wins}В</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#f97316]/15 text-[#f97316] font-bold">{h.draws}Н</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#ef4444]/15 text-[#ef4444] font-bold">{h.losses}П</span>
-                      </div>
-                      <span className="text-sm font-black text-[#FFFFFF]">{h.points} очков</span>
-                    </div>
-                    {h.managerName && (
-                      <div className="text-[10px] text-[#9CA3AF]/60 mt-1">
-                        👨‍💼 {h.managerName}
-                      </div>
-                    )}
-                    {h.teamName && (
-                      <div className="text-[10px] text-[#9CA3AF]/60 mt-0.5">
-                        ⚽ {h.teamName}
-                      </div>
-                    )}
-                    <div className="mt-2 text-[10px] font-semibold text-[#00C896]">Открыть сезон и поделиться →</div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {showHistory && <div className="px-3 pb-3"><HistoryScreen embedded /></div>}
         </div>
       )}
+      <div className="border-t border-white/5 pt-5 text-center">
+        {deleteAfterAt ? (
+          <div className="space-y-2 text-xs text-[#9CA3AF]">
+            <p>Удаление профиля запланировано на {new Date(deleteAfterAt).toLocaleString('ru-RU')}.</p>
+            <p>Осталось {Math.max(0, Math.ceil((new Date(deleteAfterAt).getTime() - clock) / 86400000))} дн. До удаления прогресс сохраняется.</p>
+            <button disabled={deletionBusy} onClick={async () => {
+              setDeletionBusy(true);
+              try { const res = await fetch('/api/users/deletion', { method: 'DELETE' }); if (!res.ok) throw new Error(); setDeleteAfterAt(null); toast.success('Профиль восстановлен вместе с прогрессом'); }
+              catch { toast.error('Срок восстановления истёк или сервер недоступен'); }
+              finally { setDeletionBusy(false); }
+            }} className="rounded-lg border border-[#00C896]/40 px-4 py-2 text-[#00C896]">Восстановить профиль</button>
+          </div>
+        ) : (
+          <button disabled={deletionBusy} onClick={async () => {
+            if (!window.confirm('Запланировать удаление профиля через 7 дней? После этого история сезонов, составы и прогресс будут удалены. До окончания срока можно восстановить профиль без потери прогресса.')) return;
+            setDeletionBusy(true);
+            try { const res = await fetch('/api/users/deletion', { method: 'POST' }); if (!res.ok) throw new Error(); const data = await res.json(); setDeleteAfterAt(data.deleteAfterAt); toast.info('Удаление запланировано. Вы можете восстановить профиль в течение недели.'); }
+            catch { toast.error('Не удалось запланировать удаление'); }
+            finally { setDeletionBusy(false); }
+          }} className="text-xs text-[#64748b] underline underline-offset-4 hover:text-[#ef4444]">Удалить профиль</button>
+        )}
+      </div>
     </div>
   );
 }

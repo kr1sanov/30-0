@@ -499,62 +499,6 @@ export default function SimulationResult() {
               </div>)}
             </div>
 
-            {/* ── Trophy Cabinet ── */}
-            {earnedTrophies.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="rounded-2xl bg-[#0d1a0d] border border-[#1E1E1E]/60 p-4"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-[#FFFFFF]">🏅 Витрина трофеев</h3>
-                  <span className="text-xs text-[#9CA3AF]">{earnedTrophies.length}/{trophies.length}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {earnedTrophies.map((trophy, idx) => (
-                    <motion.div
-                      key={trophy.id}
-                      custom={idx}
-                      variants={trophyVariants}
-                      initial="hidden"
-                      animate={trophy.earned ? 'visible' : { opacity: 0.3, scale: 1, y: 0 }}
-                      transition={trophy.earned ? {
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 15,
-                        delay: 0.8 + idx * 0.12,
-                      } : { delay: 0.8 + idx * 0.05 }}
-                      className={`rounded-xl p-3 text-center border ${
-                        trophy.earned
-                          ? 'bg-gradient-to-b from-[#1a2e1a] to-[#0d1a0d] border-[#00C896]/30'
-                          : 'bg-[#0A0A0A]/50 border-[#1E1E1E]/30'
-                      }`}
-                    >
-                      <motion.div
-                        className={`text-2xl mb-1 ${trophy.earned ? '' : 'grayscale opacity-40'}`}
-                        animate={trophy.earned ? {
-                          y: [0, -4, 0],
-                          transition: {
-                            delay: 1.2 + idx * 0.12,
-                            duration: 0.5,
-                            repeat: 1,
-                          },
-                        } : {}}
-                      >
-                        {trophy.icon}
-                      </motion.div>
-                      <div className={`text-[10px] font-bold leading-tight ${
-                        trophy.earned ? 'text-[#00C896]' : 'text-[#4a4a4a]'
-                      }`}>
-                        {trophy.name}
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
             {/* ── Secondary Achievements ── */}
             {achievements.length > 0 && (
               <div className="grid grid-cols-2 gap-2">
@@ -572,22 +516,6 @@ export default function SimulationResult() {
                   </motion.div>
                 ))}
               </div>
-            )}
-
-            {matches.length > 0 && (
-              <details className="rounded-2xl border border-white/10 bg-[#141414] p-4">
-                <summary className="cursor-pointer text-sm font-bold text-white">⚽ Все матчи сезона · {matches.length}</summary>
-                <div className="mt-3 grid max-h-80 gap-2 overflow-y-auto sm:grid-cols-2">
-                  {matches.map(match => {
-                    const scored = match.isHome ? match.homeGoals : match.awayGoals;
-                    const conceded = match.isHome ? match.awayGoals : match.homeGoals;
-                    return <div key={match.matchday} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#0A0A0A] px-3 py-2 text-xs">
-                      <div className="min-w-0 truncate text-[#9CA3AF]">{match.matchday}. {match.opponent} ({match.isHome ? 'д' : 'в'})</div>
-                      <strong className={match.result === 'W' ? 'text-[#00C896]' : match.result === 'L' ? 'text-[#ef4444]' : 'text-white'}>{scored}–{conceded}</strong>
-                    </div>;
-                  })}
-                </div>
-              </details>
             )}
 
             {/* ── Final League Table ── */}
@@ -663,6 +591,22 @@ export default function SimulationResult() {
               </div>
             )}
 
+            {matches.length > 0 && (
+              <details className="rounded-2xl border border-white/10 bg-[#141414] p-4">
+                <summary className="cursor-pointer text-sm font-bold text-white">⚽ Все матчи сезона · {matches.length}</summary>
+                <div className="mt-3 grid max-h-80 gap-2 overflow-y-auto sm:grid-cols-2">
+                  {matches.map(match => {
+                    const scored = match.isHome ? match.homeGoals : match.awayGoals;
+                    const conceded = match.isHome ? match.awayGoals : match.homeGoals;
+                    return <div key={match.matchday} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#0A0A0A] px-3 py-2 text-xs">
+                      <div className="min-w-0 truncate text-[#9CA3AF]">{match.matchday}. {match.opponent} ({match.isHome ? 'д' : 'в'})</div>
+                      <strong className={match.result === 'W' ? 'text-[#00C896]' : match.result === 'L' ? 'text-[#ef4444]' : 'text-white'}>{scored}–{conceded}</strong>
+                    </div>;
+                  })}
+                </div>
+              </details>
+            )}
+
             {/* ── Action Buttons ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -719,6 +663,7 @@ export default function SimulationResult() {
       {/* Share Modal */}
       {isComplete && <AchievementUnlocked />}
       <ShareModal
+        runId={data?.runId}
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         shareText={shareText}

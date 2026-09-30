@@ -183,7 +183,7 @@ function getAvgRating(slots: GameSlotData[]): number {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function HistoryScreen() {
+export default function HistoryScreen({ embedded = false }: { embedded?: boolean }) {
   const { resetGame, setScreen } = useGameStore();
   const [runs, setRuns] = useState<GameRunData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -290,12 +290,12 @@ export default function HistoryScreen() {
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
-      <div className="text-center">
+      {!embedded && <div className="text-center">
         <h2 className="text-xl font-bold text-[#FFFFFF]">📜 История</h2>
         <p className="text-sm text-[#9CA3AF] mt-1">
           {runs.length > 0 ? `${runs.length} ${runs.length === 1 ? 'сезон' : runs.length < 5 ? 'сезона' : 'сезонов'}` : 'Прошедшие сезоны'}
         </p>
-      </div>
+      </div>}
 
       {/* Empty state */}
       {runs.length === 0 && (
@@ -362,13 +362,6 @@ export default function HistoryScreen() {
                   className="w-full text-left p-4 focus:outline-none"
                 >
                   <div className="flex items-center gap-3">
-                    {/* Formation badge */}
-                    <div className="w-10 h-10 rounded-xl bg-[#3b82f6]/10 flex items-center justify-center shrink-0">
-                      <span className="text-[10px] font-bold text-[#3b82f6] leading-tight text-center">
-                        {run.formation}
-                      </span>
-                    </div>
-
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -381,12 +374,7 @@ export default function HistoryScreen() {
                           {diffIcon}
                           {diffLabel}
                         </span>
-                        {/* Manager */}
-                        {run.managerName && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400 truncate max-w-[120px]">
-                            🧑‍💼 {run.managerName}
-                          </span>
-                        )}
+
                       </div>
                       {/* W/D/L */}
                       <div className="flex items-center gap-2 mt-1.5">
@@ -400,7 +388,7 @@ export default function HistoryScreen() {
                           П{run.losses ?? 0}
                         </span>
                         <span className="text-[10px] text-[#9CA3AF]/60">
-                          {run.goalsFor ?? 0}:{run.goalsAgainst ?? 0}
+                          {run.goalsFor ?? 0}:{run.goalsAgainst ?? 0} (Δ {(run.goalsFor ?? 0) - (run.goalsAgainst ?? 0)})
                         </span>
                       </div>
                       {/* Date */}
@@ -490,9 +478,9 @@ export default function HistoryScreen() {
 
                         <button
                           onClick={() => setShareRun(run)}
-                          className="w-full rounded-lg border border-[#00C896]/25 bg-[#00C896]/10 py-2 text-xs font-bold text-[#00C896]"
+                          className="mx-auto block rounded-lg border border-[#00C896]/25 bg-[#00C896]/10 px-6 py-2 text-xs font-bold text-[#00C896]"
                         >
-                          Поделиться сезоном — текст и карточка
+                          Поделиться
                         </button>
 
                         {/* Squad */}
@@ -545,7 +533,7 @@ export default function HistoryScreen() {
         </div>
       )}
 
-      {/* Play button */}
+      {!embedded && (
       <Button
         onClick={() => {
           resetGame();
@@ -556,9 +544,12 @@ export default function HistoryScreen() {
         ⚽ Сыграть сезон
       </Button>
 
+      )}
+
       {shareRun && (
         <ShareModal
           isOpen
+          runId={shareRun.id}
           onClose={() => setShareRun(null)}
           shareText={[
             '⚽ МОЙ СЕЗОН В 30–0',

@@ -6,9 +6,6 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import {
   POSITION_CATEGORY,
-  POSITION_COLOR,
-  getFormationById,
-  getPitchColumn,
 } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 
@@ -35,90 +32,6 @@ const CATEGORY_ICONS: Record<PositionCategory, string> = {
   def: '🛡️',
   mid: '⚡',
   att: '⚽',
-};
-
-// ---------------------------------------------------------------------------
-// Formation pitch layout for mini visualization
-// ---------------------------------------------------------------------------
-
-const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
-  '4-3-3': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 50, col: 25 }, { row: 50, col: 50 }, { row: 50, col: 75 },
-    { row: 25, col: 20 }, { row: 25, col: 50 }, { row: 25, col: 80 },
-  ],
-  '4-4-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 45, col: 20 }, { row: 45, col: 40 }, { row: 45, col: 60 }, { row: 45, col: 80 },
-    { row: 22, col: 35 }, { row: 22, col: 65 },
-  ],
-  '4-2-3-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 53, col: 35 }, { row: 53, col: 65 },
-    { row: 35, col: 20 }, { row: 35, col: 50 }, { row: 35, col: 80 },
-    { row: 18, col: 50 },
-  ],
-  '3-5-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 }, { row: 70, col: 50 }, { row: 70, col: 75 },
-    { row: 48, col: 10 }, { row: 48, col: 35 }, { row: 48, col: 50 }, { row: 48, col: 65 }, { row: 48, col: 90 },
-    { row: 22, col: 35 }, { row: 22, col: 65 },
-  ],
-  '3-4-3': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 }, { row: 70, col: 50 }, { row: 70, col: 75 },
-    { row: 45, col: 20 }, { row: 45, col: 40 }, { row: 45, col: 60 }, { row: 45, col: 80 },
-    { row: 22, col: 20 }, { row: 22, col: 50 }, { row: 22, col: 80 },
-  ],
-  '5-3-2': [
-    { row: 90, col: 50 },
-    { row: 68, col: 10 }, { row: 68, col: 30 }, { row: 68, col: 50 }, { row: 68, col: 70 }, { row: 68, col: 90 },
-    { row: 45, col: 25 }, { row: 45, col: 50 }, { row: 45, col: 75 },
-    { row: 22, col: 35 }, { row: 22, col: 65 },
-  ],
-  '5-4-1': [
-    { row: 90, col: 50 },
-    { row: 68, col: 10 }, { row: 68, col: 30 }, { row: 68, col: 50 }, { row: 68, col: 70 }, { row: 68, col: 90 },
-    { row: 42, col: 20 }, { row: 42, col: 40 }, { row: 42, col: 60 }, { row: 42, col: 80 },
-    { row: 20, col: 50 },
-  ],
-  '4-1-2-1-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 54, col: 50 },
-    { row: 40, col: 38 }, { row: 40, col: 62 }, { row: 27, col: 50 },
-    { row: 16, col: 35 }, { row: 16, col: 65 },
-  ],
-  '4-5-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 42, col: 15 }, { row: 42, col: 35 }, { row: 42, col: 50 }, { row: 42, col: 65 }, { row: 42, col: 85 },
-    { row: 18, col: 50 },
-  ],
-  '4-4-1-1': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 48, col: 20 }, { row: 48, col: 40 }, { row: 48, col: 60 }, { row: 48, col: 80 },
-    { row: 30, col: 50 },
-    { row: 16, col: 50 },
-  ],
-  '3-4-1-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 25 }, { row: 70, col: 50 }, { row: 70, col: 75 },
-    { row: 48, col: 20 }, { row: 48, col: 40 }, { row: 48, col: 60 }, { row: 48, col: 80 },
-    { row: 30, col: 50 },
-    { row: 16, col: 35 }, { row: 16, col: 65 },
-  ],
-  '4-2-2-2': [
-    { row: 90, col: 50 },
-    { row: 70, col: 20 }, { row: 70, col: 40 }, { row: 70, col: 60 }, { row: 70, col: 80 },
-    { row: 52, col: 35 }, { row: 52, col: 65 },
-    { row: 35, col: 35 }, { row: 35, col: 65 },
-    { row: 16, col: 35 }, { row: 16, col: 65 },
-  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -270,10 +183,6 @@ export default function PreMatchAnalysis() {
     att: useAnimatedValue(stats.categoryRatings.att.avg, 800, 700),
   };
 
-  // Formation layout
-  const formation = getFormationById(config.formation);
-  const layout = formation ? (FORMATION_LAYOUTS[formation.id] ?? FORMATION_LAYOUTS['4-3-3']) : FORMATION_LAYOUTS['4-3-3'];
-
   const handleSimulate = async () => {
     setIsSimulating(true);
     await simulate(currentManager);
@@ -298,78 +207,6 @@ export default function PreMatchAnalysis() {
         </motion.div>
         <h2 className="text-2xl font-black text-[#FFFFFF]">Разведка перед матчем</h2>
         <p className="text-sm text-[#9CA3AF] mt-1">Анализ состава перед сезоном</p>
-      </motion.div>
-
-      {/* Formation Visualization */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="rounded-2xl bg-[#141414] p-4 border border-[#141414]"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-[#FFFFFF]">Расстановка</h3>
-          <span className="text-xs font-bold px-2 py-1 rounded-md bg-[#00C896]/15 text-[#00C896]">
-            {config.formation}
-          </span>
-        </div>
-        <div className="relative w-full aspect-[3/4] max-w-[280px] mx-auto rounded-xl overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #0d3320 0%, #0a4a2a 40%, #0d3320 100%)',
-          }}
-        >
-          {/* Pitch lines */}
-          <div className="absolute inset-0 pointer-events-none">
-            {/* Center circle */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-white/10" />
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-white/10" />
-            {/* Center spot */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-white/20" />
-            {/* Penalty areas */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[12%] border-b border-x border-white/10" />
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-[12%] border-t border-x border-white/10" />
-          </div>
-
-          {/* Player dots */}
-          {slots.map((slot, idx) => {
-            const pos = layout[idx];
-            if (!pos) return null;
-            const cat = POSITION_CATEGORY[slot.position as Position] ?? 'mid';
-            const color = POSITION_COLOR[cat];
-            const hasPlayer = !!slot.playerId;
-
-            return (
-              <div
-                key={idx}
-                className="absolute flex flex-col items-center"
-                style={{
-                  top: `${pos.row}%`,
-                  left: `${getPitchColumn(pos.col)}%`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold border-2"
-                  style={{
-                    backgroundColor: hasPlayer ? `${color}30` : '#0A0A0A50',
-                    borderColor: hasPlayer ? color : '#ffffff20',
-                    color: hasPlayer ? '#fff' : '#ffffff40',
-                  }}
-                >
-                  {slot.positionLabel}
-                </div>
-                {hasPlayer && slot.playerRating && (
-                  <div
-                    className="text-[7px] font-bold mt-0.5"
-                    style={{ color }}
-                  >
-                    {isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
       </motion.div>
 
       {/* Squad Rating & Chemistry */}

@@ -460,6 +460,25 @@ Object.assign(TEXT, {
   'Итоги сезона': 'Season results', 'Загружаем состав…': 'Loading squad…',
 });
 
+Object.assign(TEXT, {
+  'Чем отличается режим «Один клуб»?': 'How does One Club differ?',
+  'Вы выбираете клуб до начала драфта. Колесо предлагает игроков из его сезонов в базе; рейтинг берётся из сезона выступления за этот клуб. Режим Prime здесь недоступен.': 'Choose a club before drafting. The wheel offers players from its recorded seasons; ratings come from the season they played for that club. Prime mode is unavailable here.',
+  'Как работают перебросы и тренер?': 'How do rerolls and managers work?',
+  'Переброс меняет выпавший клуб и сезон. Доступное число зависит от сложности: 3, 1 или 0. Если включить тренера при создании игры, он выбирается случайно и даёт небольшой бонус составу.': 'A reroll changes the club and season. You get 3, 1 or 0 depending on difficulty. Enable managers at setup for a random manager and a small squad bonus.',
+  'Как определяется результат сезона?': 'How is the season result calculated?',
+  'После заполнения 11 позиций игра рассчитывает силу состава и симулирует 30 матчей против клубов из базы. На итог влияют рейтинг, совместимость позиций, сложность, тренер и случайность.': 'Once all 11 positions are filled, the game calculates squad strength and simulates 30 matches against clubs in the database. Ratings, positional fit, difficulty, the manager and chance affect the outcome.',
+  'Приглашайте друзей': 'Invite friends', 'Поделитесь ссылкой — здесь появятся ваши друзья.': 'Share your link to see friends who join here.',
+  'Скопировать текст и ссылку': 'Copy text and link', 'Текст скопирован': 'Text copied', 'Не удалось скопировать текст': 'Could not copy text',
+  'Удалить профиль': 'Delete profile', 'Восстановить профиль': 'Restore profile',
+  'До удаления прогресс сохраняется.': 'Your progress stays available until deletion.',
+  'Профиль восстановлен вместе с прогрессом': 'Profile and progress restored',
+  'Срок восстановления истёк или сервер недоступен': 'Restoration period expired or server unavailable',
+  'Удаление запланировано. Вы можете восстановить профиль в течение недели.': 'Deletion scheduled. You can restore your profile within seven days.',
+  'Не удалось запланировать удаление': 'Could not schedule deletion',
+  'Собрать свою команду': 'Build your squad', 'Открыть в Telegram': 'Open in Telegram',
+  'Мой сезон в 30-0': 'My season in 30-0', 'Сохранить PNG': 'Save PNG',
+});
+
 export function translateInterface(value: string): string {
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';
@@ -475,6 +494,8 @@ export function translateInterface(value: string): string {
     [/^⚽ Все матчи сезона · (\d+)$/, '⚽ All season matches · $1'],
     [/^Сезоны (\d+)–(\d+)$/, 'Seasons $1–$2'],
     [/^(\d+) мин назад$/, '$1 min ago'], [/^(\d+) ч назад$/, '$1 hr ago'], [/^(\d+) дн назад$/, '$1 days ago'],
+    [/^Осталось (\d+) дн\. До удаления прогресс сохраняется\.$/, '$1 days left. Progress is retained until deletion.'],
+    [/^Удаление профиля запланировано на (.+)\.$/, 'Profile deletion scheduled for $1.'],
     [/^(\d+) очков$/, '$1 points'],
     [/^(\d+) голов$/, '$1 goals'], [/^(\d+) передач$/, '$1 assists'], [/^(\d+) сэйвов$/, '$1 saves'],
     [/^(\d+)-е место · (\d+) очков · (\d+) побед$/, '$1th place · $2 points · $3 wins'],

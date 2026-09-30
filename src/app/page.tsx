@@ -111,9 +111,9 @@ const CHALLENGES: ChallengeDef[] = [
 const FAQ_ITEMS = [
   { q: 'Что такое 30-0?', a: '30-0 — это футбольный драфт-симулятор РПЛ. Вы крутите колесо, получаете случайный клуб и сезон, выбираете игрока в свой состав, а затем симулируете сезон. Цель — выиграть все 30 матчей и достичь идеального результата 30-0.' },
   { q: 'Как работают позиции?', a: 'У каждого игрока есть основная и дополнительные позиции. Игрок может играть на совместимых позициях без штрафов, на частично совместимых — с понижением рейтинга на 20%, а на несовместимых — не может быть поставлен вообще.' },
-  { q: 'Что такое перебросы?', a: 'Перебросы позволяют вам крутить колесо заново, если вам не понравился выпавший клуб. На лёгкой сложности — 3 переброса, на нормальной — 1, на сложной — 0.' },
-  { q: 'Как считается рейтинг состава?', a: 'Обычный рейтинг — оценка игрока в выбранном сезоне. Прайм — потенциал той же сезонной карточки. Общий рейтинг команды — среднее всех игроков.' },
-  { q: 'Сложно ли достичь 30-0?', a: 'Очень сложно! Это требует идеального подбора игроков и немного удачи. Даже с лучшим составом РПЛ есть вероятность неожиданных результатов. Это и делает игру увлекательной!' },
+  { q: 'Чем отличается режим «Один клуб»?', a: 'Вы выбираете клуб до начала драфта. Колесо предлагает игроков из его сезонов в базе; рейтинг берётся из сезона выступления за этот клуб. Режим Prime здесь недоступен.' },
+  { q: 'Как работают перебросы и тренер?', a: 'Переброс меняет выпавший клуб и сезон. Доступное число зависит от сложности: 3, 1 или 0. Если включить тренера при создании игры, он выбирается случайно и даёт небольшой бонус составу.' },
+  { q: 'Как определяется результат сезона?', a: 'После заполнения 11 позиций игра рассчитывает силу состава и симулирует 30 матчей против клубов из базы. На итог влияют рейтинг, совместимость позиций, сложность, тренер и случайность.' },
 ];
 
 /* ─── Animated Score Counter ─── */
@@ -491,9 +491,6 @@ function HomePage() {
           </div>
           {databaseStats?.firstYear && databaseStats?.lastYear && (
             <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
-          )}
-          {databaseStats?.lastYear && databaseStats.lastYear >= 2021 && (
-            <p className="mt-1 text-center text-xs text-[#9CA3AF]">Добавлены составы и рейтинги 2019–2021</p>
           )}
         </div>
       </motion.section>
@@ -914,7 +911,36 @@ function SquadCompleteScreen() {
       </div>
 
       <div className="lg:row-span-3 lg:sticky lg:top-20">
-        <FormationView compact />
+        <FormationView />
+      </div>
+
+      <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-bold text-white">{currentManager ? `Тренер: ${currentManager.name}` : 'Без тренера'}</div>
+          <div className="mt-1 text-xs text-[#9CA3AF]">
+            {currentManager
+              ? `Случайный выбор · бонус +2 к силе состава · рейтинг ${currentManager.rating}/10`
+              : 'Тренер отключён в настройках игры.'}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {config.enableManagers && (
+            <Button
+              variant="outline"
+              onClick={() => setScreen('manager-choice')}
+              className="h-11 rounded-xl border-[#00C896]/50 text-[#00C896] hover:bg-[#00C896]/10"
+            >
+              Крутить тренера
+            </Button>
+          )}
+          <Button
+            onClick={() => setScreen('pre-match')}
+            className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
+            style={{ backgroundColor: '#00C896' }}
+          >
+            Перейти к сезону →
+          </Button>
+        </div>
       </div>
 
       {/* Pre-season odds — 38-0 style */}
@@ -963,34 +989,6 @@ function SquadCompleteScreen() {
         </p>
       </div>
 
-      <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="text-sm font-bold text-white">{currentManager ? `Тренер: ${currentManager.name}` : 'Без тренера'}</div>
-          <div className="mt-1 text-xs text-[#9CA3AF]">
-            {currentManager
-              ? `Случайный выбор · бонус +2 к силе состава · рейтинг ${currentManager.rating}/10`
-              : 'Тренер отключён в настройках игры.'}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {config.enableManagers && (
-            <Button
-              variant="outline"
-              onClick={() => setScreen('manager-choice')}
-              className="h-11 rounded-xl border-[#00C896]/50 text-[#00C896] hover:bg-[#00C896]/10"
-            >
-              Крутить тренера
-            </Button>
-          )}
-          <Button
-            onClick={() => setScreen('pre-match')}
-            className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
-            style={{ backgroundColor: '#00C896' }}
-          >
-            Перейти к сезону →
-          </Button>
-        </div>
-      </div>
       <SquadStats />
     </div>
   );

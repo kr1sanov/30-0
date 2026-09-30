@@ -1,10 +1,12 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { purgeExpiredProfiles } from '@/lib/profileDeletion';
 
 export async function GET() {
   const startTime = Date.now();
 
   try {
+    await purgeExpiredProfiles();
     const clubCount = await db.club.count();
     const playerCount = await db.player.count();
     const seasonCount = await db.season.count();

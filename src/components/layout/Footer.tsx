@@ -68,6 +68,7 @@ export default function Footer() {
                 <span>{link.label}</span>
               </button>
             ))}
+            <a href="https://t.me/+iX9kd8CgQJxkYzFi" target="_blank" rel="noopener noreferrer" className="text-sm text-[#9CA3AF] hover:text-white">Telegram</a>
 
           </div>
         </div>

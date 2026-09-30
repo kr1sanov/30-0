@@ -106,6 +106,8 @@ model User {
   telegramNotificationsEnabled Boolean @default(true)
   telegramChatStarted Boolean @default(false)
   notificationCadence String @default("weekly")
+  deletionRequestedAt DateTime?
+  deleteAfterAt DateTime?
   lastActiveAt DateTime?
   telegramWelcomeSentAt DateTime?
 

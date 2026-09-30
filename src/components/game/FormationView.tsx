@@ -657,10 +657,6 @@ export default function FormationView({ compact = false }: { compact?: boolean }
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f97316', boxShadow: '0 0 4px #f97316' }} />
           <span className="text-[9px] text-[#94a3b8]">Атака</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-white/20" />
-          <span className="text-[9px] text-[#94a3b8]">Нельзя поставить</span>
-        </div>
       </div>
     </div>
   );
