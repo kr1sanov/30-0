@@ -41,6 +41,10 @@ const RPL_CLUBS = [
   'FC Krasnodar',
   'FC Orenburg',
   'FC Tosno',
+  'Yenisey Krasnoyarsk',
+  'Tambov',
+  'Sochi',
+  'Nizhny Novgorod',
   'Dynamo Moscow',
   'CSKA Moscow',
 ];
@@ -55,6 +59,9 @@ const RPL_SEASONS = [
   '2016',
   '2017',
   '2018',
+  '2019',
+  '2020',
+  '2021',
 ];
 
 /* ─── SlotReel: shows one reel (club or season) with slot-machine animation ─── */

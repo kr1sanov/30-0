@@ -57,7 +57,7 @@ export async function POST(
     })).map((ps) => ps.playerId));
 
     const startYear = run.eraStartYear ?? 2010;
-    const endYear = run.eraEndYear ?? 2018;
+    const endYear = run.eraEndYear ?? 2021;
 
     // Build the where clause for ClubSeasons
     // If clubFilter is set (single_club mode), only return club-seasons for that club

@@ -196,7 +196,7 @@ const defaultConfig: GameConfig = {
   ratingMode: 'season',
   eraFilter: 'all',
   eraStartYear: 2010,
-  eraEndYear: 2018,
+  eraEndYear: 2021,
   gameMode: 'classic',
   clubFilter: undefined,
   nationalityFilter: undefined,

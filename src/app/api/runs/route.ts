@@ -83,14 +83,14 @@ export async function POST(request: NextRequest) {
         select: {
           id: true, nameRu: true, nameEn: true, city: true,
           seasons: {
-            where: { season: { startYear: { gte: 2010, lte: 2018 }, endYear: { lte: 2018 } } },
+            where: { season: { startYear: { gte: 2010 } } },
             select: { players: { select: { playerId: true, mainPosition: true } } },
           },
         },
       });
       if (!club) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
       if (gameMode === 'single_club' && !selectOneClubCandidates([club]).length) {
-        return NextResponse.json({ error: 'Выберите клуб, участвовавший минимум в 5 сезонах 2010–2018' }, { status: 400 });
+        return NextResponse.json({ error: 'Выберите клуб с минимум 5 доступными сезонами РПЛ' }, { status: 400 });
       }
     }
 
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
         ratingMode: ratingMode || 'season',
         eraFilter: eraFilter || 'all',
         eraStartYear: eraStartYear ?? 2010,
-        eraEndYear: eraEndYear ?? 2018,
+        eraEndYear: eraEndYear ?? 2021,
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,

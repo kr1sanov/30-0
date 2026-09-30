@@ -492,6 +492,9 @@ function HomePage() {
           {databaseStats?.firstYear && databaseStats?.lastYear && (
             <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
           )}
+          {databaseStats?.lastYear && databaseStats.lastYear >= 2021 && (
+            <p className="mt-1 text-center text-xs text-[#9CA3AF]">Добавлены составы и рейтинги 2019–2021</p>
+          )}
         </div>
       </motion.section>
 

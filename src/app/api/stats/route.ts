@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const activeYears = { startYear: { gte: 2010, lte: 2018 } };
+    const activeYears = { startYear: { gte: 2010 } };
     const activePlayers = { clubSeason: { season: activeYears } };
     const [clubs, seasons, players, playerSeasons, gameRuns, years] = await Promise.all([
       db.club.count({ where: { seasons: { some: { season: activeYears, players: { some: {} } } } } }),

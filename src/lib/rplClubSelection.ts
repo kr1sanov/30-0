@@ -6,7 +6,7 @@ export interface OneClubCandidate {
   seasons: Array<{ players: Array<{ playerId: string; mainPosition: string }> }>;
 }
 
-/** Rank clubs by unique season appearances across the supplied 2010–2018 editions. */
+/** Rank clubs by unique season appearances across available roster editions. */
 export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[]) {
   const minSeasons = 5;
   const minPlayers = 30;

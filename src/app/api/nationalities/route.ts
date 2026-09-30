@@ -72,7 +72,7 @@ export async function GET() {
   try {
     // Group players by nationality and count
     const players = await db.player.findMany({
-      where: { seasons: { some: { clubSeason: { season: { startYear: { gte: 2010, lte: 2018 } } } } } },
+      where: { seasons: { some: { clubSeason: { season: { startYear: { gte: 2010 } } } } } },
       select: { nationality: true },
     });
 
