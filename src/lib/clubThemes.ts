@@ -20,12 +20,15 @@ export const DEFAULT_CLUB_THEME: ClubTheme = {
 
 const CLUB_THEMES: Record<string, ClubTheme> = {
   'Алания': { primary: '#F4C542', secondary: '#C1272D', accent: '#FFF0A6', onPrimary: '#241C02', surface: '#211B0D', glow: 'rgba(244, 197, 66, 0.28)' },
+  'Анжи': { primary: '#FACC15', secondary: '#15803D', accent: '#FEF08A', onPrimary: '#1D2105', surface: '#1B1B0A', glow: 'rgba(250, 204, 21, 0.28)' },
+  'Арсенал Тула': { primary: '#DC2626', secondary: '#FACC15', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#211012', glow: 'rgba(220, 38, 38, 0.28)' },
   'Амкар': { primary: '#E11D48', secondary: '#111827', accent: '#FDA4AF', onPrimary: '#FFFFFF', surface: '#211015', glow: 'rgba(225, 29, 72, 0.28)' },
   'Акрон': { primary: '#D71920', secondary: '#FFFFFF', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#211012', glow: 'rgba(215, 25, 32, 0.28)' },
   'Ахмат': { primary: '#16A34A', secondary: '#FFFFFF', accent: '#86EFAC', onPrimary: '#FFFFFF', surface: '#0D1D13', glow: 'rgba(22, 163, 74, 0.28)' },
   'Балтика': { primary: '#1D4ED8', secondary: '#FFFFFF', accent: '#93C5FD', onPrimary: '#FFFFFF', surface: '#0C1629', glow: 'rgba(29, 78, 216, 0.28)' },
   'Динамо Москва': { primary: '#2563EB', secondary: '#FFFFFF', accent: '#93C5FD', onPrimary: '#FFFFFF', surface: '#0C1629', glow: 'rgba(37, 99, 235, 0.3)' },
   'Динамо Махачкала': { primary: '#2563EB', secondary: '#DC2626', accent: '#93C5FD', onPrimary: '#FFFFFF', surface: '#10182A', glow: 'rgba(37, 99, 235, 0.28)' },
+  'Енисей': { primary: '#DC2626', secondary: '#1D4ED8', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#210F15', glow: 'rgba(220, 38, 38, 0.28)' },
   'Зенит': { primary: '#00AEEF', secondary: '#FFFFFF', accent: '#7DD3FC', onPrimary: '#031923', surface: '#071B25', glow: 'rgba(0, 174, 239, 0.3)' },
   'Краснодар': { primary: '#22C55E', secondary: '#111827', accent: '#86EFAC', onPrimary: '#06160B', surface: '#0C1E12', glow: 'rgba(34, 197, 94, 0.28)' },
   'Крылья Советов': { primary: '#38BDF8', secondary: '#1D4ED8', accent: '#BAE6FD', onPrimary: '#06202B', surface: '#0A1820', glow: 'rgba(56, 189, 248, 0.28)' },
@@ -38,7 +41,10 @@ const CLUB_THEMES: Record<string, ClubTheme> = {
   'Рубин Казань': { primary: '#A61B2B', secondary: '#14532D', accent: '#FDA4AF', onPrimary: '#FFFFFF', surface: '#211014', glow: 'rgba(166, 27, 43, 0.3)' },
   'Спартак Москва': { primary: '#E31E24', secondary: '#FFFFFF', accent: '#FDA4AF', onPrimary: '#FFFFFF', surface: '#230E10', glow: 'rgba(227, 30, 36, 0.3)' },
   'Сочи': { primary: '#111827', secondary: '#DC2626', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#171014', glow: 'rgba(220, 38, 38, 0.25)' },
+  'Тамбов': { primary: '#DC2626', secondary: '#1D4ED8', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#210F15', glow: 'rgba(220, 38, 38, 0.28)' },
   'Торпедо Москва': { primary: '#F8FAFC', secondary: '#111827', accent: '#CBD5E1', onPrimary: '#111827', surface: '#17191D', glow: 'rgba(248, 250, 252, 0.2)' },
+  'Томь': { primary: '#15803D', secondary: '#FFFFFF', accent: '#86EFAC', onPrimary: '#FFFFFF', surface: '#0C1E12', glow: 'rgba(21, 128, 61, 0.28)' },
+  'Уфа': { primary: '#7C3AED', secondary: '#FFFFFF', accent: '#DDD6FE', onPrimary: '#FFFFFF', surface: '#1C1230', glow: 'rgba(124, 58, 237, 0.3)' },
   'Урал': { primary: '#F97316', secondary: '#111827', accent: '#FDBA74', onPrimary: '#1F0D02', surface: '#21140B', glow: 'rgba(249, 115, 22, 0.3)' },
   'Факел': { primary: '#2563EB', secondary: '#FFFFFF', accent: '#93C5FD', onPrimary: '#FFFFFF', surface: '#0C1629', glow: 'rgba(37, 99, 235, 0.28)' },
   'Химки': { primary: '#DC2626', secondary: '#FFFFFF', accent: '#FCA5A5', onPrimary: '#FFFFFF', surface: '#211012', glow: 'rgba(220, 38, 38, 0.28)' },
@@ -49,6 +55,7 @@ const CLUB_THEMES: Record<string, ClubTheme> = {
 // rather than deriving new colours from those names or a remote crest.
 const HISTORICAL_CLUB_THEMES: Record<string, string> = {
   'Akhmat Grozny': 'Ахмат', 'Amkar Perm': 'Амкар',
+  'Anzhi Makhachkala': 'Анжи', 'Arsenal Tula': 'Арсенал Тула',
   'CSKA Moscow': 'ЦСКА Москва', 'Dynamo Moscow': 'Динамо Москва',
   'Zenit St. Petersburg': 'Зенит', 'FC Krasnodar': 'Краснодар',
   'FC Rostov': 'Ростов', 'Krylya Sovetov Samara': 'Крылья Советов',
@@ -56,6 +63,14 @@ const HISTORICAL_CLUB_THEMES: Record<string, string> = {
   'Rubin Kazan': 'Рубин Казань', 'Spartak Moscow': 'Спартак Москва',
   'Ural Ekaterinburg': 'Урал', 'Torpedo Moskva': 'Торпедо Москва',
   'FC Khimki': 'Химки', 'FC Orenburg': 'Оренбург',
+  'FC Ufa': 'Уфа', 'Tom Tomsk': 'Томь', 'Alania Vladikavkaz': 'Алания',
+  'Ufa': 'Уфа', 'Sochi': 'Сочи', 'Tambov': 'Тамбов', 'Yenisey Krasnoyarsk': 'Енисей',
+  'CSKA Moskva': 'ЦСКА Москва', 'Dinamo Moscow': 'Динамо Москва',
+  'Lokomotiv Moskva': 'Локомотив Москва', 'Spartak Moskva': 'Спартак Москва',
+  'Zenit': 'Зенит', 'Zenit Saint Petersburg': 'Зенит',
+  'Krasnodar': 'Краснодар', 'Rostov': 'Ростов', 'Khimki': 'Химки',
+  'Orenburg': 'Оренбург', 'FC Ural': 'Урал', 'Ural Yekaterinburg': 'Урал',
+  'Nizhny Novgorod': 'Пари Нижний Новгород',
 };
 
 export function getClubTheme(clubName?: string): ClubTheme {

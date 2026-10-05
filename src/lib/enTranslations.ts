@@ -100,6 +100,27 @@ const TEXT: Record<string, string> = {
 };
 
 Object.assign(TEXT, {
+  'Уфа':'Ufa', 'Арсенал Тула':'Arsenal Tula', 'Анжи':'Anzhi', 'Томь':'Tom Tomsk',
+  'Спартак Москва':'Spartak Moscow', 'ЦСКА Москва':'CSKA Moscow', 'Динамо Москва':'Dynamo Moscow',
+  'Локомотив Москва':'Lokomotiv Moscow', 'Рубин Казань':'Rubin Kazan', 'Крылья Советов':'Krylya Sovetov',
+  'Ростов':'Rostov', 'Краснодар':'Krasnodar', 'Зенит':'Zenit', 'Ахмат':'Akhmat',
+  'Амкар':'Amkar Perm', 'Урал':'Ural', 'Кубань':'Kuban Krasnodar', 'Оренбург':'Orenburg',
+  'Факел':'Fakel', 'Балтика':'Baltika', 'Химки':'Khimki', 'Торпедо Москва':'Torpedo Moscow',
+  'Сочи':'Sochi', 'Тамбов':'Tambov', 'Енисей':'Yenisey Krasnoyarsk', 'Алания':'Alania', 'Динамо Махачкала':'Dynamo Makhachkala',
+  'Пари Нижний Новгород':'Pari Nizhny Novgorod', 'Акрон':'Akron', 'Родина':'Rodina',
+  'Продолжить драфт':'Resume draft', '▶ Продолжить драфт':'▶ Resume draft',
+  'ТУР':'MATCHWEEK', 'Пропустить все →':'Skip all →', 'д':'H', 'в':'A', 'место':'place',
+  'Симуляция сезона...':'Simulating the season…', '⚽ Сыграть сезон':'⚽ Play a season',
+  '🏆 Награды сезона':'🏆 Season awards', '🏅':'🏅', 'трофеев':'trophies',
+  'Завершить сезон':'Finish season', '🔄 Играть снова':'🔄 Play again', '📤 Поделиться':'📤 Share',
+  '👤 Профиль':'👤 Profile', '← К итогам сезона':'← Back to results', '🏠 На главную':'🏠 Home',
+  '✅ Сильные стороны':'✅ Strengths', '⚠️ Зоны риска':'⚠️ Areas of concern',
+  'На основе среднего рейтинга':'Based on average rating',
+  'Играть с тренером?':'Play with a manager?', '+2 к рейтингу':'+2 to rating',
+  'команды в симуляции':'during the season simulation', 'Крутить тренера':'Spin for a manager',
+  'Крутить ещё раз':'Spin again', 'Без тренера → Разведка':'No manager → Preview',
+  'Разведка перед сезоном':'Season preview', 'Ищем тренера…':'Finding a manager…',
+  'Имя':'Name', 'Страна':'Country', 'ДЖЕКПОТ':'JACKPOT', 'команды':'team',
   'Сухих матчей':'Clean sheets', 'Лучшая серия':'Best streak', 'Крупная победа':'Biggest win',
   'Самый результативный':'Top scorer', 'Трансферное окно':'Transfer window',
   '⚽ МОЙ СЕЗОН В 30–0':'⚽ MY SEASON IN 30–0', '🏟️ Обычный драфт':'🏟️ Classic draft',
@@ -487,7 +508,15 @@ export function translateInterface(value: string): string {
   const normalized = core.replace(/\s+/g, ' ');
   const exact = TEXT[core] || TEXT[normalized] || MANAGERS.find(manager => manager.name === normalized)?.nameEn;
   if (exact) return leading + exact + trailing;
+  const matchOpponent = normalized.match(/^(.+) \((д|в)\)$/);
+  if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
+    [/^ТУР (\d+) \/ (\d+)$/, 'MATCHWEEK $1 / $2'],
+    [/^🏅 (\d+)\/(\d+) трофеев$/, '🏅 $1/$2 trophies'],
+    [/^(.+) \(д\)$/, '$1 (H)'],
+    [/^(.+) \(в\)$/, '$1 (A)'],
+    [/^Играть с (.+) — бонус к рейтингу команды$/, 'Play with $1 — team rating bonus'],
+    [/^(\d+) тренеров доступны$/, '$1 managers available'],
     [/^(\d+) поз\. осталось$/, '$1 positions left'],
     [/^(\d+) сезонов · (\d+) игроков$/, '$1 seasons · $2 players'],
     [/^(\d+) сезонов РПЛ · (\d+) игроков в базе \(2010–2021\)$/, '$1 RPL seasons · $2 players in the 2010–2021 database'],

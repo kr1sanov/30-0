@@ -311,7 +311,7 @@ function ClubCard({
 }
 
 export default function GameSetup() {
-  const { config, setConfig, startRun, dailyChallenge, lastDraftError } = useGameStore();
+  const { config, setConfig, startRun, dailyChallenge, lastDraftError, runId, resumeGame } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
   const { user } = useAuthStore();
 
@@ -517,6 +517,11 @@ export default function GameSetup() {
               )}
 
               {/* Club grid */}
+              {runId && (
+                <button type="button" onClick={resumeGame} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
+                  ▶ Продолжить драфт
+                </button>
+              )}
               {selectedClub ? null : clubsLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="w-6 h-6 border-2 border-[#2a2a2a] border-t-[#00C896] rounded-full animate-spin" />
@@ -534,8 +539,8 @@ export default function GameSetup() {
                   </button>
                 </div>
               ) : (
-                <div className="max-h-72 overflow-y-auto pr-1 custom-scrollbar">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {clubs.map((club) => (
                       <ClubCard
                         key={club.id}

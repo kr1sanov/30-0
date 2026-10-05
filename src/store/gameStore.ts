@@ -7,6 +7,7 @@ import { DIFFICULTY_CONFIG } from '@/lib/types';
 import { getManagersForClub, getRandomManager } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
 import { useAuthStore } from './authStore';
+import { getResumeScreen } from '@/lib/gameResume';
 
 /**
  * ============================================================================
@@ -96,6 +97,7 @@ interface LastDraftState {
 interface GameState {
   // Navigation
   screen: GameScreen;
+  resumeScreen: GameScreen | null;
   setScreen: (screen: GameScreen) => void;
 
 
@@ -220,7 +222,12 @@ export const useGameStore = create<GameState>()(
     (set, get) => ({
       // Navigation
       screen: 'home',
-      setScreen: (screen) => set({ screen }),
+      resumeScreen: null,
+      setScreen: (screen) => set((state) => ({
+        screen,
+        resumeScreen: state.runId && ['draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards'].includes(screen)
+          ? screen : state.resumeScreen,
+      })),
 
 
       // Config
@@ -379,6 +386,7 @@ export const useGameStore = create<GameState>()(
               ? getRandomManager(runConfig.gameMode === 'single_club' ? runConfig.clubFilter : undefined) ?? null
               : null,
             screen: 'draft',
+            resumeScreen: 'draft',
             lastConfig: { ...runConfig },
             lastDraftError: null,
             lastDraftState: null,
@@ -1263,6 +1271,7 @@ export const useGameStore = create<GameState>()(
       resetGame: () => {
         set({
           screen: 'home',
+          resumeScreen: null,
           runId: null,
           slots: [],
           rerollsLeft: 0,
@@ -1284,21 +1293,23 @@ export const useGameStore = create<GameState>()(
       },
 
       goHome: () => {
-        const { seasonResult } = get();
+        const { seasonResult, screen } = get();
         // If season is complete, clear the run so "Продолжить драфт" doesn't appear
         if (seasonResult) {
-          set({ screen: 'home', runId: null, seasonResult: null });
+          set({ screen: 'home', resumeScreen: null, runId: null, seasonResult: null });
         } else {
-          set({ screen: 'home' });
+          set((state) => ({ screen: 'home', resumeScreen: ['draft', 'squad-complete', 'manager-choice', 'pre-match'].includes(screen)
+            ? screen : screen === 'simulation' ? 'pre-match' : state.resumeScreen }));
         }
       },
 
       resumeGame: () => {
-        const { slots, seasonResult } = get();
+        const { slots, seasonResult, resumeScreen, screen, config, lastConfig } = get();
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
 
         // Always clear ALL stale transient UI state on resume
         const clearTransient = {
+          config: lastConfig ?? config,
           selectedPlayer: null,
           currentSpin: null,
           isSpinning: false,
@@ -1309,14 +1320,7 @@ export const useGameStore = create<GameState>()(
           lastDraftError: null,
         };
 
-        if (seasonResult) {
-          set({ screen: 'result', ...clearTransient });
-        } else if (allFilled) {
-          set({ screen: 'squad-complete', ...clearTransient });
-        } else {
-          // Go to draft screen — clear ALL stale transient UI state
-          set({ screen: 'draft', ...clearTransient });
-        }
+        set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
       },
 
       loadActiveRunFromCloud: async () => {
@@ -1337,6 +1341,7 @@ export const useGameStore = create<GameState>()(
             eraStartYear: activeRun.eraStartYear,
             eraEndYear: activeRun.eraEndYear,
             clubFilter: activeRun.clubFilter ?? undefined,
+            clubName: activeRun.clubName ?? undefined,
             nationalityFilter: activeRun.nationalityFilter ?? undefined,
             teamName: activeRun.teamName ?? undefined,
             gameMode: activeRun.clubFilter ? 'single_club' : 'classic',
@@ -1369,7 +1374,8 @@ export const useGameStore = create<GameState>()(
           set({ runId: activeRun.id, config, lastConfig: config, slots,
             rerollsLeft: Math.max(0, activeRun.rerollsTotal - activeRun.rerollsUsed),
             rerollsUsed: activeRun.rerollsUsed,
-            screen: slots.every((slot) => !!slot.playerId) ? 'squad-complete' : 'draft' });
+            screen: slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft',
+            resumeScreen: slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft' });
         } catch (error) {
           console.error('Failed to restore active run:', error);
         }
@@ -1479,11 +1485,13 @@ export const useGameStore = create<GameState>()(
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
-      // Screen is persisted but only for stable screens (home, draft, squad-complete, result).
+      // Keep the last stable game stage even when the user navigates home or to the profile.
       partialize: (state) => {
-        // Only persist stable screen values, not transient ones like 'position-assign' or 'simulation'
-        const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'result', 'profile', 'leaderboard'];
+        const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards', 'profile', 'leaderboard'];
         const persistedScreen = stableScreens.includes(state.screen) ? state.screen : 'home';
+        const resumeScreen = state.screen === 'simulation' ? 'pre-match'
+          : ['draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards'].includes(state.screen)
+            ? state.screen : state.resumeScreen;
 
         // Always persist profileStats for local profiles
 
@@ -1499,6 +1507,7 @@ export const useGameStore = create<GameState>()(
           seasonResult: state.seasonResult,
 
           screen: persistedScreen,
+          resumeScreen,
           dailyChallenge: state.dailyChallenge,
         };
       },

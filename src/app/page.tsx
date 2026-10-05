@@ -1294,7 +1294,7 @@ export default function Home() {
       <div className="football-field-bg" />
       <Header />
       <main
-        className={`flex-1 w-full mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-4 relative z-10 ${
+        className={`flex-1 w-full mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-20 sm:pb-4 relative z-10 ${
           ['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'].includes(screen)
             ? 'max-w-7xl'
             : screen === 'setup'

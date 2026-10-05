@@ -1383,9 +1383,3 @@ html {
   color: #9ca3af;
 }
 .language-switcher button[aria-pressed="true"] { background: #30c8a2; color: #031a17; }
-html[data-language="en"] body,
-html[data-language="en"] .club-theme-shell {
-  background: radial-gradient(ellipse at 55% 4%, #104c54 0%, #0b272f 28%, #07171e 58%, #071118 100%) fixed !important;
-}
-html[data-language="en"] .football-field-bg { opacity: .18; }
-html[data-language="en"] .club-theme-shell > header { background-color: rgba(7, 23, 30, .83); }

@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
 
     // Build the response in a format the frontend can use
     const formation = FORMATIONS.find((f) => f.id === run.formation);
+    const club = run.clubFilter ? await db.club.findUnique({ where: { id: run.clubFilter }, select: { nameRu: true } }) : null;
 
     const slots = run.slots.map((slot) => {
       const slotPos = slot.slotPosition.split('_')[0];
@@ -69,6 +70,7 @@ export async function GET(request: NextRequest) {
         eraStartYear: run.eraStartYear,
         eraEndYear: run.eraEndYear,
         clubFilter: run.clubFilter,
+        clubName: club?.nameRu ?? null,
         rerollsTotal: run.rerollsTotal,
         rerollsUsed: run.rerollsUsed,
         teamName: run.teamName,
