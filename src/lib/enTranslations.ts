@@ -498,6 +498,23 @@ Object.assign(TEXT, {
   'Не удалось запланировать удаление': 'Could not schedule deletion',
   'Собрать свою команду': 'Build your squad', 'Открыть в Telegram': 'Open in Telegram',
   'Мой сезон в 30-0': 'My season in 30-0', 'Сохранить PNG': 'Save PNG',
+  'Мультиплеер': 'Multiplayer', 'Играйте с друзьями. Драфт в режиме реального времени.': 'Play with friends. Draft in real time.',
+  'БЕТА': 'BETA', 'Мультиплеер · Бета': 'Multiplayer · Beta', 'Live драфт · Бета': 'Live draft · Beta',
+  'Играйте с друзьями в режиме реального времени.': 'Play with friends in real time.',
+  'Соревнуйтесь в реальном времени: до 6 игроков одновременно собирают лучшие команды из 11 футболистов.': 'Compete in real time: up to 6 players build their best XIs at once.',
+  'Играй с другом': 'Play with a friend', 'Создайте команду из 11 игроков, сыграйте сезон и узнайте, кто собрал лучший состав.': 'Build an XI, play a season and see who drafted the best team.',
+  'Имя будет общим для этого режима, таблиц лидеров и лиг.': 'Your name is shared across this mode, leaderboards and leagues.',
+  'Новая игра в прямом эфире': 'New live game', '2–6 менеджеров участвуют одновременно. Правила можно изменить в лобби.': '2–6 managers draft together. Choose the rules in the lobby.',
+  'Присоединиться по коду': 'Join with a code', 'Войти в комнату': 'Join room', 'Код комнаты': 'Room code',
+  'Лобби': 'Lobby', 'Результаты сезона': 'Season results', 'Драфт с друзьями': 'Draft with friends',
+  'Скопировать приглашение': 'Copy invite link', 'Скопировать код': 'Copy code', 'Отправить в Telegram': 'Share on Telegram',
+  'Участники': 'Participants', 'Готов': 'Ready', 'Ожидает': 'Waiting', 'Ваша схема': 'Your formation',
+  'Я готов': "I'm ready", 'Отменить готовность': 'Cancel ready', 'Мест': 'Seats', 'Рейтинг': 'Rating',
+  'Период': 'Era', 'Тренер': 'Manager', 'Добавить бота': 'Add bot', 'Начать': 'Start',
+  'Начало сезона': 'Start season', 'Ожидаем друзей…': 'Waiting for friends…',
+  'Все 11 игроков готовы. Сезон начнётся, когда каждый участник соберёт состав.': 'Your XI is ready. The season starts after everyone finishes drafting.',
+  'Матчи с друзьями': 'Matches against friends', 'Итоги сезона · 30 матчей': 'Season results · 30 matches',
+  'Комната ожидания': 'Waiting room', 'Пригласи друзей': 'Invite friends',
 });
 
 export function translateInterface(value: string): string {

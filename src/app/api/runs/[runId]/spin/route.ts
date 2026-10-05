@@ -27,6 +27,14 @@ export async function POST(
       return NextResponse.json({ error: 'Run not found' }, { status: 404 });
     }
 
+    const multiplayerSeat = await db.multiplayerSeat.findUnique({ where: { runId } });
+    if (multiplayerSeat) {
+      const room = await db.multiplayerRoom.findUnique({ where: { code: multiplayerSeat.roomCode } });
+      if (room?.status !== 'drafting' || multiplayerSeat.isBot || !multiplayerSeat.pickDeadline || multiplayerSeat.pickDeadline < new Date()) {
+        return NextResponse.json({ error: 'Время выбора истекло или драфт закрыт' }, { status: 409 });
+      }
+    }
+
     if (run.completed) {
       return NextResponse.json(
         { error: 'Run is already completed' },

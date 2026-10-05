@@ -25,6 +25,9 @@ export async function POST(
       where: { id: runId },
       include: { slots: true },
     });
+    if (await db.multiplayerSeat.findUnique({ where: { runId } })) {
+      return NextResponse.json({ error: 'Мультиплеерный сезон запускается в комнате' }, { status: 409 });
+    }
 
     if (!run) {
       return NextResponse.json({ error: 'Run not found' }, { status: 404 });

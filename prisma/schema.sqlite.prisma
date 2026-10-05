@@ -251,6 +251,8 @@ model MultiplayerRoom {
   ratingMode   String   @default("season")
   eraStartYear Int      @default(2010)
   eraEndYear   Int      @default(2026)
+  withManager  Boolean  @default(false)
+  resultJson   String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   seats        MultiplayerSeat[]
@@ -259,14 +261,18 @@ model MultiplayerRoom {
 model MultiplayerSeat {
   id        String   @id @default(cuid())
   roomCode  String
-  userId    String
+  userId    String?
+  isBot     Boolean  @default(false)
   name      String
   formation String   @default("4-3-3")
   ready     Boolean  @default(false)
+  pickDeadline DateTime?
+  managerName String?
+  managerRating Int?
   runId     String?  @unique
   joinedAt  DateTime @default(now())
   room      MultiplayerRoom @relation(fields: [roomCode], references: [code], onDelete: Cascade)
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   run       GameRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
 
   @@unique([roomCode, userId])

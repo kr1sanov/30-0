@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       where: {
         completed: false,
         userId,
+        multiplayerSeat: null,
       },
       include: {
         slots: { orderBy: { slotPosition: 'asc' } },

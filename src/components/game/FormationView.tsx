@@ -28,7 +28,7 @@ const SLOT_COLORS: Record<PositionCategory, string> = {
 // ---------------------------------------------------------------------------
 // Formation position layout coordinates (percentage-based)
 // ---------------------------------------------------------------------------
-const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
+export const FORMATION_LAYOUTS: Record<string, { row: number; col: number }[]> = {
   '4-3-3': [
     { row: 88, col: 50 },  // ВР
     { row: 68, col: 18 },  // крайний защитник команды справа; координаты зеркалятся при выводе

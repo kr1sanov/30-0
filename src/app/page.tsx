@@ -44,6 +44,7 @@ const STEPS = [
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычный драфт', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
   { emoji: '🏟️', title: 'Один клуб', desc: 'Собери состав из игроков одного клуба РПЛ', active: true, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '👥', title: 'Мультиплеер', desc: 'Играйте с друзьями. Драфт в режиме реального времени.', active: true, color: '#a78bfa', gameMode: 'multiplayer' as const },
 ];
 
 interface ChallengeDef {
@@ -410,6 +411,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
+                if (mode.gameMode === 'multiplayer') { location.href = '/multiplayer'; return; }
                 setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
                 setScreen('setup');
               }}
@@ -420,6 +422,7 @@ function HomePage() {
                   НОВОЕ
                 </span>
               )}
+              {mode.gameMode === 'multiplayer' && <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">БЕТА</span>}
               <div className="flex items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl sm:text-3xl"

@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
         slots: {
           orderBy: { slotPosition: 'asc' },
         },
+        multiplayerSeat: { select: { roomCode: true } },
       },
       orderBy,
       take: limit,
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(runs.map((run) => ({
       ...run,
-      gameMode: run.clubFilter ? 'single_club' : 'classic',
+      gameMode: run.multiplayerSeat ? 'multiplayer' : run.clubFilter ? 'single_club' : 'classic',
       clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
     })));
   } catch (error) {
