@@ -1221,6 +1221,13 @@ export default function Home() {
   useAutoAuth();
 
   useEffect(() => {
+    const startParam = new URLSearchParams(location.search).get('tgWebAppStartParam') ||
+      (window as Window & { Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.start_param || '';
+    const invite = startParam.match(/^room_([A-HJ-NP-Z2-9]{6})$/i);
+    if (invite) location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
+  }, []);
+
+  useEffect(() => {
     if (!_hasHydrated) return;
     fetch('/api/progress-epoch', { cache: 'no-store' }).then(async response => {
       if (!response.ok) return;
