@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { resolveRoom } from '@/lib/multiplayer';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 
@@ -17,10 +16,5 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   if (!seat.run || seat.run.slots.filter(slot => slot.playerSeasonId).length !== 11)
     return NextResponse.json({ error: 'Сначала соберите 11 игроков' }, { status: 400 });
   await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true } });
-  const waiting = await db.multiplayerSeat.count({ where: { roomCode: seat.roomCode, ready: false } });
-  if (!waiting) {
-    try { await resolveRoom(seat.roomCode); }
-    catch (error) { console.error('Multiplayer season:', error); return NextResponse.json({ error: 'Не удалось сыграть сезон' }, { status: 503 }); }
-  }
   return NextResponse.json({ ok: true });
 }

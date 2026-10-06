@@ -27,9 +27,12 @@ export async function publicRoom(code: string, userId: string) {
       managerRating: seat.managerRating,
     })),
     ownRun: own?.run ? { id: own.run.id, formation: own.run.formation, completed: own.run.completed,
+      rerollsLeft: Math.max(0, own.run.rerollsTotal - own.run.rerollsUsed),
       // The pitch coordinates follow formation slot order, not alphabetical position order.
       slots: [...own.run.slots].sort((a, b) => Number(a.slotPosition.split('_').at(-1)) - Number(b.slotPosition.split('_').at(-1))).map(slot => ({ slotPosition: slot.slotPosition, playerSeasonId: slot.playerSeasonId,
-        playerLastName: slot.playerLastName, playerRating: room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating })) } : null,
+        playerLastName: slot.playerLastName, playerName: slot.playerName, playerRating: room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating,
+        playerSeasonYear: slot.playerSeasonYear, playerPosition: slot.playerPosition,
+        playerOtherPositions: slot.playerOtherPositions ? slot.playerOtherPositions.split(',').map(value => value.trim()) : [] })) } : null,
     results: room.resultJson ? JSON.parse(room.resultJson) : null,
   };
 }
@@ -43,7 +46,7 @@ export async function createSeatRun(seat: { id: string; name: string; formation:
     teamName: seat.name, ...(userId ? { userId } : {}),
     slots: { create: formation.slots.map((slot, index) => ({ slotPosition: `${slot.position}_${index}` })) },
   } });
-  await db.multiplayerSeat.update({ where: { id: seat.id }, data: { runId: run.id, pickDeadline: new Date(Date.now() + 180_000) } });
+  await db.multiplayerSeat.update({ where: { id: seat.id }, data: { runId: run.id } });
   return run.id;
 }
 

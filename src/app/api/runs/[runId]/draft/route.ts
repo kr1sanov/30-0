@@ -139,7 +139,6 @@ export async function POST(
         isCompatible,
       },
     });
-    if (multiplayerSeat) await db.multiplayerSeat.update({ where: { id: multiplayerSeat.id }, data: { pickDeadline: new Date(Date.now() + 180_000) } });
 
     // Return updated run with slots
     const updatedRun = await db.gameRun.findUnique({

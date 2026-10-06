@@ -1,39 +1,27 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Clipboard, Crown, Link2, Plus, Share2, Trash2, UserRound, Users } from 'lucide-react';
-import { FORMATIONS, POSITION_CATEGORY, canFillSlotStrict, getPitchColumn, type Position } from '@/lib/positions';
-import { FORMATION_LAYOUTS } from '@/components/game/FormationView';
-import { SlotReel, RPL_CLUBS, RPL_SEASONS } from '@/components/game/SpinWheel';
-import { playerDisplayName } from '@/lib/playerNames';
+import { FORMATIONS, POSITION_CATEGORY, type Position } from '@/lib/positions';
+import SpinWheel from '@/components/game/SpinWheel';
+import FormationView from '@/components/game/FormationView';
+import PlayerList from '@/components/game/PlayerList';
+import SimulationResult from '@/components/game/SimulationResult';
+import type { DraftSlot, GameConfig, PlayerOption, SpinResult } from '@/lib/types';
 
-export type Slot = { slotPosition: string; playerSeasonId: string | null; playerLastName: string | null; playerRating: number | null };
-export type Run = { id: string; formation: string; completed: boolean; slots: Slot[] };
+export type Slot = { slotPosition: string; playerSeasonId: string | null; playerLastName: string | null; playerName: string | null; playerRating: number | null; playerSeasonYear: number | null; playerPosition: string | null; playerOtherPositions: string[] };
+export type Run = { id: string; formation: string; completed: boolean; rerollsLeft: number; slots: Slot[] };
 export type Seat = { id: string; name: string; formation: string; ready: boolean; drafted: number; result: { wins: number; draws: number; losses: number; points: number; overallRating: number } | null; isYou: boolean; isHost: boolean; isBot: boolean; pickDeadline: string | null; managerName: string | null; managerRating: number | null };
 export type RoomResult = { id: string; name: string; points: number; wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 export type Room = { code: string; status: string; maxPlayers: number; ratingMode: string; eraStartYear: number; eraEndYear: number; withManager: boolean; isHost: boolean; seats: Seat[]; ownRun: Run | null; results: RoomResult[] | null };
-export type Player = { playerSeasonId: string; fullName: string; lastName: string; rating: number; primeRating: number; mainPosition: string; otherPositions: string[] };
-export type Spin = { clubName: string; seasonLabel: string; players: Player[] };
+export type Player = PlayerOption;
+export type Spin = SpinResult;
 
 const panel = 'rounded-2xl border border-[#1E1E1E] bg-[#141414]';
 const active = 'border-[#00C896]/70 bg-[#00C896]/15 text-[#00C896] shadow-[0_0_16px_var(--club-glow)]';
 const neutral = 'border-[#292929] bg-[#1E1E1E] text-[#9CA3AF] hover:border-white/30';
 const primary = 'rounded-xl bg-[#00C896] px-5 py-3.5 font-bold text-[#07130f] transition hover:bg-[#00A67A] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40';
-
-export function Pitch({ run, compact = false }: { run: Run; compact?: boolean }) {
-  const filled = run.slots.filter(s => s.playerSeasonId).length;
-  const formation = FORMATIONS.find(f => f.id === run.formation);
-  return <div className="mx-auto w-full max-w-[520px]">
-    <div className={`relative mx-auto aspect-[.69] w-full overflow-hidden rounded-xl border border-[#1a5c30]/50 shadow-[0_16px_42px_#0006] ${compact ? 'max-w-[280px]' : ''}`}>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]"/>
-      <div className="absolute inset-0 opacity-[.06]" style={{backgroundImage:'repeating-linear-gradient(0deg, transparent 0px, transparent 18px, rgba(255,255,255,.4) 18px, rgba(255,255,255,.4) 36px)'}}/>
-      <div className="pointer-events-none absolute inset-3 border border-white/20"/><div className="pointer-events-none absolute inset-x-3 top-1/2 border-t border-white/15"/><div className="pointer-events-none absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/15"/>
-      <div className="pointer-events-none absolute left-1/2 top-3 h-10 w-28 -translate-x-1/2 border-x border-b border-white/15"/><div className="pointer-events-none absolute bottom-3 left-1/2 h-10 w-28 -translate-x-1/2 border-x border-t border-white/15"/>
-      {run.slots.map((slot, index) => { const pos = slot.slotPosition.split('_')[0] as Position; const coords = (FORMATION_LAYOUTS[run.formation] || FORMATION_LAYOUTS['4-3-3'])[index]; if (!coords) return null; const color = ({ gk: '#fbbf24', def: '#3b82f6', mid: '#22c55e', att: '#f97316' })[POSITION_CATEGORY[pos]]; const label = formation?.slots[index]?.label || pos; return <motion.div layout initial={{scale:.8,opacity:0}} animate={{scale:1,opacity:1}} key={slot.slotPosition} className="absolute z-10 w-[19%] -translate-x-1/2 -translate-y-1/2 text-center" style={{ top: `${coords.row}%`, left: `${getPitchColumn(coords.col)}%` }}><div className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full border-2 text-[10px] font-black shadow-[0_2px_8px_#0008] sm:h-9 sm:w-9 ${slot.playerSeasonId ? 'border-white/60 text-white' : 'border-dashed border-white/50 text-white'}`} style={{ background: slot.playerSeasonId ? color : '#123c1e' }}>{slot.playerRating ?? pos}</div><div className="mx-auto mt-1 max-w-full truncate text-[8px] font-bold leading-none text-white/90" title={slot.playerLastName || label}>{slot.playerLastName || label}</div></motion.div>; })}
-    </div><div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#9CA3AF]"><span><b className="text-[#00C896]">{filled}</b>/11 · {run.formation}</span><span>🟠 ВР　🔵 Защита　🟢 Центр　🔴 Атака</span></div>
-  </div>;
-}
 
 export function Lobby({ room, busy, onSeat, onSettings, onBot, onRemoveBot, onStart }: { room: Room; busy: boolean; onSeat: (ready: boolean, formation: string) => void; onSettings: (changes: Partial<Room>) => void; onBot: () => void; onRemoveBot: (botId: string) => void; onStart: () => void }) {
   const own = room.seats.find(s => s.isYou);
@@ -52,50 +40,111 @@ export function Lobby({ room, busy, onSeat, onSettings, onBot, onRemoveBot, onSt
   </div>;
 }
 
-export function Draft({ room, run, spin, busy, remaining, onSpin, onPick, onSkip, onFinish }: { room:Room; run:Run; spin:Spin|null; busy:boolean; remaining:number; onSpin:()=>void; onPick:(player:Player,slot:Slot)=>void; onSkip:()=>void; onFinish:()=>void }) {
-  const [selected, setSelected] = useState<string|null>(null);
-  const [sort, setSort] = useState<'rating'|'name'>('rating');
+export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPick, onMove, onSkip, onFinish }: {
+  room: Room; run: Run; spin: Spin | null; busy: boolean; remaining: number;
+  onSpin: () => Promise<void>; onReroll: () => Promise<void>;
+  onPick: (player: Player, slot: Slot) => void; onMove: (from: Slot, to: Slot) => void;
+  onSkip: () => void; onFinish: () => void;
+}) {
+  const [selected, setSelected] = useState<PlayerOption | null>(null);
   const [spinning, setSpinning] = useState(false);
-  const filled = run.slots.filter(s => s.playerSeasonId).length;
-  const reelClubs = useMemo(() => spin && !RPL_CLUBS.includes(spin.clubName) ? [...RPL_CLUBS, spin.clubName] : RPL_CLUBS, [spin?.clubName]);
-  const reelSeasons = useMemo(() => spin && !RPL_SEASONS.includes(spin.seasonLabel) ? [...RPL_SEASONS, spin.seasonLabel] : RPL_SEASONS, [spin?.seasonLabel]);
-  const players = useMemo(() => [...(spin?.players || [])].sort((a,b) => sort === 'rating' ? (room.ratingMode === 'prime' ? b.primeRating-a.primeRating : b.rating-a.rating) : a.lastName.localeCompare(b.lastName)), [spin,sort,room.ratingMode]);
-  const play = () => { setSpinning(true); setSelected(null); onSpin(); setTimeout(() => setSpinning(false), 1100); };
-  return <div className="grid items-start gap-6 lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]"><div className="lg:sticky lg:top-20"><div className={`${panel} mb-4 p-4`}><div className="text-xs font-bold uppercase tracking-widest text-emerald-400">Ваша команда</div><div className="mt-1 flex items-end justify-between"><strong className="text-2xl">{filled}<span className="text-slate-500">/11</span></strong><span className="text-sm text-slate-400">{run.formation} · {room.ratingMode === 'prime' ? 'Прайм' : 'Сезон'}</span></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-emerald-400 transition-all duration-500" style={{width:`${filled/11*100}%`}}/></div></div><Pitch run={run}/>{room.withManager && <p className="mt-4 text-center text-sm text-slate-400">Тренер: {room.seats.find(s => s.isYou)?.managerName || 'выбирается автоматически'}</p>}</div>
-    <div className="min-w-0 space-y-5"><div className={`${panel} p-5`}><div className="mb-3 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-widest text-slate-400">Live драфт · выбор {Math.min(filled+1,11)}/11</span><strong className={`font-mono text-xl ${remaining < 30 ? 'text-rose-400' : 'text-emerald-400'}`}>{Math.floor(remaining/60)}:{String(remaining%60).padStart(2,'0')}</strong></div><div className="h-1 overflow-hidden rounded-full bg-white/10"><div className="h-full bg-emerald-400 transition-all duration-1000" style={{width:`${Math.min(100,remaining/180*100)}%`}}/></div><div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-400">{room.seats.filter(s => !s.isYou).map(s => <span key={s.id} className="rounded-full bg-white/5 px-2.5 py-1">{s.name} · {s.drafted}/11</span>)}</div></div>
-      {filled === 11 ? <div className={`${panel} p-6 text-center`}><div className="mb-3 text-4xl">⚽</div><h2 className="text-2xl font-black">Состав готов</h2><p className="my-3 text-slate-400">Все позиции заполнены. Когда остальные закончат драфт, начнётся сезон из 30 матчей.</p><button disabled={busy || room.seats.find(s => s.isYou)?.ready} onClick={onFinish} className={`${primary} mt-3 w-full`}>{room.seats.find(s => s.isYou)?.ready ? 'Ожидаем остальных…' : 'Начать сезон →'}</button></div> : <>
-      <div className={`${panel} overflow-hidden p-5 sm:p-6`}><div className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-400">Клуб × сезон</div><div className="my-5 flex min-h-24 items-stretch gap-2 sm:gap-3"><SlotReel items={reelClubs} targetItem={spin?.clubName || null} isSpinning={spinning} hasResult={!!spin} accentColor="#00C896" label="КЛУБ"/><span className="self-center text-slate-500">×</span><SlotReel items={reelSeasons} targetItem={spin?.seasonLabel || null} isSpinning={spinning} hasResult={!!spin} accentColor="#00C896" label="СЕЗОН"/></div><button disabled={busy || remaining === 0 || !!spin} onClick={play} className={`${primary} w-full`}>🎰 {spin ? 'Выберите игрока' : busy || spinning ? 'Колесо крутится…' : 'Крутить колесо'}</button><p className="mt-3 text-center text-xs text-slate-500">{spin ? 'Выберите футболиста и подходящую позицию' : 'Прокрутите, чтобы открыть игроков клуба и сезона'}</p></div>
-      {spin && <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} className={`${panel} overflow-hidden`}><div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-5 py-4"><div><h2 className="text-lg font-bold">Игроки · {spin.clubName}</h2><p className="text-xs text-slate-400">{spin.seasonLabel} · {players.length} игроков</p></div><div className="flex gap-1 rounded-lg bg-black/30 p-1">{([['rating','Рейтинг'],['name','Имя']] as const).map(([key,label]) => <button key={key} onClick={() => setSort(key)} className={`rounded-md px-2.5 py-1.5 text-xs ${sort === key ? 'bg-white/15 text-white' : 'text-slate-400'}`}>{label}</button>)}</div></div><div className="max-h-[540px] space-y-2 overflow-y-auto p-3 sm:p-4">{players.map(player => { const options = run.slots.filter(slot => !slot.playerSeasonId && canFillSlotStrict(player.mainPosition as Position, player.otherPositions as Position[], slot.slotPosition.split('_')[0] as Position)); const rating = room.ratingMode === 'prime' ? player.primeRating : player.rating; const opened = selected === player.playerSeasonId; const display = playerDisplayName(player.fullName, player.lastName); return <div key={player.playerSeasonId} className={`rounded-xl border transition ${opened ? active : neutral} ${!options.length ? 'opacity-50' : ''}`}><button disabled={!options.length} onClick={() => setSelected(opened ? null : player.playerSeasonId)} className="flex w-full items-center gap-3 p-3 text-left"><div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl font-black text-white ${rating >= 85 ? 'bg-[#00C896]' : rating >= 75 ? 'bg-[#3b82f6]' : 'bg-[#64748b]'}`}>{rating}</div><div className="min-w-0 flex-1"><div className="truncate text-sm"><strong>{display.surname}</strong> {display.given && <span className="text-slate-400">{display.given}</span>}</div><div className="mt-1 text-xs text-slate-400">{[player.mainPosition, ...player.otherPositions].join(' · ')}</div></div><ChevronDown size={16} className={opened ? 'rotate-180' : ''}/></button>{opened && <div className="flex flex-wrap gap-2 border-t border-white/10 p-3"><span className="w-full text-xs text-slate-400">Поставить на позицию:</span>{options.map(slot => <button key={slot.slotPosition} disabled={busy} onClick={() => { onPick(player,slot); setSelected(null); }} className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-bold text-black hover:bg-emerald-400">{slot.slotPosition.split('_')[0]} · {slot.slotPosition.split('_').slice(1).join(' ') || 'основная'}</button>)}</div>}</div>; })}{players.every(p => !run.slots.some(s => !s.playerSeasonId && canFillSlotStrict(p.mainPosition as Position,p.otherPositions as Position[],s.slotPosition.split('_')[0] as Position))) && <p className="p-5 text-center text-sm text-slate-400">Нет подходящих свободных позиций. <button type="button" onClick={onSkip} className="font-bold text-[#00C896] underline">Крутить снова</button></p>}</div></motion.div>}
-      </>}
-    </div></div>;
+  const [lastPlaced, setLastPlaced] = useState('');
+  const spinRef = useRef<HTMLDivElement>(null);
+  const formation = FORMATIONS.find(value => value.id === run.formation);
+  const slots = useMemo<DraftSlot[]>(() => run.slots.map((slot, index) => {
+    const position = slot.slotPosition.split('_')[0] as Position;
+    return {
+      position, positionLabel: formation?.slots[index]?.label || position,
+      category: POSITION_CATEGORY[position], playerId: slot.playerSeasonId ?? undefined,
+      playerName: slot.playerName ?? undefined, playerLastName: slot.playerLastName ?? undefined,
+      playerRating: slot.playerRating ?? undefined, playerSeasonYear: slot.playerSeasonYear ?? undefined,
+      playerPosition: slot.playerPosition ?? undefined, playerOtherPositions: slot.playerOtherPositions,
+    };
+  }), [run.slots, formation]);
+  const config: GameConfig = { formation: run.formation, difficulty: 'normal', draftMode: 'squad_first',
+    ratingMode: room.ratingMode as 'season' | 'prime', eraFilter: 'custom', eraStartYear: room.eraStartYear,
+    eraEndYear: room.eraEndYear, gameMode: 'classic' };
+  const filled = slots.filter(value => value.playerId).length;
+  const locked = busy || remaining <= 0 || room.seats.find(value => value.isYou)?.ready === true;
+  const rating = filled ? Math.round(slots.reduce((sum, value) => sum + (value.playerRating ?? 0), 0) / filled) : null;
+  const categories = ['att', 'mid', 'def', 'gk'] as const;
+  const labels = { att: 'Атака', mid: 'Полузащита', def: 'Защита', gk: 'ВР' };
+  const colors = { att: '#ef4444', mid: '#00C896', def: '#3b82f6', gk: '#f97316' };
+  const assign = (index: number) => {
+    if (locked || !selected) return;
+    const player = selected;
+    onPick(player, run.slots[index]);
+    setLastPlaced(`${player.fullName} → ${slots[index].positionLabel}`);
+    setSelected(null);
+    setTimeout(() => spinRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 800);
+  };
+  const play = async (reroll = false) => {
+    if (locked) return;
+    setSpinning(true); setSelected(null);
+    try { await (reroll ? onReroll() : onSpin()); }
+    finally { setSpinning(false); }
+  };
+  return <div className="space-y-3 animate-fade-in pb-24 sm:pb-4">
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E1E1E] bg-[#141414] px-4 py-2.5">
+      <div><span className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Время на весь драфт · {filled}/11</span>
+        <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-[#9CA3AF]">{room.seats.filter(value => !value.isYou).map(value => <span key={value.id}>{value.name} · {value.drafted}/11</span>)}</div>
+      </div>
+      <strong role="timer" className={`font-mono text-2xl tabular-nums ${remaining < 30 ? 'text-red-400' : 'text-[#00C896]'}`}>{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</strong>
+    </div>
+    <div className="h-1 overflow-hidden rounded-full bg-[#1E1E1E]"><motion.div animate={{ width: `${remaining / 180 * 100}%` }} className="h-full bg-[#00C896]"/></div>
+    <div className="lg:grid lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <div className="space-y-3 lg:sticky lg:top-20">
+        <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="rounded-lg bg-[#1E1E1E] px-2 py-1 text-xs font-black">{run.formation}</span><span className="text-[10px] text-[#64748b]">{11-filled} поз. осталось</span></div><span className="text-[10px] font-bold text-[#fbbf24]">🔄 {run.rerollsLeft}/1</span></div>
+        {selected && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выберите позицию для <strong>{selected.fullName}</strong> на поле или в списке ниже</motion.div>}
+        {lastPlaced && !selected && <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">✅ {lastPlaced}</div>}
+        <FormationView multiplayer={{ config, slots, selectedPlayer: locked ? null : selected,
+          onAssign: assign, onMove: (from, to) => { if (!locked) onMove(run.slots[from], run.slots[to]); } }}/>
+        <div className="rounded-xl border border-[#1E1E1E]/60 bg-[#141414] p-3"><div className="flex items-center gap-3"><div className="text-center"><div className="text-4xl font-black text-[#00C896]">{rating ?? '—'}</div><div className="mt-1 text-[10px] font-bold text-[#9CA3AF]">Рейтинг</div></div><div className="flex-1 space-y-1.5">{categories.map(category => { const values = slots.filter(slot => slot.category === category && slot.playerRating).map(slot => slot.playerRating!); const average = values.length ? Math.round(values.reduce((a,b) => a+b,0)/values.length) : 0; return <div key={category} className="flex items-center gap-2"><span className="w-14 text-[9px] text-[#9CA3AF]">{labels[category]}</span><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a2a1a]"><motion.div animate={{ width: `${average/99*100}%` }} className="h-full rounded-full" style={{ backgroundColor: colors[category] }}/></div><span className="w-5 text-right text-[9px] font-bold">{average || '—'}</span></div>; })}</div></div></div>
+        {room.withManager && <p className="text-center text-xs text-[#9CA3AF]">Тренер: {room.seats.find(value => value.isYou)?.managerName}</p>}
+      </div>
+      <div className="mt-3 space-y-3 lg:mt-0">
+        {filled === 11 || locked && remaining <= 0 ? <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-6 text-center"><h2 className="text-xl font-black">{filled === 11 ? 'Состав готов' : 'Время драфта истекло'}</h2><p className="my-3 text-sm text-[#9CA3AF]">{filled === 11 ? 'Ожидайте окончания общего времени и других участников.' : 'Оставшиеся позиции заполнятся автоматически.'}</p>{filled === 11 && <button disabled={busy || room.seats.find(value => value.isYou)?.ready} onClick={onFinish} className={primary}>Начать сезон →</button>}</div> : <>
+          <div ref={spinRef}><SpinWheel multiplayer={{ currentSpin: spin, isSpinning: spinning, rerollsLeft: run.rerollsLeft,
+            openCount: 11-filled, disabled: locked, onSpin: () => play(false), onReroll: () => play(true) }}/></div>
+          {spin && !spinning && <PlayerList multiplayer={{ currentSpin: spin, slots, ratingMode: config.ratingMode,
+            selectedPlayer: selected, onSelect: setSelected, onAssign: assign, onSkip, disabled: locked }}/>}
+        </>}
+      </div>
+    </div>
+  </div>;
 }
 
-export function Results({ room, run }: { room:Room; run:Run|null }) {
-  const [showMatches, setShowMatches] = useState(false);
-  const [round, setRound] = useState(30);
-  const results = room.results || [];
-  const own = room.seats.find(s => s.isYou);
-  const mine = results.find(r => r.id === own?.id);
-  const place = results.findIndex(r => r.id === own?.id)+1;
-  const leader = results[0];
-  useEffect(() => {
-    const key = `30-0-multiplayer-seen-${room.code}`;
-    if (sessionStorage.getItem(key)) return;
-    const start = setTimeout(() => setRound(0), 0);
-    return () => clearTimeout(start);
-  }, [room.code]);
-  useEffect(() => {
-    if (round >= 30) { sessionStorage.setItem(`30-0-multiplayer-seen-${room.code}`, '1'); return; }
-    const timer = setTimeout(() => setRound(value => value+1), 420);
-    return () => clearTimeout(timer);
-  }, [round, room.code]);
-  const share = () => { const message = `30-0 · драфт с друзьями: ${mine?.points ?? 0} очков, ${place}-е место из ${results.length}. ${location.origin}/multiplayer`; if (navigator.share) void navigator.share({title:'30-0 · Мой сезон',text:message}); else void navigator.clipboard.writeText(message); };
-  if (round < 30 && mine) {
-    const played = mine.matches.slice(0, round);
-    const wins = played.filter(m => m.for > m.against).length;
-    const draws = played.filter(m => m.for === m.against).length;
-    const losses = played.length - wins - draws;
-    return <div className="mx-auto max-w-2xl pb-10"><div className="mb-6 text-center"><span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Симуляция сезона</span><h1 className="mt-2 text-3xl font-black">Тур {round} / 30</h1><p className="mt-2 text-slate-400">{mine.name} · сезон РПЛ</p></div><div className="mb-5 h-2 overflow-hidden rounded-full bg-white/10"><motion.div animate={{width:`${round/30*100}%`}} className="h-full rounded-full bg-emerald-400"/></div><div className={`${panel} mb-4 grid grid-cols-4 gap-2 p-5 text-center`}>{[[wins,'Победы'],[draws,'Ничьи'],[losses,'Поражения'],[wins*3+draws,'Очки']].map(([value,label]) => <div key={label}><b className="block text-2xl text-emerald-400">{value}</b><span className="text-xs text-slate-400">{label}</span></div>)}</div><div className={`${panel} max-h-[450px] space-y-2 overflow-y-auto p-3 sm:p-5`}>{played.slice(-8).reverse().map((m,index) => <motion.div key={round-index} initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[.035] p-3 text-sm"><span className="min-w-0 flex-1 truncate"><span className="mr-2 text-slate-500">{round-index} тур</span>{m.opponent}</span><b className={m.for > m.against ? 'text-emerald-400' : m.for < m.against ? 'text-rose-400' : 'text-slate-300'}>{m.for}–{m.against}</b></motion.div>)}</div><button className="mt-5 w-full rounded-xl border border-white/15 px-5 py-3 text-sm text-slate-300 hover:bg-white/5" onClick={() => setRound(30)}>Показать итоги →</button></div>;
-  }
-  return <div className="mx-auto max-w-6xl pb-10"><div className="mb-8 text-center"><motion.div initial={{scale:.5,opacity:0}} animate={{scale:1,opacity:1}} transition={{type:'spring',delay:.15}} className="mb-3 text-5xl">{place === 1 ? '🏆' : '⚽'}</motion.div><span className="text-xs font-bold uppercase tracking-[.25em] text-emerald-400">Сезон завершён · 30 матчей</span><h1 className="mt-2 text-3xl font-black sm:text-4xl">{place === 1 ? 'Вы победили!' : `Место ${place} из ${results.length}`}</h1><p className="mt-2 text-slate-400">{mine?.name} · {run?.formation}</p></div><div className="grid gap-6 lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]"><div>{run && <Pitch run={run}/>}<button onClick={share} className={`${primary} mt-5 w-full`}><Share2 size={17} className="mr-2 inline"/>Поделиться результатом</button></div><div className="space-y-5"><div className={`${panel} p-5 text-center sm:p-6`}><div className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">Ваш результат</div><div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[[mine?.points ?? 0,'Очки'],[mine?.wins ?? 0,'Победы'],[mine?.draws ?? 0,'Ничьи'],[mine?.losses ?? 0,'Поражения']].map(([value,label]) => <div key={label} className="rounded-xl bg-white/5 p-3"><strong className="block text-3xl text-emerald-400">{value}</strong><span className="text-xs text-slate-400">{label}</span></div>)}</div><div className="mt-4 flex justify-center gap-5 text-sm text-slate-400"><span>Голы: <b className="text-white">{mine?.goalsFor}:{mine?.goalsAgainst}</b></span><span>Рейтинг: <b className="text-white">{mine?.rating}</b></span></div></div><div className={`${panel} p-5 sm:p-6`}><h2 className="mb-4 flex items-center gap-2 text-lg font-bold"><Crown size={20} className="text-amber-400"/> Таблица игроков</h2><div className="space-y-2">{results.map((r,i) => <div key={r.id} className={`grid grid-cols-[2rem_1fr_auto] items-center gap-2 rounded-xl border p-3 ${r.id === mine?.id ? active : neutral}`}><span className="font-bold text-slate-400">{i+1}.</span><div className="min-w-0 truncate font-semibold">{r.name}{r.id === mine?.id && <span className="ml-1 text-xs font-normal text-slate-400">(вы)</span>}</div><div className="text-right"><b className="text-lg">{r.points}</b><span className="ml-1 text-xs text-slate-400">очк.</span><div className="text-[11px] text-slate-500">{r.wins}–{r.draws}–{r.losses}</div></div></div>)}</div>{leader && mine && place !== 1 && <p className="mt-3 text-center text-xs text-slate-400">До первого места: {leader.points - mine.points} очков</p>}</div><div className={`${panel} overflow-hidden`}><button onClick={() => setShowMatches(v => !v)} className="flex w-full items-center justify-between p-5 text-left font-bold"><span>Матчи сезона {mine?.matches?.length ?? 0}/30</span><ChevronDown size={18} className={showMatches ? 'rotate-180' : ''}/></button>{showMatches && <div className="max-h-80 overflow-y-auto border-t border-white/10 px-5">{mine?.matches.map((m,i) => <div key={i} className="flex items-center justify-between gap-3 border-b border-white/5 py-2 text-sm"><span className="w-12 text-slate-500">{i+1} тур</span><span className="min-w-0 flex-1 truncate">{m.opponent}{m.opponentId && <span className="ml-1 text-emerald-400">· игрок</span>}</span><b className={m.for > m.against ? 'text-emerald-400' : m.for < m.against ? 'text-rose-400' : 'text-slate-300'}>{m.for}:{m.against}</b></div>)}</div>}</div><a href="/multiplayer" className="block rounded-xl border border-white/15 px-5 py-3 text-center font-semibold hover:bg-white/5">Новая игра →</a></div></div></div>;
+export function Results({ room, run }: { room: Room; run: Run | null }) {
+  const own = room.seats.find(value => value.isYou);
+  const results = room.results ?? [];
+  const mine = results.find(value => value.id === own?.id);
+  if (!mine) return <div className="text-center text-[#9CA3AF]">Загружаем результаты сезона…</div>;
+  const position = results.findIndex(value => value.id === mine.id) + 1;
+  const matches = mine.matches.map((match, index) => ({
+    matchday: index + 1, opponent: match.opponent, isHome: match.home,
+    homeGoals: match.home ? match.for : match.against,
+    awayGoals: match.home ? match.against : match.for,
+    result: (match.for > match.against ? 'W' : match.for < match.against ? 'L' : 'D') as 'W' | 'D' | 'L',
+  }));
+  const table = results.map((result, index) => ({
+    position: index + 1, name: result.name, played: result.matches.length,
+    won: result.wins, drawn: result.draws, lost: result.losses,
+    goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst,
+    goalDifference: result.goalsFor - result.goalsAgainst, points: result.points,
+  }));
+  const formation = FORMATIONS.find(value => value.id === run?.formation);
+  const slots: DraftSlot[] = (run?.slots ?? []).map((slot, index) => {
+    const position = slot.slotPosition.split('_')[0] as Position;
+    return { position, positionLabel: formation?.slots[index]?.label || position,
+      category: POSITION_CATEGORY[position], playerId: slot.playerSeasonId ?? undefined,
+      playerName: slot.playerName ?? undefined, playerLastName: slot.playerLastName ?? undefined,
+      playerRating: slot.playerRating ?? undefined };
+  });
+  const config: GameConfig = { formation: run?.formation ?? '4-3-3', difficulty: 'normal',
+    draftMode: 'squad_first', ratingMode: room.ratingMode as 'season' | 'prime', eraFilter: 'custom',
+    eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, gameMode: 'classic', teamName: mine.name };
+  return <SimulationResult multiplayer={{ data: { runId: run?.id, points: mine.points, wins: mine.wins,
+    draws: mine.draws, losses: mine.losses, goalsFor: mine.goalsFor, goalsAgainst: mine.goalsAgainst,
+    position, formation: config.formation, matches, table }, config, slots,
+    onHome: () => { location.href = '/'; }, onReplay: () => { location.href = '/multiplayer'; } }}/ >;
 }

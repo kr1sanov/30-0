@@ -31,7 +31,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
       if (seat.isBot) await draftBot(runId, room.eraStartYear, room.eraEndYear);
       else await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: false } });
     }
-    await db.multiplayerRoom.update({ where: { code: room.code }, data: { status: 'drafting' } });
+    // One shared deadline begins only when every participant can actually draft.
+    const deadline = new Date(Date.now() + 180_000);
+    await db.$transaction([
+      db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { pickDeadline: deadline } }),
+      db.multiplayerRoom.update({ where: { code: room.code }, data: { status: 'drafting' } }),
+    ]);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Multiplayer start:', error);

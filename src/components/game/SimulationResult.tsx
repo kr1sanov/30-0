@@ -10,6 +10,7 @@ import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
 import html2canvas from 'html2canvas-pro';
+import type { DraftSlot, GameConfig } from '@/lib/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -118,8 +119,17 @@ const trophyVariants = {
 // Season Result — 38-0 style
 // ---------------------------------------------------------------------------
 
-export default function SimulationResult() {
-  const { seasonResult, resetGame, goHome, slots, setScreen, config } = useGameStore();
+export default function SimulationResult({ multiplayer }: { multiplayer?: {
+  data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
+  onHome: () => void; onReplay: () => void;
+} }) {
+  const store = useGameStore();
+  const seasonResult = multiplayer ? multiplayer.data : store.seasonResult;
+  const resetGame = multiplayer?.onReplay ?? store.resetGame;
+  const goHome = multiplayer?.onHome ?? store.goHome;
+  const slots = multiplayer ? multiplayer.slots : store.slots;
+  const setScreen = store.setScreen;
+  const config = multiplayer ? multiplayer.config : store.config;
   const { haptic, notify, showConfirm } = useTelegram();
   const [currentMatchweek, setCurrentMatchweek] = useState(0);
   const [showTable, setShowTable] = useState(true);
@@ -137,7 +147,7 @@ export default function SimulationResult() {
   // Track season finish in Metrika (once)
   const hasTrackedRef = useRef(false);
   useEffect(() => {
-    if (data && !hasTrackedRef.current) {
+    if (data && !multiplayer && !hasTrackedRef.current) {
       hasTrackedRef.current = true;
       Metrics.seasonFinish({
         wins: data.wins,
@@ -147,7 +157,7 @@ export default function SimulationResult() {
         position: data.position,
       });
     }
-  }, [data]);
+  }, [data, multiplayer]);
 
   // Auto-play through matchweeks
   useEffect(() => {
@@ -173,7 +183,7 @@ export default function SimulationResult() {
   // can measure it reliably on both desktop and mobile browsers.
   useEffect(() => {
     const runId = data?.runId;
-    if (!isComplete || !runId || !telegramCardRef.current) return;
+    if (multiplayer || !isComplete || !runId || !telegramCardRef.current) return;
     const sentKey = `30-0-result-sent-${runId}`;
     if (telegramSendRef.current === runId || sessionStorage.getItem(sentKey)) return;
     telegramSendRef.current = runId;
@@ -201,7 +211,7 @@ export default function SimulationResult() {
     };
     void sendResult();
     return () => { cancelled = true; };
-  }, [isComplete, data]);
+  }, [isComplete, data, multiplayer]);
 
   // Haptic on simulation completion
   useEffect(() => {
@@ -559,7 +569,7 @@ export default function SimulationResult() {
                           </thead>
                           <tbody>
                             {data.table.map((team) => {
-                              const isPlayer = team.name === 'Моя команда';
+                              const isPlayer = team.name === (config.teamName || 'Моя команда');
                               return (
                                 <tr
                                   key={team.position}
@@ -621,13 +631,13 @@ export default function SimulationResult() {
               >
                 Завершить сезон
               </Button>
-              <Button
+              {!multiplayer && <Button
                 onClick={() => { haptic('medium'); setScreen('awards'); }}
                 className="w-full h-14 text-base font-black rounded-xl transition-all"
                 style={{ background: 'linear-gradient(135deg, var(--club-primary), var(--club-secondary))', color: 'var(--club-on-primary)', boxShadow: '0 8px 24px var(--club-glow)' }}
               >
                 🏆 Награды сезона
-              </Button>
+              </Button>}
               <div className="flex gap-3">
                 <Button
                   onClick={async () => {
@@ -648,20 +658,20 @@ export default function SimulationResult() {
                   📤 Поделиться
                 </Button>
               </div>
-              <Button
+              {!multiplayer && <Button
                 onClick={() => setScreen('profile')}
                 variant="outline"
                 className="w-full h-11 rounded-xl border-[#1E1E1E] text-[#9CA3AF] hover:bg-[#141414] hover:text-[#FFFFFF]"
               >
                 👤 Профиль
-              </Button>
+              </Button>}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Share Modal */}
-      {isComplete && <AchievementUnlocked />}
+      {isComplete && !multiplayer && <AchievementUnlocked />}
       <ShareModal
         runId={data?.runId}
         isOpen={isShareOpen}
@@ -695,7 +705,7 @@ export default function SimulationResult() {
         }
       />
 
-      {data && (
+      {data && !multiplayer && (
         <div
           ref={telegramCardRef}
           aria-hidden="true"

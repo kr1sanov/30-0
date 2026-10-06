@@ -7,6 +7,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { RotateCcw, Loader2 } from 'lucide-react';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
+import type { SpinResult } from '@/lib/types';
 
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
@@ -295,12 +296,21 @@ function EmptyField({ label, value, onClear }: { label: string; value: string | 
 /**
  * SpinWheel — 38-0 style slot-machine spin component.
  */
-export default function SpinWheel() {
-  const { currentSpin, isSpinning, spin, reroll, rerollsLeft, slots, config, skipSpin } =
-    useGameStore();
+export default function SpinWheel({ multiplayer }: { multiplayer?: {
+  currentSpin: SpinResult | null; isSpinning: boolean; rerollsLeft: number; openCount: number;
+  disabled: boolean; onSpin: () => Promise<void>; onReroll: () => Promise<void>;
+} }) {
+  const store = useGameStore();
+  const currentSpin = multiplayer ? multiplayer.currentSpin : store.currentSpin;
+  const isSpinning = multiplayer ? multiplayer.isSpinning : store.isSpinning;
+  const spin = multiplayer?.onSpin ?? store.spin;
+  const reroll = multiplayer?.onReroll ?? store.reroll;
+  const rerollsLeft = multiplayer ? multiplayer.rerollsLeft : store.rerollsLeft;
+  const slots = store.slots;
+  const config = multiplayer ? { ...store.config, difficulty: 'normal' as const, showRatings: true } : store.config;
   const { haptic, notify, selectionChanged } = useTelegram();
 
-  const openCount = slots.filter((s) => !s.playerId).length;
+  const openCount = multiplayer ? multiplayer.openCount : slots.filter((s) => !s.playerId).length;
   const hasResult = !!currentSpin;
 
   // Effective showRatings
@@ -310,33 +320,33 @@ export default function SpinWheel() {
 
   /* ── User actions ── */
   const handleSpin = useCallback(async () => {
-    if (isSpinning) return;
+    if (isSpinning || multiplayer?.disabled) return;
     haptic('medium'); // Haptic on spin start
     await spin();
     // Track spin in Metrika after result
-    const state = useGameStore.getState();
-    if (state.currentSpin) {
-      Metrics.spinWheel(state.currentSpin.clubName, state.currentSpin.seasonLabel);
+    const result = multiplayer?.currentSpin ?? useGameStore.getState().currentSpin;
+    if (result) {
+      Metrics.spinWheel(result.clubName, result.seasonLabel);
     }
-  }, [isSpinning, spin, haptic]);
+  }, [isSpinning, spin, haptic, multiplayer]);
 
   const handleReroll = useCallback(async () => {
-    if (isSpinning || rerollsLeft <= 0) return;
+    if (isSpinning || rerollsLeft <= 0 || multiplayer?.disabled) return;
     haptic('light'); // Haptic on reroll
     await reroll();
-  }, [isSpinning, rerollsLeft, reroll, haptic]);
+  }, [isSpinning, rerollsLeft, reroll, haptic, multiplayer]);
 
   // Spacebar support & tap-to-spin
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !hasResult && !isSpinning) {
+      if (e.code === 'Space' && !hasResult && !isSpinning && !multiplayer?.disabled) {
         e.preventDefault();
         handleSpin();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [hasResult, isSpinning, handleSpin]);
+  }, [hasResult, isSpinning, handleSpin, multiplayer?.disabled]);
 
   return (
     <div className="space-y-3">
@@ -377,7 +387,7 @@ export default function SpinWheel() {
               <motion.div whileTap={{ scale: 0.97 }}>
                 <Button
                   onClick={handleSpin}
-                  disabled={isSpinning}
+                  disabled={isSpinning || multiplayer?.disabled}
                   className="w-full h-12 text-base font-black text-white rounded-xl transition-all flex items-center justify-center gap-2"
                   style={{
                     backgroundColor: ACCENT,
@@ -490,6 +500,7 @@ export default function SpinWheel() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleReroll}
+                  disabled={multiplayer?.disabled}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold border border-[#fbbf24]/40 text-[#fbbf24] rounded-xl hover:bg-[#fbbf24]/10 transition-all mb-2"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />

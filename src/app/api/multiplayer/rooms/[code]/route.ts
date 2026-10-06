@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { publicRoom, roomName, validEra, validFormation } from '@/lib/multiplayer';
+import { publicRoom, resolveRoom, roomName, validEra, validFormation } from '@/lib/multiplayer';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { setRunAccessCookie } from '@/lib/runAccess';
@@ -15,14 +15,25 @@ export async function GET(request: Request, { params }: Context) {
   const { code } = await params;
   const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } } });
   if (!authorized) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
-  const expired = await db.multiplayerSeat.findFirst({ where: { roomCode: code.toUpperCase(),
-    isBot: false, pickDeadline: { lt: new Date() }, run: { completed: false, slots: { some: { playerSeasonId: null } } },
+  const expired = await db.multiplayerSeat.findMany({ where: { roomCode: code.toUpperCase(),
+    isBot: false, pickDeadline: { lte: new Date() },
     room: { status: 'drafting' } }, include: { room: true } });
-  if (expired?.runId) {
-    const claimed = await db.multiplayerSeat.updateMany({ where: { id: expired.id, pickDeadline: expired.pickDeadline },
-      data: { pickDeadline: new Date(Date.now() + 180_000) } });
-    if (claimed.count) await draftBot(expired.runId, expired.room.eraStartYear, expired.room.eraEndYear, 1).catch(error => console.error('Multiplayer auto pick:', error));
+  for (const seat of expired) {
+    if (!seat.runId) continue;
+    const claimed = await db.multiplayerSeat.updateMany({ where: { id: seat.id, pickDeadline: seat.pickDeadline },
+      data: { pickDeadline: null } });
+    if (!claimed.count) continue;
+    try {
+      await draftBot(seat.runId, seat.room.eraStartYear, seat.room.eraEndYear, 11);
+      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true } });
+    } catch (error) {
+      console.error('Multiplayer auto finish:', error);
+      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { pickDeadline: seat.pickDeadline } });
+    }
   }
+  const waiting = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false } });
+  const activeClocks = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: new Date() } } });
+  if (!waiting && !activeClocks) await resolveRoom(code.toUpperCase()).catch(error => console.error('Multiplayer resolve:', error));
   const room = await publicRoom(code.toUpperCase(), userId);
   if (!room) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
   const response = NextResponse.json(room, { headers: { 'Cache-Control': 'no-store' } });

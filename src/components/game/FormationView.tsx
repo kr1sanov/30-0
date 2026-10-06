@@ -12,6 +12,7 @@ import type { PositionCategory, Position } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTelegram } from '@/hooks/use-telegram';
+import type { DraftSlot, GameConfig, PlayerOption } from '@/lib/types';
 
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
@@ -206,18 +207,21 @@ function getPlayerSurname(lastName?: string): string {
 // ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
-export default function FormationView({ compact = false }: { compact?: boolean }) {
-  const {
-    config,
-    slots,
-    selectedPlayer,
-    movingPlayerSlotIndex,
-    assignToSlot,
-    movePlayer,
-    finishMoving,
-    screen,
-    justAssignedSlotIndex,
-  } = useGameStore();
+export default function FormationView({ compact = false, multiplayer }: { compact?: boolean; multiplayer?: {
+  config: GameConfig; slots: DraftSlot[]; selectedPlayer: PlayerOption | null;
+  onAssign: (index: number) => void; onMove?: (from: number, to: number) => void;
+} }) {
+  const store = useGameStore();
+  const config = multiplayer?.config ?? store.config;
+  const slots = multiplayer?.slots ?? store.slots;
+  const selectedPlayer = multiplayer ? multiplayer.selectedPlayer : store.selectedPlayer;
+  const [externalMoving, setExternalMoving] = useState<number | null>(null);
+  const movingPlayerSlotIndex = multiplayer ? externalMoving : store.movingPlayerSlotIndex;
+  const assignToSlot = multiplayer?.onAssign ?? store.assignToSlot;
+  const movePlayer = multiplayer?.onMove ?? store.movePlayer;
+  const finishMoving = multiplayer ? () => setExternalMoving(null) : store.finishMoving;
+  const screen = multiplayer ? 'draft' : store.screen;
+  const justAssignedSlotIndex = multiplayer ? null : store.justAssignedSlotIndex;
   const { haptic, notify, selectionChanged } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
@@ -278,6 +282,7 @@ export default function FormationView({ compact = false }: { compact?: boolean }
           }
         }
       }
+      if (multiplayer) setExternalMoving(null);
       return;
     }
 
@@ -304,7 +309,8 @@ export default function FormationView({ compact = false }: { compact?: boolean }
 
     // --- Click filled player to start moving ---
     if (slot.playerId && canMove) {
-      useGameStore.setState({ movingPlayerSlotIndex: index });
+      if (multiplayer) setExternalMoving(index);
+      else useGameStore.setState({ movingPlayerSlotIndex: index });
     }
   };
 

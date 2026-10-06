@@ -6,7 +6,7 @@ import { POSITION_CATEGORY, POSITION_COLOR, canFillSlotStrict } from '@/lib/posi
 import type { Position, PositionCategory } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import type { PlayerOption } from '@/lib/types';
+import type { PlayerOption, SpinResult, DraftSlot } from '@/lib/types';
 import { useTelegram } from '@/hooks/use-telegram';
 import { playerDisplayName } from '@/lib/playerNames';
 
@@ -48,8 +48,21 @@ interface ProcessedPlayer extends PlayerOption {
 
 type SortMode = 'rating' | 'name';
 
-export default function PlayerList() {
-  const { currentSpin, slots, config, assignToSlot, selectedPlayer, selectPlayer, deselectPlayer, skipSpin, lastDraftError } = useGameStore();
+export default function PlayerList({ multiplayer }: { multiplayer?: {
+  currentSpin: SpinResult | null; slots: DraftSlot[]; ratingMode: 'season' | 'prime';
+  selectedPlayer: PlayerOption | null; onSelect: (player: PlayerOption | null) => void;
+  onAssign: (index: number) => void; onSkip: () => void; disabled: boolean;
+} }) {
+  const store = useGameStore();
+  const currentSpin = multiplayer ? multiplayer.currentSpin : store.currentSpin;
+  const slots = multiplayer ? multiplayer.slots : store.slots;
+  const config = multiplayer ? { ...store.config, ratingMode: multiplayer.ratingMode, difficulty: 'normal' as const, showRatings: true } : store.config;
+  const assignToSlot = multiplayer?.onAssign ?? store.assignToSlot;
+  const selectedPlayer = multiplayer ? multiplayer.selectedPlayer : store.selectedPlayer;
+  const selectPlayer = multiplayer ? (player: PlayerOption) => multiplayer.onSelect(player) : store.selectPlayer;
+  const deselectPlayer = multiplayer ? () => multiplayer.onSelect(null) : store.deselectPlayer;
+  const skipSpin = multiplayer?.onSkip ?? store.skipSpin;
+  const lastDraftError = multiplayer ? null : store.lastDraftError;
   const { haptic, selectionChanged } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
@@ -217,6 +230,7 @@ export default function PlayerList() {
             <div key={player.playerSeasonId}>
               {/* ── Player card row ── */}
               <motion.button
+                disabled={multiplayer?.disabled}
                 onClick={() => handlePlayerClick(player)}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -318,6 +332,7 @@ export default function PlayerList() {
 
                           return (
                             <motion.button
+                              disabled={multiplayer?.disabled}
                               key={slot.slotIndex}
                               onClick={() => handlePositionClick(slot.slotIndex)}
                               initial={{ opacity: 0, scale: 0.8 }}
