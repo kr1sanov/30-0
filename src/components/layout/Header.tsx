@@ -5,7 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import HowToPlayModal from '@/components/game/HowToPlayModal';
 import { Home, User } from 'lucide-react';
 
-export default function Header() {
+export default function Header({ onHome, onProfile }: { onHome?: () => void; onProfile?: () => void } = {}) {
   const { goHome, resetGame, runId } = useGameStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
 
@@ -17,6 +17,7 @@ export default function Header() {
   }, []);
 
   const handleHome = () => {
+    if (onHome) { onHome(); return; }
     if (runId) {
       goHome();
     } else {
@@ -40,7 +41,7 @@ export default function Header() {
           </button>
 
           <button
-            onClick={() => useGameStore.getState().setScreen('profile')}
+            onClick={onProfile ?? (() => useGameStore.getState().setScreen('profile'))}
             className={btnClass}
             title="Мой профиль"
           >
@@ -52,7 +53,7 @@ export default function Header() {
 
       <nav aria-label="Навигация" className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between border-t border-white/10 bg-[#0A0A0A]/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
         <button onClick={handleHome} className={btnClass} aria-label="Домой"><Home className="h-4 w-4" /><span>Домой</span></button>
-        <button onClick={() => useGameStore.getState().setScreen('profile')} className={btnClass} aria-label="Мой профиль"><User className="h-4 w-4" /><span>Мой профиль</span></button>
+        <button onClick={onProfile ?? (() => useGameStore.getState().setScreen('profile'))} className={btnClass} aria-label="Мой профиль"><User className="h-4 w-4" /><span>Мой профиль</span></button>
       </nav>
 
       <HowToPlayModal open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />

@@ -13,7 +13,7 @@ const ACCENT = 'var(--club-primary)';
 const BG_CARD = '#141414';
 
 /* ─── RPL data for slot reels ─── */
-const RPL_CLUBS = [
+export const RPL_CLUBS = [
   'Krylya Sovetov Samara',
   'Lokomotiv Moscow',
   'Anzhi Makhachkala',
@@ -49,7 +49,7 @@ const RPL_CLUBS = [
   'CSKA Moscow',
 ];
 
-const RPL_SEASONS = [
+export const RPL_SEASONS = [
   '2010',
   '2011',
   '2012',
@@ -62,6 +62,11 @@ const RPL_SEASONS = [
   '2019',
   '2020',
   '2021',
+  '2022',
+  '2023',
+  '2024',
+  '2025',
+  '2026',
 ];
 
 /* ─── SlotReel: shows one reel (club or season) with slot-machine animation ─── */
@@ -75,7 +80,7 @@ interface SlotReelProps {
   resultColor?: string;
 }
 
-function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
+export function SlotReel({ items, targetItem, isSpinning, hasResult, accentColor, label, resultColor = '#ffffff' }: SlotReelProps) {
   const reduceMotion = useReducedMotion();
   const [displayItems, setDisplayItems] = useState<string[]>([items[0]]);
   const [isStopped, setIsStopped] = useState(false);

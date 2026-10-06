@@ -10,12 +10,13 @@ interface FooterNavLink {
   action: () => void;
 }
 
-export default function Footer() {
+export default function Footer({ onHome, onPlay, onProfile }: { onHome?: () => void; onPlay?: () => void; onProfile?: () => void } = {}) {
   const mainNavLinks: FooterNavLink[] = [
     {
       label: 'Главная',
       icon: <Home className="w-3.5 h-3.5" />,
       action: () => {
+        if (onHome) { onHome(); return; }
         const state = useGameStore.getState();
         if (state.runId) {
           state.goHome();
@@ -28,6 +29,7 @@ export default function Footer() {
       label: 'Играть',
       icon: <Play className="w-3.5 h-3.5" />,
       action: () => {
+        if (onPlay) { onPlay(); return; }
         const state = useGameStore.getState();
         if (state.runId) {
           state.resumeGame();
@@ -39,7 +41,7 @@ export default function Footer() {
     {
       label: 'Мой профиль',
       icon: <User className="w-3.5 h-3.5" />,
-      action: () => useGameStore.getState().setScreen('profile'),
+      action: onProfile ?? (() => useGameStore.getState().setScreen('profile')),
     },
   ];
 

@@ -63,6 +63,16 @@ export async function PATCH(request: Request, { params }: Context) {
       if (!reserved.count) return NextResponse.json({ error: 'Все места заняты' }, { status: 409 });
       try { await db.multiplayerSeat.create({ data: { roomCode: room.code, isBot: true, name: `Бот ${room.seatCount}`, ready: true } }); }
       catch (error) { await db.multiplayerRoom.update({ where: { code: room.code }, data: { seatCount: { decrement: 1 } } }); throw error; }
+    } else if (body.action === 'remove-bot' && room.hostUserId === userId) {
+      const botId = typeof body.botId === 'string' ? body.botId : '';
+      const bot = room.seats.find(seat => seat.id === botId && seat.isBot);
+      if (!bot) return NextResponse.json({ error: 'Бот не найден' }, { status: 404 });
+      await db.$transaction(async tx => {
+        const reserved = await tx.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby' }, data: { seatCount: { decrement: 1 } } });
+        if (!reserved.count) throw new Error('Лобби закрыто');
+        const removed = await tx.multiplayerSeat.deleteMany({ where: { id: bot.id, roomCode: room.code, isBot: true } });
+        if (!removed.count) throw new Error('Бот уже удалён');
+      });
     } else return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
     return NextResponse.json(await publicRoom(room.code, userId));
   } catch (error) { console.error('Multiplayer update:', error); return NextResponse.json({ error: 'Не удалось изменить комнату' }, { status: 500 }); }

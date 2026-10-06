@@ -547,6 +547,11 @@ Object.assign(TEXT, {
   'Ваш результат':'Your result', 'Голы:':'Goals:', 'Таблица игроков':'Standings',
   'До первого места:':'Behind first place:', 'Матчи сезона':'Season matches', 'Новая игра →':'New game →',
   'Результаты сезона':'Season results', 'Готовим сезон…':'Preparing the season…',
+  'Откройте ссылку в Telegram — вход и подключение к комнате произойдут автоматически.':'Open the link in Telegram to sign in and join the room automatically.',
+  'Ссылка в Telegram':'Telegram link',
+  'Нет подходящих свободных позиций.':'No eligible open positions.',
+  'Открыть игру в Telegram':'Open the game in Telegram',
+  'Открыть игру в Telegram и присоединиться':'Open the game in Telegram and join',
 });
 
 export function translateInterface(value: string): string {
@@ -561,6 +566,7 @@ export function translateInterface(value: string): string {
   if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
     [/^Тур (\d+) \/ (\d+)$/, 'Matchweek $1 / $2'],
+    [/^Подключаем к комнате ([A-HJ-NP-Z2-9]{6})…$/, 'Joining room $1…'],
     [/^(\d+) тур$/, 'Match $1'],
     [/^Место (\d+) из (\d+)$/, 'Place $1 of $2'],
     [/^(\d+) игроков$/, '$1 players'],

@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { isTelegramLoginData, type TelegramLoginData } from '@/lib/telegramLogin';
 
-export default function TelegramLogin() {
+export default function TelegramLogin({ startParam }: { startParam?: string } = {}) {
   const openLogin = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [miniAppUrl, setMiniAppUrl] = useState('');
   useEffect(() => {
     let cancelled = false;
     const win = window as typeof window & { Telegram?: {
@@ -27,6 +28,8 @@ export default function TelegramLogin() {
         if (!response.ok) throw new Error('Не удалось загрузить вход. Обновите страницу.');
         const config = await response.json();
         if (cancelled) return;
+        const bot = String(config.botUsername || 'RPL30_bot').replace(/^@/, '');
+        if (/^[a-zA-Z0-9_]{5,32}$/.test(bot)) setMiniAppUrl(`https://t.me/${bot}/app${startParam ? `?startapp=${encodeURIComponent(startParam)}` : ''}`);
         if (config.user) { useAuthStore.getState().setUser(config.user); return; }
         const login = async (payload: Record<string, unknown>) => {
           setLoading(true); setError('');
@@ -69,12 +72,13 @@ export default function TelegramLogin() {
     }
     void setup();
     return () => { cancelled = true; openLogin.current = null; };
-  }, []);
+  }, [startParam]);
   return <section className="mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center">
     <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>
     <h1 className="mt-6 text-2xl font-bold">Войти через Telegram</h1>
     <p className="mt-3 text-sm text-[#9CA3AF]">Войдите, чтобы собрать команду и начать сезон.</p>
     <button type="button" disabled={!ready || loading} onClick={() => openLogin.current?.()} className="mt-6 min-h-12 w-full rounded-xl bg-[#00C896] px-4 font-bold text-black disabled:opacity-40">Войти через Telegram</button>
+    {miniAppUrl && <a href={miniAppUrl} className="mt-3 block rounded-xl border border-[#229ED9]/40 bg-[#229ED9]/10 px-4 py-3 text-sm font-semibold text-[#8BD8F7] hover:bg-[#229ED9]/20">Открыть игру в Telegram{startParam ? ' и присоединиться' : ''} →</a>}
     {loading && <p role="status" className="text-sm text-[#9CA3AF]">Подключаем Telegram…</p>}
     {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}
   </section>;
