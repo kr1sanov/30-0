@@ -517,6 +517,38 @@ Object.assign(TEXT, {
   'Комната ожидания': 'Waiting room', 'Пригласи друзей': 'Invite friends',
 });
 
+Object.assign(TEXT, {
+  'Играй вместе':'Play together', 'Соберите лучший состав и сыграйте сезон с друзьями.':'Build the best squad and play a season with friends.',
+  '2–6 участников одновременно выбирают футболистов. Сравните результаты после 30 матчей РПЛ.':'2–6 players draft at the same time. Compare results after 30 RPL matches.',
+  'Live драфт':'Live draft', 'Мультиплеер · Live драфт':'Multiplayer · Live draft',
+  'Создайте команду из 11 игроков и узнайте, чей сезон окажется лучше.':'Build an XI and find out whose season is better.',
+  'Создать комнату →':'Create room →', 'Есть код приглашения?':'Have an invite code?',
+  'Live драфт · Лобби':'Live draft · Lobby', 'Соберите команду':'Build your squad',
+  'Пригласите друзей, выберите схему и начните драфт вместе.':'Invite friends, choose formations and start the draft together.',
+  'Код комнаты':'Room code', 'Отправьте код или ссылку друзьям':'Send the code or link to your friends',
+  'Скопировано':'Copied', 'Скопировать код':'Copy code', 'Ссылка':'Link', 'Поделиться':'Share',
+  'Свободное место':'Open seat', '+ Бот':'+ Bot', 'Организатор':'Host', 'Участник':'Player',
+  'Выберите расстановку для своих 11 игроков':'Choose a formation for your XI',
+  'Правила драфта':'Draft rules', 'Участников':'Players', 'Сезон':'Season', 'Включён':'On', 'Выключен':'Off',
+  'Вы готовы · Отменить':'Ready · Cancel', 'Начать драфт →':'Start draft →',
+  'Нужен хотя бы ещё один участник или бот':'Add at least one more player or bot',
+  'Дождитесь готовности всех участников':'Wait until everyone is ready', 'Все готовы к началу':'Everyone is ready',
+  'Все участники одновременно крутят клуб и сезон, выбирают игроков на свободные позиции и собирают состав из 11 человек. На выбор есть 3 минуты. После завершения все команды сыграют сезон РПЛ из 30 матчей. Побеждает тот, кто наберёт больше очков.':'Everyone spins for a club and season, then fills 11 positions. You have three minutes per pick. All teams play a 30-match RPL season, and the most points wins.',
+  'Ваша команда':'Your team', 'Драфт с друзьями':'Draft with friends', 'Клуб × сезон':'Club × season',
+  'Крутить колесо':'Spin the wheel', 'Выберите игрока':'Choose a player', 'Колесо крутится…':'Spinning…',
+  'Прокрутите, чтобы открыть игроков клуба и сезона':'Spin to reveal players from a club and season',
+  'Выберите футболиста и подходящую позицию':'Choose a player and an available position',
+  'Состав готов':'Squad ready', 'Все позиции заполнены. Когда остальные закончат драфт, начнётся сезон из 30 матчей.':'All positions are filled. The 30-match season starts after everyone finishes.',
+  'Начать сезон →':'Start season →', 'Ожидаем остальных…':'Waiting for others…',
+  'Игроки':'Players', 'Имя':'Name', 'Поставить на позицию:':'Place in position:',
+  'Нет подходящих свободных позиций. Дождитесь следующего выбора.':'No eligible open positions. Wait for the next pick.',
+  'Симуляция сезона':'Season simulation', 'Показать итоги →':'Show results →',
+  'Сезон завершён · 30 матчей':'Season complete · 30 matches', 'Вы победили!':'You won!',
+  'Ваш результат':'Your result', 'Голы:':'Goals:', 'Таблица игроков':'Standings',
+  'До первого места:':'Behind first place:', 'Матчи сезона':'Season matches', 'Новая игра →':'New game →',
+  'Результаты сезона':'Season results', 'Готовим сезон…':'Preparing the season…',
+});
+
 export function translateInterface(value: string): string {
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';

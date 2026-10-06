@@ -27,7 +27,8 @@ export async function publicRoom(code: string, userId: string) {
       managerRating: seat.managerRating,
     })),
     ownRun: own?.run ? { id: own.run.id, formation: own.run.formation, completed: own.run.completed,
-      slots: own.run.slots.map(slot => ({ slotPosition: slot.slotPosition, playerSeasonId: slot.playerSeasonId,
+      // The pitch coordinates follow formation slot order, not alphabetical position order.
+      slots: [...own.run.slots].sort((a, b) => Number(a.slotPosition.split('_').at(-1)) - Number(b.slotPosition.split('_').at(-1))).map(slot => ({ slotPosition: slot.slotPosition, playerSeasonId: slot.playerSeasonId,
         playerLastName: slot.playerLastName, playerRating: room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating })) } : null,
     results: room.resultJson ? JSON.parse(room.resultJson) : null,
   };
