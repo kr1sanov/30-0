@@ -2,10 +2,11 @@ import { randomBytes } from 'node:crypto';
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
 import { calculateSquadStrength, simulateMatch, simulateSeason, type SquadSlot } from '@/lib/simulation';
+import { ERA_MIN_YEAR, ERA_MAX_YEAR } from '@/lib/types';
 
 export const roomCode = () => Array.from(randomBytes(6), byte => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[byte % 32]).join('');
 export const roomName = (value: unknown) => typeof value === 'string' ? value.trim().slice(0, 30) : '';
-export const validEra = (start: number, end: number) => Number.isInteger(start) && Number.isInteger(end) && start >= 2010 && end <= 2026 && start <= end;
+export const validEra = (start: number, end: number) => Number.isInteger(start) && Number.isInteger(end) && start >= ERA_MIN_YEAR && end <= ERA_MAX_YEAR && start <= end;
 export const validFormation = (value: string) => FORMATIONS.some(formation => formation.id === value);
 
 export async function publicRoom(code: string, userId: string) {
@@ -16,10 +17,11 @@ export async function publicRoom(code: string, userId: string) {
   const own = room.seats.find(seat => seat.userId === userId);
   return {
     code: room.code, status: room.status, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
-    eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, withManager: room.withManager,
+    eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, eraFilter: room.eraFilter,
+    draftMode: room.draftMode, showRatings: room.showRatings, withManager: room.withManager,
     isHost: room.hostUserId === userId,
     seats: room.seats.map(seat => ({ id: seat.id, name: seat.name, formation: seat.formation,
-      ready: seat.ready, drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
+      ready: seat.ready, forfeited: seat.forfeited, drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
       result: seat.run?.completed ? { wins: seat.run.wins, draws: seat.run.draws, losses: seat.run.losses,
         points: seat.run.points, overallRating: seat.run.overallRating } : null,
       isYou: seat.userId === userId, isHost: seat.userId === room.hostUserId, isBot: seat.isBot,
@@ -37,12 +39,12 @@ export async function publicRoom(code: string, userId: string) {
   };
 }
 
-export async function createSeatRun(seat: { id: string; name: string; formation: string }, room: { ratingMode: string; eraStartYear: number; eraEndYear: number }, userId?: string) {
+export async function createSeatRun(seat: { id: string; name: string; formation: string }, room: { ratingMode: string; draftMode: string; eraFilter: string; eraStartYear: number; eraEndYear: number }, userId?: string) {
   const formation = FORMATIONS.find(value => value.id === seat.formation);
   if (!formation) throw new Error('Неизвестная схема');
   const run = await db.gameRun.create({ data: {
     formation: seat.formation, ratingMode: room.ratingMode, eraStartYear: room.eraStartYear,
-    eraEndYear: room.eraEndYear, difficulty: 'normal', draftMode: 'squad_first',
+    eraEndYear: room.eraEndYear, eraFilter: room.eraFilter, difficulty: 'normal', draftMode: room.draftMode,
     teamName: seat.name, ...(userId ? { userId } : {}),
     slots: { create: formation.slots.map((slot, index) => ({ slotPosition: `${slot.position}_${index}` })) },
   } });
@@ -51,7 +53,7 @@ export async function createSeatRun(seat: { id: string; name: string; formation:
 }
 
 type Result = { id: string; name: string; points: number; wins: number; draws: number; losses: number;
-  goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
+  goalsFor: number; goalsAgainst: number; rating: number; forfeited: boolean; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 
 // Resolve the room once, from the same squads. Each head-to-head fixture is
 // generated once and mirrored into both participants' match lists.
@@ -74,7 +76,7 @@ export async function resolveRoom(code: string) {
     // fixtures, keeping the season at 30 matches per participant.
     const replaced = 2 * (room.seats.length - 1);
     const retained = seasonResult.matches.slice(replaced);
-    return { id: seat.id, name: seat.name, rating, points: 0, wins: 0, draws: 0, losses: 0,
+    return { id: seat.id, name: seat.name, rating, forfeited: seat.forfeited, points: 0, wins: 0, draws: 0, losses: 0,
       goalsFor: 0, goalsAgainst: 0, matches: retained.map(match => ({ opponent: match.opponent, home: match.isHome,
         for: match.isHome ? match.homeGoals : match.awayGoals,
         against: match.isHome ? match.awayGoals : match.homeGoals })) };
@@ -94,7 +96,7 @@ export async function resolveRoom(code: string) {
     else result.draws++;
   }
   for (const result of results) result.points = result.wins * 3 + result.draws;
-  results.sort((a,b) => b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor);
+  results.sort((a,b) => Number(a.forfeited)-Number(b.forfeited) || b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor);
   const changed = await db.multiplayerRoom.updateMany({ where: { code, status: 'drafting' }, data: { status: 'completed', resultJson: JSON.stringify(results) } });
   if (!changed.count) return false;
   await db.$transaction(results.map((result, index) => db.gameRun.update({ where: { id: room.seats.find(seat => seat.id === result.id)!.runId! }, data: {

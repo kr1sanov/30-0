@@ -210,6 +210,7 @@ function getPlayerSurname(lastName?: string): string {
 export default function FormationView({ compact = false, multiplayer }: { compact?: boolean; multiplayer?: {
   config: GameConfig; slots: DraftSlot[]; selectedPlayer: PlayerOption | null;
   onAssign: (index: number) => void; onMove?: (from: number, to: number) => void;
+  onChooseSlot?: (index: number) => void; targetSlotIndex?: number | null;
 } }) {
   const store = useGameStore();
   const config = multiplayer?.config ?? store.config;
@@ -304,6 +305,11 @@ export default function FormationView({ compact = false, multiplayer }: { compac
         triggerShake(index);
         toast.error('Несовместимая позиция');
       }
+      return;
+    }
+
+    if (multiplayer && !selectedPlayer && !slot.playerId && multiplayer.onChooseSlot) {
+      multiplayer.onChooseSlot(index);
       return;
     }
 
@@ -465,6 +471,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                   slot.position as Position,
                 )
               : false;
+          const isTargetSlot = multiplayer?.targetSlotIndex === index && !isFilled;
 
           // Is this an incompatible empty slot while a player is selected?
           const isIncompatible = !!selectedPlayer && !isFilled && !isCompatible;
@@ -578,18 +585,18 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                       height: '30px',
                       backgroundColor: isIncompatible
                         ? 'rgba(239,68,68,0.05)'
-                        : isCompatible || isMoveTarget
+                        : isCompatible || isMoveTarget || isTargetSlot
                         ? `${slotColor}20`
                         : 'rgba(255,255,255,0.05)',
                       border: isIncompatible
                         ? '2px dashed rgba(239,68,68,0.25)'
-                        : isCompatible || isMoveTarget
+                        : isCompatible || isMoveTarget || isTargetSlot
                         ? `2px solid ${ACCENT}`
                         : '2px dashed rgba(255,255,255,0.2)',
-                      boxShadow: isCompatible || isMoveTarget
+                      boxShadow: isCompatible || isMoveTarget || isTargetSlot
                         ? '0 0 8px 2px var(--club-glow), 0 0 16px 4px var(--club-glow)'
                         : 'none',
-                      animation: isCompatible || isMoveTarget
+                      animation: isCompatible || isMoveTarget || isTargetSlot
                         ? 'strongGreenPulse 1.2s ease-in-out infinite'
                         : !isIncompatible
                         ? 'emptySlotPulse 3s ease-in-out infinite'
@@ -635,7 +642,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
           <span className="text-[10px] text-[#94a3b8]">
             <span className="font-bold" style={{ color: ACCENT }}>{filledCount}</span>/11
           </span>
-          {avgRating !== null && (
+          {avgRating !== null && config.showRatings !== false && (
             <span className="text-[10px] text-[#94a3b8]">
               · Ср. <span className="font-bold text-white">{avgRating}</span>
             </span>

@@ -52,17 +52,19 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
   currentSpin: SpinResult | null; slots: DraftSlot[]; ratingMode: 'season' | 'prime';
   selectedPlayer: PlayerOption | null; onSelect: (player: PlayerOption | null) => void;
   onAssign: (index: number) => void; onSkip: () => void; disabled: boolean;
+  targetSlotIndex?: number | null; showRatings?: boolean;
 } }) {
   const store = useGameStore();
   const currentSpin = multiplayer ? multiplayer.currentSpin : store.currentSpin;
   const slots = multiplayer ? multiplayer.slots : store.slots;
-  const config = multiplayer ? { ...store.config, ratingMode: multiplayer.ratingMode, difficulty: 'normal' as const, showRatings: true } : store.config;
+  const config = multiplayer ? { ...store.config, ratingMode: multiplayer.ratingMode, difficulty: 'normal' as const, showRatings: multiplayer.showRatings ?? true } : store.config;
   const assignToSlot = multiplayer?.onAssign ?? store.assignToSlot;
   const selectedPlayer = multiplayer ? multiplayer.selectedPlayer : store.selectedPlayer;
   const selectPlayer = multiplayer ? (player: PlayerOption) => multiplayer.onSelect(player) : store.selectPlayer;
   const deselectPlayer = multiplayer ? () => multiplayer.onSelect(null) : store.deselectPlayer;
   const skipSpin = multiplayer?.onSkip ?? store.skipSpin;
   const lastDraftError = multiplayer ? null : store.lastDraftError;
+  const targetSlotIndex = multiplayer?.targetSlotIndex;
   const { haptic, selectionChanged } = useTelegram();
 
   const isPrimeMode = config.ratingMode === 'prime';
@@ -84,6 +86,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
       for (let i = 0; i < slots.length; i++) {
         const slot = slots[i];
         if (slot.playerId) continue; // Skip filled slots
+        if (targetSlotIndex != null && i !== targetSlotIndex) continue;
 
         if (canFillSlotStrict(
           player.mainPosition as Position,
@@ -118,7 +121,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
       }
       return a.fullName.localeCompare(b.fullName, 'ru');
     });
-  }, [currentSpin, slots, sortMode, isPrimeMode]);
+  }, [currentSpin, slots, sortMode, isPrimeMode, targetSlotIndex]);
 
   // Show soft warning toast when draft API fails (non-blocking — game continues)
   useEffect(() => {

@@ -53,7 +53,13 @@ export async function POST(
 
     // Extract the position codes from open slot positions
     // slotPosition format is "POSITION_INDEX" e.g. "ВР_0", "ЦЗ_1"
-    const openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    let openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    if (multiplayerSeat && run.draftMode === 'position_first') {
+      const body = await request.json().catch(() => ({}));
+      const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
+      if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
+      openPositions = [target.slotPosition.split('_')[0]];
+    }
 
     // Identify people by stable player ID; names can legitimately coincide.
     const draftedSlots = run.slots.filter((s) => s.playerSeasonId);

@@ -50,12 +50,6 @@ export async function POST(
       );
     }
 
-    // Increment rerollsUsed
-    await db.gameRun.update({
-      where: { id: runId },
-      data: { rerollsUsed: run.rerollsUsed + 1 },
-    });
-
     // Get open slots
     const openSlots = run.slots.filter((s) => !s.playerSeasonId);
     if (openSlots.length === 0) {
@@ -65,7 +59,13 @@ export async function POST(
       );
     }
 
-    const openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    let openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    if (multiplayerSeat && run.draftMode === 'position_first') {
+      const body = await request.json().catch(() => ({}));
+      const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
+      if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
+      openPositions = [target.slotPosition.split('_')[0]];
+    }
 
     // Identify people by stable player ID; names can legitimately coincide.
     const draftedSlots = run.slots.filter((s) => s.playerSeasonId);
@@ -128,6 +128,11 @@ export async function POST(
         { status: 400 },
       );
     }
+
+    // Spend the reroll only after a valid target and compatible squad are found.
+    const spent = await db.gameRun.updateMany({ where: { id: runId, rerollsUsed: run.rerollsUsed },
+      data: { rerollsUsed: { increment: 1 } } });
+    if (!spent.count) return NextResponse.json({ error: 'Повторите переброс' }, { status: 409 });
 
     const selected = spinWheel(compatible);
 

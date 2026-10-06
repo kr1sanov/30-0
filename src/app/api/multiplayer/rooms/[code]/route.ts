@@ -5,6 +5,7 @@ import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { setRunAccessCookie } from '@/lib/runAccess';
 import { draftBot } from '@/lib/multiplayerBots';
+import { ERA_CONFIG } from '@/lib/types';
 
 type Context = { params: Promise<{ code: string }> };
 export const runtime = 'nodejs';
@@ -24,8 +25,9 @@ export async function GET(request: Request, { params }: Context) {
       data: { pickDeadline: null } });
     if (!claimed.count) continue;
     try {
+      const count = await db.gameSlot.count({ where: { runId: seat.runId, playerSeasonId: { not: null } } });
       await draftBot(seat.runId, seat.room.eraStartYear, seat.room.eraEndYear, 11);
-      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true } });
+      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true, forfeited: count < 11 } });
     } catch (error) {
       console.error('Multiplayer auto finish:', error);
       await db.multiplayerSeat.update({ where: { id: seat.id }, data: { pickDeadline: seat.pickDeadline } });
@@ -61,12 +63,16 @@ export async function PATCH(request: Request, { params }: Context) {
         data: { formation, name, ready: Boolean(body.ready) } });
     } else if (body.action === 'settings' && room.hostUserId === userId) {
       const maxPlayers = Number(body.maxPlayers), eraStartYear = Number(body.eraStartYear), eraEndYear = Number(body.eraEndYear);
+      const eraFilter = String(body.eraFilter);
       if (!Number.isInteger(maxPlayers) || maxPlayers < room.seatCount || maxPlayers > 6 || maxPlayers < 2 ||
-        !validEra(eraStartYear, eraEndYear) || !['season', 'prime'].includes(body.ratingMode)) {
+        !validEra(eraStartYear, eraEndYear) || !['season', 'prime'].includes(body.ratingMode) ||
+        !['squad_first', 'position_first'].includes(body.draftMode) || !(eraFilter in ERA_CONFIG) ||
+        (eraFilter !== 'custom' && (eraStartYear !== ERA_CONFIG[eraFilter as keyof typeof ERA_CONFIG].minYear || eraEndYear !== ERA_CONFIG[eraFilter as keyof typeof ERA_CONFIG].maxYear))) {
         return NextResponse.json({ error: 'Неверные правила' }, { status: 400 });
       }
       await db.multiplayerRoom.update({ where: { code: room.code }, data: {
-        maxPlayers, eraStartYear, eraEndYear, ratingMode: body.ratingMode, withManager: Boolean(body.withManager),
+        maxPlayers, eraStartYear, eraEndYear, eraFilter, ratingMode: body.ratingMode,
+        draftMode: body.draftMode, showRatings: Boolean(body.showRatings), withManager: Boolean(body.withManager),
       } });
       await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });
     } else if (body.action === 'bot' && room.hostUserId === userId) {

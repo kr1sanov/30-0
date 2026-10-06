@@ -251,8 +251,11 @@ model MultiplayerRoom {
   maxPlayers   Int               @default(2)
   seatCount    Int               @default(1)
   ratingMode   String            @default("season")
+  draftMode    String            @default("squad_first")
+  showRatings  Boolean           @default(true)
+  eraFilter    String            @default("all")
   eraStartYear Int               @default(2010)
-  eraEndYear   Int               @default(2026)
+  eraEndYear   Int               @default(2021)
   withManager  Boolean           @default(false)
   resultJson   String?
   createdAt    DateTime          @default(now())
@@ -265,6 +268,7 @@ model MultiplayerSeat {
   roomCode  String
   userId    String?
   isBot     Boolean         @default(false)
+  forfeited Boolean        @default(false)
   name      String
   formation String          @default("4-3-3")
   ready     Boolean         @default(false)

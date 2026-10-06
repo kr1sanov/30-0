@@ -1304,12 +1304,13 @@ export const useGameStore = create<GameState>()(
       },
 
       resumeGame: () => {
-        const { slots, seasonResult, resumeScreen, screen, config, lastConfig } = get();
+        const { runId, slots, seasonResult, resumeScreen, screen, config, lastConfig } = get();
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
+        const restored = lastConfig?.clubFilter ? lastConfig : config.clubFilter ? config : lastConfig ?? config;
 
         // Always clear ALL stale transient UI state on resume
         const clearTransient = {
-          config: lastConfig ?? config,
+          config: { ...restored, gameMode: restored.clubFilter ? 'single_club' as const : 'classic' as const },
           selectedPlayer: null,
           currentSpin: null,
           isSpinning: false,
@@ -1321,6 +1322,18 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
+        // A changed setup screen can overwrite local presentation settings. The
+        // server's run keeps the selected club, so restore it when rejoining.
+        if (runId) void fetch('/api/runs/active', { cache: 'no-store' }).then(async response => {
+          if (!response.ok) return;
+          const { activeRun } = await response.json();
+          if (!activeRun || activeRun.id !== get().runId || activeRun.id !== runId) return;
+          set(state => ({ config: { ...state.config, formation: activeRun.formation,
+            clubFilter: activeRun.clubFilter ?? undefined, clubName: activeRun.clubName ?? undefined,
+            gameMode: activeRun.clubFilter ? 'single_club' : 'classic',
+            ratingMode: activeRun.ratingMode, eraStartYear: activeRun.eraStartYear,
+            eraEndYear: activeRun.eraEndYear } }));
+        }).catch(() => undefined);
       },
 
       loadActiveRunFromCloud: async () => {

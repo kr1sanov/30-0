@@ -44,7 +44,8 @@ interface GameRunData {
   overallRating: number | null;
   managerName: string | null;
   teamName: string | null;
-  gameMode?: 'classic' | 'single_club';
+  gameMode?: 'classic' | 'single_club' | 'multiplayer';
+  multiplayerSeat?: { roomCode: string } | null;
   clubName?: string | null;
   createdAt: string;
   slots: GameSlotData[];
@@ -221,6 +222,10 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
     fetchRuns();
   }, [fetchRuns]);
 
+  const sections = ([['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['multiplayer', 'Мультиплеер']] as const)
+    .map(([mode, title]) => ({ mode, title, items: runs.filter(run => (run.gameMode ?? 'classic') === mode) }))
+    .filter(section => section.items.length > 0);
+
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
@@ -331,7 +336,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
       {/* Runs list */}
       {runs.length > 0 && (
         <div className="space-y-3">
-          {runs.map((run, idx) => {
+          {sections.map(section => <section key={section.mode} className="space-y-3"><h3 className="flex items-center justify-between border-b border-[#1E1E1E] pb-2 text-sm font-bold text-[#FFFFFF]"><span>{section.title}</span><span className="text-[#64748b]">{section.items.length}</span></h3>{section.items.map((run, idx) => {
             const isExpanded = expandedId === run.id;
             const diffBadge = DIFFICULTY_BADGE_COLORS[run.difficulty] || DIFFICULTY_BADGE_COLORS.normal;
             const diffLabel = DIFFICULTY_LABELS[run.difficulty] || run.difficulty;
@@ -369,6 +374,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
                           {run.formation}
                         </span>
+                        {run.multiplayerSeat?.roomCode && <span className="text-[10px] text-[#a78bfa]">Комната {run.multiplayerSeat.roomCode}</span>}
                         {/* Difficulty */}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${diffBadge.bg} ${diffBadge.text}`}>
                           {diffIcon}
@@ -529,7 +535,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                 </AnimatePresence>
               </motion.div>
             );
-          })}
+          })}</section>)}
         </div>
       )}
 
@@ -574,7 +580,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
               }}
               teamName={shareRun.teamName}
               managerName={shareRun.managerName}
-              mode={shareRun.gameMode ?? 'classic'}
+              mode={shareRun.gameMode === 'single_club' ? 'single_club' : 'classic'}
               clubName={shareRun.clubName}
               players={shareRun.slots
                 .filter((slot) => slot.playerName)

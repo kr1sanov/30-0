@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { roomCode, roomName } from '@/lib/multiplayer';
+import { ERA_CONFIG } from '@/lib/types';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       const code = roomCode();
       try {
         await db.multiplayerRoom.create({ data: { code, hostUserId: userId, maxPlayers,
+          eraStartYear: ERA_CONFIG.all.minYear, eraEndYear: ERA_CONFIG.all.maxYear,
           seats: { create: { userId, name } } } });
         return NextResponse.json({ code }, { status: 201 });
       } catch (error) {

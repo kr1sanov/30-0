@@ -299,13 +299,13 @@ export default function ProfileScreen() {
       </div>
 
       {/* History */}
-      {profileStats.history.length > 0 && (
+      {(
         <div className="rounded-2xl bg-[#141414] border border-[#141414] overflow-hidden">
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0A0A0A]/30 transition-colors"
           >
-            <span className="text-sm font-bold text-[#FFFFFF]">📜 История ({profileStats.history.length})</span>
+            <span className="text-sm font-bold text-[#FFFFFF]">📜 История</span>
             <motion.span animate={{ rotate: showHistory ? 180 : 0 }} className="text-[#9CA3AF]">
               ▼
             </motion.span>
