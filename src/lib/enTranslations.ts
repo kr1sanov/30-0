@@ -560,6 +560,13 @@ export function translateInterface(value: string): string {
   const matchOpponent = normalized.match(/^(.+) \((д|в)\)$/);
   if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
+    [/^Тур (\d+) \/ (\d+)$/, 'Matchweek $1 / $2'],
+    [/^(\d+) тур$/, 'Match $1'],
+    [/^Место (\d+) из (\d+)$/, 'Place $1 of $2'],
+    [/^(\d+) игроков$/, '$1 players'],
+    [/^(\d+) очк\.$/, '$1 pts'],
+    [/^Матчи сезона (\d+)\/30$/, 'Season matches $1/30'],
+    [/^До первого места: (\d+) очков$/, '$1 points behind first place'],
     [/^ТУР (\d+) \/ (\d+)$/, 'MATCHWEEK $1 / $2'],
     [/^🏅 (\d+)\/(\d+) трофеев$/, '🏅 $1/$2 trophies'],
     [/^(.+) \(д\)$/, '$1 (H)'],
