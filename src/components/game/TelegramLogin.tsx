@@ -29,7 +29,7 @@ export default function TelegramLogin({ startParam, compact = false }: { startPa
         const config = await response.json();
         if (cancelled) return;
         const bot = String(config.botUsername || 'RPL30_bot').replace(/^@/, '');
-        if (/^[a-zA-Z0-9_]{5,32}$/.test(bot)) setMiniAppUrl(`https://t.me/${bot}/app${startParam ? `?startapp=${encodeURIComponent(startParam)}` : ''}`);
+        if (/^[a-zA-Z0-9_]{5,32}$/.test(bot)) setMiniAppUrl(`https://t.me/${bot}?startapp${startParam ? `=${encodeURIComponent(startParam)}` : ''}`);
         if (config.user) { useAuthStore.getState().setUser(config.user); return; }
         const login = async (payload: Record<string, unknown>) => {
           setLoading(true); setError('');

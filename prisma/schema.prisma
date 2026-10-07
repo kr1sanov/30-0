@@ -273,6 +273,7 @@ model MultiplayerSeat {
   formation String          @default("4-3-3")
   ready     Boolean         @default(false)
   pickDeadline DateTime?
+  pendingSpinJson String?
   managerName String?
   managerRating Int?
   runId     String?         @unique

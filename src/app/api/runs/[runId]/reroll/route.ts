@@ -60,11 +60,13 @@ export async function POST(
     }
 
     let openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    let targetSlotPosition: string | undefined;
     if (multiplayerSeat && run.draftMode === 'position_first') {
       const body = await request.json().catch(() => ({}));
       const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
       if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
       openPositions = [target.slotPosition.split('_')[0]];
+      targetSlotPosition = target.slotPosition;
     }
 
     // Identify people by stable player ID; names can legitimately coincide.
@@ -177,14 +179,17 @@ export async function POST(
       nationality: ps.nationality ?? ps.player.nationality,
     }));
 
-    return NextResponse.json({
+    const result = {
       clubSeasonId: selectedClubSeason.id,
       clubName: selectedClubSeason.club.nameRu,
       seasonLabel: selectedClubSeason.season.label,
       players,
+      ...(targetSlotPosition ? { targetSlotPosition } : {}),
       rerollsUsed: run.rerollsUsed + 1,
       rerollsTotal: run.rerollsTotal,
-    });
+    };
+    if (multiplayerSeat) await db.multiplayerSeat.update({ where: { id: multiplayerSeat.id }, data: { pendingSpinJson: JSON.stringify(result) } });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Failed to reroll:', error);
     return NextResponse.json(

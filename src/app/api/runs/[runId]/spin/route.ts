@@ -33,6 +33,7 @@ export async function POST(
       if (room?.status !== 'drafting' || multiplayerSeat.isBot || !multiplayerSeat.pickDeadline || multiplayerSeat.pickDeadline < new Date()) {
         return NextResponse.json({ error: 'Время выбора истекло или драфт закрыт' }, { status: 409 });
       }
+      if (multiplayerSeat.pendingSpinJson) return NextResponse.json(JSON.parse(multiplayerSeat.pendingSpinJson));
     }
 
     if (run.completed) {
@@ -54,11 +55,13 @@ export async function POST(
     // Extract the position codes from open slot positions
     // slotPosition format is "POSITION_INDEX" e.g. "ВР_0", "ЦЗ_1"
     let openPositions = openSlots.map((s) => s.slotPosition.split('_')[0]);
+    let targetSlotPosition: string | undefined;
     if (multiplayerSeat && run.draftMode === 'position_first') {
       const body = await request.json().catch(() => ({}));
       const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
       if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
       openPositions = [target.slotPosition.split('_')[0]];
+      targetSlotPosition = target.slotPosition;
     }
 
     // Identify people by stable player ID; names can legitimately coincide.
@@ -179,12 +182,23 @@ export async function POST(
       nationality: ps.nationality ?? ps.player.nationality,
     }));
 
-    return NextResponse.json({
+    const result = {
       clubSeasonId: selectedClubSeason.id,
       clubName: selectedClubSeason.club.nameRu,
       seasonLabel: selectedClubSeason.season.label,
       players,
-    });
+      ...(targetSlotPosition ? { targetSlotPosition } : {}),
+    };
+    if (multiplayerSeat) {
+      const saved = await db.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id, pendingSpinJson: null, ready: false },
+        data: { pendingSpinJson: JSON.stringify(result) } });
+      if (!saved.count) {
+        const current = await db.multiplayerSeat.findUnique({ where: { id: multiplayerSeat.id } });
+        if (current?.pendingSpinJson) return NextResponse.json(JSON.parse(current.pendingSpinJson));
+        return NextResponse.json({ error: 'Драфт уже завершён' }, { status: 409 });
+      }
+    }
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Failed to spin wheel:', error);
     return NextResponse.json(

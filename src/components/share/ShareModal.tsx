@@ -55,7 +55,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
   }, [isOpen]);
   const ref = inviteUrl ? new URL(inviteUrl).searchParams.get('ref') : null;
   const resultUrl = runId ? `${typeof window !== 'undefined' ? window.location.origin : 'https://30-0.рф'}/share/${runId}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}` : (inviteUrl || 'https://30-0.рф');
-  const fullText = `${localizeShareText(shareText).replace(/🎮 Играть: https:\/\/30-0\.рф/g, '').trim()}\n\n${resultUrl}\n🎮 https://t.me/RPL30_bot?startapp`;
+  const fullText = `${localizeShareText(shareText).replace(/🎮 Играть: https:\/\/30-0\.рф/g, '').trim()}\n\n${resultUrl}\n🎮 ${inviteUrl || 'https://t.me/RPL30_bot?startapp'}`;
   const handleCopyText = useCallback(async () => {
     try { await navigator.clipboard.writeText(fullText); Metrics.shareResult('clipboard'); toast.success('Текст скопирован'); }
     catch { toast.error('Не удалось скопировать текст'); }

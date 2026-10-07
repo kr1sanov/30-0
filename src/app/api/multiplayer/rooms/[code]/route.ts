@@ -16,6 +16,12 @@ export async function GET(request: Request, { params }: Context) {
   const { code } = await params;
   const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } } });
   if (!authorized) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
+  const allReady = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false, room: { status: 'drafting' } } }) === 0;
+  if (allReady) {
+    const deadline = new Date(Date.now() + 10_000);
+    await db.multiplayerSeat.updateMany({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: deadline } },
+      data: { pickDeadline: deadline } });
+  }
   const expired = await db.multiplayerSeat.findMany({ where: { roomCode: code.toUpperCase(),
     isBot: false, pickDeadline: { lte: new Date() },
     room: { status: 'drafting' } }, include: { room: true } });
@@ -61,6 +67,13 @@ export async function PATCH(request: Request, { params }: Context) {
       if (!validFormation(formation) || name.length < 2) return NextResponse.json({ error: 'Проверьте имя и схему' }, { status: 400 });
       await db.multiplayerSeat.update({ where: { roomCode_userId: { roomCode: room.code, userId } },
         data: { formation, name, ready: Boolean(body.ready) } });
+    } else if (body.action === 'capacity') {
+      const maxPlayers = Number(body.maxPlayers);
+      if (!Number.isInteger(maxPlayers) || maxPlayers < room.seatCount || maxPlayers > 6 || maxPlayers < 2)
+        return NextResponse.json({ error: 'Выберите от 2 до 6 мест' }, { status: 400 });
+      const resized = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', seatCount: { lte: maxPlayers } }, data: { maxPlayers } });
+      if (!resized.count) return NextResponse.json({ error: 'Количество игроков изменилось. Обновите лобби' }, { status: 409 });
+      await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });
     } else if (body.action === 'settings' && room.hostUserId === userId) {
       const maxPlayers = Number(body.maxPlayers), eraStartYear = Number(body.eraStartYear), eraEndYear = Number(body.eraEndYear);
       const eraFilter = String(body.eraFilter);
@@ -75,12 +88,12 @@ export async function PATCH(request: Request, { params }: Context) {
         draftMode: body.draftMode, showRatings: Boolean(body.showRatings), withManager: Boolean(body.withManager),
       } });
       await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });
-    } else if (body.action === 'bot' && room.hostUserId === userId) {
-      const reserved = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', seatCount: { lt: room.maxPlayers } }, data: { seatCount: { increment: 1 } } });
+    } else if (body.action === 'bot') {
+      const reserved = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', seatCount: { lt: room.maxPlayers }, maxPlayers: { gte: room.seatCount + 1 } }, data: { seatCount: { increment: 1 } } });
       if (!reserved.count) return NextResponse.json({ error: 'Все места заняты' }, { status: 409 });
       try { await db.multiplayerSeat.create({ data: { roomCode: room.code, isBot: true, name: `Бот ${room.seatCount}`, ready: true } }); }
       catch (error) { await db.multiplayerRoom.update({ where: { code: room.code }, data: { seatCount: { decrement: 1 } } }); throw error; }
-    } else if (body.action === 'remove-bot' && room.hostUserId === userId) {
+    } else if (body.action === 'remove-bot') {
       const botId = typeof body.botId === 'string' ? body.botId : '';
       const bot = room.seats.find(seat => seat.id === botId && seat.isBot);
       if (!bot) return NextResponse.json({ error: 'Бот не найден' }, { status: 404 });

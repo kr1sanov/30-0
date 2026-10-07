@@ -28,6 +28,7 @@ export async function publicRoom(code: string, userId: string) {
       pickDeadline: seat.pickDeadline?.toISOString() ?? null, managerName: seat.managerName,
       managerRating: seat.managerRating,
     })),
+    pendingSpin: own?.pendingSpinJson && room.status === 'drafting' ? JSON.parse(own.pendingSpinJson) : null,
     ownRun: own?.run ? { id: own.run.id, formation: own.run.formation, completed: own.run.completed,
       rerollsLeft: Math.max(0, own.run.rerollsTotal - own.run.rerollsUsed),
       // The pitch coordinates follow formation slot order, not alphabetical position order.
@@ -85,8 +86,10 @@ export async function resolveRoom(code: string) {
     for (const homeIndex of [i, j]) {
       const awayIndex = homeIndex === i ? j : i;
       const match = simulateMatch(results[homeIndex].rating, results[awayIndex].rating, true);
-      results[homeIndex].matches.push({ opponent: results[awayIndex].name, opponentId: results[awayIndex].id, home: true, for: match.homeGoals, against: match.awayGoals });
-      results[awayIndex].matches.push({ opponent: results[homeIndex].name, opponentId: results[homeIndex].id, home: false, for: match.awayGoals, against: match.homeGoals });
+      // Spread direct fixtures through the season instead of appending them at the end.
+      const round = Math.min(29, Math.floor((results[homeIndex].matches.length + 1) * (homeIndex === i ? 1 : 2) / 3));
+      results[homeIndex].matches.splice(round, 0, { opponent: results[awayIndex].name, opponentId: results[awayIndex].id, home: true, for: match.homeGoals, against: match.awayGoals });
+      results[awayIndex].matches.splice(round, 0, { opponent: results[homeIndex].name, opponentId: results[homeIndex].id, home: false, for: match.awayGoals, against: match.homeGoals });
     }
   }
   for (const result of results) for (const match of result.matches) {

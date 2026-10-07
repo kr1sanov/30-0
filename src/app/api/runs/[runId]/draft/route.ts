@@ -41,6 +41,13 @@ export async function POST(
       if (room?.status !== 'drafting' || multiplayerSeat.isBot || !multiplayerSeat.pickDeadline || multiplayerSeat.pickDeadline < new Date()) {
         return NextResponse.json({ error: 'Время выбора истекло или драфт закрыт' }, { status: 409 });
       }
+      const pending = multiplayerSeat.pendingSpinJson ? JSON.parse(multiplayerSeat.pendingSpinJson) : null;
+      if (!pending?.players?.some((player: { playerSeasonId: string }) => player.playerSeasonId === playerSeasonId)) {
+        return NextResponse.json({ error: 'Сначала прокрутите колесо и выберите игрока из этой команды' }, { status: 409 });
+      }
+      if (run.draftMode === 'position_first' && pending.targetSlotPosition !== slotPosition) {
+        return NextResponse.json({ error: 'Выберите исходную позицию для этого прокрута' }, { status: 409 });
+      }
     }
 
     if (run.completed) {
@@ -124,9 +131,14 @@ export async function POST(
     const isCompatible = penalty === 1; // full = compatible, partial = not fully compatible
 
     // Update the game slot with player info — including otherPositions, nationality and primeRating
-    await db.gameSlot.update({
-      where: { id: slot.id },
-      data: {
+    await db.$transaction(async (tx) => {
+      if (multiplayerSeat) {
+        const claimed = await tx.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id,
+          pendingSpinJson: multiplayerSeat.pendingSpinJson, ready: false }, data: { pendingSpinJson: null } });
+        if (!claimed.count) throw new Error('Результат прокрута уже использован');
+      }
+      const placed = await tx.gameSlot.updateMany({
+        where: { id: slot.id, playerSeasonId: null }, data: {
         playerSeasonId,
         playerSeasonYear: playerSeason.clubSeason.season.startYear,
         playerName: playerSeason.player.alias || playerSeason.player.fullName,
@@ -137,7 +149,9 @@ export async function POST(
         playerOtherPositions: playerSeason.otherPositions ?? null,
         playerNationality: playerSeason.nationality ?? playerSeason.player.nationality ?? null,
         isCompatible,
-      },
+        },
+      });
+      if (!placed.count) throw new Error('Позиция уже занята');
     });
 
     // Return updated run with slots

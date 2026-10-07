@@ -17,7 +17,6 @@ const input = 'w-full rounded-xl border border-white/20 bg-[#0A0A0A] px-4 py-3 t
 
 type Menu = {
   activeRoom: { code: string; status: string; deadline: string | null; drafted: number } | null;
-  recentRooms: { code: string; date: string; participants: string[]; bots: number; openCode: string | null }[];
 };
 
 async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -107,6 +106,7 @@ export default function MultiplayerPage() {
       if (currentRoomCode.current !== code) return;
       setRoom(value);
       if (value.status === 'completed') setSpin(null);
+      else if (value.status === 'drafting') setSpin(value.pendingSpin);
     } catch (error) { if (currentRoomCode.current === code) setError((error as Error).message); }
   }, [code]);
 
@@ -159,7 +159,7 @@ export default function MultiplayerPage() {
   const remaining = Math.max(0, Math.ceil(((own?.pickDeadline ? Date.parse(own.pickDeadline) : now) - now) / 1000));
   const updateSettings = (changes: Partial<Room>) => room && void action(async () => {
     await json(`/api/multiplayer/rooms/${room.code}`, 'PATCH', {
-      action: 'settings', maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
+      action: !room.isHost && changes.maxPlayers !== undefined ? 'capacity' : 'settings', maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
       draftMode: room.draftMode, showRatings: room.showRatings, eraFilter: room.eraFilter,
       eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, withManager: room.withManager,
       ...changes,
@@ -179,7 +179,7 @@ export default function MultiplayerPage() {
       {!code && !joiningLink && <div className="mx-auto max-w-2xl space-y-5">
         <div className="text-center">
           <h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1>
-          <p className="mt-2 text-sm text-[#9CA3AF]">Создайте комнату или сыграйте снова с недавними соперниками.</p>
+          <p className="mt-2 text-sm text-[#9CA3AF]">Создайте игру или войдите по коду.</p>
         </div>
 
         {menu?.activeRoom && <button onClick={() => openRoom(menu.activeRoom!.code)} className="w-full rounded-2xl border border-[#00C896]/50 bg-[#00C896]/10 p-4 text-left transition hover:bg-[#00C896]/20">
@@ -204,22 +204,11 @@ export default function MultiplayerPage() {
           </div>
         </div>}
 
-        {user && menu?.recentRooms && menu.recentRooms.length > 0 && <div className={`${card} space-y-3`}>
-          <h2 className="text-base font-bold">Недавние соперники</h2>
-          {menu.recentRooms.map(previous => <div key={previous.code} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0A0A0A] p-3">
-            <div className="min-w-0 text-sm"><strong className="block truncate">{previous.participants.join(' · ') || 'Игра с ботами'}{previous.bots && previous.participants.length ? ` · ${previous.bots} бот` : ''}</strong>
-              <span className="text-xs text-[#64748b]">{new Date(previous.date).toLocaleDateString(document.documentElement.lang === 'en' ? 'en-US' : 'ru-RU')}</span>
-            </div>
-            {previous.openCode
-              ? <button disabled={busy || name.trim().length < 2} onClick={() => void enter(previous.openCode!)} className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896] transition hover:bg-[#00C896]/10 disabled:opacity-40">Присоединиться →</button>
-              : <button disabled={busy} onClick={() => rematch(previous.code)} className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896] transition hover:bg-[#00C896]/10 disabled:opacity-40">Повторить →</button>}
-          </div>)}
-        </div>}
       </div>}
 
       {joiningLink && <p role="status" className="mx-auto max-w-lg rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 p-4 text-center text-[#00C896]">Открываем комнату {joinCode}…</p>}
       {code && <button onClick={backToMenu} className="mb-5 text-sm font-semibold text-[#9CA3AF] hover:text-white">← К списку игр</button>}
-      {code && !room && <p className="text-center text-[#9CA3AF]">Загружаем комнату {code}…</p>}
+      {code && !room && <p className="text-center text-[#9CA3AF]">Загружаем лобби…</p>}
       {code && room?.status === 'lobby' && <Lobby room={room} busy={busy}
         onSeat={(ready, formation) => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'seat', ready, formation, name }); await refresh(); })}
         onSettings={updateSettings}
@@ -233,7 +222,7 @@ export default function MultiplayerPage() {
           onReroll={async target => { await action(async () => { const next = await json<Spin>(`/api/runs/${run.id}/reroll`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined); setSpin(next); await refresh(); }); }}
           onPick={(player: Player, slot: Slot) => action(async () => { await json(`/api/runs/${run.id}/draft`, 'POST', { playerSeasonId: player.playerSeasonId, slotPosition: slot.slotPosition }); setSpin(null); await refresh(); })}
           onMove={(from: Slot, to: Slot) => void action(async () => { await json(`/api/runs/${run.id}/swap`, 'POST', { fromSlotPosition: from.slotPosition, toSlotPosition: to.slotPosition }); await refresh(); })}
-          onSkip={() => setSpin(null)} onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/finish`, 'POST'); await refresh(); })}/>
+          onSkip={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/skip`, 'POST'); setSpin(null); await refresh(); })} onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/finish`, 'POST'); await refresh(); })}/>
       </>}
       {code && room?.status === 'completed' && <Results room={room} run={run || null} onReplay={() => rematch(room.code)}/>}
       {code && room && !['lobby', 'drafting', 'completed'].includes(room.status) && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[#9CA3AF]">Готовим сезон…</motion.p>}

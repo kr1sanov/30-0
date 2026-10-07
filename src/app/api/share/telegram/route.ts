@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   const photo = new URL(`/share/${runId}/photo`, siteUrl).toString();
   const result = {
     type: 'photo', id: runId, photo_url: photo, thumbnail_url: photo,
-    caption: `${seasonCaption(run)}\n\nСобери состав и попробуй превзойти результат: ${url}\n🎮 https://t.me/RPL30_bot?startapp`,
+    caption: `${seasonCaption(run)}\n\nРезультат: ${url}\n🎮 https://t.me/RPL30_bot?startapp${user.referralCode ? `=${encodeURIComponent(user.referralCode)}` : ''}`,
   };
   try {
     const response = await fetch(`https://api.telegram.org/bot${token}/savePreparedInlineMessage`, {

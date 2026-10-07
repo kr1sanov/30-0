@@ -16,5 +16,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   if (!seat.run || seat.run.slots.filter(slot => slot.playerSeasonId).length !== 11)
     return NextResponse.json({ error: 'Сначала соберите 11 игроков' }, { status: 400 });
   await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true } });
+  const waiting = await db.multiplayerSeat.count({ where: { roomCode: seat.roomCode, ready: false } });
+  if (!waiting) {
+    const deadline = new Date(Date.now() + 10_000);
+    await db.multiplayerSeat.updateMany({ where: { roomCode: seat.roomCode, isBot: false, pickDeadline: { gt: deadline } },
+      data: { pickDeadline: deadline } });
+  }
   return NextResponse.json({ ok: true });
 }
