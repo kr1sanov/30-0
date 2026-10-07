@@ -74,7 +74,7 @@ export default function Footer({ onHome, onPlay, onProfile }: { onHome?: () => v
           <div className="mt-5 flex justify-center">
             <a href="https://t.me/RPL30_bot?startapp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full border border-[#229ED9]/45 bg-[#229ED9]/10 px-4 py-2 text-sm font-semibold text-[#8BD8F7] transition-colors hover:bg-[#229ED9]/20 hover:text-white">
               <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#229ED9"/><path fill="#fff" d="m18.8 6.7-2.4 11.2c-.2.8-.7 1-1.4.6l-3.7-2.8-1.8 1.8c-.2.2-.4.4-.8.4l.3-3.8 6.9-6.2c.3-.3-.1-.4-.5-.2l-8.5 5.4-3.7-1.2c-.8-.3-.8-.8.2-1.2L18 5.5c.7-.3 1.2.2.8 1.2Z"/></svg>
-              Телеграм мини апп
+              Telegram Mini App
             </a>
           </div>
         </div>
