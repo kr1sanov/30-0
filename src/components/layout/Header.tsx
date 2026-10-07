@@ -51,7 +51,8 @@ export default function Header({ onHome, onProfile }: { onHome?: () => void; onP
         </div>
       </header>
 
-      <nav aria-label="Навигация" className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between border-t border-white/10 bg-[#0A0A0A]/95 px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:hidden">
+      <nav aria-label="Навигация" className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between border-t border-white/10 bg-[#0A0A0A]/95 px-4 pt-2 backdrop-blur-xl sm:hidden"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom), var(--tg-content-safe-bottom, 0px))' }}>
         <button onClick={handleHome} className={btnClass} aria-label="Домой"><Home className="h-4 w-4" /><span>Домой</span></button>
         <button onClick={onProfile ?? (() => useGameStore.getState().setScreen('profile'))} className={btnClass} aria-label="Мой профиль"><User className="h-4 w-4" /><span>Мой профиль</span></button>
       </nav>
