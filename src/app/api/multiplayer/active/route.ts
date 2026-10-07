@@ -12,25 +12,22 @@ export async function GET(request: Request) {
     include: { room: { include: { seats: { select: { userId: true, name: true, isBot: true } } } } },
   });
   const active = seats.find(seat => seat.room.status === 'drafting') ??
-    seats.find(seat => seat.room.status === 'lobby' && seat.room.createdAt.getTime() > Date.now() - 7 * 86400000);
-  const invitations = seats.filter(seat => seat.room.status === 'lobby' && seat.room.hostUserId !== userId &&
-    seat.room.createdAt.getTime() > Date.now() - 7 * 86400000).map(seat => ({
-      code: seat.roomCode, host: seat.room.seats.find(other => other.userId === seat.room.hostUserId)?.name ?? 'Игрок',
-      joinedAt: seat.joinedAt.toISOString(),
-    }));
+    seats.find(seat => seat.room.status === 'lobby' && (seat.room.hostUserId === userId || seat.ready) &&
+      seat.room.createdAt.getTime() > Date.now() - 7 * 86400000);
   const completed = seats.filter(seat => seat.room.status === 'completed');
-  const friends = new Map<string, { id: string; name: string; games: number; lastPlayed: string }>();
-  for (const seat of completed) for (const other of seat.room.seats) {
-    if (!other.userId || other.userId === userId || other.isBot) continue;
-    const prior = friends.get(other.userId);
-    if (prior) prior.games++;
-    else friends.set(other.userId, { id: other.userId, name: other.name, games: 1, lastPlayed: seat.room.createdAt.toISOString() });
-  }
+  const seenGroups = new Set<string>();
+  const recentRooms = completed.filter(seat => {
+    const participants = seat.room.seats.filter(other => other.userId && !other.isBot)
+      .map(other => other.userId!).sort().join(':');
+    if (seenGroups.has(participants)) return false;
+    seenGroups.add(participants);
+    return true;
+  }).slice(0, 5);
   return NextResponse.json({
     activeRoom: active ? { code: active.roomCode, status: active.room.status,
       deadline: active.pickDeadline?.toISOString() ?? null, drafted: active.runId ? await db.gameSlot.count({ where: { runId: active.runId, playerSeasonId: { not: null } } }) : 0 } : null,
-    invitations, friends: [...friends.values()].slice(0, 30),
-    recentRooms: completed.slice(0, 5).map(seat => ({ code: seat.roomCode, date: seat.room.createdAt.toISOString(),
-      participants: seat.room.seats.map(other => other.name) })),
+    recentRooms: recentRooms.map(seat => ({ code: seat.roomCode, date: seat.room.createdAt.toISOString(),
+      participants: seat.room.seats.filter(other => !other.isBot).map(other => other.name),
+      bots: seat.room.seats.filter(other => other.isBot).length })),
   }, { headers: { 'Cache-Control': 'no-store' } });
 }

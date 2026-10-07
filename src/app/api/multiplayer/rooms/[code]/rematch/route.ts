@@ -14,19 +14,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   const old = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, include: { seats: true } });
   if (!userId || !old || old.status !== 'completed' || !old.seats.some(seat => seat.userId === userId))
     return NextResponse.json({ error: 'Повторная игра недоступна' }, { status: 403 });
-  const participants = old.seats.filter(seat => seat.isBot || seat.userId);
+  const ownSeat = old.seats.find(seat => seat.userId === userId)!;
+  const bots = old.seats.filter(seat => seat.isBot);
   for (let attempt = 0; attempt < 5; attempt++) {
     const nextCode = roomCode();
     try {
       await db.multiplayerRoom.create({ data: {
-        code: nextCode, hostUserId: userId, maxPlayers: old.maxPlayers, seatCount: participants.length,
+        code: nextCode, hostUserId: userId, maxPlayers: old.maxPlayers, seatCount: 1 + bots.length,
         ratingMode: old.ratingMode, draftMode: old.draftMode, showRatings: old.showRatings,
         eraFilter: old.eraFilter, eraStartYear: old.eraStartYear, eraEndYear: old.eraEndYear,
         withManager: old.withManager,
-        seats: { create: participants.map(seat => ({
-          ...(seat.isBot ? { isBot: true } : { userId: seat.userId! }),
-          name: seat.name, formation: seat.formation, ready: seat.isBot,
-        })) },
+        seats: { create: [
+          { userId, name: ownSeat.name, formation: ownSeat.formation, ready: false },
+          ...bots.map(seat => ({ isBot: true, name: seat.name, formation: seat.formation, ready: true })),
+        ] },
       } });
       return NextResponse.json({ code: nextCode });
     } catch (error) {
