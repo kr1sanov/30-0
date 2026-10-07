@@ -24,6 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
         ratingMode: old.ratingMode, draftMode: old.draftMode, showRatings: old.showRatings,
         eraFilter: old.eraFilter, eraStartYear: old.eraStartYear, eraEndYear: old.eraEndYear,
         withManager: old.withManager,
+        resultJson: JSON.stringify({ rematchOf: old.code }),
         seats: { create: [
           { userId, name: ownSeat.name, formation: ownSeat.formation, ready: false },
           ...bots.map(seat => ({ isBot: true, name: seat.name, formation: seat.formation, ready: true })),

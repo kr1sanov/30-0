@@ -35,7 +35,7 @@ export async function publicRoom(code: string, userId: string) {
         playerLastName: slot.playerLastName, playerName: slot.playerName, playerRating: room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating,
         playerSeasonYear: slot.playerSeasonYear, playerPosition: slot.playerPosition,
         playerOtherPositions: slot.playerOtherPositions ? slot.playerOtherPositions.split(',').map(value => value.trim()) : [] })) } : null,
-    results: room.resultJson ? JSON.parse(room.resultJson) : null,
+    results: room.status === 'completed' && room.resultJson ? JSON.parse(room.resultJson) : null,
   };
 }
 

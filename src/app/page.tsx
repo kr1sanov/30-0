@@ -31,6 +31,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import TelegramLogin from '@/components/game/TelegramLogin';
 import { clubThemeStyle } from '@/lib/clubThemes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
+import { useTelegram } from '@/hooks/use-telegram';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -1212,6 +1213,7 @@ const pageVariants = {
 /* ─── Main Home Component ─── */
 export default function Home() {
   const { screen, config } = useGameStore();
+  const { showBackButton, hideBackButton } = useTelegram();
   const { isAuthenticated, _hasHydrated } = useAuthStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
@@ -1219,6 +1221,12 @@ export default function Home() {
 
   // Initialize the server-verified Telegram session
   useAutoAuth();
+  useEffect(() => {
+    if (screen === 'home') return;
+    const back = () => useGameStore.getState().goHome();
+    showBackButton(back);
+    return () => hideBackButton(back);
+  }, [screen, showBackButton, hideBackButton]);
 
   useEffect(() => {
     const startParam = new URLSearchParams(location.search).get('tgWebAppStartParam') ||

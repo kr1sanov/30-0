@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { isTelegramLoginData, type TelegramLoginData } from '@/lib/telegramLogin';
 
-export default function TelegramLogin({ startParam }: { startParam?: string } = {}) {
+export default function TelegramLogin({ startParam, compact = false }: { startParam?: string; compact?: boolean } = {}) {
   const openLogin = useRef<(() => void) | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
@@ -52,7 +52,7 @@ export default function TelegramLogin({ startParam }: { startParam?: string } = 
           if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обновите страницу.'); return; }
           openLogin.current = () => {
             setError('');
-            win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), request_access: true, lang: 'ru' }, data => {
+            win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), lang: document.documentElement.lang === 'en' ? 'en' : 'ru' }, data => {
               if (cancelled) return;
               if (isTelegramLoginData(data)) void login({ authData: data });
               else setError('Вход не завершён. Попробуйте ещё раз.');
@@ -73,11 +73,11 @@ export default function TelegramLogin({ startParam }: { startParam?: string } = 
     void setup();
     return () => { cancelled = true; openLogin.current = null; };
   }, [startParam]);
-  return <section className="mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center">
-    <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>
-    <h1 className="mt-6 text-2xl font-bold">Войти через Telegram</h1>
-    <p className="mt-3 text-sm text-[#9CA3AF]">Войдите, чтобы собрать команду и начать сезон.</p>
-    <button type="button" disabled={!ready || loading} onClick={() => openLogin.current?.()} className="mt-6 min-h-12 w-full rounded-xl bg-[#00C896] px-4 font-bold text-black disabled:opacity-40">Войти через Telegram</button>
+  return <section className={compact ? 'mx-auto max-w-md text-center' : 'mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center'}>
+    {!compact && <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>}
+    {compact ? <h2 className="text-lg font-bold">Войдите через Telegram</h2> : <h1 className="mt-6 text-2xl font-bold">Войти через Telegram</h1>}
+    {!compact && <p className="mt-3 text-sm text-[#9CA3AF]">Войдите, чтобы собрать команду и начать сезон.</p>}
+    <button type="button" disabled={!ready || loading} onClick={() => openLogin.current?.()} className={`${compact ? 'mt-4' : 'mt-6'} min-h-12 w-full rounded-xl bg-[#00C896] px-4 font-bold text-black disabled:opacity-40`}>Войти через Telegram</button>
     {miniAppUrl && <a href={miniAppUrl} className="mt-3 block rounded-xl border border-[#229ED9]/40 bg-[#229ED9]/10 px-4 py-3 text-sm font-semibold text-[#8BD8F7] hover:bg-[#229ED9]/20">Открыть игру в Telegram{startParam ? ' и присоединиться' : ''} →</a>}
     {loading && <p role="status" className="text-sm text-[#9CA3AF]">Подключаем Telegram…</p>}
     {error && <p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}

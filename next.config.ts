@@ -15,7 +15,6 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -38,6 +37,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' data:",
               "connect-src 'self' https://oauth.telegram.org",
               "frame-src https://web.telegram.org https://oauth.telegram.org",
+              "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org",
               "object-src 'none'",
               "base-uri 'self'",
             ].join("; "),

@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster as SonnerToaster } from "sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageController } from "@/components/layout/LanguageSwitcher";
+import { TelegramAppSetup } from "@/hooks/use-telegram";
 
 export const metadata: Metadata = {
   title: "30-0 | Драфт РПЛ",
@@ -29,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" className="dark" suppressHydrationWarning>
-      <head />
+      <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js?64" strategy="beforeInteractive" />
+      </head>
       <Script id="yandex-metrika" strategy="beforeInteractive">
         {`(function(m,e,t,r,i,k,a){
     m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -42,7 +45,7 @@ ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLa
       </Script>
       <body
         className="font-sans antialiased bg-[#0A0A0A] text-[#FFFFFF]"
-        style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}
+        style={{ paddingTop: 'max(env(safe-area-inset-top), var(--tg-content-safe-top, 0px))', paddingBottom: 'max(env(safe-area-inset-bottom), var(--tg-content-safe-bottom, 0px))', paddingLeft: 'max(env(safe-area-inset-left), var(--tg-content-safe-left, 0px))', paddingRight: 'max(env(safe-area-inset-right), var(--tg-content-safe-right, 0px))' }}
       >
         <noscript>
           <div>
@@ -53,7 +56,7 @@ ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLa
             />
           </div>
         </noscript>
-        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <TelegramAppSetup />
         <LanguageController />
         {children}
         <Toaster />

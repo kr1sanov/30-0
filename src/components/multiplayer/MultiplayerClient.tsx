@@ -8,6 +8,7 @@ import { useGameStore } from '@/store/gameStore';
 import TelegramLogin from '@/components/game/TelegramLogin';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useTelegram } from '@/hooks/use-telegram';
 import { Draft, Lobby, Results, type Player, type Room, type Spin, type Slot } from './MultiplayerViews';
 
 const card = 'rounded-2xl border border-[#1E1E1E] bg-[#141414] p-5 sm:p-6';
@@ -16,7 +17,7 @@ const input = 'w-full rounded-xl border border-white/20 bg-[#0A0A0A] px-4 py-3 t
 
 type Menu = {
   activeRoom: { code: string; status: string; deadline: string | null; drafted: number } | null;
-  recentRooms: { code: string; date: string; participants: string[]; bots: number }[];
+  recentRooms: { code: string; date: string; participants: string[]; bots: number; openCode: string | null }[];
 };
 
 async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -45,6 +46,7 @@ export default function MultiplayerPage() {
   const [now, setNow] = useState(Date.now());
   const openedLink = useRef('');
   const currentRoomCode = useRef('');
+  const { showBackButton, hideBackButton } = useTelegram();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -93,7 +95,7 @@ export default function MultiplayerPage() {
           await json('/api/multiplayer/rooms', 'POST', { code: nextCode, name: user.displayName });
         }
         openRoom(nextCode);
-      } catch (error) { setError((error as Error).message); }
+      } catch (error) { openedLink.current = ''; setError((error as Error).message); }
       finally { setJoiningLink(false); }
     })();
   }, [user]);
@@ -105,7 +107,7 @@ export default function MultiplayerPage() {
       if (currentRoomCode.current !== code) return;
       setRoom(value);
       if (value.status === 'completed') setSpin(null);
-    } catch (error) { setError((error as Error).message); }
+    } catch (error) { if (currentRoomCode.current === code) setError((error as Error).message); }
   }, [code]);
 
   useEffect(() => {
@@ -126,6 +128,7 @@ export default function MultiplayerPage() {
   async function enter(targetCode?: string) {
     await action(async () => {
       const cleanName = name.trim() || user?.displayName || '';
+      if (cleanName.length < 2) throw new Error('Введите имя от 2 символов');
       if (cleanName !== user?.displayName) await updateDisplayName(cleanName);
       const result = await json<{ code: string }>('/api/multiplayer/rooms', 'POST', {
         name: cleanName, ...(targetCode ? { code: targetCode } : { maxPlayers: 2 }),
@@ -139,12 +142,17 @@ export default function MultiplayerPage() {
     openRoom(next.code);
   });
 
-  const backToMenu = () => {
+  const backToMenu = useCallback(() => {
     currentRoomCode.current = '';
     setCode(''); setRoom(null); setSpin(null); setError('');
     history.replaceState(null, '', '/multiplayer');
     void refreshMenu();
-  };
+  }, [refreshMenu]);
+  useEffect(() => {
+    if (!code) return;
+    showBackButton(backToMenu);
+    return () => hideBackButton(backToMenu);
+  }, [code, backToMenu, showBackButton, hideBackButton]);
 
   const own = room?.seats.find(seat => seat.isYou);
   const run = room?.ownRun;
@@ -170,9 +178,8 @@ export default function MultiplayerPage() {
 
       {!code && !joiningLink && <div className="mx-auto max-w-2xl space-y-5">
         <div className="text-center">
-          <span className="text-xs font-bold uppercase tracking-[.25em] text-emerald-400">Играй вместе</span>
-          <h1 className="mb-2 mt-3 text-3xl font-black sm:text-4xl">Мультиплеер</h1>
-          <p className="text-sm text-[#9CA3AF]">Создайте комнату, отправьте ссылку и соберите команду за три минуты.</p>
+          <h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1>
+          <p className="mt-2 text-sm text-[#9CA3AF]">Создайте комнату или сыграйте снова с недавними соперниками.</p>
         </div>
 
         {menu?.activeRoom && <button onClick={() => openRoom(menu.activeRoom!.code)} className="w-full rounded-2xl border border-[#00C896]/50 bg-[#00C896]/10 p-4 text-left transition hover:bg-[#00C896]/20">
@@ -184,8 +191,7 @@ export default function MultiplayerPage() {
         </button>}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>
-          <p className="mb-4 text-sm text-[#9CA3AF]">Войдите, чтобы создать комнату или присоединиться по ссылке.</p>
-          <TelegramLogin startParam={joinCode ? `room_${joinCode}` : undefined}/>
+          <TelegramLogin compact startParam={joinCode ? `room_${joinCode}` : undefined}/>
         </div> : <div className={`${card} space-y-4`}>
           <label className="block text-sm font-semibold">Ваше имя
             <input aria-label="Ваше имя" maxLength={30} value={name} onChange={event => setName(event.target.value)} className={`${input} mt-2`}/>
@@ -199,13 +205,14 @@ export default function MultiplayerPage() {
         </div>}
 
         {user && menu?.recentRooms && menu.recentRooms.length > 0 && <div className={`${card} space-y-3`}>
-          <h2 className="text-base font-bold">Недавние игроки</h2>
-          <p className="text-xs text-[#9CA3AF]">Повторите матч с прежними настройками и отправьте ссылку участникам.</p>
+          <h2 className="text-base font-bold">Недавние соперники</h2>
           {menu.recentRooms.map(previous => <div key={previous.code} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#0A0A0A] p-3">
-            <div className="min-w-0 text-sm"><strong className="block truncate">{previous.participants.join(' · ')}{previous.bots ? ` · ${previous.bots} бот` : ''}</strong>
+            <div className="min-w-0 text-sm"><strong className="block truncate">{previous.participants.join(' · ') || 'Игра с ботами'}{previous.bots && previous.participants.length ? ` · ${previous.bots} бот` : ''}</strong>
               <span className="text-xs text-[#64748b]">{new Date(previous.date).toLocaleDateString(document.documentElement.lang === 'en' ? 'en-US' : 'ru-RU')}</span>
             </div>
-            <button disabled={busy} onClick={() => rematch(previous.code)} className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896] transition hover:bg-[#00C896]/10 disabled:opacity-40">Повторить →</button>
+            {previous.openCode
+              ? <button disabled={busy || name.trim().length < 2} onClick={() => void enter(previous.openCode!)} className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896] transition hover:bg-[#00C896]/10 disabled:opacity-40">Присоединиться →</button>
+              : <button disabled={busy} onClick={() => rematch(previous.code)} className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896] transition hover:bg-[#00C896]/10 disabled:opacity-40">Повторить →</button>}
           </div>)}
         </div>}
       </div>}
@@ -220,7 +227,7 @@ export default function MultiplayerPage() {
         onRemoveBot={botId => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'remove-bot', botId }); await refresh(); })}
         onStart={() => void action(async () => { await json(`/api/multiplayer/rooms/${code}/start`, 'POST'); await refresh(); })}/>}
       {code && room?.status === 'drafting' && run && <>
-        <div className="mb-4 text-center"><div className="text-xs font-bold uppercase tracking-widest text-emerald-400">Комната {room.code}</div><h1 className="mt-1 text-2xl font-black">Драфт с друзьями</h1></div>
+        <h1 className="sr-only">Драфт · комната {room.code}</h1>
         <Draft room={room} run={run} spin={spin} busy={busy} remaining={remaining}
           onSpin={async target => { await action(async () => { setSpin(await json<Spin>(`/api/runs/${run.id}/spin`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined)); }); }}
           onReroll={async target => { await action(async () => { const next = await json<Spin>(`/api/runs/${run.id}/reroll`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined); setSpin(next); await refresh(); }); }}

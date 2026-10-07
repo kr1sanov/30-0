@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ interface GameRunData {
   teamName: string | null;
   gameMode?: 'classic' | 'single_club' | 'multiplayer';
   multiplayerSeat?: { roomCode: string } | null;
+  opponents?: string[];
   clubName?: string | null;
   createdAt: string;
   slots: GameSlotData[];
@@ -191,8 +192,11 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [shareRun, setShareRun] = useState<GameRunData | null>(null);
+  const [mode, setMode] = useState<'all' | 'classic' | 'single_club' | 'multiplayer'>('all');
+  const requestId = useRef(0);
 
   const fetchRuns = useCallback(async () => {
+    const currentRequest = ++requestId.current;
     setLoading(true);
     setError(null);
     try {
@@ -201,9 +205,11 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
         sort: 'date',
         limit: '100',
       });
+      if (mode !== 'all') params.set('mode', mode);
       const res = await fetch(`/api/runs?${params.toString()}`);
       if (!res.ok) throw new Error('Ошибка загрузки');
       const data = await res.json();
+      if (currentRequest !== requestId.current) return;
       setRuns(data);
       const requestedRun = localStorage.getItem('30-0-selected-run');
       if (requestedRun && Array.isArray(data) && data.some((run: GameRunData) => run.id === requestedRun)) {
@@ -211,20 +217,20 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
         localStorage.removeItem('30-0-selected-run');
       }
     } catch (err) {
+      if (currentRequest !== requestId.current) return;
       console.error('Failed to fetch history:', err);
       setError('Не удалось загрузить историю');
     } finally {
-      setLoading(false);
+      if (currentRequest === requestId.current) setLoading(false);
     }
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     fetchRuns();
   }, [fetchRuns]);
 
-  const sections = ([['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['multiplayer', 'Мультиплеер']] as const)
-    .map(([mode, title]) => ({ mode, title, items: runs.filter(run => (run.gameMode ?? 'classic') === mode) }))
-    .filter(section => section.items.length > 0);
+  const modes = [['all', 'Все'], ['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['multiplayer', 'Мультиплеер']] as const;
+  const sections = [{ mode, items: runs }];
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
@@ -301,6 +307,13 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
           {runs.length > 0 ? `${runs.length} ${runs.length === 1 ? 'сезон' : runs.length < 5 ? 'сезона' : 'сезонов'}` : 'Прошедшие сезоны'}
         </p>
       </div>}
+      <div aria-label="Фильтр истории по режиму" className="flex gap-2 overflow-x-auto pb-1">
+        {modes.map(([key, label]) => <button key={key} type="button" aria-pressed={mode === key}
+          onClick={() => { setExpandedId(null); setMode(key); }}
+          className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition ${mode === key ? 'border-[#00C896] bg-[#00C896]/15 text-[#00C896]' : 'border-white/10 bg-[#141414] text-[#9CA3AF] hover:text-white'}`}>
+          {label}
+        </button>)}
+      </div>
 
       {/* Empty state */}
       {runs.length === 0 && (
@@ -317,7 +330,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
           >
             📋
           </motion.div>
-          <div className="text-lg font-bold text-[#FFFFFF] mb-2">Пока нет сезонов</div>
+          <div className="text-lg font-bold text-[#FFFFFF] mb-2">{mode === 'all' ? 'Пока нет сезонов' : 'В этом режиме пока нет сезонов'}</div>
           <div className="text-sm text-[#9CA3AF] mb-6">
             Сыграйте первый сезон, и он появится здесь!
           </div>
@@ -336,7 +349,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
       {/* Runs list */}
       {runs.length > 0 && (
         <div className="space-y-3">
-          {sections.map(section => <section key={section.mode} className="space-y-3"><h3 className="flex items-center justify-between border-b border-[#1E1E1E] pb-2 text-sm font-bold text-[#FFFFFF]"><span>{section.title}</span><span className="text-[#64748b]">{section.items.length}</span></h3>{section.items.map((run, idx) => {
+          {sections.map(section => <section key={section.mode} className="space-y-3">{section.items.map((run, idx) => {
             const isExpanded = expandedId === run.id;
             const diffBadge = DIFFICULTY_BADGE_COLORS[run.difficulty] || DIFFICULTY_BADGE_COLORS.normal;
             const diffLabel = DIFFICULTY_LABELS[run.difficulty] || run.difficulty;
@@ -370,11 +383,12 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[10px] font-semibold text-[#9CA3AF]">{modes.find(([key]) => key === (run.gameMode ?? 'classic'))?.[1]}</span>
                         {/* Formation */}
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
                           {run.formation}
                         </span>
-                        {run.multiplayerSeat?.roomCode && <span className="text-[10px] text-[#a78bfa]">Комната {run.multiplayerSeat.roomCode}</span>}
+                        {run.gameMode === 'multiplayer' && <span className="max-w-full truncate text-xs font-semibold text-[#a78bfa]">Против: {run.opponents?.length ? run.opponents.join(', ') : 'соперник'}</span>}
                         {/* Difficulty */}
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${diffBadge.bg} ${diffBadge.text}`}>
                           {diffIcon}

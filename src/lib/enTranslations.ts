@@ -591,6 +591,12 @@ Object.assign(TEXT, {
 });
 
 Object.assign(TEXT, {
+  'Все':'All', 'Фильтр истории по режиму':'Filter history by mode',
+  'В этом режиме пока нет сезонов':'No seasons in this mode yet',
+  'Недавние соперники':'Recent opponents', 'Игра с ботами':'Game with bots',
+  'Присоединиться →':'Join →', 'Скопировать ссылку':'Copy link',
+  'Создайте комнату или сыграйте снова с недавними соперниками.':'Create a room or play again with recent opponents.',
+  'Против:':'Against:', 'Ожидаем игроков':'Waiting for players',
   'Навигация':'Navigation', 'Загружаем админку…':'Loading admin dashboard…',
   'Управление продуктом':'Product management', 'Панель администратора':'Admin dashboard',
   'Игры за последние 14 дней':'Games in the last 14 days', 'Режимы':'Modes',
@@ -655,6 +661,9 @@ export function translateInterface(value: string): string {
   const matchOpponent = normalized.match(/^(.+) \((д|в)\)$/);
   if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
+    [/^Против: (.+)$/, 'Against: $1'],
+    [/^Комната ([A-HJ-NP-Z2-9]{6})$/, 'Room $1'],
+    [/^Ожидаем игроков · (\d+)\/(\d+)$/, 'Waiting for players · $1/$2'],
     [/^Тур (\d+) \/ (\d+)$/, 'Matchweek $1 / $2'],
     [/^▶ Продолжить игру$/, '▶ Continue game'],
     [/^Время на весь драфт · (\d+)\/11$/, 'Whole draft timer · $1/11'],

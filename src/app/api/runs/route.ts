@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const completed = searchParams.get('completed');
     const difficulty = searchParams.get('difficulty');
+    const mode = searchParams.get('mode');
     const sort = searchParams.get('sort') || 'date'; // 'date' | 'points'
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
 
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
     if (difficulty && ['easy', 'normal', 'hard'].includes(difficulty)) {
       where.difficulty = difficulty;
     }
+    if (mode === 'multiplayer') where.multiplayerSeat = { isNot: null };
+    if (mode === 'single_club') { where.multiplayerSeat = { is: null }; where.clubFilter = { not: null }; }
+    if (mode === 'classic') { where.multiplayerSeat = { is: null }; where.clubFilter = null; }
 
     const orderBy: Record<string, string>[] =
       sort === 'points'
@@ -35,7 +39,9 @@ export async function GET(request: NextRequest) {
         slots: {
           orderBy: { slotPosition: 'asc' },
         },
-        multiplayerSeat: { select: { roomCode: true } },
+        multiplayerSeat: { select: { roomCode: true, room: { select: { seats: {
+          select: { userId: true, name: true, isBot: true, user: { select: { username: true } } },
+        } } } } },
       },
       orderBy,
       take: limit,
@@ -49,6 +55,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(runs.map((run) => ({
       ...run,
+      multiplayerSeat: run.multiplayerSeat ? { roomCode: run.multiplayerSeat.roomCode } : null,
+      opponents: run.multiplayerSeat?.room.seats
+        .filter(seat => seat.userId !== userId)
+        .map(seat => seat.isBot ? seat.name : seat.user?.username ? `@${seat.user.username}` : seat.name) ?? [],
       gameMode: run.multiplayerSeat ? 'multiplayer' : run.clubFilter ? 'single_club' : 'classic',
       clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
     })));
