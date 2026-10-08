@@ -39,6 +39,7 @@ export default function MultiplayerPage() {
   const [room, setRoom] = useState<Room | null>(null);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
+  const [selectedFormat, setSelectedFormat] = useState<0 | 3 | null>(null);
   const [busy, setBusy] = useState(false);
   const [joiningLink, setJoiningLink] = useState(false);
   const [error, setError] = useState('');
@@ -131,7 +132,7 @@ export default function MultiplayerPage() {
       if (cleanName.length < 2) throw new Error('Введите имя от 2 символов');
       if (cleanName !== user?.displayName) await updateDisplayName(cleanName);
       const result = await json<{ code: string }>('/api/multiplayer/rooms', 'POST', {
-        name: cleanName, ...(targetCode ? { code: targetCode } : { maxPlayers: 2 }),
+        name: cleanName, ...(targetCode ? { code: targetCode } : { maxPlayers: 2, seriesTargetWins: selectedFormat ?? 0 }),
       });
       openRoom(result.code);
     });
@@ -182,9 +183,17 @@ export default function MultiplayerPage() {
     <div className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:pb-12 sm:pt-10">
       {error && <div role="alert" className="mx-auto mb-5 max-w-2xl rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-red-200">{error}</div>}
 
-      {!code && !joiningLink && <div className="mx-auto max-w-2xl space-y-5">
+      {!code && !joiningLink && selectedFormat === null && <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
+        <div className="text-center"><h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1><p className="mt-2 text-sm text-[#9CA3AF]">Выберите формат игры</p></div>
+        <button onClick={() => setSelectedFormat(0)} className={`${card} w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="text-2xl">⚽</span><strong className="mt-2 block text-xl">Один сезон</strong><span className="mt-1 block text-sm text-slate-400">Один драфт, один сезон и итоговая таблица.</span></button>
+        <button onClick={() => setSelectedFormat(3)} className={`${card} w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="text-2xl">🏆</span><strong className="mt-2 block text-xl">Серия сезонов</strong><span className="mt-1 block text-sm text-slate-400">Новый состав в каждом раунде. Игра до выбранного числа побед.</span></button>
+        {menu?.activeRoom && <button onClick={() => openRoom(menu.activeRoom!.code)} className="w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 p-4 text-left font-bold text-[#00C896]">▶ Продолжить текущую игру</button>}
+      </div>}
+
+      {!code && !joiningLink && selectedFormat !== null && <div className="mx-auto max-w-2xl space-y-5">
         <div className="text-center">
-          <h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1>
+          <button onClick={() => setSelectedFormat(null)} className="mb-4 text-sm text-slate-400 hover:text-white">← Выбрать формат</button>
+          <h1 className="text-3xl font-black sm:text-4xl">{selectedFormat ? 'Серия сезонов' : 'Один сезон'}</h1>
           <p className="mt-2 text-sm text-[#9CA3AF]">Создайте игру или войдите по коду.</p>
         </div>
 

@@ -148,6 +148,7 @@ export async function POST(request: NextRequest) {
         formation: formation || '4-3-3',
         difficulty: safeDifficulty,
         draftMode: draftMode || 'squad_first',
+        gameMode,
         ratingMode: ratingMode || 'season',
         eraFilter: eraFilter || 'all',
         eraStartYear: eraStartYear ?? 2010,

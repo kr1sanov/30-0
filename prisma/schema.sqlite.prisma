@@ -182,6 +182,7 @@ model GameRun {
   formation    String   @default("4-3-3")
   difficulty   String   @default("normal")
   draftMode    String   @default("squad_first")
+  gameMode     String @default("classic")
   ratingMode   String   @default("season")
   eraFilter    String   @default("all")
   rerollsTotal Int      @default(1)
@@ -258,6 +259,7 @@ model MultiplayerRoom {
   resultJson   String?
   seriesTargetWins Int @default(0)
   seriesRound Int @default(1)
+  seriesRootCode String?
   seriesScoreJson String?
   seriesWinnerKey String?
   nextRoomCode String?

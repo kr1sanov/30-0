@@ -176,7 +176,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => void;
-  loadActiveRunFromCloud: () => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club', clubId?: string) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -1324,7 +1324,7 @@ export const useGameStore = create<GameState>()(
         set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
         // A changed setup screen can overwrite local presentation settings. The
         // server's run keeps the selected club, so restore it when rejoining.
-        if (runId) void fetch('/api/runs/active', { cache: 'no-store' }).then(async response => {
+        if (runId) void fetch(`/api/runs/active?mode=${restored.clubFilter ? 'single_club&clubId=' + encodeURIComponent(restored.clubFilter) : 'classic'}`, { cache: 'no-store' }).then(async response => {
           if (!response.ok) return;
           const { activeRun } = await response.json();
           if (!activeRun || activeRun.id !== get().runId || activeRun.id !== runId) return;
@@ -1336,12 +1336,16 @@ export const useGameStore = create<GameState>()(
         }).catch(() => undefined);
       },
 
-      loadActiveRunFromCloud: async () => {
+      loadActiveRunFromCloud: async (mode = 'classic', clubId) => {
         try {
-          const response = await fetch('/api/runs/active', { cache: 'no-store' });
+          const response = await fetch(`/api/runs/active?mode=${mode}${clubId ? `&clubId=${encodeURIComponent(clubId)}` : ''}`, { cache: 'no-store' });
           if (!response.ok) return;
           const { activeRun } = await response.json();
-          if (!activeRun || get().runId) return;
+          if (!activeRun) {
+            if (get().runId && (mode === 'classic' || get().config.clubFilter === clubId)) get().resetGame();
+            return;
+          }
+          if (activeRun.id === get().runId && get().slots.length) return;
           const formation = FORMATIONS.find((item) => item.id === activeRun.formation);
           if (!formation) return;
           const config: GameConfig = {

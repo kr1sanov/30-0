@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Собери состав из игроков Российской Премьер-Лиги, крутя колесо фортуны. Заполни 11 позиций и сыграй сезон — сможешь ли ты добиться 30-0?",
   keywords: ["РПЛ", "футбол", "драфт", "30-0", "Российская Премьер-Лига", "футбольная игра"],
   manifest: "/manifest.json",
-  icons: { icon: "/brand-30-0.png", apple: "/brand-30-0.png" },
+  icons: { icon: [{ url: "/brand-30-0.svg", type: "image/svg+xml" }, { url: "/brand-30-0.png", type: "image/png", sizes: "512x512" }], apple: "/brand-30-0.png" },
 };
 
 export const viewport: Viewport = {

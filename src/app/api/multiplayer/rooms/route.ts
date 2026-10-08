@@ -33,10 +33,12 @@ export async function POST(request: Request) {
     }
     const maxPlayers = Number(body.maxPlayers ?? 2);
     if (!Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 6) return NextResponse.json({ error: 'Можно выбрать от 2 до 6 мест' }, { status: 400 });
+    const seriesTargetWins = Number(body.seriesTargetWins ?? 0);
+    if (![0, 2, 3, 5].includes(seriesTargetWins)) return NextResponse.json({ error: 'Выберите формат серии' }, { status: 400 });
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = roomCode();
       try {
-        await db.multiplayerRoom.create({ data: { code, hostUserId: userId, maxPlayers,
+        await db.multiplayerRoom.create({ data: { code, hostUserId: userId, maxPlayers, seriesTargetWins,
           eraStartYear: ERA_CONFIG.all.minYear, eraEndYear: ERA_CONFIG.all.maxYear,
           seats: { create: { userId, name } } } });
         return NextResponse.json({ code }, { status: 201 });

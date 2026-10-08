@@ -28,6 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
           ratingMode: old.ratingMode, draftMode: old.draftMode, showRatings: old.showRatings,
           eraFilter: old.eraFilter, eraStartYear: old.eraStartYear, eraEndYear: old.eraEndYear,
           withManager: old.withManager, seriesTargetWins: old.seriesTargetWins, seriesRound: old.seriesRound + 1,
+          seriesRootCode: old.seriesRootCode ?? old.code,
           seriesScoreJson: old.seriesScoreJson,
           seats: { create: old.seats.map(seat => ({ userId: seat.userId, isBot: seat.isBot, name: seat.name,
             formation: seat.formation, ready: seat.isBot, seriesMemberKey: seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}` })) },

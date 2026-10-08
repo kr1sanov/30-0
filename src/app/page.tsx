@@ -282,7 +282,7 @@ function RecentResults() {
 
 /* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
-  const { setScreen, setConfig, profileStats, runId, resumeGame } = useGameStore();
+  const { setScreen, setConfig, profileStats, runId, config, lastConfig, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number; firstYear: number | null; lastYear: number | null } | null>(null);
@@ -306,7 +306,7 @@ function HomePage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
-        className="flex flex-col items-center justify-center text-center px-4 pt-8 sm:pt-16 pb-8"
+        className="flex flex-col items-center justify-center text-center px-4 pt-4 sm:pt-8 pb-8"
       >
         {/* Badge */}
         <LanguageSwitcher />
@@ -314,7 +314,7 @@ function HomePage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
-          className="mb-6"
+          className="mb-4"
         >
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#1E1E1E] text-xs font-medium text-[#9CA3AF]">
             <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse" />
@@ -322,10 +322,11 @@ function HomePage() {
           </span>
         </motion.div>
 
+        <img src="/brand-30-0.svg" alt="Эмблема 30-0 — Драфт Российской Премьер-лиги" width={96} height={96} className="mb-2 h-20 w-20 object-contain sm:h-24 sm:w-24" />
         {/* Huge "30-0" Title */}
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           <h1
-            className="text-8xl sm:text-[10rem] font-black leading-none tracking-tighter"
+            className="text-7xl sm:text-[9rem] font-black leading-none tracking-tighter"
             style={{ textShadow: '0 0 40px rgba(0,200,150,0.15), 0 0 80px rgba(0,200,150,0.05)' }}
           >
             <AnimatedCounter target={30} duration={500} delay={0} />
@@ -347,7 +348,7 @@ function HomePage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="text-lg sm:text-2xl font-bold text-[#FFFFFF] mb-8 max-w-md"
+          className="text-lg sm:text-2xl font-bold text-[#FFFFFF] mb-6 max-w-md"
         >
           Собери величайшую сборную РПЛ всех времён
         </motion.p>
@@ -379,7 +380,7 @@ function HomePage() {
           </button>
 
           {/* Resume draft button — only if there's an unfinished draft */}
-          {runId && (
+          {runId && (lastConfig?.gameMode ?? config.gameMode) === 'classic' && !lastConfig?.clubFilter && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

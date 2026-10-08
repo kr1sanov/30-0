@@ -172,6 +172,7 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
       <div className={`${panel} p-5 sm:p-6`}><h2 className="mb-4 font-bold">{room.seriesTargetWins ? 'Счёт серии' : 'Таблица участников'}</h2>
         {(room.seriesTargetWins ? scores.map(([key, score], index) => ({ id: key, name: score.name, wins: score.wins, points: score.points, isYou: key === own?.seriesMemberKey, position: index + 1 })) : results.map((result, index) => ({ id: result.id, name: result.name, wins: 0, points: result.points, isYou: result.id === mine.id, position: index + 1 }))).map(item => <div key={item.id} className={`flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-0 ${item.isYou ? 'text-[#00C896]' : 'text-slate-200'}`}><span className="font-semibold">{item.name}{item.isYou ? ' · вы' : ''}</span><strong>{room.seriesTargetWins ? `${item.wins} побед` : `${item.position}-е место · ${item.points} очков`}</strong></div>)}
       </div>
+      {winner && <SeriesFinalDetails code={room.code}/>}
       {room.seriesTargetWins > 0 && !winner ? <button className={`${primary} w-full`} onClick={onNext}>{room.nextRoomCode ? 'Перейти к следующему раунду →' : 'Создать следующий раунд →'}</button> : <button className={`${primary} w-full`} onClick={onReplay}>Сыграть снова →</button>}
       <button onClick={onMenu} className="w-full rounded-xl border border-white/20 py-3 font-semibold hover:bg-white/5">В меню</button>
     </div>;
@@ -205,4 +206,42 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
     draws: mine.draws, losses: mine.losses, goalsFor: mine.goalsFor, goalsAgainst: mine.goalsAgainst,
     position, formation: config.formation, matches, table }, config, slots,
     onHome: onFinish, onReplay: onFinish }}/></div>;
+}
+
+type SeriesDetails = { bestSquad: { name: string; rating: number } | null; bestStreak: { name: string; wins: number } | null;
+  rounds: { round: number; code: string; winner: string; squads: { memberKey: string; name: string; rank: number; rating: number;
+    points: number; wins: number; goalsFor: number; winStreak: number; formation: string;
+    players: { position: string; name: string; rating: number }[] }[] }[] };
+
+function SeriesFinalDetails({ code }: { code: string }) {
+  const [details, setDetails] = useState<SeriesDetails | null>(null);
+  const [error, setError] = useState(false);
+  const [openRound, setOpenRound] = useState<number | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/multiplayer/rooms/${code}/series`, { cache: 'no-store', signal: controller.signal })
+      .then(async response => { if (!response.ok) throw new Error('Не удалось загрузить серию'); return response.json(); })
+      .then(value => setDetails(value))
+      .catch(() => { if (!controller.signal.aborted) setError(true); });
+    return () => controller.abort();
+  }, [code]);
+  if (error) return <p role="alert" className="text-center text-sm text-rose-300">Не удалось загрузить составы серии. Обновите страницу.</p>;
+  if (!details) return <p role="status" className="text-center text-sm text-slate-400">Загружаем статистику серии…</p>;
+  return <div className="space-y-4">
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className={`${panel} p-4`}><div className="text-xs uppercase tracking-widest text-slate-400">Лучший состав</div><strong className="mt-2 block text-lg text-[#00C896]">{details.bestSquad?.name ?? '—'}</strong><span className="text-sm text-slate-300">Сила команды: {details.bestSquad?.rating ?? '—'}</span></div>
+      <div className={`${panel} p-4`}><div className="text-xs uppercase tracking-widest text-slate-400">Самая длинная серия побед в сезоне</div><strong className="mt-2 block text-lg text-[#00C896]">{details.bestStreak?.name ?? '—'}</strong><span className="text-sm text-slate-300">{details.bestStreak?.wins ?? 0} побед подряд</span></div>
+    </div>
+    <h2 className="pt-2 text-lg font-bold">Раунды и составы</h2>
+    {details.rounds.map(round => <div key={round.code} className={`${panel} overflow-hidden`}>
+      <button onClick={() => setOpenRound(openRound === round.round ? null : round.round)} aria-expanded={openRound === round.round} className="flex w-full items-center justify-between gap-3 p-4 text-left hover:bg-white/5">
+        <span><strong>Раунд {round.round}</strong><span className="mt-1 block text-sm text-slate-400">Победитель: {round.winner}</span></span><ChevronDown size={18} className={`shrink-0 transition ${openRound === round.round ? 'rotate-180' : ''}`}/>
+      </button>
+      {openRound === round.round && <div className="grid gap-3 border-t border-white/10 p-4 sm:grid-cols-2">{round.squads.map(squad => <div key={squad.memberKey} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+        <div className="flex justify-between gap-2"><strong className="truncate">{squad.rank}. {squad.name}</strong><span className="shrink-0 font-bold text-[#00C896]">{squad.points} очков</span></div>
+        <p className="mt-1 text-xs text-slate-400">{squad.formation} · сила {squad.rating} · {squad.wins} побед · {squad.goalsFor} голов · серия {squad.winStreak}</p>
+        <ul className="mt-3 grid gap-1 text-xs">{squad.players.map((player, index) => <li key={index} className="flex justify-between gap-2 border-t border-white/5 pt-1.5"><span className="min-w-0 truncate"><span className="mr-2 text-slate-500">{player.position}</span>{player.name}</span><strong className="text-[#00C896]">{player.rating}</strong></li>)}</ul>
+      </div>)}</div>}
+    </div>)}
+  </div>;
 }

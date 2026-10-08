@@ -311,7 +311,7 @@ function ClubCard({
 }
 
 export default function GameSetup() {
-  const { config, setConfig, startRun, dailyChallenge, lastDraftError, runId, resumeGame } = useGameStore();
+  const { config, setConfig, startRun, dailyChallenge, lastDraftError, resumeGame } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
   const { user } = useAuthStore();
 
@@ -321,6 +321,7 @@ export default function GameSetup() {
   const [clubsError, setClubsError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [activeClubRunId, setActiveClubRunId] = useState<string | null>(null);
 
   // Current game mode
   const currentGameMode: GameModeType = config.gameMode ?? 'classic';
@@ -351,6 +352,23 @@ export default function GameSetup() {
 
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
+  useEffect(() => {
+    setActiveClubRunId(null);
+    if (currentGameMode !== 'single_club' || !selectedClub || !user) return;
+    const controller = new AbortController();
+    fetch(`/api/runs/active?mode=single_club&clubId=${encodeURIComponent(selectedClub.id)}`, { cache: 'no-store', signal: controller.signal })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (!controller.signal.aborted) setActiveClubRunId(data?.activeRun?.id ?? null); })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [currentGameMode, selectedClub?.id, user?.id]);
+
+  const resumeClubRun = async () => {
+    if (!selectedClub || !activeClubRunId) return;
+    await useGameStore.getState().loadActiveRunFromCloud('single_club', selectedClub.id);
+    if (useGameStore.getState().runId === activeClubRunId) resumeGame();
+    else setActiveClubRunId(null);
+  };
 
   // Local profile — always available
 
@@ -517,8 +535,8 @@ export default function GameSetup() {
               )}
 
               {/* Club grid */}
-              {runId && (
-                <button type="button" onClick={resumeGame} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
+              {selectedClub && activeClubRunId && (
+                <button type="button" onClick={() => void resumeClubRun()} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
                   ▶ Продолжить драфт
                 </button>
               )}
