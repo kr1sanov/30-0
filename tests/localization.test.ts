@@ -24,3 +24,28 @@ test('translates live season, manager, and award labels without losing results',
   assert.equal(translateInterface('✅ Сильные стороны'), '✅ Strengths');
   assert.equal(translateInterface('Крутить тренера'), 'Spin for manager');
 });
+
+test('keeps multiplayer entry, lobby and series UI in the selected language', () => {
+  assert.equal(translateInterface('← Выбрать формат'), '← Choose a format');
+  assert.equal(translateInterface('Мультиплеер · Бета-версия'), 'Multiplayer · Beta');
+  assert.equal(translateInterface('Сыграй с другом'), 'Play with a friend');
+  assert.equal(translateInterface('собственную команду из 11 игроков'), 'own team of 11 players');
+  assert.equal(translateInterface('Изменить'), 'Edit');
+  assert.equal(translateInterface('Поделиться ссылкой'), 'Share link');
+  assert.equal(translateInterface('В ожидании противника'), 'Waiting for an opponent');
+  assert.equal(translateInterface('+ Добавить бота'), '+ Add bot');
+  assert.equal(translateInterface('Все готовы · Драфт начнётся через 10 сек.'), 'Everyone is ready · Draft starts in 10 sec.');
+  assert.equal(translateInterface('Раунд 2 · до 3 побед'), 'Round 2 · First to 3 wins');
+  assert.equal(translateInterface('Сыграем в 30-0? Код: LJD8HZ'), 'Play 30–0 with me! Code: LJD8HZ');
+  assert.equal(translateInterface('Бот 2'), 'Бот 2');
+});
+
+test('translates positions, formations and player labels while preserving names', () => {
+  assert.equal(translateInterface('Глубокая оборона'), 'Deep defence');
+  assert.equal(translateInterface('ЛФЗ'), 'LWB');
+  assert.equal(translateInterface('Welliton, НП, рейтинг 85'), 'Welliton, ST, rating 85');
+  assert.equal(translateInterface('Павлюченко, ЛЗ, рейтинг 75'), 'Павлюченко, LB, rating 75');
+  assert.equal(translateInterface('ЦСКА'), 'ЦСКА');
+  assert.equal(translateInterface('Соберите 3 игроков из 🇷🇺 Россия'), 'Draft 3 players from 🇷🇺 Russia');
+  assert.equal(translateInterface('Импорт завершён: добавлено 4, обновлено 6.'), 'Import complete: 4 added, 6 updated.');
+});
