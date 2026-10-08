@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       action = String(form.get('action') ?? '');
       const file = form.get('file');
       if (!(file instanceof File) || file.size > 1024 * 1024 || !file.name.toLowerCase().endsWith('.csv')) {
-        throw new RosterImportError('Выберите CSV-файл размером до 1 МБ');
+        throw new RosterImportError('Выбери CSV-файл размером до 1 МБ');
       }
       csv = await file.text();
     } else if (contentType.includes('application/json')) {
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
       if (action !== 'manual' || !body.player || typeof body.player !== 'object') throw new RosterImportError('Неверный формат игрока');
       const escape = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
       csv = `${ROSTER_COLUMNS.join(',')}\n${ROSTER_COLUMNS.map(column => escape(body.player[column])).join(',')}`;
-    } else throw new RosterImportError('Загрузите CSV-файл');
-    if (!seasonId || !['preview', 'commit', 'manual'].includes(action)) throw new RosterImportError('Выберите сезон и действие');
+    } else throw new RosterImportError('Загрузи CSV-файл');
+    if (!seasonId || !['preview', 'commit', 'manual'].includes(action)) throw new RosterImportError('Выбери сезон и действие');
     const rows = parseRosterCsv(csv);
     const summary = await db.$transaction(tx => saveRosterRows(tx, seasonId, rows, action !== 'preview'), { timeout: 120_000 });
     return NextResponse.json({ ok: true, preview: action === 'preview', summary }, { headers: { 'Cache-Control': 'no-store' } });

@@ -18,7 +18,7 @@ export interface NationalityRequirement {
 export interface DailyChallenge {
   date: string;                    // "2026-07-05"
   title: string;                   // "Национальный челлендж"
-  description: string;             // "Соберите 6 игроков из России и 2 из Бразилии"
+  description: string;             // "Собери 6 игроков из России и 2 из Бразилии"
   eraRestriction?: { start: number; end: number };
   formationLock?: string;          // forced formation e.g. "4-4-2"
   nationalityRequirements: NationalityRequirement[];
@@ -147,7 +147,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     title: 'Национальный челлендж',
     descriptionFn: (reqs) => {
       const parts = reqs.map(r => `${r.count} игроков из ${r.flag} ${r.nationality}`);
-      return `Соберите ${parts.join(' и ')}`;
+      return `Собери ${parts.join(' и ')}`;
     },
     reqsFn: (rng) => {
       const count = rng() < 0.5 ? 1 : 2;
@@ -197,7 +197,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     descriptionFn: (reqs, extra) => {
       const era = extra.era as string;
       const natPart = reqs.length > 0 ? `. Плюс ${reqs[0].count} игроков из ${reqs[0].flag} ${reqs[0].nationality}` : '';
-      return `Соберите состав только из эпохи ${era}${natPart}`;
+      return `Собери состав только из эпохи ${era}${natPart}`;
     },
     reqsFn: (rng) => {
       const eras: Array<{ label: string; start: number; end: number }> = [
@@ -223,7 +223,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       };
     },
     difficulty: 'hard',
-    bonusDescription: 'Используйте легенд прошлого для максимального счёта',
+    bonusDescription: 'Используй легенд прошлого для максимального счёта',
     completionOdds: 25,
     bonusMultiplier: 2.0,
     rerollsAllowed: 1,
@@ -235,7 +235,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     descriptionFn: (reqs, extra) => {
       const formation = extra.formation as string;
       const natPart = reqs.length > 0 ? ` + ${reqs[0].count} из ${reqs[0].flag}` : '';
-      return `Соберите состав в схеме ${formation}${natPart}`;
+      return `Собери состав в схеме ${formation}${natPart}`;
     },
     reqsFn: (rng) => {
       const formation = FORMATIONS[Math.floor(rng() * FORMATIONS.length)];
@@ -257,7 +257,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       };
     },
     difficulty: 'normal',
-    bonusDescription: 'Соблюдайте тактическую дисциплину!',
+    bonusDescription: 'Соблюдай тактическую дисциплину!',
     completionOdds: 40,
     bonusMultiplier: 1.3,
     rerollsAllowed: 1,
@@ -268,7 +268,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     title: 'Мультинациональный челлендж',
     descriptionFn: (reqs) => {
       const parts = reqs.map(r => `${r.flag}${r.count}`);
-      return `Соберите команду из разных стран: ${parts.join(' ')}`;
+      return `Собери команду из разных стран: ${parts.join(' ')}`;
     },
     reqsFn: (rng) => {
       const numReqs = Math.floor(rng() * 2) + 3;
@@ -299,7 +299,7 @@ const TEMPLATES: ChallengeTemplate[] = [
   {
     title: 'Разминка',
     descriptionFn: (reqs) => {
-      return `Соберите ${reqs[0].count} игроков из ${reqs[0].flag} ${reqs[0].nationality}`;
+      return `Собери ${reqs[0].count} игроков из ${reqs[0].flag} ${reqs[0].nationality}`;
     },
     reqsFn: (rng) => {
       const nat = RICH_NATIONALITIES[Math.floor(rng() * RICH_NATIONALITIES.length)];
@@ -313,7 +313,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       };
     },
     difficulty: 'easy',
-    bonusDescription: 'Лёгкое начало дня — попробуйте!',
+    bonusDescription: 'Лёгкое начало дня — попробуй!',
     completionOdds: 65,
     bonusMultiplier: 1.0,
     rerollsAllowed: 2,
@@ -323,7 +323,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     title: 'Минималист',
     descriptionFn: (reqs) => {
       const natPart = reqs.length > 0 ? ` и ${reqs.map(r => `${r.count} из ${r.flag} ${r.nationality}`).join(', ')}` : '';
-      return `Соберите состав без перебросов${natPart}`;
+      return `Собери состав без перебросов${natPart}`;
     },
     reqsFn: (rng) => {
       const requirements: NationalityRequirement[] = [];
@@ -352,7 +352,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     title: 'Экономный режим',
     descriptionFn: (reqs) => {
       const natPart = reqs.length > 0 ? ` + ${reqs[0].count} из ${reqs[0].flag}` : '';
-      return `Соберите состав с рейтингом ниже 72${natPart}`;
+      return `Собери состав с рейтингом ниже 72${natPart}`;
     },
     reqsFn: (rng) => {
       const requirements: NationalityRequirement[] = [];
@@ -381,7 +381,7 @@ const TEMPLATES: ChallengeTemplate[] = [
     title: 'Ранние сезоны',
     descriptionFn: (reqs) => {
       const natPart = reqs.length > 0 ? ` + ${reqs.map(r => `${r.count} из ${r.flag} ${r.nationality}`).join(', ')}` : '';
-      return `Соберите состав из сезонов 2010–2012${natPart}`;
+      return `Собери состав из сезонов 2010–2012${natPart}`;
     },
     reqsFn: (rng) => {
       const requirements: NationalityRequirement[] = [];
@@ -402,7 +402,7 @@ const TEMPLATES: ChallengeTemplate[] = [
       };
     },
     difficulty: 'hard',
-    bonusDescription: 'Легенды начала века ждут вас!',
+    bonusDescription: 'Легенды начала века ждут тебя!',
     completionOdds: 18,
     bonusMultiplier: 2.0,
     rerollsAllowed: 1,
@@ -412,7 +412,7 @@ const TEMPLATES: ChallengeTemplate[] = [
   {
     title: 'Сборная Бразилии',
     descriptionFn: (reqs) => {
-      return `Соберите ${reqs[0].count} бразильских игроков в составе`;
+      return `Собери ${reqs[0].count} бразильских игроков в составе`;
     },
     reqsFn: (rng) => {
       const count = Math.floor(rng() * 2) + 3; // 3-4

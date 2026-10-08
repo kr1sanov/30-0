@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 export async function POST(request: Request, { params }: { params: Promise<{ code: string }> }) {
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый запрос' }, { status: 403 });
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   const { code } = await params;
   const room = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, select: { status: true } });
   if (room?.status !== 'completed') return NextResponse.json({ error: 'Сезон ещё не завершён' }, { status: 409 });

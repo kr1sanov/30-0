@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   if (!seat) return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
   if (seat.room.status !== 'drafting') return NextResponse.json({ error: 'Сезон уже запущен' }, { status: 409 });
   if (!seat.run || seat.run.slots.filter(slot => slot.playerSeasonId).length !== 11)
-    return NextResponse.json({ error: 'Сначала соберите 11 игроков' }, { status: 400 });
+    return NextResponse.json({ error: 'Сначала собери 11 игроков' }, { status: 400 });
   await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true } });
   const waiting = await db.multiplayerSeat.count({ where: { roomCode: seat.roomCode, ready: false } });
   if (!waiting) {

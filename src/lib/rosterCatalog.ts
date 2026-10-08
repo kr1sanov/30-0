@@ -5,7 +5,7 @@ type Catalog = Prisma.TransactionClient;
 
 export async function saveRosterRows(tx: Catalog, seasonId: string, rows: RosterRow[], commit: boolean) {
   const season = await tx.season.findUnique({ where: { id: seasonId }, select: { id: true } });
-  if (!season) throw new RosterImportError('Сначала выберите созданный сезон');
+  if (!season) throw new RosterImportError('Сначала выбери созданный сезон');
   const names = [...new Set(rows.map(row => row.clubName))];
   const fullNames = [...new Set(rows.map(row => row.fullName))];
   const ids = [...new Set(rows.flatMap(row => row.playerId ? [row.playerId] : []))];
@@ -42,7 +42,7 @@ export async function saveRosterRows(tx: Catalog, seasonId: string, rows: Roster
       const matches = players.filter(player => player.fullName === row.fullName &&
         (!row.nationality || !player.nationality || player.nationality === row.nationality) &&
         (!row.birthYear || !player.birthYear || player.birthYear === row.birthYear));
-      if (matches.length > 1) throw new RosterImportError(`Строка ${row.line}: несколько игроков с именем ${row.fullName}; укажите playerId`);
+      if (matches.length > 1) throw new RosterImportError(`Строка ${row.line}: несколько игроков с именем ${row.fullName}; укажи playerId`);
       if (matches[0]) playerId = matches[0].id;
       else {
         newPlayers++;

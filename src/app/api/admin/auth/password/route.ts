@@ -34,7 +34,7 @@ export async function PATCH(request: Request) {
   const limited = enforceRateLimit(request, 'admin:password-change', { limit: 5, windowMs: 15 * 60_000 });
   if (limited) return limited;
   const admin = await adminSession(request);
-  if (!admin) return NextResponse.json({ error: 'Войдите заново' }, { status: 401 });
+  if (!admin) return NextResponse.json({ error: 'Войди заново' }, { status: 401 });
   const body = await request.json().catch(() => ({}));
   const current = typeof body.currentPassword === 'string' ? body.currentPassword : '';
   const next = typeof body.newPassword === 'string' ? body.newPassword : '';

@@ -5,7 +5,7 @@ import { sessionUser } from '@/lib/telegramSession';
 export async function GET(request: Request) {
   try {
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
 
     const user = await db.user.findUnique({
       where: { id: userId },
@@ -83,12 +83,12 @@ export async function PATCH(request: Request) {
   try {
     const body = await request.json();
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const { displayName, profileStats, progressEpoch } = body as { displayName?: string; profileStats?: unknown; progressEpoch?: string };
 
     const currentEpoch = (await db.appSetting.findUnique({ where: { key: 'progressEpoch' } }))?.value ?? '2026-09-27';
     if (profileStats !== undefined && progressEpoch !== currentEpoch) {
-      return NextResponse.json({ error: 'Обновите страницу: прежний прогресс сброшен' }, { status: 409 });
+      return NextResponse.json({ error: 'Обнови страницу: прежний прогресс сброшен' }, { status: 409 });
     }
 
     if (profileStats !== undefined && (!profileStats || typeof profileStats !== 'object' || JSON.stringify(profileStats).length > 200_000)) {

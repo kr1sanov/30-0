@@ -424,7 +424,7 @@ export default function DailyChallengeScreen() {
           >
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm">🏆</span>
-              <span className="text-xs font-bold text-[#00C896]">Ваш лучший результат сегодня</span>
+              <span className="text-xs font-bold text-[#00C896]">Твой лучший результат сегодня</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="text-lg font-black text-[#FFFFFF]">{todayBestAttempt.points} очков</div>

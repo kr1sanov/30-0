@@ -59,7 +59,7 @@ export async function POST(
     if (multiplayerSeat && run.draftMode === 'position_first') {
       const body = await request.json().catch(() => ({}));
       const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
-      if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
+      if (!target) return NextResponse.json({ error: 'Сначала выбери свободную позицию' }, { status: 400 });
       openPositions = [target.slotPosition.split('_')[0]];
       targetSlotPosition = target.slotPosition;
     }
@@ -126,7 +126,7 @@ export async function POST(
       const totalClubs = await db.club.count();
       if (totalClubs === 0) {
         return NextResponse.json(
-          { error: 'База данных пуста. Запустите сид: POST /api/seed', needsSeed: true },
+          { error: 'База данных пуста. Запусти сид: POST /api/seed', needsSeed: true },
           { status: 503 },
         );
       }

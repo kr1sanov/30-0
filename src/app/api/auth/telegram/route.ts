@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const body = JSON.parse(text);
     const cookie = (request.headers.get('cookie') ?? '').split(';').map(p => p.trim()).find(p => p.startsWith('rpl_login_csrf='))?.slice(15);
     if (!cookie || typeof body.csrf !== 'string' || cookie.length !== body.csrf.length || !timingSafeEqual(Buffer.from(cookie), Buffer.from(body.csrf))) {
-      return NextResponse.json({ error: 'Обновите страницу входа' }, { status: 403 });
+      return NextResponse.json({ error: 'Обнови страницу входа' }, { status: 403 });
     }
     const authData = body.authData && typeof body.authData === 'object' && !Array.isArray(body.authData)
       ? body.authData as Record<string, unknown>
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
         void sendTelegramMessage(chatId, [
           '<b>Добро пожаловать в 30-0!</b> ⚽',
           '',
-          'Соберите команду из игроков РПЛ разных эпох и попробуйте пройти сезон без поражений.',
+          'Собери команду из игроков РПЛ разных эпох и попробуй пройти сезон без поражений.',
           '',
           'После каждого сезона сюда будет приходить карточка результата.',
         ].join('\n')).then(async sent => {
@@ -159,7 +159,7 @@ export async function POST(request: Request) {
     }
     return response;
   } catch {
-    return NextResponse.json({ error: 'Не удалось выполнить вход. Попробуйте ещё раз.' }, { status: 400 });
+    return NextResponse.json({ error: 'Не удалось выполнить вход. Попробуй ещё раз.' }, { status: 400 });
   }
 }
 

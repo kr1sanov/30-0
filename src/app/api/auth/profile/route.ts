@@ -7,7 +7,7 @@ export async function PATCH(request: Request) {
     if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
     const body = await request.json();
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const displayName = typeof body.displayName === 'string' ? body.displayName.trim() : undefined;
     const telegramNotificationsEnabled = typeof body.telegramNotificationsEnabled === 'boolean'
       ? body.telegramNotificationsEnabled

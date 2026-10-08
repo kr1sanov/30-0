@@ -10,7 +10,7 @@ import { randomBytes } from 'node:crypto';
 export async function GET(request: Request) {
   try {
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
 
     let user = await db.user.findUnique({
       where: { id: userId },

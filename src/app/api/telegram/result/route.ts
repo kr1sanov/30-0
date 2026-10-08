@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   const limited = enforceRateLimit(request, 'telegram:result', { limit: 5, windowMs: 60_000 });
   if (limited) return limited;
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
 
   try {
     const body = await request.json() as { runId?: unknown; image?: unknown };
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       `${run.wins ?? 0} побед · ${run.draws ?? 0} ничьих · ${run.losses ?? 0} поражений`,
       `<b>${run.points ?? 0} очков · ${run.position ?? '—'}-е место</b>`,
       '',
-      'Сможете улучшить результат? Откройте 30-0 и сыграйте ещё раз.',
+      'Сможешь улучшить результат? Открой 30-0 и сыграй ещё раз.',
     ].join('\n');
     const appUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://30-0.xn--p1ai';
     const sent = await sendTelegramResult(chatId, image, caption, appUrl);

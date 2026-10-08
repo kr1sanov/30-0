@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   if (!actor) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
   if (actor.role !== 'owner' || !sameOrigin(request)) return NextResponse.json({ error: 'Только владелец может сбросить прогресс' }, { status: 403 });
   const body = await request.json().catch(() => ({}));
-  if (body.confirm !== 'СБРОСИТЬ ПРОГРЕСС ВСЕХ') return NextResponse.json({ error: 'Введите фразу подтверждения' }, { status: 400 });
+  if (body.confirm !== 'СБРОСИТЬ ПРОГРЕСС ВСЕХ') return NextResponse.json({ error: 'Введи фразу подтверждения' }, { status: 400 });
   const epoch = randomUUID();
   const [rooms, runs, users] = await db.$transaction([
     db.multiplayerRoom.deleteMany(),

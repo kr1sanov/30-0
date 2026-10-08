@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       }
       if (/^\/notifications\b/.test(message.text)) {
         const user = await db.user.findUnique({ where: { providerId: `telegram_${chatId}` } });
-        if (!user) { await sendTelegramMessage(chatId, 'Сначала войдите в игру через Telegram, затем настройте уведомления в профиле.'); }
+        if (!user) { await sendTelegramMessage(chatId, 'Сначала войди в игру через Telegram, затем настрой уведомления в профиле.'); }
         else {
           const enabled = !user.telegramNotificationsEnabled;
           await db.user.update({ where: { id: user.id }, data: { telegramNotificationsEnabled: enabled } });

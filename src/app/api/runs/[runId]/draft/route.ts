@@ -43,10 +43,10 @@ export async function POST(
       }
       const pending = multiplayerSeat.pendingSpinJson ? JSON.parse(multiplayerSeat.pendingSpinJson) : null;
       if (!pending?.players?.some((player: { playerSeasonId: string }) => player.playerSeasonId === playerSeasonId)) {
-        return NextResponse.json({ error: 'Сначала прокрутите колесо и выберите игрока из этой команды' }, { status: 409 });
+        return NextResponse.json({ error: 'Сначала прокрути колесо и выбери игрока из этой команды' }, { status: 409 });
       }
       if (run.draftMode === 'position_first' && pending.targetSlotPosition !== slotPosition) {
-        return NextResponse.json({ error: 'Выберите исходную позицию для этого прокрута' }, { status: 409 });
+        return NextResponse.json({ error: 'Выбери исходную позицию для этого прокрута' }, { status: 409 });
       }
     }
 

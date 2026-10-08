@@ -337,7 +337,7 @@ export default function GameSetup() {
       setClubs(data as ClubData[]);
     } catch (error) {
       console.error('Failed to load clubs:', error);
-      setClubsError('Не удалось загрузить клубы. Проверьте соединение и повторите.');
+      setClubsError('Не удалось загрузить клубы. Проверь соединение и повтори.');
     } finally {
       setClubsLoading(false);
     }
@@ -375,7 +375,7 @@ export default function GameSetup() {
   const handleStart = async () => {
     // In single_club mode, require a club selection
     if (currentGameMode === 'single_club' && !config.clubFilter) {
-      setStartError('Выберите клуб для режима "Один клуб".');
+      setStartError('Выбери клуб для режима "Один клуб".');
       return;
     }
     haptic('medium');
@@ -394,7 +394,7 @@ export default function GameSetup() {
       // If we're still on setup after startRun, it means it failed
       const currentState = useGameStore.getState();
       if (currentState.screen === 'setup') {
-        const error = currentState.lastDraftError || 'Не удалось начать игру. Попробуйте ещё раз.';
+        const error = currentState.lastDraftError || 'Не удалось начать игру. Попробуй ещё раз.';
         console.error('[handleStart] Run failed, still on setup screen:', error);
         setStartError(error);
       } else {
@@ -402,7 +402,7 @@ export default function GameSetup() {
       }
     } catch (err) {
       console.error('[handleStart] Exception during startRun:', err);
-      setStartError(err instanceof Error ? err.message : 'Произошла ошибка. Попробуйте ещё раз.');
+      setStartError(err instanceof Error ? err.message : 'Произошла ошибка. Попробуй ещё раз.');
     } finally {
       setIsStarting(false);
     }
@@ -432,7 +432,7 @@ export default function GameSetup() {
           {dailyChallenge ? 'Ежедневный челлендж' : currentGameMode === 'single_club' ? (selectedClub ? 'Настройка · Один клуб' : 'Один клуб') : 'Обычный драфт'}
         </h2>
         <p className="text-sm text-[#9CA3AF] mt-1">
-          {dailyChallenge ? dailyChallenge.title : currentGameMode === 'single_club' && !selectedClub ? 'Сначала выберите клуб' : 'Выберите параметры драфта'}
+          {dailyChallenge ? dailyChallenge.title : currentGameMode === 'single_club' && !selectedClub ? 'Сначала выбери клуб' : 'Выбери параметры драфта'}
         </p>
       </div>
 
@@ -497,14 +497,14 @@ export default function GameSetup() {
               {!selectedClub && (
                 <div className="mb-5 space-y-3 rounded-xl border border-[#00C896]/25 bg-[#00C896]/[0.06] p-4 text-sm leading-relaxed text-[#cbd5e1]">
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Как это работает</h3>
-                  <p>Выберите клуб и соберите 11 игроков из доступных составов РПЛ (2010–2021). Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграйте сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
+                  <p>Выбери клуб и собери 11 игроков из доступных составов РПЛ (2010–2021). Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграй сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Трофеи</h3>
-                  <p>Охотьтесь за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.</p>
+                  <p>Охоться за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Полезно знать</h3>
                   <p>Все прокрутки берутся из выбранного клуба. Режим рассчитан на одиночную игру.</p>
                 </div>
               )}
-              <SectionHeader>{selectedClub ? 'Выбранный клуб' : 'Выберите клуб'}</SectionHeader>
+              <SectionHeader>{selectedClub ? 'Выбранный клуб' : 'Выбери клуб'}</SectionHeader>
               {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы с достаточным составом в базе выпусков 2010–2021.</p>}
 
               {/* Selected club indicator */}
@@ -1029,9 +1029,9 @@ export default function GameSetup() {
               Загрузка...
             </span>
           ) : currentGameMode === 'single_club' && !config.clubFilter
-          ? 'Выберите клуб'
+          ? 'Выбери клуб'
           : currentGameMode === 'nations_cup' && !config.nationalityFilter
-          ? 'Выберите нацию'
+          ? 'Выбери нацию'
           : dailyChallenge
           ? 'Начать челлендж →'
           : currentGameMode === 'single_club'

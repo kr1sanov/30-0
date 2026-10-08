@@ -129,7 +129,7 @@ export default function ProfileScreen() {
           )}
         </motion.div>
         {showAvatarChoices && (
-          <div className="mx-auto mt-3 grid max-w-xs grid-cols-8 gap-1 rounded-xl border border-[#1E1E1E] bg-[#141414] p-2" aria-label="Выберите эмодзи">
+          <div className="mx-auto mt-3 grid max-w-xs grid-cols-8 gap-1 rounded-xl border border-[#1E1E1E] bg-[#141414] p-2" aria-label="Выбери эмодзи">
             {['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🥊', '🏆', '🏅', '🤸', '🏋️', '🚴', '🏃', '🤾', '🧑', '👨', '👩', '🙂', '😎', '🤩', '🥳', '😄', '🧔'].map((emoji) => (
               <button key={emoji} type="button" onClick={() => { setAvatarEmoji(emoji); setShowAvatarChoices(false); }} className="rounded-lg p-1.5 text-xl hover:bg-[#00C896]/15" aria-label={`Выбрать ${emoji}`}>
                 {emoji}
@@ -231,8 +231,8 @@ export default function ProfileScreen() {
       <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">Приглашайте друзей</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделитесь ссылкой — здесь появятся ваши друзья.</p>
+            <h3 className="text-sm font-bold text-white">Приглашай друзей</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделись ссылкой — здесь появятся твои друзья.</p>
           </div>
           <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
             <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
@@ -244,7 +244,7 @@ export default function ProfileScreen() {
             <input readOnly aria-label="Реферальная ссылка" value={referrals.inviteUrl} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
             <Button onClick={async () => { try { await navigator.clipboard.writeText(referrals.inviteUrl!); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
           </div>
-        ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем вашу ссылку…</p>}
+        ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем твою ссылку…</p>}
         {referrals?.referredUsers.length ? (
           <div className="mt-4 border-t border-[#252525] pt-3">
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Присоединились по ссылке</p>
@@ -332,7 +332,7 @@ export default function ProfileScreen() {
           <button disabled={deletionBusy} onClick={async () => {
             if (!window.confirm('Запланировать удаление профиля через 7 дней? После этого история сезонов, составы и прогресс будут удалены. До окончания срока можно восстановить профиль без потери прогресса.')) return;
             setDeletionBusy(true);
-            try { const res = await fetch('/api/users/deletion', { method: 'POST' }); if (!res.ok) throw new Error(); const data = await res.json(); setDeleteAfterAt(data.deleteAfterAt); toast.info('Удаление запланировано. Вы можете восстановить профиль в течение недели.'); }
+            try { const res = await fetch('/api/users/deletion', { method: 'POST' }); if (!res.ok) throw new Error(); const data = await res.json(); setDeleteAfterAt(data.deleteAfterAt); toast.info('Удаление запланировано. Ты можешь восстановить профиль в течение недели.'); }
             catch { toast.error('Не удалось запланировать удаление'); }
             finally { setDeletionBusy(false); }
           }} className="text-xs text-[#64748b] underline underline-offset-4 hover:text-[#ef4444]">Удалить профиль</button>

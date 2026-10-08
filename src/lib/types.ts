@@ -132,8 +132,8 @@ export const ERA_MAX_YEAR = 2021;
 // ---------------------------------------------------------------------------
 
 export const DRAFT_MODE_CONFIG = {
-  squad_first: { label: 'Сначала состав', description: 'Крутите колесо, затем выберите игрока и позицию' },
-  position_first: { label: 'Сначала позиция', description: 'Выберите позицию, затем крутите колесо' },
+  squad_first: { label: 'Сначала состав', description: 'Крути колесо, затем выбери игрока и позицию' },
+  position_first: { label: 'Сначала позиция', description: 'Выбери позицию, затем крути колесо' },
 } as const;
 
 export const RATING_MODE_CONFIG = {

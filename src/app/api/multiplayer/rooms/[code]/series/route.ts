@@ -15,7 +15,7 @@ function longestWinStreak(matches: { for: number; against: number }[]) {
 
 export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   const { code } = await params;
   const final = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, select: {
     code: true, seriesRootCode: true, seriesWinnerKey: true, status: true, seriesTargetWins: true,

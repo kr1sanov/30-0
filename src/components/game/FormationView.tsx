@@ -379,7 +379,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
             style={{ backgroundColor: '#1a150a', border: '1px solid #facc1525' }}
           >
-            <span className="text-[10px] text-[#94a3b8]">Выберите позицию для обмена с</span>
+            <span className="text-[10px] text-[#94a3b8]">Выбери позицию для обмена с</span>
             <span className="text-[10px] font-bold text-[#facc15]">
               {slots[movingPlayerSlotIndex]?.playerName}
             </span>

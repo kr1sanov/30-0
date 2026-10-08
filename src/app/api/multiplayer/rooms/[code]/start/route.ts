@@ -16,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   const room = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, include: { seats: true } });
   if (!room || !userId || !room.seats.some(seat => seat.userId === userId)) return NextResponse.json({ error: 'Нет доступа к игре' }, { status: 403 });
   if (room.status !== 'lobby' || room.seats.length < 2 || room.seats.some(seat => !seat.ready) || !room.draftStartAt || room.draftStartAt.getTime() > Date.now())
-    return NextResponse.json({ error: 'Дождитесь готовности игроков и конца отсчёта' }, { status: 409 });
+    return NextResponse.json({ error: 'Дождись готовности игроков и конца отсчёта' }, { status: 409 });
   const claimed = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', draftStartAt: { lte: new Date() } }, data: { status: 'starting' } });
   if (!claimed.count) return NextResponse.json({ error: 'Игра уже началась' }, { status: 409 });
   const createdRunIds: string[] = [];

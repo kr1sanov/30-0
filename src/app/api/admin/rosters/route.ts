@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   if (!Number.isInteger(startYear) || startYear < 2000 || startYear > 2100 ||
     !Number.isInteger(endYear) || ![startYear, startYear + 1].includes(endYear) ||
     !Number.isInteger(matchesPerTeam) || matchesPerTeam < 1 || matchesPerTeam > 60 ||
-    label.length < 4 || label.length > 100) return NextResponse.json({ error: 'Проверьте годы, название и число матчей' }, { status: 400 });
+    label.length < 4 || label.length > 100) return NextResponse.json({ error: 'Проверь годы, название и число матчей' }, { status: 400 });
   const existing = await db.season.findUnique({ where: { startYear_endYear: { startYear, endYear } } });
   if (existing) return NextResponse.json({ error: 'Сезон с этими годами уже существует' }, { status: 409 });
   const season = await db.season.create({ data: { startYear, endYear, label, matchesPerTeam } });
@@ -45,7 +45,7 @@ export async function PATCH(request: Request) {
   const rating = Number(b.rating); const primeRating = Number(b.primeRating); const mainPosition = String(b.mainPosition ?? '').trim(); const otherPositions = String(b.otherPositions ?? '').trim();
   if (!id || !Number.isInteger(rating) || rating < 1 || rating > 100 || !Number.isInteger(primeRating) || primeRating < rating || primeRating > 100 ||
     !ALL_POSITIONS.includes(mainPosition as typeof ALL_POSITIONS[number]) || otherPositions.length > 255 ||
-    (otherPositions && otherPositions.split(',').some((pos: string) => !ALL_POSITIONS.includes(pos.trim() as typeof ALL_POSITIONS[number])))) return NextResponse.json({ error: 'Проверьте рейтинги и позиции игрока' }, { status: 400 });
+    (otherPositions && otherPositions.split(',').some((pos: string) => !ALL_POSITIONS.includes(pos.trim() as typeof ALL_POSITIONS[number])))) return NextResponse.json({ error: 'Проверь рейтинги и позиции игрока' }, { status: 400 });
   const row = await db.playerSeason.update({ where: { id }, data: { rating, primeRating, mainPosition, otherPositions: otherPositions || null } });
   return NextResponse.json({ ok: true, id: row.id });
  } catch { return NextResponse.json({ error: 'Не удалось обновить запись игрока' }, { status: 500 }); }

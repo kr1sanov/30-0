@@ -66,7 +66,7 @@ export function parseRosterCsv(input: string): RosterRow[] {
     if (record.length !== ROSTER_COLUMNS.length) throw new RosterImportError(`Строка ${line}: ожидается ${ROSTER_COLUMNS.length} столбцов, получено ${record.length}`);
     const values = Object.fromEntries(ROSTER_COLUMNS.map((key, i) => [key, record[i]])) as Record<typeof ROSTER_COLUMNS[number], string>;
     const required = ['clubName', 'fullName', 'lastName', 'mainPosition', 'rating'] as const;
-    if (required.some(key => !values[key])) throw new RosterImportError(`Строка ${line}: заполните клуб, полное имя, фамилию, позицию и рейтинг`);
+    if (required.some(key => !values[key])) throw new RosterImportError(`Строка ${line}: заполни клуб, полное имя, фамилию, позицию и рейтинг`);
     if (['clubName', 'clubNameEn', 'fullName', 'lastName', 'firstName', 'nationality'].some(key => values[key as keyof typeof values].length > 255)) {
       throw new RosterImportError(`Строка ${line}: имя или название слишком длинное`);
     }
@@ -78,16 +78,16 @@ export function parseRosterCsv(input: string): RosterRow[] {
     }
     const birthYear = values.birthYear ? Number(values.birthYear) : null;
     if (values.birthYear && (!/^\d{4}$/.test(values.birthYear) || birthYear! < 1900 || birthYear! > new Date().getUTCFullYear())) {
-      throw new RosterImportError(`Строка ${line}: проверьте год рождения`);
+      throw new RosterImportError(`Строка ${line}: проверь год рождения`);
     }
     const valid = new Set<string>(ALL_POSITIONS);
     const other = values.otherPositions ? values.otherPositions.split('|').map(value => value.trim()) : [];
     if (!valid.has(values.mainPosition) || other.some(pos => !valid.has(pos)) || other.includes(values.mainPosition)) {
-      throw new RosterImportError(`Строка ${line}: неверная позиция. Используйте коды из памятки, дополнительные позиции разделяйте |`);
+      throw new RosterImportError(`Строка ${line}: неверная позиция. Используй коды из памятки, дополнительные позиции разделяй |`);
     }
     if (values.sourceUrl) {
       try { const url = new URL(values.sourceUrl); if (!['https:', 'http:'].includes(url.protocol) || values.sourceUrl.length > 1500) throw Error(); }
-      catch { throw new RosterImportError(`Строка ${line}: укажите корректную ссылку на источник`); }
+      catch { throw new RosterImportError(`Строка ${line}: укажи корректную ссылку на источник`); }
     }
     if (values.playerId && !/^[a-zA-Z0-9_-]{1,64}$/.test(values.playerId)) throw new RosterImportError(`Строка ${line}: неверный ID игрока`);
     const key = `${values.clubName.toLocaleLowerCase()}|${values.fullName.toLocaleLowerCase()}|${values.birthYear}`;

@@ -314,10 +314,10 @@ export const useGameStore = create<GameState>()(
             const errData = await res.json().catch(() => ({}));
             console.error('[startRun] API error:', res.status, errData);
             const errMsg = errData?.error === 'Invalid formation'
-              ? 'Неверная схема формирования. Выберите другую схему.'
+              ? 'Неверная схема формирования. Выбери другую схему.'
               : typeof errData?.error === 'string'
                 ? errData.error
-                : `Не удалось начать игру (ошибка ${res.status}). Попробуйте ещё раз.`;
+                : `Не удалось начать игру (ошибка ${res.status}). Попробуй ещё раз.`;
             set({ screen: 'setup', lastDraftError: errMsg });
             return;
           }
@@ -328,7 +328,7 @@ export const useGameStore = create<GameState>()(
           const formation = FORMATIONS.find((f) => f.id === runConfig.formation);
           if (!formation) {
             console.error('[startRun] Formation not found:', runConfig.formation);
-            set({ screen: 'setup', lastDraftError: `Схема "${runConfig.formation}" не найдена. Выберите другую.` });
+            set({ screen: 'setup', lastDraftError: `Схема "${runConfig.formation}" не найдена. Выбери другую.` });
             return;
           }
 
@@ -396,7 +396,7 @@ export const useGameStore = create<GameState>()(
         } catch (error) {
           console.error('Failed to start run:', error);
           // Revert to setup screen so the user isn't stuck on draft with no runId
-          set({ screen: 'setup', lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
+          set({ screen: 'setup', lastDraftError: 'Не удалось начать игру. Попробуй ещё раз.' });
         }
       },
 
@@ -412,7 +412,7 @@ export const useGameStore = create<GameState>()(
           await get().startRun();
           runId = get().runId;
           if (!runId) {
-            set({ lastDraftError: 'Не удалось начать игру. Попробуйте ещё раз.' });
+            set({ lastDraftError: 'Не удалось начать игру. Попробуй ещё раз.' });
             return;
           }
         }
@@ -430,13 +430,13 @@ export const useGameStore = create<GameState>()(
             // Provide user-friendly Russian messages for common API errors
             let userMsg = 'Ошибка при вращении колеса';
             if ((errData as Record<string, unknown>).needsSeed) {
-              userMsg = 'База данных пуста. Подождите, идёт загрузка данных...';
+              userMsg = 'База данных пуста. Подожди, идёт загрузка данных...';
               // Auto-seed in background
               fetch('/api/seed', { method: 'POST' }).catch(() => {});
             } else if (errMsg === 'No compatible club-seasons available' || errMsg === 'No compatible club-seasons available for the selected era/filters') {
-              userMsg = 'Нет доступных клубов-сезонов для оставшихся позиций. Попробуйте изменить эпоху или начать заново.';
+              userMsg = 'Нет доступных клубов-сезонов для оставшихся позиций. Попробуй изменить эпоху или начать заново.';
             } else if (errMsg === 'Run not found') {
-              userMsg = 'Игровая сессия не найдена. Начните новую игру.';
+              userMsg = 'Игровая сессия не найдена. Начни новую игру.';
             } else if (errMsg === 'No open slots remaining') {
               userMsg = 'Все позиции заполнены!';
             } else if (errMsg) {

@@ -471,7 +471,7 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
           >
             <div className="text-center">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-[#00C896]">Сезон завершён</div>
-              <h1 className="mt-2 text-2xl font-black text-white sm:text-4xl">Ваш результат</h1>
+              <h1 className="mt-2 text-2xl font-black text-white sm:text-4xl">Твой результат</h1>
               {config.gameMode === 'single_club' && config.clubName && <p className="mt-1 text-sm text-[#9CA3AF]">{config.clubName}</p>}
             </div>
             {/* ── Hero Stat: Points & Position ── */}

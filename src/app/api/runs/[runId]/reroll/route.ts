@@ -64,7 +64,7 @@ export async function POST(
     if (multiplayerSeat && run.draftMode === 'position_first') {
       const body = await request.json().catch(() => ({}));
       const target = openSlots.find(slot => slot.slotPosition === body.targetSlotPosition);
-      if (!target) return NextResponse.json({ error: 'Сначала выберите свободную позицию' }, { status: 400 });
+      if (!target) return NextResponse.json({ error: 'Сначала выбери свободную позицию' }, { status: 400 });
       openPositions = [target.slotPosition.split('_')[0]];
       targetSlotPosition = target.slotPosition;
     }
@@ -134,7 +134,7 @@ export async function POST(
     // Spend the reroll only after a valid target and compatible squad are found.
     const spent = await db.gameRun.updateMany({ where: { id: runId, rerollsUsed: run.rerollsUsed },
       data: { rerollsUsed: { increment: 1 } } });
-    if (!spent.count) return NextResponse.json({ error: 'Повторите переброс' }, { status: 409 });
+    if (!spent.count) return NextResponse.json({ error: 'Повтори переброс' }, { status: 409 });
 
     const selected = spinWheel(compatible);
 

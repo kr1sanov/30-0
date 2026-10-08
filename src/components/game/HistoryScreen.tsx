@@ -332,7 +332,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
           </motion.div>
           <div className="text-lg font-bold text-[#FFFFFF] mb-2">{mode === 'all' ? 'Пока нет сезонов' : 'В этом режиме пока нет сезонов'}</div>
           <div className="text-sm text-[#9CA3AF] mb-6">
-            Сыграйте первый сезон, и он появится здесь!
+            Сыграй первый сезон, и он появится здесь!
           </div>
           <Button
             onClick={() => {

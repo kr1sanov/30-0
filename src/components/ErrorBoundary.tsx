@@ -40,7 +40,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             Что-то пошло не так
           </h2>
           <p className="text-sm text-[#9CA3AF] mb-6 max-w-md">
-            Произошла непредвиденная ошибка. Попробуйте обновить страницу или начать заново.
+            Произошла непредвиденная ошибка. Попробуй обновить страницу или начать заново.
           </p>
           {this.state.error && (
             <p className="text-xs text-[#64748b] mb-4 max-w-md font-mono bg-[#0A0A0A] p-3 rounded-lg">

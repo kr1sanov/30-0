@@ -15,7 +15,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user, isAuthenticated: Boolean(user), _hasHydrated: true }),
   updateDisplayName: async (name) => {
     const user = useAuthStore.getState().user;
-    if (!user) throw new Error('Войдите через Telegram');
+    if (!user) throw new Error('Войди через Telegram');
     const response = await fetch('/api/auth/profile', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ displayName: name }),
@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   updateTelegramNotifications: async (enabled) => {
     const user = useAuthStore.getState().user;
-    if (!user) throw new Error('Войдите через Telegram');
+    if (!user) throw new Error('Войди через Telegram');
     const response = await fetch('/api/auth/profile', {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ telegramNotificationsEnabled: enabled }),

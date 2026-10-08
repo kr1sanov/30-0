@@ -29,7 +29,11 @@ test('keeps multiplayer entry, lobby and series UI in the selected language', ()
   assert.equal(translateInterface('← Выбрать формат'), '← Choose a format');
   assert.equal(translateInterface('Мультиплеер · Бета-версия'), 'Multiplayer · Beta');
   assert.equal(translateInterface('Сыграй с другом'), 'Play with a friend');
-  assert.equal(translateInterface('собственную команду из 11 игроков'), 'own team of 11 players');
+  assert.equal(translateInterface('Собери'), 'Build a');
+  assert.equal(translateInterface('команду из 11 игроков'), 'team of 11 players');
+  assert.equal(translateInterface(', сыграй сезон и узнай, кто собрал лучший состав.'), ', play a season and see who built the best squad.');
+  assert.equal(translateInterface('Твоё имя'), 'Your name');
+  assert.equal(translateInterface('Твоя схема'), 'Your formation');
   assert.equal(translateInterface('Изменить'), 'Edit');
   assert.equal(translateInterface('Поделиться ссылкой'), 'Share link');
   assert.equal(translateInterface('В ожидании противника'), 'Waiting for an opponent');
@@ -46,6 +50,17 @@ test('translates positions, formations and player labels while preserving names'
   assert.equal(translateInterface('Welliton, НП, рейтинг 85'), 'Welliton, ST, rating 85');
   assert.equal(translateInterface('Павлюченко, ЛЗ, рейтинг 75'), 'Павлюченко, LB, rating 75');
   assert.equal(translateInterface('ЦСКА'), 'ЦСКА');
-  assert.equal(translateInterface('Соберите 3 игроков из 🇷🇺 Россия'), 'Draft 3 players from 🇷🇺 Russia');
+  assert.equal(translateInterface('Собери 3 игроков из 🇷🇺 Россия'), 'Draft 3 players from 🇷🇺 Russia');
   assert.equal(translateInterface('Импорт завершён: добавлено 4, обновлено 6.'), 'Import complete: 4 added, 6 updated.');
+});
+
+test('translates informal copy on the home, profile and legal pages', () => {
+  assert.equal(translateInterface('Включай плейлист и собери лучший состав РПЛ'), 'Put on a playlist and build the best RPL XI');
+  assert.equal(translateInterface('Твой результат'), 'Your result');
+  assert.equal(translateInterface('Поделись ссылкой — здесь появятся твои друзья.'), 'Share your link to see friends who join here.');
+  assert.equal(translateInterface('Твои запросы'), 'Your requests');
+  assert.equal(translateInterface('Не удалось собрать 11 игроков за три минуты.'), 'You did not fill all 11 positions in three minutes.');
+  assert.equal(translateInterface('Выбери от 2 до 6 мест'), 'Choose between 2 and 6 seats');
+  assert.equal(translateInterface('Собери состав только из эпохи 2010–2014. Плюс 2 игроков из 🇷🇺 Россия'), 'Build a squad from the 2010–2014 era. Include 2 players from 🇷🇺 Russia');
+  assert.equal(translateInterface('Собери состав в схеме 4-3-3 + 2 из 🇧🇷'), 'Build a squad in a 4-3-3 formation + 2 from 🇧🇷');
 });

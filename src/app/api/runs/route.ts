@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
 
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const where: Record<string, unknown> = { userId };
     if (completed === 'true') {
       where.completed = true;
@@ -80,13 +80,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
     const userId = sessionUser(request);
-    if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+    if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const gameMode = body.gameMode || 'classic';
     if (nationalityFilter || !['classic', 'single_club'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
     if (gameMode === 'single_club' && !clubFilter) {
-      return NextResponse.json({ error: 'Выберите клуб' }, { status: 400 });
+      return NextResponse.json({ error: 'Выбери клуб' }, { status: 400 });
     }
     if (clubFilter) {
       const club = await db.club.findUnique({
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       });
       if (!club) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
       if (gameMode === 'single_club' && !selectOneClubCandidates([club]).length) {
-        return NextResponse.json({ error: 'Выберите клуб с минимум 5 доступными сезонами РПЛ' }, { status: 400 });
+        return NextResponse.json({ error: 'Выбери клуб с минимум 5 доступными сезонами РПЛ' }, { status: 400 });
       }
     }
 

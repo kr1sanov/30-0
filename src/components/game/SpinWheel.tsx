@@ -399,7 +399,7 @@ export default function SpinWheel({ multiplayer }: { multiplayer?: {
                 </Button>
               </motion.div>
               <p className="text-[11px] text-[#64748b] text-center mt-2">
-                Крутить колесо или нажмите в любом месте
+                Крути колесо или нажми в любом месте
               </p>
             </motion.div>
           )}
@@ -492,7 +492,7 @@ export default function SpinWheel({ multiplayer }: { multiplayer?: {
 
               {/* Instruction */}
               <p className="text-xs text-[#9CA3AF] text-center mb-3">
-                Выберите игрока и позицию, куда его поставить
+                Выбери игрока и позицию, куда его поставить
               </p>
 
               {/* Re-roll button */}

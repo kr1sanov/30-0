@@ -6,7 +6,7 @@ export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   const seats = await db.multiplayerSeat.findMany({
     where: { userId, OR: [{ room: { status: 'drafting' } }, { resultViewedAt: null, room: { status: 'completed' } }] }, orderBy: { joinedAt: 'desc' }, take: 20,
     include: { room: true },

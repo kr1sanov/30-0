@@ -12,11 +12,11 @@ export async function POST(request: Request) {
   if (limited) return limited;
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый запрос' }, { status: 403 });
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   try {
     const body = await request.json();
     const name = roomName(body.name);
-    if (name.length < 2) return NextResponse.json({ error: 'Введите имя от 2 символов' }, { status: 400 });
+    if (name.length < 2) return NextResponse.json({ error: 'Введи имя от 2 символов' }, { status: 400 });
     if (body.code) {
       const code = String(body.code).toUpperCase();
       if (!/^[A-HJ-NP-Z2-9]{6}$/.test(code)) return NextResponse.json({ error: 'Неверный код' }, { status: 400 });
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const maxPlayers = Number(body.maxPlayers ?? 2);
     if (!Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 6) return NextResponse.json({ error: 'Можно выбрать от 2 до 6 мест' }, { status: 400 });
     const seriesTargetWins = Number(body.seriesTargetWins ?? 0);
-    if (![0, 2, 3, 5].includes(seriesTargetWins)) return NextResponse.json({ error: 'Выберите формат серии' }, { status: 400 });
+    if (![0, 2, 3, 5].includes(seriesTargetWins)) return NextResponse.json({ error: 'Выбери формат серии' }, { status: 400 });
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = roomCode();
       try {

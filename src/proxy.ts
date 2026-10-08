@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
   const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path.startsWith('/api/telegram') || path.startsWith('/api/referrals') || path === '/api/auth/profile';
   if (!protectedPath) return NextResponse.next();
   const userId = sessionUser(request);
-  if (!userId) return NextResponse.json({ error: 'Войдите через Telegram' }, { status: 401 });
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   if (!['GET', 'HEAD'].includes(request.method) && !sameOrigin(request)) {
     return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
   }

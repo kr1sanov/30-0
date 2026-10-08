@@ -25,7 +25,7 @@ export default function TelegramLogin({ startParam, compact = false }: { startPa
         const ref = new URLSearchParams(window.location.search).get('ref');
         const path = ref && /^[a-z0-9]{6,32}$/i.test(ref) ? `/api/auth/telegram?ref=${encodeURIComponent(ref)}` : '/api/auth/telegram';
         const response = await fetch(path, { cache: 'no-store' });
-        if (!response.ok) throw new Error('Не удалось загрузить вход. Обновите страницу.');
+        if (!response.ok) throw new Error('Не удалось загрузить вход. Обнови страницу.');
         const config = await response.json();
         if (cancelled) return;
         const bot = String(config.botUsername || 'RPL30_bot').replace(/^@/, '');
@@ -42,20 +42,20 @@ export default function TelegramLogin({ startParam, compact = false }: { startPa
           finally { if (!cancelled) setLoading(false); }
         };
         if (win.Telegram?.WebApp?.initData) {
-          if (!config.configured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуйте позже.');
+          if (!config.configured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуй позже.');
           await login({ initData: win.Telegram.WebApp.initData });
           return;
         }
-        if (!config.webConfigured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуйте позже.');
+        if (!config.webConfigured || !config.clientId) throw new Error('Вход через Telegram пока недоступен. Попробуй позже.');
         const enableLogin = () => {
           if (cancelled) return;
-          if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обновите страницу.'); return; }
+          if (!win.Telegram?.Login) { setError('Не удалось загрузить Telegram. Обнови страницу.'); return; }
           openLogin.current = () => {
             setError('');
             win.Telegram?.Login?.auth({ bot_id: Number(config.clientId), lang: document.documentElement.lang === 'en' ? 'en' : 'ru' }, data => {
               if (cancelled) return;
               if (isTelegramLoginData(data)) void login({ authData: data });
-              else setError('Вход не завершён. Попробуйте ещё раз.');
+              else setError('Вход не завершён. Попробуй ещё раз.');
             });
           };
           setReady(true);
@@ -65,7 +65,7 @@ export default function TelegramLogin({ startParam, compact = false }: { startPa
         script.src = 'https://telegram.org/js/telegram-widget.js?22';
         script.async = true;
         script.onload = enableLogin;
-        script.onerror = () => { if (!cancelled) setError('Не удалось загрузить Telegram. Проверьте соединение и обновите страницу.'); };
+        script.onerror = () => { if (!cancelled) setError('Не удалось загрузить Telegram. Проверь соединение и обнови страницу.'); };
         document.head.appendChild(script);
       } catch(e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Не удалось загрузить вход'); }
       finally { if (!cancelled) setLoading(false); }
@@ -75,8 +75,8 @@ export default function TelegramLogin({ startParam, compact = false }: { startPa
   }, [startParam]);
   return <section className={compact ? 'mx-auto max-w-md text-center' : 'mx-auto my-12 max-w-md rounded-2xl border border-white/10 bg-[#141414] p-6 text-center'}>
     {!compact && <div className="text-5xl font-black">30<span className="text-[#00C896]">-</span>0</div>}
-    {compact ? <h2 className="text-lg font-bold">Войдите через Telegram</h2> : <h1 className="mt-6 text-2xl font-bold">Войти через Telegram</h1>}
-    {!compact && <p className="mt-3 text-sm text-[#9CA3AF]">Войдите, чтобы собрать команду и начать сезон.</p>}
+    {compact ? <h2 className="text-lg font-bold">Войди через Telegram</h2> : <h1 className="mt-6 text-2xl font-bold">Войти через Telegram</h1>}
+    {!compact && <p className="mt-3 text-sm text-[#9CA3AF]">Войди, чтобы собрать команду и начать сезон.</p>}
     <button type="button" disabled={!ready || loading} onClick={() => openLogin.current?.()} className={`${compact ? 'mt-4' : 'mt-6'} min-h-12 w-full rounded-xl bg-[#00C896] px-4 font-bold text-black disabled:opacity-40`}>Войти через Telegram</button>
     {miniAppUrl && <a href={miniAppUrl} className="mt-3 block rounded-xl border border-[#229ED9]/40 bg-[#229ED9]/10 px-4 py-3 text-sm font-semibold text-[#8BD8F7] hover:bg-[#229ED9]/20">Открыть игру в Telegram{startParam ? ' и присоединиться' : ''} →</a>}
     {loading && <p role="status" className="text-sm text-[#9CA3AF]">Подключаем Telegram…</p>}

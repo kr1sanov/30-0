@@ -46,7 +46,7 @@ const STEPS = [
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычный драфт', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
   { emoji: '🏟️', title: 'Один клуб', desc: 'Собери состав из игроков одного клуба РПЛ', active: true, color: '#00C896', gameMode: 'single_club' as const },
-  { emoji: '👥', title: 'Мультиплеер', desc: 'Играйте с друзьями. Драфт в режиме реального времени.', active: true, color: '#a78bfa', gameMode: 'multiplayer' as const },
+  { emoji: '👥', title: 'Мультиплеер', desc: 'Играй с друзьями. Драфт в режиме реального времени.', active: true, color: '#a78bfa', gameMode: 'multiplayer' as const },
 ];
 
 interface ChallengeDef {
@@ -62,7 +62,7 @@ const CHALLENGES: ChallengeDef[] = [
   {
     emoji: '🔥',
     title: '30-0',
-    desc: 'Выиграйте все 30 матчей сезона',
+    desc: 'Выиграй все 30 матчей сезона',
     gradientClass: 'challenge-gradient-fire',
     checkFn: (s) => s.perfect > 0,
     progressFn: (s) => {
@@ -76,7 +76,7 @@ const CHALLENGES: ChallengeDef[] = [
   {
     emoji: '🛡️',
     title: 'Железная защита',
-    desc: 'Пропустите менее 15 голов за сезон',
+    desc: 'Пропусти меньше 15 голов за сезон',
     gradientClass: 'challenge-gradient-shield',
     checkFn: (s) => s.achievements?.includes('iron_defense') ?? false,
     progressFn: (s) => {
@@ -88,7 +88,7 @@ const CHALLENGES: ChallengeDef[] = [
   {
     emoji: '⚡',
     title: 'Голая атака',
-    desc: 'Забейте 60+ голов за сезон',
+    desc: 'Забей 60+ голов за сезон',
     gradientClass: 'challenge-gradient-bolt',
     checkFn: (s) => s.achievements?.includes('goal_machine') ?? false,
     progressFn: (s) => {
@@ -100,7 +100,7 @@ const CHALLENGES: ChallengeDef[] = [
   {
     emoji: '🎯',
     title: 'Минималист',
-    desc: 'Соберите состав без перебросов',
+    desc: 'Собери состав без перебросов',
     gradientClass: 'challenge-gradient-target',
     checkFn: (s) => s.achievements?.includes('minimalist') ?? false,
     progressFn: (s) => {
@@ -112,9 +112,9 @@ const CHALLENGES: ChallengeDef[] = [
 ];
 
 const FAQ_ITEMS = [
-  { q: 'Что такое 30-0?', a: '30-0 — это футбольный драфт-симулятор РПЛ. Вы крутите колесо, получаете случайный клуб и сезон, выбираете игрока в свой состав, а затем симулируете сезон. Цель — выиграть все 30 матчей и достичь идеального результата 30-0.' },
+  { q: 'Что такое 30-0?', a: '30-0 — это футбольный драфт-симулятор РПЛ. Крути колесо, получай случайный клуб и сезон, выбирай игрока в состав, а затем симулируй сезон. Цель — выиграть все 30 матчей и достичь идеального результата 30-0.' },
   { q: 'Как работают позиции?', a: 'У каждого игрока есть основная и дополнительные позиции. Игрок может играть на совместимых позициях без штрафов, на частично совместимых — с понижением рейтинга на 20%, а на несовместимых — не может быть поставлен вообще.' },
-  { q: 'Чем отличается режим «Один клуб»?', a: 'Вы выбираете клуб до начала драфта. Колесо предлагает игроков из его сезонов в базе; рейтинг берётся из сезона выступления за этот клуб. Режим Prime здесь недоступен.' },
+  { q: 'Чем отличается режим «Один клуб»?', a: 'Выбирай клуб до начала драфта. Колесо предложит игроков из его сезонов в базе; рейтинг берётся из сезона выступления за этот клуб. Режим Prime здесь недоступен.' },
   { q: 'Как работают перебросы и тренер?', a: 'Переброс меняет выпавший клуб и сезон. Доступное число зависит от сложности: 3, 1 или 0. Если включить тренера при создании игры, он выбирается случайно и даёт небольшой бонус составу.' },
   { q: 'Как определяется результат сезона?', a: 'После заполнения 11 позиций игра рассчитывает силу состава и симулирует 30 матчей против клубов из базы. На итог влияют рейтинг, совместимость позиций, сложность, тренер и случайность.' },
 ];
@@ -218,7 +218,7 @@ function RecentResults() {
       {recentSeasons.length === 0 ? (
         <div className="rounded-2xl bg-[#141414] p-8 text-center border border-[#1E1E1E]">
           <div className="text-3xl mb-2">⚽</div>
-          <div className="text-sm text-[#9CA3AF]">Сыграйте первый сезон!</div>
+          <div className="text-sm text-[#9CA3AF]">Сыграй первый сезон!</div>
           <Button
             onClick={() => setScreen('setup')}
             variant="outline"
@@ -514,7 +514,7 @@ function HomePage() {
           Музыка эпохи
         </h2>
         <p className="mb-4 text-center text-sm text-[#9CA3AF]">
-          Включите плейлист и собирайте команду под треки эпохи.
+          Включай плейлист и собери лучший состав РПЛ
         </p>
         <div className="space-y-3">
           <a
@@ -771,7 +771,7 @@ function DraftScreen() {
           >
             <span className="text-[#00C896] text-xs font-bold">👉</span>
             <span className="text-xs text-[#00C896] font-medium">
-              Выберите позицию для <strong>{selectedPlayer.fullName}</strong> в списке ниже
+              Выбери позицию для <strong>{selectedPlayer.fullName}</strong> в списке ниже
             </span>
           </motion.div>
         )}
@@ -886,7 +886,7 @@ function DraftScreen() {
             >
               <h3 className="text-lg font-black text-[#FFFFFF] mb-2">Начать новый драфт?</h3>
               <p className="text-sm text-[#9CA3AF] mb-6">
-                Перезапуск происходит немедленно с теми же настройками. Ваш текущий черновик будет потерян.
+                Перезапуск происходит сразу с теми же настройками. Твой текущий драфт будет потерян.
               </p>
               <div className="flex gap-3">
                 <button
@@ -1137,7 +1137,7 @@ function LeaderboardScreen() {
         >
           <div className="text-6xl mb-4">🏆</div>
           <div className="text-lg font-bold text-[#FFFFFF] mb-2">Пока нет результатов</div>
-          <div className="text-sm text-[#9CA3AF] mb-6">Сыграйте первый сезон и попадите в таблицу лидеров!</div>
+          <div className="text-sm text-[#9CA3AF] mb-6">Сыграй первый сезон и попади в таблицу лидеров!</div>
           <Button
             onClick={() => { resetGame(); setScreen('setup'); }}
             className="h-12 px-8 text-base font-bold bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/20"
