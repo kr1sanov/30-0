@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { publicRoom, resolveRoom, roomName, validEra, validFormation } from '@/lib/multiplayer';
+import { publicRoom, resolveRoom, roomName, validEra, validFormation, syncLobbyCountdown } from '@/lib/multiplayer';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { setRunAccessCookie } from '@/lib/runAccess';
@@ -16,6 +16,7 @@ export async function GET(request: Request, { params }: Context) {
   const { code } = await params;
   const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } } });
   if (!authorized) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
+  await syncLobbyCountdown(code.toUpperCase());
   const allReady = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false, room: { status: 'drafting' } } }) === 0;
   if (allReady) {
     const deadline = new Date(Date.now() + 10_000);
@@ -108,6 +109,7 @@ export async function PATCH(request: Request, { params }: Context) {
         if (!removed.count) throw new Error('Бот уже удалён');
       });
     } else return NextResponse.json({ error: 'Нет доступа' }, { status: 403 });
+    await syncLobbyCountdown(room.code);
     return NextResponse.json(await publicRoom(room.code, userId));
   } catch (error) { console.error('Multiplayer update:', error); return NextResponse.json({ error: 'Не удалось изменить комнату' }, { status: 500 }); }
 }

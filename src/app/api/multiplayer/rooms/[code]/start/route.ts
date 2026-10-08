@@ -14,10 +14,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   const userId = sessionUser(request);
   const { code } = await params;
   const room = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, include: { seats: true } });
-  if (!room || !userId || room.hostUserId !== userId) return NextResponse.json({ error: 'Только создатель может начать игру' }, { status: 403 });
-  if (room.status !== 'lobby' || room.seats.length < 2 || room.seats.some(seat => !seat.ready))
-    return NextResponse.json({ error: 'Нужно минимум два готовых участника' }, { status: 409 });
-  const claimed = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby' }, data: { status: 'starting' } });
+  if (!room || !userId || !room.seats.some(seat => seat.userId === userId)) return NextResponse.json({ error: 'Нет доступа к игре' }, { status: 403 });
+  if (room.status !== 'lobby' || room.seats.length < 2 || room.seats.some(seat => !seat.ready) || !room.draftStartAt || room.draftStartAt.getTime() > Date.now())
+    return NextResponse.json({ error: 'Дождитесь готовности игроков и конца отсчёта' }, { status: 409 });
+  const claimed = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', draftStartAt: { lte: new Date() } }, data: { status: 'starting' } });
   if (!claimed.count) return NextResponse.json({ error: 'Игра уже началась' }, { status: 409 });
   const createdRunIds: string[] = [];
   try {
@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
     console.error('Multiplayer start:', error);
     await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, runId: { in: createdRunIds } }, data: { runId: null, pickDeadline: null } });
     await db.gameRun.deleteMany({ where: { id: { in: createdRunIds } } });
-    await db.multiplayerRoom.update({ where: { code: room.code }, data: { status: 'lobby' } });
+    await db.multiplayerRoom.update({ where: { code: room.code }, data: { status: 'lobby', draftStartAt: null } });
     return NextResponse.json({ error: 'Не удалось начать драфт' }, { status: 500 });
   }
 }

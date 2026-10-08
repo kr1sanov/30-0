@@ -10,6 +10,17 @@ export const validEra = (start: number, end: number) => Number.isInteger(start) 
 export const validFormation = (value: string) => FORMATIONS.some(formation => formation.id === value);
 export type SeriesScore = Record<string, { name: string; wins: number; seasonWins: number; points: number; isBot: boolean }>;
 
+export async function syncLobbyCountdown(code: string) {
+  const room = await db.multiplayerRoom.findUnique({ where: { code }, select: { status: true, draftStartAt: true } });
+  if (!room || room.status !== 'lobby') return;
+  const seats = await db.multiplayerSeat.findMany({ where: { roomCode: code }, select: { ready: true } });
+  if (seats.length < 2 || seats.some(seat => !seat.ready)) {
+    if (room.draftStartAt) await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby' }, data: { draftStartAt: null } });
+  } else if (!room.draftStartAt) {
+    await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby', draftStartAt: null }, data: { draftStartAt: new Date(Date.now() + 10_000) } });
+  }
+}
+
 export async function publicRoom(code: string, userId: string) {
   const room = await db.multiplayerRoom.findUnique({ where: { code }, include: {
     seats: { orderBy: { joinedAt: 'asc' }, include: { run: { include: { slots: { orderBy: { slotPosition: 'asc' } } } } } },
@@ -17,7 +28,7 @@ export async function publicRoom(code: string, userId: string) {
   if (!room || !room.seats.some(seat => seat.userId === userId)) return null;
   const own = room.seats.find(seat => seat.userId === userId);
   return {
-    code: room.code, status: room.status, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
+    code: room.code, status: room.status, draftStartAt: room.draftStartAt?.toISOString() ?? null, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
     seriesTargetWins: room.seriesTargetWins, seriesRound: room.seriesRound,
     seriesScores: room.seriesScoreJson ? JSON.parse(room.seriesScoreJson) as SeriesScore : {},
     seriesWinnerKey: room.seriesWinnerKey, nextRoomCode: room.nextRoomCode,

@@ -247,6 +247,7 @@ model MultiplayerRoom {
   code         String   @id
   hostUserId   String
   status       String   @default("lobby")
+  draftStartAt DateTime?
   maxPlayers   Int      @default(2)
   seatCount    Int      @default(1)
   ratingMode   String   @default("season")

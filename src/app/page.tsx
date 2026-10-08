@@ -322,7 +322,7 @@ function HomePage() {
           </span>
         </motion.div>
 
-        <img src="/brand-30-0.svg" alt="Эмблема 30-0 — Драфт Российской Премьер-лиги" width={96} height={96} className="mb-2 h-20 w-20 object-contain sm:h-24 sm:w-24" />
+        <img src="/brand-30-0.svg" alt="Эмблема 30-0 — Драфт Российской Премьер-лиги" width={112} height={112} className="mb-1 h-24 w-24 object-contain sm:h-28 sm:w-28" />
         {/* Huge "30-0" Title */}
         <div className="relative mb-3">
           <h1
