@@ -5,7 +5,6 @@ import { enforceRateLimit } from '@/lib/rateLimit';
 import { verifyLoginWidget, verifyMiniAppPublic } from '@/lib/telegramVerification';
 import { verifyTelegramIdToken } from '@/lib/telegramOidc';
 import { createSession, sessionUser, sameOrigin, SESSION_COOKIE, SESSION_SECONDS } from '@/lib/telegramSession';
-import { sendTelegramMessage, telegramChatId } from '@/lib/telegramBot';
 import { purgeExpiredProfiles } from '@/lib/profileDeletion';
 
 export const dynamic = 'force-dynamic';
@@ -143,20 +142,6 @@ export async function POST(request: Request) {
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });
     response.cookies.set('rpl_login_csrf', '', { ...options, maxAge: 0 });
     response.cookies.set('rpl_site_ref', '', { ...options, maxAge: 0 });
-    if (user.telegramChatStarted && !user.telegramWelcomeSentAt && user.telegramNotificationsEnabled) {
-      const chatId = telegramChatId(user.providerId);
-      if (chatId) {
-        void sendTelegramMessage(chatId, [
-          '<b>Добро пожаловать в 30-0!</b> ⚽',
-          '',
-          'Собери команду из игроков РПЛ разных эпох и попробуй пройти сезон без поражений.',
-          '',
-          'После каждого сезона сюда будет приходить карточка результата.',
-        ].join('\n')).then(async sent => {
-          if (sent) await db.user.update({ where: { id: user.id }, data: { telegramWelcomeSentAt: new Date() } });
-        }).catch(() => undefined);
-      }
-    }
     return response;
   } catch {
     return NextResponse.json({ error: 'Не удалось выполнить вход. Попробуй ещё раз.' }, { status: 400 });

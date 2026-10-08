@@ -4,8 +4,7 @@ import { db } from '@/lib/db';
 import { answerTelegramCallback, sendBotPhoto, sendTelegramMessage } from '@/lib/telegramBot';
 
 export const runtime = 'nodejs';
-const appUrl = () => process.env.NEXT_PUBLIC_BASE_URL || 'https://30-0.xn--p1ai';
-const openMarkup = { inline_keyboard: [[{ text: 'Открыть', web_app: { url: appUrl() } }]] };
+const openMarkup = { inline_keyboard: [[{ text: 'Играть', url: 'https://t.me/RPL30_bot?startapp' }]] };
 
 export async function POST(request: Request) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -39,22 +38,12 @@ export async function POST(request: Request) {
           },
         });
         const photo = await readFile(`${process.cwd()}/public/telegram-start.png`).catch(() => readFile(`${process.cwd()}/.next/standalone/public/telegram-start.png`).catch(() => null));
-        const caption = '<b>30-0 — футбольный драфт РПЛ</b> ⚽\nСобери состав мечты из игроков разных сезонов, пройди чемпионат и попробуй добиться результата 30-0.\n\nНажми «Открыть», чтобы начать игру прямо в Telegram.';
+        const caption = '<b>30-0 · Драфт РПЛ</b> ⚽\nСобери команду из игроков РПЛ разных сезонов, сыграй сезон из 30 матчей и попробуй победить во всех. Играй сам или с друзьями.';
         const sent = photo
           ? await sendBotPhoto(chatId, photo, caption, openMarkup)
           : await sendTelegramMessage(chatId, caption, openMarkup);
         if (sent && !user.telegramWelcomeSentAt) {
           await db.user.update({ where: { id: user.id }, data: { telegramWelcomeSentAt: now } });
-        }
-        return NextResponse.json({ ok: true });
-      }
-      if (/^\/notifications\b/.test(message.text)) {
-        const user = await db.user.findUnique({ where: { providerId: `telegram_${chatId}` } });
-        if (!user) { await sendTelegramMessage(chatId, 'Сначала войди в игру через Telegram, затем настрой уведомления в профиле.'); }
-        else {
-          const enabled = !user.telegramNotificationsEnabled;
-          await db.user.update({ where: { id: user.id }, data: { telegramNotificationsEnabled: enabled } });
-          await sendTelegramMessage(chatId, enabled ? 'Уведомления включены.' : 'Уведомления отключены. Их можно включить в профиле 30-0.');
         }
         return NextResponse.json({ ok: true });
       }
