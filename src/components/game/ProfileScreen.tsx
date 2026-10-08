@@ -38,6 +38,7 @@ const TROPHIES = [
   { id: 'perfect_twice', icon: '✨', name: 'Безупречная серия', desc: 'Два идеальных сезона' },
   { id: 'top_four_10', icon: '🎖️', name: 'Постоянство', desc: '10 раз попасть в топ-4' },
   { id: 'referral_invite', icon: '🤝', name: 'Первый приглашённый', desc: 'Пригласить первого игрока в 30-0' },
+  { id: 'multiplayer_series_champion', icon: '🏅', name: 'Победитель серии', desc: 'Выиграть серию сезонов в мультиплеере' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -70,6 +71,8 @@ export default function ProfileScreen() {
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
   const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
   useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
+  const [seriesWins, setSeriesWins] = useState(0);
+  useEffect(() => { if (user) fetch('/api/multiplayer/series/stats').then(r => r.ok ? r.json() : null).then(data => setSeriesWins(data?.seriesWins ?? 0)).catch(() => undefined); }, [user]);
 
   // Track profile open in Metrika
   useEffect(() => { Metrics.profileOpen(); }, []);
@@ -84,7 +87,7 @@ export default function ProfileScreen() {
 
   // Total earned trophies
   const hasReferralAchievement = (referrals?.referralCount ?? 0) > 0;
-  const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : profileStats.achievements.includes(id);
+  const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : id === 'multiplayer_series_champion' ? seriesWins > 0 : profileStats.achievements.includes(id);
   const earnedTrophies = TROPHIES.filter(t => hasTrophy(t.id)).length;
 
   const handleSaveName = async () => {

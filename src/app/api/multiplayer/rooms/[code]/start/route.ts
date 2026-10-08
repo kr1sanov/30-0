@@ -22,6 +22,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   const createdRunIds: string[] = [];
   try {
     for (const seat of room.seats) {
+      if (!seat.seriesMemberKey) await db.multiplayerSeat.update({ where: { id: seat.id }, data: { seriesMemberKey: seat.userId ?? `bot:${seat.id}` } });
       const runId = await createSeatRun(seat, room, seat.userId || undefined);
       createdRunIds.push(runId);
       if (room.withManager) {

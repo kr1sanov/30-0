@@ -256,6 +256,11 @@ model MultiplayerRoom {
   eraEndYear   Int      @default(2021)
   withManager  Boolean  @default(false)
   resultJson   String?
+  seriesTargetWins Int @default(0)
+  seriesRound Int @default(1)
+  seriesScoreJson String?
+  seriesWinnerKey String?
+  nextRoomCode String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   seats        MultiplayerSeat[]
@@ -272,6 +277,8 @@ model MultiplayerSeat {
   ready     Boolean  @default(false)
   pickDeadline DateTime?
   pendingSpinJson String?
+  seriesMemberKey String?
+  resultViewedAt DateTime?
   managerName String?
   managerRating Int?
   runId     String?  @unique

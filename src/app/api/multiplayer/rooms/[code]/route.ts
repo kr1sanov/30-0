@@ -61,6 +61,8 @@ export async function PATCH(request: Request, { params }: Context) {
   if (room.status !== 'lobby') return NextResponse.json({ error: 'Лобби закрыто' }, { status: 409 });
   try {
     const body = await request.json();
+    if (room.seriesRound > 1 && body.action !== 'seat')
+      return NextResponse.json({ error: 'Правила и участники серии уже зафиксированы' }, { status: 409 });
     if (body.action === 'seat') {
       const formation = String(body.formation);
       const name = roomName(body.name);
@@ -76,15 +78,17 @@ export async function PATCH(request: Request, { params }: Context) {
       await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });
     } else if (body.action === 'settings' && room.hostUserId === userId) {
       const maxPlayers = Number(body.maxPlayers), eraStartYear = Number(body.eraStartYear), eraEndYear = Number(body.eraEndYear);
+      const seriesTargetWins = Number(body.seriesTargetWins ?? room.seriesTargetWins);
       const eraFilter = String(body.eraFilter);
       if (!Number.isInteger(maxPlayers) || maxPlayers < room.seatCount || maxPlayers > 6 || maxPlayers < 2 ||
+        !Number.isInteger(seriesTargetWins) || ![0, 2, 3, 5].includes(seriesTargetWins) || (room.seriesRound > 1 && seriesTargetWins !== room.seriesTargetWins) ||
         !validEra(eraStartYear, eraEndYear) || !['season', 'prime'].includes(body.ratingMode) ||
         !['squad_first', 'position_first'].includes(body.draftMode) || !(eraFilter in ERA_CONFIG) ||
         (eraFilter !== 'custom' && (eraStartYear !== ERA_CONFIG[eraFilter as keyof typeof ERA_CONFIG].minYear || eraEndYear !== ERA_CONFIG[eraFilter as keyof typeof ERA_CONFIG].maxYear))) {
         return NextResponse.json({ error: 'Неверные правила' }, { status: 400 });
       }
       await db.multiplayerRoom.update({ where: { code: room.code }, data: {
-        maxPlayers, eraStartYear, eraEndYear, eraFilter, ratingMode: body.ratingMode,
+        maxPlayers, eraStartYear, eraEndYear, eraFilter, seriesTargetWins, ratingMode: body.ratingMode,
         draftMode: body.draftMode, showRatings: Boolean(body.showRatings), withManager: Boolean(body.withManager),
       } });
       await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });

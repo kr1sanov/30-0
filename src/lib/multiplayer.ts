@@ -8,6 +8,7 @@ export const roomCode = () => Array.from(randomBytes(6), byte => 'ABCDEFGHJKLMNP
 export const roomName = (value: unknown) => typeof value === 'string' ? value.trim().slice(0, 30) : '';
 export const validEra = (start: number, end: number) => Number.isInteger(start) && Number.isInteger(end) && start >= ERA_MIN_YEAR && end <= ERA_MAX_YEAR && start <= end;
 export const validFormation = (value: string) => FORMATIONS.some(formation => formation.id === value);
+export type SeriesScore = Record<string, { name: string; wins: number; seasonWins: number; points: number; isBot: boolean }>;
 
 export async function publicRoom(code: string, userId: string) {
   const room = await db.multiplayerRoom.findUnique({ where: { code }, include: {
@@ -17,11 +18,16 @@ export async function publicRoom(code: string, userId: string) {
   const own = room.seats.find(seat => seat.userId === userId);
   return {
     code: room.code, status: room.status, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
+    seriesTargetWins: room.seriesTargetWins, seriesRound: room.seriesRound,
+    seriesScores: room.seriesScoreJson ? JSON.parse(room.seriesScoreJson) as SeriesScore : {},
+    seriesWinnerKey: room.seriesWinnerKey, nextRoomCode: room.nextRoomCode,
+    ownResultViewed: Boolean(own?.resultViewedAt),
     eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, eraFilter: room.eraFilter,
     draftMode: room.draftMode, showRatings: room.showRatings, withManager: room.withManager,
     isHost: room.hostUserId === userId,
     seats: room.seats.map(seat => ({ id: seat.id, name: seat.name, formation: seat.formation,
-      ready: seat.ready, forfeited: seat.forfeited, drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
+      ready: seat.ready, forfeited: seat.forfeited, seriesMemberKey: seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}`,
+      drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
       result: seat.run?.completed ? { wins: seat.run.wins, draws: seat.run.draws, losses: seat.run.losses,
         points: seat.run.points, overallRating: seat.run.overallRating } : null,
       isYou: seat.userId === userId, isHost: seat.userId === room.hostUserId, isBot: seat.isBot,
@@ -99,8 +105,21 @@ export async function resolveRoom(code: string) {
     else result.draws++;
   }
   for (const result of results) result.points = result.wins * 3 + result.draws;
-  results.sort((a,b) => Number(a.forfeited)-Number(b.forfeited) || b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor);
-  const changed = await db.multiplayerRoom.updateMany({ where: { code, status: 'drafting' }, data: { status: 'completed', resultJson: JSON.stringify(results) } });
+  results.sort((a,b) => Number(a.forfeited)-Number(b.forfeited) || b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor || a.id.localeCompare(b.id));
+  const scores: SeriesScore = room.seriesScoreJson ? JSON.parse(room.seriesScoreJson) : {};
+  let seriesWinnerKey: string | null = null;
+  if (room.seriesTargetWins > 0) {
+    for (const result of results) {
+      const seat = room.seats.find(value => value.id === result.id)!;
+      const key = seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}`;
+      const previous = scores[key];
+      scores[key] = { name: result.name, isBot: seat.isBot, wins: (previous?.wins ?? 0) + Number(result.id === results[0].id),
+        seasonWins: (previous?.seasonWins ?? 0) + result.wins, points: (previous?.points ?? 0) + result.points };
+      if (scores[key].wins >= room.seriesTargetWins) seriesWinnerKey = key;
+    }
+  }
+  const changed = await db.multiplayerRoom.updateMany({ where: { code, status: 'drafting' }, data: { status: 'completed', resultJson: JSON.stringify(results),
+    ...(room.seriesTargetWins > 0 ? { seriesScoreJson: JSON.stringify(scores), seriesWinnerKey } : {}) } });
   if (!changed.count) return false;
   await db.$transaction(results.map((result, index) => db.gameRun.update({ where: { id: room.seats.find(seat => seat.id === result.id)!.runId! }, data: {
     completed: true, wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,

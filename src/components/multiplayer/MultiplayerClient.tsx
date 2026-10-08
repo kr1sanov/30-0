@@ -141,6 +141,11 @@ export default function MultiplayerPage() {
     const next = await json<{ code: string }>(`/api/multiplayer/rooms/${source}/rematch`, 'POST');
     openRoom(next.code);
   });
+  const nextRound = (source: string) => void action(async () => {
+    const next = await json<{ code: string }>(`/api/multiplayer/rooms/${source}/next`, 'POST');
+    if (!next.code) throw new Error('Следующий раунд ещё создаётся. Попробуйте снова.');
+    openRoom(next.code);
+  });
 
   const backToMenu = useCallback(() => {
     currentRoomCode.current = '';
@@ -162,6 +167,7 @@ export default function MultiplayerPage() {
       action: !room.isHost && changes.maxPlayers !== undefined ? 'capacity' : 'settings', maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
       draftMode: room.draftMode, showRatings: room.showRatings, eraFilter: room.eraFilter,
       eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, withManager: room.withManager,
+      seriesTargetWins: room.seriesTargetWins,
       ...changes,
     });
     await refresh();
@@ -187,7 +193,7 @@ export default function MultiplayerPage() {
             <span>▶ Продолжить игру</span>
             {menu.activeRoom.deadline && menu.activeRoom.status === 'drafting' && <span className="font-mono tabular-nums">{Math.floor(Math.max(0, Math.ceil((Date.parse(menu.activeRoom.deadline) - now) / 1000)) / 60)}:{String(Math.max(0, Math.ceil((Date.parse(menu.activeRoom.deadline) - now) / 1000)) % 60).padStart(2, '0')}</span>}
           </span>
-          <span className="mt-1 block text-sm text-[#9CA3AF]">{menu.activeRoom.status === 'drafting' ? `${menu.activeRoom.drafted}/11 · Время драфта продолжается` : 'Комната ожидает участников'}</span>
+          <span className="mt-1 block text-sm text-[#9CA3AF]">{menu.activeRoom.status === 'drafting' ? `${menu.activeRoom.drafted}/11 · Время драфта продолжается` : 'Симуляция сезона · посмотреть результат'}</span>
         </button>}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>
@@ -224,7 +230,9 @@ export default function MultiplayerPage() {
           onMove={(from: Slot, to: Slot) => void action(async () => { await json(`/api/runs/${run.id}/swap`, 'POST', { fromSlotPosition: from.slotPosition, toSlotPosition: to.slotPosition }); await refresh(); })}
           onSkip={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/skip`, 'POST'); setSpin(null); await refresh(); })} onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/finish`, 'POST'); await refresh(); })}/>
       </>}
-      {code && room?.status === 'completed' && <Results room={room} run={run || null} onReplay={() => rematch(room.code)}/>}
+      {code && room?.status === 'completed' && <Results room={room} run={run || null}
+        onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/viewed`, 'POST'); await refresh(); })}
+        onNext={() => nextRound(room.code)} onReplay={() => rematch(room.code)} onMenu={backToMenu}/>}
       {code && room && !['lobby', 'drafting', 'completed'].includes(room.status) && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[#9CA3AF]">Готовим сезон…</motion.p>}
     </div>
     <Footer onHome={home} onPlay={home} onProfile={profile}/>

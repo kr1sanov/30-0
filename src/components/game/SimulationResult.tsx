@@ -642,13 +642,14 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
                 <Button
                   onClick={async () => {
                     haptic('light');
+                    if (multiplayer) { resetGame(); return; }
                     const confirmed = await showConfirm('Начать новый драфт? Текущий результат будет сохранён.');
                     if (confirmed) resetGame();
                   }}
                   className="flex-1 h-11 rounded-xl font-bold"
                   style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-on-primary)', boxShadow: '0 6px 20px var(--club-glow)' }}
                 >
-                  🔄 Играть снова
+                  {multiplayer ? '📊 К итогам матча' : '🔄 Играть снова'}
                 </Button>
                 <Button
                   onClick={() => { haptic('light'); setIsShareOpen(true); }}
