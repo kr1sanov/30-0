@@ -1383,3 +1383,8 @@ html {
   color: #9ca3af;
 }
 .language-switcher button[aria-pressed="true"] { background: #30c8a2; color: #031a17; }
+
+/* Show the official Yandex Music wordmark for the selected interface language. */
+.music-logo-en { display: none; }
+html[data-language="en"] .music-logo-ru { display: none; }
+html[data-language="en"] .music-logo-en { display: block; }

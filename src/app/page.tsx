@@ -32,6 +32,7 @@ import TelegramLogin from '@/components/game/TelegramLogin';
 import { clubThemeStyle } from '@/lib/clubThemes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useTelegram } from '@/hooks/use-telegram';
+import Image from 'next/image';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -501,6 +502,50 @@ function HomePage() {
       </motion.section>
 
       {/* ── Challenges Section (hidden on home — only in Profile) ── */}
+
+      {/* ── Playlists ── */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className="px-4 py-6"
+      >
+        <h2 className="mb-2 text-center text-xl font-black text-[#FFFFFF] sm:text-2xl">
+          Музыка эпохи
+        </h2>
+        <p className="mb-4 text-center text-sm text-[#9CA3AF]">
+          Включите плейлист и собирайте команду под треки эпохи.
+        </p>
+        <div className="space-y-3">
+          <a
+            href="https://music.yandex.ru/playlists/817a946d-8890-8a43-a4e7-daca3606725a"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Открыть плейлист в Яндекс Музыке"
+            className="flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-[#1E1E1E] bg-[#141414] px-5 py-4 transition-colors hover:border-[#FFE600]/40 hover:bg-[#1E1E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFE600] active:scale-[0.99]"
+          >
+            <span className="min-w-0">
+              <Image src="/music/yandex-music-ru.svg" alt="Яндекс Музыка" width={862} height={103} className="music-logo-ru h-7 w-auto max-w-full" />
+              <Image src="/music/yandex-music-en.svg" alt="Yandex Music" width={734} height={103} className="music-logo-en h-7 w-auto max-w-full" />
+              <span className="mt-2 block text-xs text-[#9CA3AF]">Открыть плейлист ↗</span>
+            </span>
+            <span aria-hidden="true" className="shrink-0 text-xl text-[#FFE600]">↗</span>
+          </a>
+          <a
+            href="https://open.spotify.com/playlist/3O1Oqzitol9LU72g7puBi5"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Открыть плейлист в Spotify"
+            className="flex min-h-20 items-center justify-between gap-4 rounded-2xl border border-[#1E1E1E] bg-[#141414] px-5 py-4 transition-colors hover:border-[#1ED760]/40 hover:bg-[#1E1E1E] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1ED760] active:scale-[0.99]"
+          >
+            <span className="min-w-0">
+              <Image src="/music/spotify.svg" alt="Spotify" width={823} height={225} className="h-8 w-auto max-w-full" />
+              <span className="mt-2 block text-xs text-[#9CA3AF]">Открыть плейлист ↗</span>
+            </span>
+            <span aria-hidden="true" className="shrink-0 text-xl text-[#1ED760]">↗</span>
+          </a>
+        </div>
+      </motion.section>
 
       {/* ── FAQ Section ── */}
       <motion.section

@@ -3,6 +3,11 @@ import { MANAGERS } from './managers.ts';
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
   'Домой':'Home', 'Мой профиль':'My profile', 'Главная':'Home', 'Играть':'Play',
+  'Музыка эпохи':'Music of the era',
+  'Включите плейлист и собирайте команду под треки эпохи.':'Play the soundtrack while you build your team.',
+  'Открыть плейлист ↗':'Open playlist ↗',
+  'Открыть плейлист в Яндекс Музыке':'Open playlist in Yandex Music',
+  'Открыть плейлист в Spotify':'Open playlist in Spotify',
   '© 2026 30-0. Все права защищены.':'© 2026 30–0. All rights reserved.',
   '30-0 RPL · Драфт симулятор':'30–0 RPL · Draft simulator',
   '🎮 Играть: https://30-0.рф':'🎮 Play: https://30-0.рф',
