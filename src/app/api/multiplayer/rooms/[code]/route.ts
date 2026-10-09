@@ -10,6 +10,18 @@ import { ERA_CONFIG } from '@/lib/types';
 type Context = { params: Promise<{ code: string }> };
 export const runtime = 'nodejs';
 
+export async function DELETE(request: Request, { params }: Context) {
+  if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый запрос' }, { status: 403 });
+  const userId = sessionUser(request);
+  if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
+  const { code } = await params;
+  const updated = await db.multiplayerRoom.updateMany({
+    where: { code: code.toUpperCase(), hostUserId: userId, status: { in: ['lobby', 'drafting'] } },
+    data: { status: 'closed', draftStartAt: null },
+  });
+  return updated.count ? NextResponse.json({ ok: true }) : NextResponse.json({ error: 'Закрыть комнату может только её создатель до завершения сезона' }, { status: 403 });
+}
+
 export async function GET(request: Request, { params }: Context) {
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });

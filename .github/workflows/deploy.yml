@@ -265,6 +265,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
           NEXT_PUBLIC_BASE_URL: https://30-0.xn--p1ai
+          TELEGRAM_PROBE_CHAT_ID: ${{ contains(github.event.head_commit.message, '[bot-probe]') && '361912433' || '' }}
         run: node scripts/set-telegram-webhook.mjs
 
   # ─── Stage 4: Post-Deploy Verification ───

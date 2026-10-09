@@ -11,6 +11,14 @@ if (!actualUsername || actualUsername.toLowerCase() !== expectedUsername) {
   throw new Error(`Wrong Telegram bot token: expected @${expectedUsername}, received @${actualUsername || 'unknown'}`);
 }
 console.log(`Verified Telegram bot identity: @${actualUsername}`);
+const beforeInfoResponse = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`);
+const beforeInfo = await beforeInfoResponse.json();
+if (beforeInfo.ok) {
+  console.log('Previous webhook diagnostics:', JSON.stringify({
+    url: beforeInfo.result?.url, pending: beforeInfo.result?.pending_update_count,
+    lastError: beforeInfo.result?.last_error_message, lastErrorAt: beforeInfo.result?.last_error_date,
+  }));
+}
 const response = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
   method: 'POST', headers: { 'content-type': 'application/json' },
   body: JSON.stringify({ url: `${base.replace(/\/$/, '')}/api/telegram/webhook`, secret_token: secret, allowed_updates: ['message', 'callback_query'], drop_pending_updates: false }),
@@ -30,3 +38,15 @@ for (const [language_code, description] of [['', 'Играть в 30-0'], ['ru',
   if (!commandResponse.ok || !commandResult.ok) throw new Error(`Telegram command setup failed: ${commandResult.description || commandResponse.status}`);
 }
 console.log('Telegram private-chat command list contains only /start.');
+
+// Opt-in delivery probe uses the same credentials Telegram uses, without
+// printing the token or the secret. It is enabled only for a diagnostic run.
+if (process.env.TELEGRAM_PROBE_CHAT_ID) {
+  const probe = await fetch(`${base.replace(/\/$/, '')}/api/telegram/webhook`, {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-telegram-bot-api-secret-token': secret },
+    body: JSON.stringify({ message: { chat: { id: Number(process.env.TELEGRAM_PROBE_CHAT_ID), type: 'private' },
+      from: { id: Number(process.env.TELEGRAM_PROBE_CHAT_ID), first_name: 'Никита' }, text: '/start' } }),
+  });
+  console.log(`Bot delivery probe status: ${probe.status}; response: ${(await probe.text()).slice(0, 200)}`);
+  if (!probe.ok) throw new Error('Bot delivery probe failed');
+}

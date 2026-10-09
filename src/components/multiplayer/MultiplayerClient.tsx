@@ -160,6 +160,11 @@ export default function MultiplayerPage() {
     openRoom(next.code);
   });
 
+  const closeRoom = () => {
+    if (!room || !window.confirm('Закрыть комнату для всех участников? Текущий драфт будет остановлен.')) return;
+    void action(async () => { await json(`/api/multiplayer/rooms/${room.code}`, 'DELETE'); backToMenu(); });
+  };
+
   const backToMenu = useCallback(() => {
     currentRoomCode.current = '';
     setCode(''); setRoom(null); setSpin(null); setError('');
@@ -237,7 +242,9 @@ export default function MultiplayerPage() {
 
       {joiningLink && <p role="status" className="mx-auto max-w-lg rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 p-4 text-center text-[#00C896]">Открываем комнату {joinCode}…</p>}
       {code && <button onClick={backToMenu} className="mb-5 text-sm font-semibold text-[#9CA3AF] hover:text-white">← К списку игр</button>}
+      {code && room?.isHost && ['lobby', 'drafting'].includes(room.status) && <button disabled={busy} onClick={closeRoom} className="mb-5 ml-5 text-sm font-semibold text-red-300 hover:text-red-200 disabled:opacity-40">Закрыть комнату</button>}
       {code && !room && <p className="text-center text-[#9CA3AF]">Загружаем лобби…</p>}
+      {code && room?.status === 'closed' && <div role="status" className={`${card} mx-auto max-w-xl text-center`}><h1 className="text-2xl font-bold">Комната закрыта</h1><p className="mt-2 text-[#9CA3AF]">Организатор завершил игру.</p><button onClick={backToMenu} className={`${button} mt-5`}>К выбору игры</button></div>}
       {code && room?.status === 'lobby' && <Lobby room={room} busy={busy} now={now}
         onSeat={(ready, formation) => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'seat', ready, formation, name }); await refresh(); })}
         onSettings={updateSettings}
@@ -255,7 +262,7 @@ export default function MultiplayerPage() {
       {code && room?.status === 'completed' && <Results room={room} run={run || null}
         onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/viewed`, 'POST'); await refresh(); })}
         onNext={() => nextRound(room.code)} onReplay={() => rematch(room.code)} onMenu={backToMenu}/>}
-      {code && room && !['lobby', 'drafting', 'completed'].includes(room.status) && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[#9CA3AF]">Готовим сезон…</motion.p>}
+      {code && room && !['lobby', 'drafting', 'completed', 'closed'].includes(room.status) && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[#9CA3AF]">Готовим сезон…</motion.p>}
     </div>
     <Footer onHome={home} onPlay={home} onProfile={profile}/>
   </main>;
