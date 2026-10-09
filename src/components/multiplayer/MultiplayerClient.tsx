@@ -16,7 +16,7 @@ const button = 'rounded-xl bg-[#00C896] px-5 py-3.5 font-bold text-[#07130f] tra
 const input = 'w-full rounded-xl border border-white/20 bg-[#0A0A0A] px-4 py-3 text-white focus:border-[#00C896] focus:outline-none';
 
 type Menu = {
-  activeRoom: { code: string; status: string; deadline: string | null; drafted: number } | null;
+  activeRooms: { code: string; status: string; deadline: string | null; drafted: number; participants: string[] }[];
 };
 
 async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -188,6 +188,16 @@ export default function MultiplayerPage() {
 
   const home = () => { location.href = '/'; };
   const profile = () => { useGameStore.getState().setScreen('profile'); location.href = '/'; };
+  const roomChoices = menu?.activeRooms ?? [];
+  const continueRooms = roomChoices.length > 0 && <div className="space-y-2">
+    <h2 className="text-sm font-bold text-[#9CA3AF]">Твои текущие игры</h2>
+    {roomChoices.map(active => <button key={active.code} onClick={() => openRoom(active.code)} className="w-full rounded-2xl border border-[#00C896]/40 bg-[#00C896]/10 p-4 text-left transition hover:bg-[#00C896]/20">
+      <span className="flex items-center justify-between gap-3 font-bold text-[#00C896]"><span>▶ {active.status === 'lobby' ? 'Вернуться в лобби' : 'Продолжить игру'} · {active.code}</span>
+        {active.deadline && active.status === 'drafting' && <span className="font-mono tabular-nums">{Math.floor(Math.max(0, Math.ceil((Date.parse(active.deadline) - now) / 1000)) / 60)}:{String(Math.max(0, Math.ceil((Date.parse(active.deadline) - now) / 1000)) % 60).padStart(2, '0')}</span>}
+      </span>
+      <span className="mt-1 block text-sm text-[#9CA3AF]">{active.status === 'lobby' ? active.participants.join(', ') : active.status === 'drafting' ? `${active.drafted}/11 · Драфт продолжается` : 'Посмотреть результат сезона'}</span>
+    </button>)}
+  </div>;
 
   return <main className="club-theme-shell flex min-h-[100dvh] flex-col bg-[#0A0A0A] text-white">
     <div className="football-field-bg"/>
@@ -198,7 +208,7 @@ export default function MultiplayerPage() {
       {!code && !joiningLink && !showCreate && <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
         <div className="text-center"><h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1><p className="mt-2 text-base text-[#9CA3AF]">Выбери формат игры</p></div>
         <button onClick={() => setShowCreate(true)} className={`${card} group w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl sm:text-2xl">Драфт с друзьями</strong><span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500"/>Прямой эфир</span></span><span className="mt-3 block text-sm leading-6 text-slate-400">Соревнуйся в режиме реального времени с участием до 6 игроков. Все находятся онлайн одновременно и собирают лучшую команду из 11 игроков.</span></button>
-        {menu?.activeRoom && <button onClick={() => openRoom(menu.activeRoom!.code)} className="w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 p-4 text-left font-bold text-[#00C896]">▶ Продолжить текущую игру</button>}
+        {continueRooms}
       </div>}
 
       {!code && !joiningLink && showCreate && <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
@@ -209,13 +219,7 @@ export default function MultiplayerPage() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#9CA3AF]">Собери <strong className="text-white">команду из 11 игроков</strong>, сыграй сезон и узнай, кто собрал лучший состав.</p>
         </div>
 
-        {menu?.activeRoom && <button onClick={() => openRoom(menu.activeRoom!.code)} className="w-full rounded-2xl border border-[#00C896]/50 bg-[#00C896]/10 p-4 text-left transition hover:bg-[#00C896]/20">
-          <span className="flex items-center justify-between gap-3 text-lg font-bold text-[#00C896]">
-            <span>▶ Продолжить игру</span>
-            {menu.activeRoom.deadline && menu.activeRoom.status === 'drafting' && <span className="font-mono tabular-nums">{Math.floor(Math.max(0, Math.ceil((Date.parse(menu.activeRoom.deadline) - now) / 1000)) / 60)}:{String(Math.max(0, Math.ceil((Date.parse(menu.activeRoom.deadline) - now) / 1000)) % 60).padStart(2, '0')}</span>}
-          </span>
-          <span className="mt-1 block text-sm text-[#9CA3AF]">{menu.activeRoom.status === 'drafting' ? `${menu.activeRoom.drafted}/11 · Время драфта продолжается` : 'Симуляция сезона · посмотреть результат'}</span>
-        </button>}
+        {continueRooms}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>
           <TelegramLogin compact startParam={joinCode ? `room_${joinCode}` : undefined}/>

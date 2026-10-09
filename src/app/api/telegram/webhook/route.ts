@@ -16,35 +16,33 @@ export async function POST(request: Request) {
       const chatId = String(message.chat.id);
       const match = /^\/start(?:\s|$)/.test(message.text);
       if (match) {
-        // Persist /start even when it arrives before the user's first web-app login.
-        // The later Telegram auth upsert reuses this record and keeps chatStarted=true.
         const firstName = typeof message.from?.first_name === 'string' ? message.from.first_name : null;
         const lastName = typeof message.from?.last_name === 'string' ? message.from.last_name : null;
         const username = typeof message.from?.username === 'string' ? message.from.username : null;
         const now = new Date();
-        const user = await db.user.upsert({
-          where: { providerId: `telegram_${chatId}` },
-          create: {
-            provider: 'telegram', providerId: `telegram_${chatId}`,
-            firstName, lastName, username,
-            displayName: firstName || username || 'Игрок',
-            telegramChatStarted: true, lastActiveAt: now,
-          },
-          update: {
-            telegramChatStarted: true, lastActiveAt: now,
-            ...(firstName ? { firstName } : {}),
-            ...(lastName ? { lastName } : {}),
-            ...(username ? { username } : {}),
-          },
-        });
         const photo = await readFile(`${process.cwd()}/public/telegram-start.png`).catch(() => readFile(`${process.cwd()}/.next/standalone/public/telegram-start.png`).catch(() => null));
         const caption = '<b>30-0 · Драфт РПЛ</b> ⚽\nСобери команду из игроков РПЛ разных сезонов, сыграй сезон из 30 матчей и попробуй победить во всех. Играй сам или с друзьями.';
-        const sent = photo
-          ? await sendBotPhoto(chatId, photo, caption, openMarkup)
-          : await sendTelegramMessage(chatId, caption, openMarkup);
-        if (sent && !user.telegramWelcomeSentAt) {
-          await db.user.update({ where: { id: user.id }, data: { telegramWelcomeSentAt: now } });
-        }
+        const sent = photo && await sendBotPhoto(chatId, photo, caption, openMarkup)
+          || await sendTelegramMessage(chatId, caption, openMarkup);
+        if (!sent) return NextResponse.json({ error: 'Telegram delivery failed' }, { status: 502 });
+        // Delivery must not depend on the game database being available.
+        try {
+          await db.user.upsert({
+            where: { providerId: `telegram_${chatId}` },
+            create: {
+              provider: 'telegram', providerId: `telegram_${chatId}`,
+              firstName, lastName, username,
+              displayName: firstName || username || 'Игрок',
+              telegramChatStarted: true, telegramWelcomeSentAt: now, lastActiveAt: now,
+            },
+            update: {
+              telegramChatStarted: true, telegramWelcomeSentAt: now, lastActiveAt: now,
+              ...(firstName ? { firstName } : {}),
+              ...(lastName ? { lastName } : {}),
+              ...(username ? { username } : {}),
+            },
+          });
+        } catch (error) { console.error('Telegram /start profile update:', error); }
         return NextResponse.json({ ok: true });
       }
     }
@@ -60,5 +58,5 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
     return NextResponse.json({ ok: true });
-  } catch { return NextResponse.json({ ok: true }); }
+  } catch (error) { console.error('Telegram webhook:', error); return NextResponse.json({ error: 'Webhook failed' }, { status: 500 }); }
 }

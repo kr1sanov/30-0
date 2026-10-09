@@ -8,6 +8,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.json({ error: 'Доступен только вход через Telegram' }, { status: 410 });
   }
   if (path === '/api/auth/telegram') return NextResponse.next();
+  // Telegram posts updates without our browser session or Origin header.
+  // The route validates Telegram's secret-token header itself.
+  if (path === '/api/telegram/webhook') return NextResponse.next();
   if (path.startsWith('/api/daily')) {
     return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 403 });
   }
