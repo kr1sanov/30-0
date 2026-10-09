@@ -14,8 +14,8 @@ export function LegalPageShell({
     <main className="min-h-screen bg-[#0A0A0A] px-4 py-8 text-white sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl">
         <nav className="mb-8 flex items-center justify-between gap-4">
-          <Link href="/" className="text-sm font-bold text-[#00C896] hover:text-[#42e0b2]">30–0</Link>
-          <Link href="/" className="rounded-lg border border-white/10 px-3 py-2 text-sm text-[#9CA3AF] hover:border-[#00C896]/40 hover:text-white">← К игре</Link>
+          <Link href="/" className="rounded-lg border border-white/10 px-3 py-2 text-sm text-[#9CA3AF] hover:border-[#00C896]/40 hover:text-white">← Назад</Link>
+          <span className="text-sm font-bold text-[#00C896]">30–0</span>
         </nav>
         <header className="mb-8 border-b border-white/10 pb-6">
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-[#00C896]">Правовая информация</p>

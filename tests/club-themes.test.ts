@@ -42,3 +42,10 @@ test('every imported 2010–2021 club has a mapped theme', () => {
   }
   for (const name of names) assert.notDeepEqual(getClubTheme(name), DEFAULT_CLUB_THEME, name);
 });
+
+test('additional historical clubs do not share the default palette', () => {
+  const names = ['FC Moscow', 'Shinnik Yaroslavl', 'Luch-Energiya Vladivostok', 'Spartak Nalchik', 'Saturn Ramenskoye', 'Mordovia Saransk', 'Volga', 'Sibir Novosibirsk'];
+  const palettes = names.map(name => getClubTheme(name));
+  for (const palette of palettes) assert.notDeepEqual(palette, DEFAULT_CLUB_THEME);
+  assert.equal(new Set(palettes.map(theme => `${theme.primary}:${theme.secondary}`)).size, names.length);
+});

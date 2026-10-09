@@ -1357,7 +1357,13 @@ export default function Home() {
     >
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
-      <Header />
+      <Header onBack={screen === 'home' ? undefined : () => {
+        const state = useGameStore.getState();
+        if (screen === 'history' || screen === 'leaderboard') state.setScreen('profile');
+        else if (screen === 'awards') state.setScreen('result');
+        else if (screen === 'manager-choice') state.setScreen('pre-match');
+        else state.goHome();
+      }} />
       <main
         className={`flex-1 w-full mx-auto px-3 sm:px-4 py-2 sm:py-4 pb-20 sm:pb-4 relative z-10 ${
           ['draft', 'position-assign', 'squad-complete', 'pre-match', 'manager-choice', 'simulation', 'result', 'awards'].includes(screen)

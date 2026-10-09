@@ -8,6 +8,7 @@ import { getManagersForClub, getRandomManager } from '@/lib/managers';
 import type { Manager } from '@/lib/managers';
 import { useAuthStore } from './authStore';
 import { getResumeScreen } from '@/lib/gameResume';
+import { squadAchievementIds } from '@/lib/squadAchievements';
 
 /**
  * ============================================================================
@@ -58,6 +59,10 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'points_1000', name: 'Тысяча очков', description: 'Набрать 1 000 очков за карьеру', icon: '📊', condition: 'careerPoints >= 1000' },
   { id: 'perfect_twice', name: 'Безупречная серия', description: 'Провести два идеальных сезона', icon: '✨', condition: 'perfect >= 2' },
   { id: 'top_four_10', name: 'Постоянство', description: '10 раз попасть в топ-4', icon: '🎖️', condition: 'topFourSeasons >= 10' },
+  { id: 'samba_attack', name: 'Самба в атаке', description: 'Собрать трёх бразильцев и забить командой 50 голов за сезон', icon: '🇧🇷', condition: 'brazilianPlayers >= 3 && goalsFor >= 50' },
+  { id: 'russian_core', name: 'Русский костяк', description: 'Стать чемпионом с семью россиянами в составе', icon: '🇷🇺', condition: 'russianPlayers >= 7 && position === 1' },
+  { id: 'army_season', name: 'Армейский сезон', description: 'Победить 20 раз за сезон в режиме «Один клуб» с ЦСКА', icon: '🔴', condition: 'singleClubCSKA && wins >= 20' },
+  { id: 'neva_attack', name: 'Невская атака', description: 'Забить 60 голов за сезон в режиме «Один клуб» с «Зенитом»', icon: '🌊', condition: 'singleClubZenit && goalsFor >= 60' },
 ];
 
 
@@ -1207,6 +1212,7 @@ export const useGameStore = create<GameState>()(
           if (stats.totalWins >= 100) addAch('hundred_wins');
           if (stats.totalWins >= 300) addAch('three_hundred_wins');
           if (stats.totalGoals >= 500) addAch('goal_collector');
+          for (const id of squadAchievementIds(state.slots, config, r)) addAch(id);
           if (stats.titles >= 5) addAch('three_titles');
           if (stats.perfect >= 2) addAch('perfect_twice');
           if (allHistory.filter((season) => season.position <= 4).length >= 10) addAch('top_four_10');

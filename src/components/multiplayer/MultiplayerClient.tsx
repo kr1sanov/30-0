@@ -171,11 +171,13 @@ export default function MultiplayerPage() {
     history.replaceState(null, '', '/multiplayer');
     void refreshMenu();
   }, [refreshMenu]);
+  const backToFormat = useCallback(() => setShowCreate(false), []);
+  const back = code ? backToMenu : showCreate ? backToFormat : null;
   useEffect(() => {
-    if (!code) return;
-    showBackButton(backToMenu);
-    return () => hideBackButton(backToMenu);
-  }, [code, backToMenu, showBackButton, hideBackButton]);
+    if (!back) return;
+    showBackButton(back);
+    return () => hideBackButton(back);
+  }, [back, showBackButton, hideBackButton]);
 
   const own = room?.seats.find(seat => seat.isYou);
   const run = room?.ownRun;
@@ -206,7 +208,7 @@ export default function MultiplayerPage() {
 
   return <main className="club-theme-shell flex min-h-[100dvh] flex-col bg-[#0A0A0A] text-white">
     <div className="football-field-bg"/>
-    <Header onHome={home} onProfile={profile}/>
+    <Header onHome={home} onBack={back ?? undefined} onProfile={profile}/>
     <div className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-8 sm:pb-12 sm:pt-10">
       {error && <div role="alert" className="mx-auto mb-5 max-w-2xl rounded-xl border border-red-500/40 bg-red-950/40 p-3 text-red-200">{error}</div>}
 
@@ -218,7 +220,6 @@ export default function MultiplayerPage() {
 
       {!code && !joiningLink && showCreate && <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
         <div className="text-center">
-          <button onClick={() => setShowCreate(false)} className="mb-5 block text-sm text-slate-400 hover:text-white">← Выбрать формат</button>
           <span className="inline-flex rounded-full border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-1.5 text-xs font-bold text-[#00C896]">Мультиплеер · Бета-версия</span>
           <h1 className="mt-5 text-3xl font-black sm:text-4xl">Сыграй с другом</h1>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#9CA3AF]">Собери <strong className="text-white">команду из 11 игроков</strong>, сыграй сезон и узнай, кто собрал лучший состав.</p>
@@ -241,7 +242,6 @@ export default function MultiplayerPage() {
       </div>}
 
       {joiningLink && <p role="status" className="mx-auto max-w-lg rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 p-4 text-center text-[#00C896]">Открываем комнату {joinCode}…</p>}
-      {code && <button onClick={backToMenu} className="mb-5 text-sm font-semibold text-[#9CA3AF] hover:text-white">← К списку игр</button>}
       {code && room?.isHost && room.status === 'drafting' && <button disabled={busy} onClick={closeRoom} className="mb-5 ml-5 text-sm font-semibold text-red-300 hover:text-red-200 disabled:opacity-40">Закрыть комнату</button>}
       {code && !room && <p className="text-center text-[#9CA3AF]">Загружаем лобби…</p>}
       {code && room?.status === 'closed' && <div role="status" className={`${card} mx-auto max-w-xl text-center`}><h1 className="text-2xl font-bold">Комната закрыта</h1><p className="mt-2 text-[#9CA3AF]">Организатор завершил игру.</p><button onClick={backToMenu} className={`${button} mt-5`}>К выбору игры</button></div>}

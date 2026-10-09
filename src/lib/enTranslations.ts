@@ -2,7 +2,16 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
-  'Домой':'Home', 'Мой профиль':'My profile', 'Главная':'Home', 'Играть':'Play',
+  'Домой':'Home', 'Назад':'Back', 'Мой профиль':'My profile', 'Главная':'Home', 'Играть':'Play',
+  'Самба в атаке':'Samba attack', 'Русский костяк':'Russian core', 'Армейский сезон':'Army season', 'Невская атака':'Neva attack',
+  '3 бразильца в составе и 50 голов команды за сезон':'3 Brazilian players and 50 team goals in a season',
+  'Чемпионство с 7 россиянами в составе':'Win the title with 7 Russian players in your squad',
+  '20 побед за ЦСКА в режиме «Один клуб»':'20 wins with CSKA in One Club mode',
+  '60 голов за «Зенит» в режиме «Один клуб»':'60 goals with Zenit in One Club mode',
+  'Собрать трёх бразильцев и забить командой 50 голов за сезон':'Draft three Brazilian players and score 50 team goals in a season',
+  'Стать чемпионом с семью россиянами в составе':'Win the title with seven Russian players in your squad',
+  'Победить 20 раз за сезон в режиме «Один клуб» с ЦСКА':'Win 20 matches in a season with CSKA in One Club mode',
+  'Забить 60 голов за сезон в режиме «Один клуб» с «Зенитом»':'Score 60 goals in a season with Zenit in One Club mode',
   'Музыка эпохи':'Music of the era',
   'Включите плейлист и собирайте команду под треки эпохи.':'Play the soundtrack while you build your team.',
   'Открыть плейлист ↗':'Open playlist ↗',
