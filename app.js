@@ -29,3 +29,9 @@ process.env.PORT = process.env.PORT || '3000';
 // Start the Next.js standalone server
 const serverPath = path.join(__dirname, '.next', 'standalone', 'server.js');
 require(serverPath);
+
+// Receive Telegram updates over an outbound connection. The cron job in the
+// deployment script also polls when Passenger puts this process to sleep.
+import(require('node:url').pathToFileURL(path.join(__dirname, 'scripts', 'poll-telegram.mjs')).href)
+  .then(({ startPolling }) => startPolling())
+  .catch(error => console.error('Telegram polling startup:', error));

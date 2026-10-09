@@ -165,6 +165,7 @@ cp -r "$DEPLOY_STAGE/docs/research/rpl-2010-2018/." docs/research/rpl-2010-2018/
 mkdir -p docs/research/rpl-2019-2021
 cp -r "$DEPLOY_STAGE/docs/research/rpl-2019-2021/." docs/research/rpl-2019-2021/
 cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
+cp "$DEPLOY_STAGE/scripts/poll-telegram.mjs" scripts/poll-telegram.mjs
 
 # The deployment workflow can provide bot credentials as a short-lived file.
 # Keep it private and outside the release tree until the persistent .env is updated.
@@ -263,6 +264,16 @@ ensure_env "RUN_SESSION_SECRET" "$(openssl rand -hex 32)"
 ensure_env "ADMIN_SESSION_SECRET" "$(openssl rand -hex 32)"
 chmod 600 .env
 echo "✅ Required production variables are present (values are not printed)"
+
+# Passenger can sleep while the site is idle. Cron keeps bot commands flowing
+# even with no website traffic; both workers share an atomic poll lock.
+if command -v crontab >/dev/null 2>&1; then
+  POLL_CRON="* * * * * cd '$APP_DIR' && $(command -v node) --env-file=.env scripts/poll-telegram.mjs >> '$APP_DIR/telegram-poll.log' 2>&1 # rpl30-telegram-poll"
+  { crontab -l 2>/dev/null | grep -v 'rpl30-telegram-poll' || true; echo "$POLL_CRON"; } | crontab -
+  echo "✅ Telegram polling cron installed"
+else
+  echo "⚠️ crontab unavailable; Passenger polling will run while the app is active"
+fi
 
 # ─── Step 6: Ensure Prisma client ───
 echo ""

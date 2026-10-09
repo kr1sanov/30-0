@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-test('registers the webhook and only /start in the private-chat command list', async () => {
+test('switches to outbound polling without dropping pending /start updates', async () => {
   const originalFetch = globalThis.fetch;
   const originalEnv = Object.fromEntries(['TELEGRAM_BOT_TOKEN', 'TELEGRAM_WEBHOOK_SECRET', 'NEXT_PUBLIC_BASE_URL', 'TELEGRAM_BOT_USERNAME']
     .map(key => [key, process.env[key]]));
@@ -17,7 +17,9 @@ test('registers the webhook and only /start in the private-chat command list', a
   }) as typeof fetch;
   try {
     await import('../scripts/set-telegram-webhook.mjs');
-    assert.equal(calls.filter(call => call.method === 'setWebhook').length, 1);
+    const deleted = calls.filter(call => call.method === 'deleteWebhook');
+    assert.equal(deleted.length, 1);
+    assert.deepEqual(deleted[0].body, { drop_pending_updates: false });
     const commands = calls.filter(call => call.method === 'setMyCommands');
     assert.deepEqual(commands.map(call => call.body?.language_code), ['', 'ru', 'en']);
     for (const call of commands) {

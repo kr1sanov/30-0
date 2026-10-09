@@ -15,23 +15,6 @@ env:
   NODE_VERSION: '22'
 
 jobs:
-  telegram-diagnostics:
-    name: Telegram delivery diagnostics
-    if: contains(github.event.head_commit.message, '[bot-probe]')
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Inspect Telegram webhook and probe /start
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
-          TELEGRAM_PROBE_CHAT_ID: '361912433'
-        run: node scripts/probe-telegram.mjs
-
   # ─── Stage 1: Quality Gates ───
   lint:
     name: Lint & Type Check
@@ -82,6 +65,7 @@ jobs:
           node --check scripts/import-rpl-2019-2021.mjs
           node --check scripts/reset-legacy-progress.mjs
           node --check scripts/set-telegram-webhook.mjs
+          node --check scripts/poll-telegram.mjs
 
       - name: Verify FIFA 10 source roster
         run: node scripts/import-fifa10-rpl.mjs
@@ -212,6 +196,7 @@ jobs:
           cp -r docs/research/rpl-2010-2018 deploy-package/docs/research/
           cp -r docs/research/rpl-2019-2021 deploy-package/docs/research/
           cp scripts/set-telegram-webhook.mjs deploy-package/scripts/
+          cp scripts/poll-telegram.mjs deploy-package/scripts/
 
           # Copy package.json for reference
           cp build-artifact/package.json deploy-package/
@@ -256,34 +241,48 @@ jobs:
           echo "${{ secrets.JINO_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-      - name: Upload and deploy over one SSH connection
-        run: |
-          # Jino intermittently throttles consecutive SSH connections. Stream
-          # the archive and execute the bundled deploy script in one session.
-          ssh \
-            -i ~/.ssh/deploy_key \
-            -p "${{ secrets.JINO_SSH_PORT }}" \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=accept-new \
-            -o ConnectTimeout=180 \
-            -o ServerAliveInterval=30 \
-            -o ServerAliveCountMax=10 \
-          "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
-            "umask 077; set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod 700 /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
-            < deploy.tar.gz
-
-      - name: Setup Node.js for webhook registration
+      - name: Setup Node.js for Telegram
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
-      - name: Register Telegram webhook from GitHub runner
+      - name: Enable Telegram polling
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
-          NEXT_PUBLIC_BASE_URL: https://30-0.xn--p1ai
-          TELEGRAM_PROBE_CHAT_ID: ${{ contains(github.event.head_commit.message, '[bot-probe]') && '361912433' || '' }}
         run: node scripts/set-telegram-webhook.mjs
+
+      - name: Deliver queued /start commands during polling migration
+        if: contains(github.event.head_commit.message, '[poll-migration]')
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          node scripts/poll-telegram.mjs
+          node scripts/poll-telegram.mjs
+
+      - name: Upload and deploy over one SSH connection
+        run: |
+          # Jino intermittently throttles consecutive SSH connections. Stream
+          # the archive and execute the bundled deploy script in one session.
+          for attempt in 1 2 3; do
+            if ssh -4 \
+              -i ~/.ssh/deploy_key \
+              -p "${{ secrets.JINO_SSH_PORT }}" \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=accept-new \
+              -o ConnectTimeout=45 \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=10 \
+            "${{ secrets.JINO_USERNAME }}@${{ secrets.JINO_HOST }}" \
+              "umask 077; set -euo pipefail; cat > /tmp/deploy.tar.gz; tar -xOf /tmp/deploy.tar.gz ./scripts/deploy-production.sh > /tmp/deploy-production.sh; chmod 700 /tmp/deploy-production.sh; export APP_DIR='${{ secrets.JINO_APP_DIR }}'; bash /tmp/deploy-production.sh" \
+              < deploy.tar.gz; then
+              exit 0
+            else
+              status=$?
+              if [ "$status" -ne 255 ] || [ "$attempt" -eq 3 ]; then exit "$status"; fi
+              echo "SSH connection failed, retrying ($attempt/3)"
+              sleep 15
+            fi
+          done
 
   # ─── Stage 4: Post-Deploy Verification ───
   # scripts/deploy-production.sh blocks until /api/health reports status=ok
