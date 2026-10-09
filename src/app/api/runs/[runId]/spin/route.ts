@@ -78,15 +78,9 @@ export async function POST(
 
     // Build the where clause for ClubSeasons
     // If clubFilter is set (single_club mode), only return club-seasons for that club
-    const clubSeasonWhere: Record<string, unknown> = {
-      season: {
-        startYear: { gte: startYear, lte: endYear },
-      },
-    };
-
-    if (run.clubFilter) {
-      clubSeasonWhere.clubId = run.clubFilter;
-    }
+    const clubSeasonWhere: Record<string, unknown> = run.clubFilter
+      ? { clubId: run.clubFilter, players: { some: {} } }
+      : { season: { startYear: { gte: startYear, lte: endYear } } };
 
     // Get all ClubSeasons with their players for the given era
     const clubSeasons = await db.clubSeason.findMany({

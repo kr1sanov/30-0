@@ -14,6 +14,7 @@ model Club {
   nameEn    String?
   city      String?
   logoUrl   String?
+  oneClubHidden Boolean @default(false)
   seasons   ClubSeason[]
 
   @@unique([nameRu])

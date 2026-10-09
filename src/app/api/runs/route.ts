@@ -92,9 +92,9 @@ export async function POST(request: NextRequest) {
       const club = await db.club.findUnique({
         where: { id: clubFilter },
         select: {
-          id: true, nameRu: true, nameEn: true, city: true,
+          id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true,
           seasons: {
-            where: { season: { startYear: { gte: 2006, lte: 2021 } } },
+            where: { players: { some: {} } },
             select: { players: { select: { playerId: true, mainPosition: true } } },
           },
         },
@@ -150,9 +150,9 @@ export async function POST(request: NextRequest) {
         draftMode: draftMode || 'squad_first',
         gameMode,
         ratingMode: ratingMode || 'season',
-        eraFilter: eraFilter || 'all',
-        eraStartYear: eraStartYear ?? 2006,
-        eraEndYear: eraEndYear ?? 2021,
+        eraFilter: gameMode === 'single_club' ? 'all' : eraFilter || 'all',
+        eraStartYear: gameMode === 'single_club' ? 2000 : eraStartYear ?? 2006,
+        eraEndYear: gameMode === 'single_club' ? 2100 : eraEndYear ?? 2021,
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,

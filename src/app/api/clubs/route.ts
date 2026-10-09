@@ -6,10 +6,10 @@ export async function GET() {
   try {
     const clubs = await db.club.findMany({
       select: {
-        id: true, nameRu: true, nameEn: true, city: true,
+        id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true,
         seasons: {
-          where: { season: { startYear: { gte: 2006, lte: 2021 } } },
-          select: { players: { select: { playerId: true, mainPosition: true } } },
+          where: { players: { some: {} } },
+          select: { season: { select: { startYear: true } }, players: { select: { playerId: true, mainPosition: true } } },
         },
       },
     });

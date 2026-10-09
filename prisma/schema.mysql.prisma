@@ -13,6 +13,7 @@ model Club {
   nameEn    String?  @db.VarChar(255)
   city      String?  @db.VarChar(255)
   logoUrl   String?  @db.Text
+  oneClubHidden Boolean @default(false)
   seasons   ClubSeason[]
 
   @@unique([nameRu])

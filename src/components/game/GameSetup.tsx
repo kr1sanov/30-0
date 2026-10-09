@@ -34,6 +34,7 @@ interface ClubData {
   city?: string;
   seasonCount: number;
   playerCount: number;
+  periods: string;
 }
 
 /* ─── Pitch dot layout for formation preview ─── */
@@ -305,6 +306,7 @@ function ClubCard({
           <div className="text-[9px] text-white/85 mt-0.5 leading-tight">{club.city}</div>
         )}
         <div className="mt-1 text-[9px] font-medium text-white/85">{club.seasonCount} сезонов · {club.playerCount} игроков</div>
+        <div className="mt-0.5 text-[9px] text-white/75">{club.periods}</div>
       </div>
     </motion.button>
   );
@@ -374,7 +376,7 @@ export default function GameSetup() {
 
   const handleStart = async () => {
     // In single_club mode, require a club selection
-    if (currentGameMode === 'single_club' && !config.clubFilter) {
+    if (currentGameMode === 'single_club' && !selectedClub) {
       setStartError('Выбери клуб для режима "Один клуб".');
       return;
     }
@@ -422,7 +424,7 @@ export default function GameSetup() {
       : DIFFICULTY_CONFIG[config.difficulty].showRatings;
 
   // Can start? In single_club mode, need a club selected. In nations_cup mode, need a nationality selected.
-  const canStart = currentGameMode === 'single_club' ? !!config.clubFilter : true;
+  const canStart = currentGameMode === 'single_club' ? !!selectedClub : true;
 
   return (
     <div className="space-y-4 animate-fade-in-up">
@@ -497,7 +499,7 @@ export default function GameSetup() {
               {!selectedClub && (
                 <div className="mb-5 space-y-3 rounded-xl border border-[#00C896]/25 bg-[#00C896]/[0.06] p-4 text-sm leading-relaxed text-[#cbd5e1]">
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Как это работает</h3>
-                  <p>Выбери клуб и собери 11 игроков из доступных составов РПЛ (2006–2021). Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграй сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
+                  <p>Выбери клуб и собери 11 игроков из его доступных в игре сезонов. Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграй сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Трофеи</h3>
                   <p>Охоться за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Полезно знать</h3>
@@ -505,7 +507,7 @@ export default function GameSetup() {
                 </div>
               )}
               <SectionHeader>{selectedClub ? 'Выбранный клуб' : 'Выбери клуб'}</SectionHeader>
-              {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы с достаточным составом в базе выпусков 2006–2021.</p>}
+              {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы минимум с 8 доступными сезонами и достаточным составом для драфта.</p>}
 
               {/* Selected club indicator */}
               {selectedClub && (
@@ -527,7 +529,7 @@ export default function GameSetup() {
                       {selectedClub.nameRu}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2006–2021)
+                      {selectedClub.seasonCount} сезонов · {selectedClub.playerCount} игроков · {selectedClub.periods}
                     </div>
                   </div>
                   <button type="button" onClick={() => setConfig({ clubFilter: undefined, clubName: undefined })} className="ml-auto shrink-0 rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896]">Сменить клуб</button>
@@ -566,7 +568,7 @@ export default function GameSetup() {
                         isSelected={config.clubFilter === club.id}
                         onClick={() => {
                           selectionChanged();
-                          setConfig({ clubFilter: club.id, clubName: club.nameRu, ratingMode: 'season' });
+                          setConfig({ clubFilter: club.id, clubName: club.nameRu, ratingMode: 'season', eraFilter: 'all' });
                         }}
                       />
                     ))}
@@ -877,7 +879,7 @@ export default function GameSetup() {
       </div>}
 
       {/* ─── ERA ─── */}
-      <div
+      {currentGameMode !== 'single_club' && <div
         className="rounded-2xl p-4"
         style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
       >
@@ -988,7 +990,7 @@ export default function GameSetup() {
             )}
           </>
         )}
-      </div>
+      </div>}
 
       {/* ─── Error Display ─── */}
       <AnimatePresence>

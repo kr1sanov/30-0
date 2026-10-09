@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { selectOneClubCandidates } from '../src/lib/rplClubSelection.ts';
+import { formatSeasonPeriods, selectOneClubCandidates } from '../src/lib/rplClubSelection.ts';
 
 const positions = ['ВР', 'ЦЗ', 'ПЗ', 'ЛЗ', 'ОП', 'ЦП', 'АП', 'ЛП', 'ЛВ', 'ПВ', 'НП', 'ЦН'];
 
@@ -14,9 +14,9 @@ function club(id: string, seasons: number, playerCount = 30, includeKeeper = tru
   };
 }
 
-test('includes short archives with a complete squad and ranks by RPL seasons', () => {
-  const result = selectOneClubCandidates([club('5 seasons', 5), club('9 seasons', 9), club('4 seasons', 4)]);
-  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '5 seasons', '4 seasons']);
+test('requires more than seven roster seasons and ranks eligible clubs', () => {
+  const result = selectOneClubCandidates([club('7 seasons', 7), club('9 seasons', 9), club('8 seasons', 8)]);
+  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '8 seasons']);
   assert.equal(result[0].playerCount, 30);
 });
 
@@ -32,6 +32,12 @@ test('counts distinct players across seasons, not every player-season row', () =
   assert.deepEqual(selectOneClubCandidates([onePlayerPool]), []);
 });
 
-test('includes a single supplied season when it has enough players by line', () => {
-  assert.equal(selectOneClubCandidates([club('single season', 1, 26)]).length, 1);
+test('hidden clubs are excluded from the game but remain manageable in admin', () => {
+  const hidden = { ...club('hidden', 9, 26), oneClubHidden: true };
+  assert.deepEqual(selectOneClubCandidates([hidden]), []);
+  assert.equal(selectOneClubCandidates([hidden], true)[0].oneClubHidden, true);
+});
+
+test('lists only recorded periods, keeping gaps in the archive visible', () => {
+  assert.equal(formatSeasonPeriods([2010, 2007, 2006, 2010, 2012, 2013]), '2006–2007, 2010, 2012–2013');
 });
