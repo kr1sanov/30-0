@@ -15,6 +15,22 @@ env:
   NODE_VERSION: '22'
 
 jobs:
+  telegram-diagnostics:
+    name: Telegram delivery diagnostics
+    if: contains(github.event.head_commit.message, '[bot-probe]')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inspect Telegram webhook and probe /start
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          TELEGRAM_PROBE_CHAT_ID: '361912433'
+        run: node scripts/probe-telegram.mjs
+
   # ─── Stage 1: Quality Gates ───
   lint:
     name: Lint & Type Check
