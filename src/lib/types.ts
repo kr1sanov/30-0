@@ -116,15 +116,15 @@ export type Difficulty = keyof typeof DIFFICULTY_CONFIG;
 
 // Era presets with year ranges
 export const ERA_CONFIG = {
-  all:    { label: 'Все',    minYear: 2010, maxYear: 2021 },
-  early:  { label: '2010–2014', minYear: 2010, maxYear: 2014 },
-  late:   { label: '2015–2021', minYear: 2015, maxYear: 2021 },
-  custom: { label: 'Свой',   minYear: 2010, maxYear: 2021 },
+  all:    { label: 'Все',    minYear: 2006, maxYear: 2021 },
+  early:  { label: '2006–2013', minYear: 2006, maxYear: 2013 },
+  late:   { label: '2014–2021', minYear: 2014, maxYear: 2021 },
+  custom: { label: 'Свой',   minYear: 2006, maxYear: 2021 },
 } as const;
 
 export type EraFilter = keyof typeof ERA_CONFIG;
 
-export const ERA_MIN_YEAR = 2010;
+export const ERA_MIN_YEAR = 2006;
 export const ERA_MAX_YEAR = 2021;
 
 // ---------------------------------------------------------------------------

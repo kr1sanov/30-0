@@ -73,7 +73,7 @@ export async function POST(
       where: { id: { in: [...draftedPlayerSeasonIds] } }, select: { playerId: true },
     })).map((ps) => ps.playerId));
 
-    const startYear = run.eraStartYear ?? 2010;
+    const startYear = run.eraStartYear ?? 2006;
     const endYear = run.eraEndYear ?? 2021;
 
     // Build the where clause for ClubSeasons
@@ -184,7 +184,9 @@ export async function POST(
 
     const result = {
       clubSeasonId: selectedClubSeason.id,
-      clubName: selectedClubSeason.club.nameRu,
+      clubName: selectedClubSeason.season.startYear < 2010
+        ? selectedClubSeason.sourceName || selectedClubSeason.club.nameRu
+        : selectedClubSeason.club.nameRu,
       seasonLabel: selectedClubSeason.season.label,
       players,
       ...(targetSlotPosition ? { targetSlotPosition } : {}),

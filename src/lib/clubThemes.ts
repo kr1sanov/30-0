@@ -71,6 +71,8 @@ const HISTORICAL_CLUB_THEMES: Record<string, string> = {
   'Krasnodar': 'Краснодар', 'Rostov': 'Ростов', 'Khimki': 'Химки',
   'Orenburg': 'Оренбург', 'FC Ural': 'Урал', 'Ural Yekaterinburg': 'Урал',
   'Nizhny Novgorod': 'Пари Нижний Новгород',
+  'Terek Grozny': 'Ахмат', 'Torpedo Moscow': 'Торпедо Москва',
+  'Krylia Sovetov Samara': 'Крылья Советов',
 };
 
 export function getClubTheme(clubName?: string): ClubTheme {

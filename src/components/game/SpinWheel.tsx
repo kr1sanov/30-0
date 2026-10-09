@@ -48,9 +48,22 @@ export const RPL_CLUBS = [
   'Nizhny Novgorod',
   'Dynamo Moscow',
   'CSKA Moscow',
+  'Shinnik Yaroslavl',
+  'Luch-Energiya Vladivostok',
+  'Terek Grozny',
+  'Torpedo Moscow',
+  'FC Moscow',
+  'Khimki',
+  'Rostov',
+  'Zenit Saint Petersburg',
+  'Krylia Sovetov Samara',
 ];
 
 export const RPL_SEASONS = [
+  '2006',
+  '2007',
+  '2008',
+  '2009',
   '2010',
   '2011',
   '2012',
@@ -63,11 +76,6 @@ export const RPL_SEASONS = [
   '2019',
   '2020',
   '2021',
-  '2022',
-  '2023',
-  '2024',
-  '2025',
-  '2026',
 ];
 
 /* ─── SlotReel: shows one reel (club or season) with slot-machine animation ─── */

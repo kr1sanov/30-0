@@ -8,7 +8,7 @@ export async function GET() {
       select: {
         id: true, nameRu: true, nameEn: true, city: true,
         seasons: {
-          where: { season: { startYear: { gte: 2010 } } },
+          where: { season: { startYear: { gte: 2006, lte: 2021 } } },
           select: { players: { select: { playerId: true, mainPosition: true } } },
         },
       },

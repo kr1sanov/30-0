@@ -79,7 +79,7 @@ export async function POST(
     })).map((ps) => ps.playerId));
 
     // Determine era range from run config
-    const startYear = run.eraStartYear ?? 2010;
+    const startYear = run.eraStartYear ?? 2006;
     const endYear = run.eraEndYear ?? 2021;
 
     // Build the where clause for ClubSeasons

@@ -497,7 +497,7 @@ export default function GameSetup() {
               {!selectedClub && (
                 <div className="mb-5 space-y-3 rounded-xl border border-[#00C896]/25 bg-[#00C896]/[0.06] p-4 text-sm leading-relaxed text-[#cbd5e1]">
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Как это работает</h3>
-                  <p>Выбери клуб и собери 11 игроков из доступных составов РПЛ (2010–2021). Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграй сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
+                  <p>Выбери клуб и собери 11 игроков из доступных составов РПЛ (2006–2021). Каждому игроку соответствует рейтинг его выпуска: режим Prime здесь недоступен. Затем сыграй сезон из 30 матчей. Цель — 30 побед и ни одного поражения.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Трофеи</h3>
                   <p>Охоться за 30–0, сезоном без поражений и другими трофеями за результат. Прогресс и награды сохраняются в профиле.</p>
                   <h3 className="font-black uppercase tracking-widest text-[#00C896]">Полезно знать</h3>
@@ -505,7 +505,7 @@ export default function GameSetup() {
                 </div>
               )}
               <SectionHeader>{selectedClub ? 'Выбранный клуб' : 'Выбери клуб'}</SectionHeader>
-              {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы с достаточным составом в базе выпусков 2010–2021.</p>}
+              {!selectedClub && <p className="mb-4 text-sm leading-relaxed text-[#9CA3AF]">Клубы с достаточным составом в базе выпусков 2006–2021.</p>}
 
               {/* Selected club indicator */}
               {selectedClub && (
@@ -527,7 +527,7 @@ export default function GameSetup() {
                       {selectedClub.nameRu}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
-                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2010–2021)
+                      {selectedClub.seasonCount} сезонов РПЛ · {selectedClub.playerCount} игроков в базе (2006–2021)
                     </div>
                   </div>
                   <button type="button" onClick={() => setConfig({ clubFilter: undefined, clubName: undefined })} className="ml-auto shrink-0 rounded-lg border border-[#00C896]/40 px-3 py-2 text-xs font-bold text-[#00C896]">Сменить клуб</button>

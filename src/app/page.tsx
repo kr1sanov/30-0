@@ -498,6 +498,7 @@ function HomePage() {
           {databaseStats?.firstYear && databaseStats?.lastYear && (
             <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
           )}
+          <p className="mt-2 text-center text-xs text-[#00C896]">Добавлены составы и рейтинги 2006–2009</p>
         </div>
       </motion.section>
 

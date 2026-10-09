@@ -3,8 +3,9 @@ import type { ClubSeasonWithPlayers } from '@/lib/wheel';
 
 type ClubSeasonRecord = {
   id: string;
+  sourceName?: string | null;
   club: { nameRu: string };
-  season: { label: string };
+  season: { label: string; startYear: number };
   players: Array<{
     id: string;
     playerId: string;
@@ -50,7 +51,9 @@ export function getClubSeasonOptions(
     if (availablePositions.size) {
       options.push({
         clubSeasonId: clubSeason.id,
-        clubName: clubSeason.club.nameRu,
+        clubName: clubSeason.season.startYear < 2010
+          ? clubSeason.sourceName || clubSeason.club.nameRu
+          : clubSeason.club.nameRu,
         seasonLabel: clubSeason.season.label,
         availablePositions: Array.from(availablePositions) as ClubSeasonWithPlayers['availablePositions'],
       });
