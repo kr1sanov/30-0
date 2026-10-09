@@ -26,7 +26,7 @@ const active = 'border-[#00C896]/70 bg-[#00C896]/15 text-[#00C896] shadow-[0_0_1
 const neutral = 'border-[#292929] bg-[#1E1E1E] text-[#9CA3AF] hover:border-white/30';
 const primary = 'rounded-xl bg-[#00C896] px-5 py-3.5 font-bold text-[#07130f] transition hover:bg-[#00A67A] active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40';
 
-export function Lobby({ room, busy, now, onSeat, onSettings, onBot, onRemoveBot }: { room: Room; busy: boolean; now: number; onSeat: (ready: boolean, formation: string) => void; onSettings: (changes: Partial<Room>) => void; onBot: () => void; onRemoveBot: (botId: string) => void }) {
+export function Lobby({ room, busy, now, onSeat, onSettings, onBot, onRemoveBot, onClose }: { room: Room; busy: boolean; now: number; onSeat: (ready: boolean, formation: string) => void; onSettings: (changes: Partial<Room>) => void; onBot: () => void; onRemoveBot: (botId: string) => void; onClose: () => void }) {
   const own = room.seats.find(s => s.isYou);
   const [copied, setCopied] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -66,6 +66,7 @@ export function Lobby({ room, busy, now, onSeat, onSettings, onBot, onRemoveBot 
     </div>}
     <div className={`${panel} overflow-hidden`}><button className="flex w-full items-center justify-between p-5 text-left font-semibold" onClick={() => setRulesOpen(v => !v)}>Как это работает <ChevronDown size={18} className={rulesOpen ? 'rotate-180' : ''}/></button>{rulesOpen && <p className="border-t border-white/10 px-5 pb-5 pt-4 text-sm leading-6 text-slate-400">Все участники одновременно крутят клуб и сезон, выбирают игроков на свободные позиции и собирают состав из 11 человек. На весь драфт даётся 3 минуты. После завершения все команды сыграют сезон РПЛ из 30 матчей. Побеждает участник выше в таблице. В серии состав собирается заново в каждом раунде.</p>}</div>
     <div className="space-y-2">{room.seats.length >= 2 && <button disabled={busy} onClick={() => onSeat(!own?.ready, own?.formation || '4-3-3')} className={`w-full ${own?.ready ? 'rounded-xl border border-emerald-500 py-3.5 font-bold text-emerald-300' : primary}`}>{own?.ready ? '✓ Ты готов · Отменить' : 'Я готов'}</button>}{room.draftStartAt && <div role="status" className="rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-center font-bold text-[#00C896]">{Math.max(0, Math.ceil((Date.parse(room.draftStartAt) - now) / 1000)) > 0 ? `Все готовы · Драфт начнётся через ${Math.max(0, Math.ceil((Date.parse(room.draftStartAt) - now) / 1000))} сек.` : 'Начинаем драфт…'}</div>}<p className="text-center text-xs text-slate-500">{room.seats.length < 2 ? 'Нужен хотя бы ещё один участник или бот' : room.seats.some(s => !s.ready) ? 'Дождись готовности всех участников' : 'Все готовы к началу'}</p></div>
+    {room.isHost && <button disabled={busy} onClick={onClose} className="block w-full rounded-xl border border-red-500/30 px-4 py-3 text-center text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:opacity-40">Закрыть комнату</button>}
   </div>;
 }
 
