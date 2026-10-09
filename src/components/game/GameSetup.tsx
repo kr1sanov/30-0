@@ -330,7 +330,7 @@ export default function GameSetup() {
     setClubsLoading(true);
     setClubsError(null);
     try {
-      const response = await fetch('/api/clubs');
+      const response = await fetch('/api/clubs?v=2006', { cache: 'no-store' });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data: unknown = await response.json();
       if (!Array.isArray(data)) throw new Error('Некорректный ответ');

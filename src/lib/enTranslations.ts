@@ -830,6 +830,7 @@ Object.assign(TEXT, {
   'Драфт уже завершён':'The draft is complete',
   'Выбери режим и клуб':'Choose a mode and club',
   'Выбери клуб с минимум 5 доступными сезонами РПЛ':'Choose a club with at least five available RPL seasons',
+  'Выбери клуб с достаточным составом и игроками на всех линиях':'Choose a club with enough players for every line',
   'Сможешь улучшить результат? Открой 30-0 и сыграй ещё раз.':'Can you beat your result? Open 30–0 and play again.',
   'Сначала войди в игру через Telegram, затем настрой уведомления в профиле.':'Sign in through Telegram first, then manage notifications in your profile.',
   'Собери команду из игроков РПЛ разных эпох и попробуй пройти сезон без поражений.':'Build an RPL squad from different eras and try to finish a season unbeaten.',

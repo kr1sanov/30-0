@@ -14,7 +14,7 @@ export async function GET() {
       },
     });
     const eligible = selectOneClubCandidates(clubs);
-    return NextResponse.json(eligible, { headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=3600' } });
+    return NextResponse.json(eligible, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('Failed to fetch clubs:', error);
     return NextResponse.json({ error: 'Failed to fetch clubs' }, { status: 500 });

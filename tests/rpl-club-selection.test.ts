@@ -14,15 +14,15 @@ function club(id: string, seasons: number, playerCount = 30, includeKeeper = tru
   };
 }
 
-test('keeps well represented clubs and ranks them by RPL seasons', () => {
+test('includes short archives with a complete squad and ranks by RPL seasons', () => {
   const result = selectOneClubCandidates([club('5 seasons', 5), club('9 seasons', 9), club('4 seasons', 4)]);
-  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '5 seasons']);
+  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '5 seasons', '4 seasons']);
   assert.equal(result[0].playerCount, 30);
 });
 
 test('excludes clubs without an 11-player pool or goalkeeper data', () => {
   assert.deepEqual(selectOneClubCandidates([
-    club('small roster', 26, 29),
+    club('small roster', 26, 19),
     club('no keeper', 26, 30, false),
   ]), []);
 });
@@ -32,6 +32,6 @@ test('counts distinct players across seasons, not every player-season row', () =
   assert.deepEqual(selectOneClubCandidates([onePlayerPool]), []);
 });
 
-test('excludes an otherwise playable club appearing in only four of nine seasons', () => {
-  assert.equal(selectOneClubCandidates([club('rare club', 4, 35)]).length, 0);
+test('includes a single supplied season when it has enough players by line', () => {
+  assert.equal(selectOneClubCandidates([club('single season', 1, 26)]).length, 1);
 });

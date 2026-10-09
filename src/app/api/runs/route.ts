@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       });
       if (!club) return NextResponse.json({ error: 'Клуб не найден' }, { status: 400 });
       if (gameMode === 'single_club' && !selectOneClubCandidates([club]).length) {
-        return NextResponse.json({ error: 'Выбери клуб с минимум 5 доступными сезонами РПЛ' }, { status: 400 });
+        return NextResponse.json({ error: 'Выбери клуб с достаточным составом и игроками на всех линиях' }, { status: 400 });
       }
     }
 

@@ -8,8 +8,10 @@ export interface OneClubCandidate {
 
 /** Rank clubs by unique season appearances across available roster editions. */
 export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[]) {
-  const minSeasons = 5;
-  const minPlayers = 30;
+  // A complete supplied squad can support One Club even when its club has
+  // fewer recorded seasons. Keep a margin above the eleven draft slots.
+  const minSeasons = 1;
+  const minPlayers = 20;
   return clubs.map((club) => {
     const players = new Map<string, string>();
     for (const season of club.seasons) {
