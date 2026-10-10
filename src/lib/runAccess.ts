@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { sessionUser } from '@/lib/telegramSession';
 
 const COOKIE_NAME = 'run_access';
 const DEVELOPMENT_SECRET = '30-0-local-development-only';
@@ -41,33 +43,28 @@ export function setRunAccessCookie(response: NextResponse, runId: string): void 
   });
 }
 
-export function authorizeRun(request: Request, runId: string): NextResponse | null {
+export async function authorizeRun(request: Request, runId: string): Promise<NextResponse | null> {
   try {
     const value = cookieValue(request);
-    if (!value) return unauthorized();
-
-    const separator = value.indexOf('.');
-    if (separator < 1) return unauthorized();
-
-    const tokenRunId = value.slice(0, separator);
-    const supplied = value.slice(separator + 1);
-    const expected = signature(runId);
-
-    if (tokenRunId !== runId) return unauthorized();
-
-    const suppliedBuffer = Buffer.from(supplied);
-    const expectedBuffer = Buffer.from(expected);
-    if (
-      suppliedBuffer.length !== expectedBuffer.length ||
-      !timingSafeEqual(suppliedBuffer, expectedBuffer)
-    ) {
-      return unauthorized();
+    if (value) {
+      const separator = value.indexOf('.');
+      if (separator > 0 && value.slice(0, separator) === runId) {
+        const suppliedBuffer = Buffer.from(value.slice(separator + 1));
+        const expectedBuffer = Buffer.from(signature(runId));
+        if (suppliedBuffer.length === expectedBuffer.length && timingSafeEqual(suppliedBuffer, expectedBuffer)) return null;
+      }
     }
-
-    return null;
   } catch {
-    return unauthorized();
+    // A rotated signing key or malformed old cookie should not strand an owner.
   }
+  // The browser may have lost its run-specific cookie after an app relaunch.
+  // A valid Telegram session still proves ownership of an unfinished run.
+  const userId = sessionUser(request);
+  if (userId) {
+    const owned = await db.gameRun.findFirst({ where: { id: runId, userId, completed: false }, select: { id: true } });
+    if (owned) return null;
+  }
+  return unauthorized();
 }
 
 function unauthorized(): NextResponse {

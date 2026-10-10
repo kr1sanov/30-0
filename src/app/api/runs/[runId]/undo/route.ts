@@ -11,7 +11,7 @@ export async function POST(
     const { runId } = await params;
     const limited = enforceRateLimit(request, 'runs:undo', { limit: 60, windowMs: 60_000 });
     if (limited) return limited;
-    const denied = authorizeRun(request, runId);
+    const denied = await authorizeRun(request, runId);
     if (denied) return denied;
 
     const body = await request.json().catch(() => ({}));

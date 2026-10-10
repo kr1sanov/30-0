@@ -48,6 +48,9 @@ test('keeps multiplayer entry, lobby and series UI in the selected language', ()
 });
 
 test('translates challenge and story labels without changing results', () => {
+  assert.equal(translateInterface('Играть →'), 'Play →');
+  assert.equal(translateInterface('30-0 · Драфт РПЛ'), '30–0 · RPL Draft');
+  assert.equal(translateInterface('3 сезонов · 52 игроков · 2009–2012'), '3 seasons · 52 players · 2009–2012');
   assert.equal(translateInterface('Челленджи'), 'Challenges');
   assert.equal(translateInterface('Вагнер навсегда'), 'Vagner Forever');
   assert.equal(translateInterface('Сохранить изображение'), 'Save image');

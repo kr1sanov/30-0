@@ -5,7 +5,7 @@ import { ALL_POSITIONS } from '@/lib/positions';
 
 type Season = { id: string; label: string; startYear: number; endYear: number; matchesPerTeam: number; clubs: { id: string; name: string; players: number }[] };
 type Club = { id: string; nameRu: string; nameEn: string | null };
-type RosterPlayer = { id: string; rating: number; primeRating: number; mainPosition: string; otherPositions: string | null; sourceUrl: string | null; player: { fullName: string; alias: string | null } };
+type RosterPlayer = { id: string; rating: number; primeRating: number; mainPosition: string; otherPositions: string | null; sourceUrl: string | null; player: { id: string; fullName: string; alias: string | null } };
 type Summary = { total: number; clubs: number; newClubs: number; newPlayers: number; inserted: number; updated: number };
 const panel = 'rounded-2xl border border-white/10 bg-[#151a18] p-5';
 const input = 'min-h-10 w-full rounded-lg border border-white/10 bg-[#080e0c] px-3 py-2 text-white outline-none focus:border-emerald-500';
@@ -119,7 +119,7 @@ export default function AdminRosterManager({ onChanged }: { onChanged: () => voi
         </form>
       </section>
       <section className={panel}><h2 className="text-lg font-semibold">Игроки сезона</h2><div className="mt-4 flex flex-wrap gap-2"><select aria-label="Сезон" className={`${input} w-auto`} value={seasonId} onChange={e => { setSeasonId(e.target.value); setPreview(null); }}>{seasons.map(season => <option key={season.id} value={season.id}>{season.label}</option>)}</select><select aria-label="Клуб" className={`${input} w-auto`} value={clubSeasonId} onChange={e => setClubSeasonId(e.target.value)}>{selectedSeason?.clubs.map(club => <option key={club.id} value={club.id}>{club.name} · {club.players}</option>)}</select></div>
-        <div className="mt-4 max-h-[650px] space-y-2 overflow-auto">{roster.map(row => <RosterEditor key={row.id} row={row} busy={busy} onSave={(rating, primeRating, mainPosition) => void execute(async () => { await api('/api/admin/rosters', 'PATCH', { id: row.id, rating, primeRating, mainPosition, otherPositions: row.otherPositions || '' }); setNotice(`Обновлён ${row.player.fullName}`); setRoster((await api<{ players: RosterPlayer[] }>(`/api/club-seasons/${clubSeasonId}/players`)).players); })} />)}{!roster.length && <p className="text-sm text-white/50">В этом клубе пока нет игроков.</p>}</div>
+        <div className="mt-4 max-h-[650px] space-y-2 overflow-auto">{roster.map(row => <RosterEditor key={row.id} row={row} busy={busy} onSave={(rating, primeRating, mainPosition, alias) => void execute(async () => { await api('/api/admin/rosters', 'PATCH', { id: row.id, rating, primeRating, mainPosition, otherPositions: row.otherPositions || '' }); if (alias.trim() !== (row.player.alias ?? '')) await api(`/api/admin/players/${row.player.id}/alias`, 'PATCH', { alias }); setNotice(`Обновлён ${row.player.fullName}`); setRoster((await api<{ players: RosterPlayer[] }>(`/api/club-seasons/${clubSeasonId}/players`)).players); })} />)}{!roster.length && <p className="text-sm text-white/50">В этом клубе пока нет игроков.</p>}</div>
       </section>
     </div>
     <aside className={`${panel} h-fit xl:sticky xl:top-5`}><h2 className="text-lg font-semibold">Правила заполнения</h2><a href="/examples/roster-import-example.csv" download="roster-import-example.csv" className="mt-4 inline-flex rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-300 hover:bg-emerald-400/10">↓ Скачать заполненный CSV-образец</a><p className="mt-2 text-xs text-white/50">Образец: подтверждённые строки FIFA 10 за 2009 год. Для нового сезона замени их актуальными проверенными данными.</p>
@@ -129,10 +129,18 @@ export default function AdminRosterManager({ onChanged }: { onChanged: () => voi
   </div>;
 }
 
-function RosterEditor({ row, busy, onSave }: { row: RosterPlayer; busy: boolean; onSave: (rating: number, primeRating: number, mainPosition: string) => void }) {
+function RosterEditor({ row, busy, onSave }: { row: RosterPlayer; busy: boolean; onSave: (rating: number, primeRating: number, mainPosition: string, alias: string) => void }) {
   const [rating, setRating] = useState(row.rating);
   const [primeRating, setPrimeRating] = useState(row.primeRating);
   const [position, setPosition] = useState(row.mainPosition);
-  useEffect(() => { setRating(row.rating); setPrimeRating(row.primeRating); setPosition(row.mainPosition); }, [row.rating, row.primeRating, row.mainPosition]);
-  return <div className="grid items-center gap-2 rounded-lg bg-white/5 p-3 text-sm md:grid-cols-[minmax(170px,1fr)_70px_70px_85px_auto]"><span>{row.player.alias || row.player.fullName}</span><input aria-label={`Рейтинг ${row.player.fullName}`} className={input} type="number" min={1} max={100} value={rating} onChange={e => setRating(Number(e.target.value))} /><input aria-label={`Прайм ${row.player.fullName}`} className={input} type="number" min={1} max={100} value={primeRating} onChange={e => setPrimeRating(Number(e.target.value))} /><select aria-label={`Позиция ${row.player.fullName}`} className={input} value={position} onChange={e => setPosition(e.target.value)}>{ALL_POSITIONS.map(pos => <option key={pos}>{pos}</option>)}</select><button className={action} disabled={busy || primeRating < rating} onClick={() => onSave(rating, primeRating, position)}>Сохранить</button></div>;
+  const [alias, setAlias] = useState(row.player.alias ?? '');
+  useEffect(() => { setRating(row.rating); setPrimeRating(row.primeRating); setPosition(row.mainPosition); setAlias(row.player.alias ?? ''); }, [row.rating, row.primeRating, row.mainPosition, row.player.alias]);
+  return <div className="grid items-center gap-2 rounded-lg bg-white/5 p-3 text-sm md:grid-cols-[minmax(170px,1fr)_minmax(120px,1fr)_70px_70px_85px_auto]">
+    <span title={row.player.fullName} className="truncate">{row.player.fullName}</span>
+    <input aria-label={`Псевдоним ${row.player.fullName}`} title="Отображается в драфте; исходное имя сохраняется" placeholder="Псевдоним" maxLength={50} className={input} value={alias} onChange={e => setAlias(e.target.value)} />
+    <input aria-label={`Рейтинг ${row.player.fullName}`} title="Уровень в этом сезоне" className={input} type="number" min={1} max={100} value={rating} onChange={e => setRating(Number(e.target.value))} />
+    <input aria-label={`Прайм ${row.player.fullName}`} title="Лучший уровень игрока" className={input} type="number" min={1} max={100} value={primeRating} onChange={e => setPrimeRating(Number(e.target.value))} />
+    <select aria-label={`Позиция ${row.player.fullName}`} className={input} value={position} onChange={e => setPosition(e.target.value)}>{ALL_POSITIONS.map(pos => <option key={pos}>{pos}</option>)}</select>
+    <button className={action} disabled={busy || !Number.isInteger(rating) || rating < 1 || rating > 100 || !Number.isInteger(primeRating) || primeRating < rating || primeRating > 100} onClick={() => onSave(rating, primeRating, position, alias)}>Сохранить</button>
+  </div>;
 }

@@ -85,7 +85,7 @@ export default function ChallengesClient() {
     try {
       const unfinished = resultFor(issue).runs.find(run => !run.completed);
       if (unfinished) {
-        await useGameStore.getState().loadActiveRunFromCloud(issue.mode, undefined, issue.id);
+        await useGameStore.getState().loadActiveRunFromCloud(issue.mode, undefined, issue.id, true);
         if (useGameStore.getState().runId === unfinished.id) { router.push(`/?challenge=${encodeURIComponent(issue.id)}`); return; }
       }
       await useGameStore.getState().startStarChallenge(issue.mode, issue.id);

@@ -1388,3 +1388,6 @@ html {
 .music-logo-en { display: none; }
 html[data-language="en"] .music-logo-ru { display: none; }
 html[data-language="en"] .music-logo-en { display: block; }
+.hero-logo-en { display: none; }
+html[data-language="en"] .hero-logo-ru { display: none; }
+html[data-language="en"] .hero-logo-en { display: block; }

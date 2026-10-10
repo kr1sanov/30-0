@@ -3,6 +3,7 @@ import { FORMATIONS } from '@/lib/positions';
 import { NextResponse } from 'next/server';
 import { NextRequest } from 'next/server';
 import { sessionUser } from '@/lib/telegramSession';
+import { setRunAccessCookie } from '@/lib/runAccess';
 
 /**
  * GET /api/runs/active?userId=xxx
@@ -68,7 +69,7 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       activeRun: {
         id: run.id,
         gameMode: run.gameMode,
@@ -90,6 +91,10 @@ export async function GET(request: NextRequest) {
         createdAt: run.createdAt,
       },
     });
+    // A signed-in user can restore their own draft on another device or after
+    // the run-specific cookie expires. Refresh that cookie on every restore.
+    setRunAccessCookie(response, run.id);
+    return response;
   } catch (error) {
     console.error('Failed to fetch active run:', error);
     return NextResponse.json(

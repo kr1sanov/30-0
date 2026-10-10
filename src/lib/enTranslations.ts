@@ -2,6 +2,13 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Играть →':'Play →',
+  '30-0 · Драфт РПЛ':'30–0 · RPL Draft',
+  'Не удалось восстановить драфт. Проверь подключение и попробуй снова.':'Could not restore your draft. Check your connection and try again.',
+  'Run access denied':'Your draft session expired. Choose Continue to restore it.',
+  'Отображается в драфте; исходное имя сохраняется':'Shown in drafts; the original name stays in the database',
+  'Уровень в этом сезоне':'Rating for this season',
+  'Лучший уровень игрока':'Player’s best rating',
   'Гость или бот':'Guest or bot', 'Обновить ↻':'Refresh ↻', 'Режим':'Mode',
   'С':'From', 'По':'To', 'Поиск':'Search', 'Активность':'Activity',
   'Активные':'Active', 'Без активности':'Inactive', 'Новые за период':'New during period',
@@ -1035,6 +1042,7 @@ export function translateInterface(value: string): string {
     [/^(\d+) тренеров доступны$/, '$1 managers available'],
     [/^(\d+) поз\. осталось$/, '$1 positions left'],
     [/^(\d+) сезонов · (\d+) игроков$/, '$1 seasons · $2 players'],
+    [/^(\d+) сезонов · (\d+) игроков · (.+)$/, '$1 seasons · $2 players · $3'],
     [/^(\d+) сезонов · (\d{4})–(\d{4}) · (\d+) игроков$/, '$1 seasons · $2–$3 · $4 players'],
     [/^(\d+) сезонов \((\d{4})–(\d{4})\) · (\d+) игроков$/, '$1 seasons ($2–$3) · $4 players'],
     [/^(\d+) сезонов · (\d+) игроков · (.+)$/, '$1 seasons · $2 players · $3'],

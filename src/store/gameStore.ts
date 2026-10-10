@@ -182,8 +182,8 @@ interface GameState {
   syncRunWithDB: () => Promise<boolean>;
   resetGame: () => void;
   goHome: () => void;
-  resumeGame: () => void;
-  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string, issueId?: string) => Promise<void>;
+  resumeGame: () => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -1316,10 +1316,33 @@ export const useGameStore = create<GameState>()(
         }
       },
 
-      resumeGame: () => {
+      resumeGame: async () => {
         const { runId, slots, seasonResult, resumeScreen, screen, config, lastConfig } = get();
+        if (!runId) return;
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
         const restored = lastConfig?.clubFilter ? lastConfig : config.clubFilter ? config : lastConfig ?? config;
+        const mode = restored.clubFilter ? 'single_club'
+          : restored.gameMode === 'challenge_vagner' || restored.gameMode === 'challenge_dzyuba'
+            ? restored.gameMode : 'classic';
+
+        // The stored run may belong to a previous login or have an expired
+        // run cookie. Verify ownership and refresh access before opening it.
+        try {
+          const params = new URLSearchParams({ mode });
+          if (mode === 'single_club' && restored.clubFilter) params.set('clubId', restored.clubFilter);
+          if (restored.challengeIssueId) params.set('issueId', restored.challengeIssueId);
+          const response = await fetch(`/api/runs/active?${params}`, { cache: 'no-store' });
+          if (!response.ok) throw new Error('Could not restore draft');
+          const { activeRun } = await response.json();
+          if (!activeRun || activeRun.id !== runId) {
+            if (activeRun) await get().loadActiveRunFromCloud(mode, restored.clubFilter, restored.challengeIssueId, true);
+            else get().resetGame();
+            return;
+          }
+        } catch {
+          set({ lastDraftError: 'Не удалось восстановить драфт. Проверь подключение и попробуй снова.' });
+          return;
+        }
 
         // Always clear ALL stale transient UI state on resume
         const clearTransient = {
@@ -1335,21 +1358,9 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
-        // A changed setup screen can overwrite local presentation settings. The
-        // server's run keeps the selected club, so restore it when rejoining.
-        if (runId) void fetch(`/api/runs/active?mode=${restored.clubFilter ? 'single_club&clubId=' + encodeURIComponent(restored.clubFilter) : restored.gameMode ?? 'classic'}`, { cache: 'no-store' }).then(async response => {
-          if (!response.ok) return;
-          const { activeRun } = await response.json();
-          if (!activeRun || activeRun.id !== get().runId || activeRun.id !== runId) return;
-          set(state => ({ config: { ...state.config, formation: activeRun.formation,
-            clubFilter: activeRun.clubFilter ?? undefined, clubName: activeRun.clubName ?? undefined,
-            gameMode: activeRun.gameMode,
-            ratingMode: activeRun.ratingMode, eraStartYear: activeRun.eraStartYear,
-            eraEndYear: activeRun.eraEndYear } }));
-        }).catch(() => undefined);
       },
 
-      loadActiveRunFromCloud: async (mode = 'classic', clubId, issueId) => {
+      loadActiveRunFromCloud: async (mode = 'classic', clubId, issueId, openDraft = false) => {
         try {
           const response = await fetch(`/api/runs/active?mode=${mode}${clubId ? `&clubId=${encodeURIComponent(clubId)}` : ''}${issueId ? `&issueId=${encodeURIComponent(issueId)}` : ''}`, { cache: 'no-store' });
           if (!response.ok) return;
@@ -1361,6 +1372,7 @@ export const useGameStore = create<GameState>()(
           if (activeRun.id === get().runId && get().slots.length) {
             if (mode.startsWith('challenge_') && get().config.ratingMode !== 'prime')
               set(state => ({ config: { ...state.config, ratingMode: 'prime' } }));
+            if (openDraft) set(state => ({ screen: state.slots.every(slot => !!slot.playerId) ? 'pre-match' : 'draft' }));
             return;
           }
           const formation = FORMATIONS.find((item) => item.id === activeRun.formation);
@@ -1409,7 +1421,7 @@ export const useGameStore = create<GameState>()(
           set({ runId: activeRun.id, config, lastConfig: config, slots,
             rerollsLeft: Math.max(0, activeRun.rerollsTotal - activeRun.rerollsUsed),
             rerollsUsed: activeRun.rerollsUsed,
-            screen: slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft',
+            screen: openDraft ? (slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft') : get().screen,
             resumeScreen: slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft' });
         } catch (error) {
           console.error('Failed to restore active run:', error);
@@ -1530,8 +1542,6 @@ export const useGameStore = create<GameState>()(
       // transient UI states that must NOT be persisted — they are cleared on resume.
       // Keep the last stable game stage even when the user navigates home or to the profile.
       partialize: (state) => {
-        const stableScreens: GameScreen[] = ['home', 'draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards', 'profile', 'leaderboard'];
-        const persistedScreen = stableScreens.includes(state.screen) ? state.screen : 'home';
         const resumeScreen = state.screen === 'simulation' ? 'pre-match'
           : ['draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards'].includes(state.screen)
             ? state.screen : state.resumeScreen;
@@ -1549,10 +1559,15 @@ export const useGameStore = create<GameState>()(
           config: state.config,
           seasonResult: state.seasonResult,
 
-          screen: persistedScreen,
+          screen: 'home' as GameScreen,
           resumeScreen,
           dailyChallenge: state.dailyChallenge,
         };
+      },
+      onRehydrateStorage: () => state => {
+        // Old clients persisted the draft screen. Landing always starts at home;
+        // the draft remains available through an explicit Continue action.
+        if (state) state.setScreen('home');
       },
       migrate: (persistedState: unknown, version: number) => {
         // Every older browser cache must discard runs and achievements from

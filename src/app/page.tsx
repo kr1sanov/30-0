@@ -326,7 +326,8 @@ function HomePage() {
         <LanguageSwitcher />
 
         <div className="relative mb-2 h-24 w-[min(90vw,360px)] overflow-hidden sm:h-28 sm:w-[390px]">
-          <Image src="/brand-draft-rpl.png" alt="30-0 · Драфт РПЛ" width={1672} height={941} priority className="absolute left-1/2 top-1/2 h-auto w-full max-w-none -translate-x-1/2 -translate-y-1/2" />
+          <Image src="/brand-draft-rpl-ru.webp" alt="30-0 · Драфт РПЛ" width={1672} height={941} priority className="hero-logo-ru absolute left-1/2 top-1/2 h-auto w-full max-w-none -translate-x-1/2 -translate-y-1/2" />
+          <Image src="/brand-draft-rpl-en.webp" alt="30-0 · Draft RPL" width={1672} height={941} className="hero-logo-en absolute left-1/2 top-1/2 h-auto w-full max-w-none -translate-x-1/2 -translate-y-1/2" />
         </div>
         {/* Huge "30-0" Title */}
         <div className="relative mb-3">
@@ -367,13 +368,10 @@ function HomePage() {
         >
           {/* Primary CTA — full width green */}
           <Button
-            onClick={() => {
-              setConfig({ gameMode: 'classic', clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
-              setScreen('setup');
-            }}
+            onClick={() => document.getElementById('game-modes')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             className="w-full h-14 text-lg font-bold bg-[#00C896] hover:bg-[#00A67A] text-[#0A0A0A] rounded-2xl transition-colors active:scale-[0.97] shadow-lg shadow-[#00C896]/20"
           >
-            Играть 30-0 →
+            Играть →
           </Button>
 
           {/* Secondary — dark outline */}
@@ -403,7 +401,8 @@ function HomePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.1 }}
-        className="px-4 py-6"
+        id="game-modes"
+        className="scroll-mt-20 px-4 py-6"
       >
         <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
           Игровые режимы
@@ -503,9 +502,7 @@ function HomePage() {
           {databaseStats?.firstYear && databaseStats?.lastYear && (
             <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
           )}
-          <p className="mt-2 text-center text-xs text-[#00C896]">Добавлены составы и рейтинги 2006–2009</p>
           <div className="mt-5 border-t border-white/10 pt-5 text-center" aria-live="polite">
-            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-[#00C896]"><span className="h-2 w-2 rounded-full bg-[#00C896] animate-pulse" /> И счёт растёт</span>
             <strong className="mt-2 block text-4xl font-black tabular-nums text-white sm:text-5xl">{databaseStats?.simulatedSeasons?.toLocaleString('ru-RU') ?? '…'}</strong>
             <span className="mt-1 block text-sm text-[#9CA3AF]">сезонов уже сыграно</span>
           </div>
@@ -1308,7 +1305,7 @@ export default function Home() {
       const issueId = new URLSearchParams(location.search).get('challenge');
       const issue = issueId && findWeeklyChallenge(issueId);
       if (issue) {
-        await useGameStore.getState().loadActiveRunFromCloud(issue.mode, undefined, issue.id);
+        await useGameStore.getState().loadActiveRunFromCloud(issue.mode, undefined, issue.id, true);
         window.history.replaceState(window.history.state, '', '/');
         return;
       }
