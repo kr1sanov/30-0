@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const mode = request.nextUrl.searchParams.get('mode') ?? 'classic';
     const clubId = request.nextUrl.searchParams.get('clubId');
+    const issueId = request.nextUrl.searchParams.get('issueId');
     if (!['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba'].includes(mode) || (mode === 'single_club' && !clubId))
       return NextResponse.json({ error: 'Выбери режим и клуб' }, { status: 400 });
 
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
         userId,
         multiplayerSeat: null,
         gameMode: mode,
+        ...(mode.startsWith('challenge_') && issueId ? { challengeIssueId: issueId } : {}),
         clubFilter: mode === 'single_club' ? clubId : null,
       },
       include: {
@@ -70,6 +72,7 @@ export async function GET(request: NextRequest) {
       activeRun: {
         id: run.id,
         gameMode: run.gameMode,
+        challengeIssueId: run.challengeIssueId,
         formation: run.formation,
         difficulty: run.difficulty,
         draftMode: run.draftMode,

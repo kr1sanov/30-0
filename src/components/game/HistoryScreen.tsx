@@ -14,6 +14,7 @@ import {
   Target,
 } from 'lucide-react';
 import ResultShareCard from '@/components/share/ResultShareCard';
+import { findWeeklyChallenge } from '@/lib/weeklyChallenges';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,6 +47,8 @@ interface GameRunData {
   teamName: string | null;
   gameMode?: 'classic' | 'single_club' | 'multiplayer' | 'challenge';
   challengeId?: string | null;
+  challengeIssueId?: string | null;
+  challengeSucceeded?: boolean | null;
   multiplayerSeat?: { roomCode: string } | null;
   opponents?: string[];
   clubName?: string | null;
@@ -385,7 +388,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-semibold text-[#9CA3AF]">{modes.find(([key]) => key === (run.gameMode ?? 'classic'))?.[1]}</span>
-                        {run.challengeId && <span className="text-[10px] font-bold text-sky-300">{run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба'}</span>}
+                        {run.challengeId && <span className="text-[10px] font-bold text-sky-300">{run.challengeIssueId ? findWeeklyChallenge(run.challengeIssueId)?.titleRu ?? (run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба') : run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба'}</span>}
+                        {run.challengeIssueId && <span className={`text-[10px] font-bold ${run.challengeSucceeded ? 'text-emerald-300' : 'text-[#9CA3AF]'}`}>{run.challengeSucceeded ? 'Задание выполнено' : 'Задание не выполнено'}</span>}
                         {/* Formation */}
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
                           {run.formation}

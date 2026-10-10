@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     await db.$transaction(async tx => {
       const referrer = await tx.user.findUnique({ where: { referralCode: safeSiteReferral }, select: { id: true } });
       if (referrer && referrer.id !== user.id) {
-        const changed = await tx.user.updateMany({ where: { id: user.id, referredBy: null }, data: { referredBy: safeSiteReferral } });
+        const changed = await tx.user.updateMany({ where: { id: user.id, referredBy: null }, data: { referredBy: safeSiteReferral, referralJoinedAt: new Date() } });
         if (changed.count) await tx.user.update({ where: { id: referrer.id }, data: { referralCount: { increment: 1 } } });
       }
     });
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
             ...data,
             lastActiveAt: new Date(),
             ...(!existing.referralCode ? { referralCode: `rpl${randomBytes(6).toString('hex')}` } : {}),
-            ...(referrer ? { referredBy: safeReferralCode } : {}),
+            ...(referrer ? { referredBy: safeReferralCode, referralJoinedAt: new Date() } : {}),
           },
         });
         if (referrer) {
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
           providerId,
           displayName: verified.firstName || verified.username || 'Игрок',
           referralCode: `rpl${randomBytes(6).toString('hex')}`,
-          ...(referrer ? { referredBy: safeReferralCode } : {}),
+          ...(referrer ? { referredBy: safeReferralCode, referralJoinedAt: new Date() } : {}),
         },
       });
       if (referrer) {

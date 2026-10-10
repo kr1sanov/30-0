@@ -118,6 +118,7 @@ model User {
 
   referralCode     String?  @unique @db.VarChar(50)
   referredBy       String?  @db.VarChar(50)
+  referralJoinedAt DateTime?
   referralCount    Int      @default(0)
 
   runs             GameRun[]
@@ -185,6 +186,7 @@ model GameRun {
   difficulty   String   @default("normal") @db.VarChar(20)
   draftMode    String   @default("squad_first") @db.VarChar(30)
   gameMode     String @default("classic")
+  challengeIssueId String? @db.VarChar(80)
   ratingMode   String   @default("season") @db.VarChar(20)
   eraFilter    String   @default("all") @db.VarChar(20)
   rerollsTotal Int      @default(1)
@@ -221,6 +223,7 @@ model GameRun {
   @@index([completed])
   @@index([completed, points])
   @@index([createdAt])
+  @@index([challengeIssueId])
 }
 
 model GameSlot {

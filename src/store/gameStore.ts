@@ -183,7 +183,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => void;
-  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string) => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string, issueId?: string) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -194,7 +194,7 @@ interface GameState {
   loadProfileFromCloud: () => Promise<void>;
   setAvatarEmoji: (emoji: string) => void;
   startDailyChallenge: (challenge: DailyChallenge) => void;
-  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba') => Promise<void>;
+  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba', issueId: string) => Promise<void>;
   clearError: () => void;
   setError: (error: string) => void;
 }
@@ -1349,13 +1349,13 @@ export const useGameStore = create<GameState>()(
         }).catch(() => undefined);
       },
 
-      loadActiveRunFromCloud: async (mode = 'classic', clubId) => {
+      loadActiveRunFromCloud: async (mode = 'classic', clubId, issueId) => {
         try {
-          const response = await fetch(`/api/runs/active?mode=${mode}${clubId ? `&clubId=${encodeURIComponent(clubId)}` : ''}`, { cache: 'no-store' });
+          const response = await fetch(`/api/runs/active?mode=${mode}${clubId ? `&clubId=${encodeURIComponent(clubId)}` : ''}${issueId ? `&issueId=${encodeURIComponent(issueId)}` : ''}`, { cache: 'no-store' });
           if (!response.ok) return;
           const { activeRun } = await response.json();
           if (!activeRun) {
-            if (get().runId && get().config.gameMode === mode && (mode !== 'single_club' || get().config.clubFilter === clubId)) get().resetGame();
+            if (get().runId && get().config.gameMode === mode && (!issueId || get().config.challengeIssueId === issueId) && (mode !== 'single_club' || get().config.clubFilter === clubId)) get().resetGame();
             return;
           }
           if (activeRun.id === get().runId && get().slots.length) return;
@@ -1375,6 +1375,7 @@ export const useGameStore = create<GameState>()(
             nationalityFilter: activeRun.nationalityFilter ?? undefined,
             teamName: activeRun.teamName ?? undefined,
             gameMode: activeRun.gameMode,
+            challengeIssueId: activeRun.challengeIssueId ?? undefined,
           };
           const savedByIndex = new Map<number, (typeof activeRun.slots)[number]>();
           for (const saved of activeRun.slots) {
@@ -1502,10 +1503,10 @@ export const useGameStore = create<GameState>()(
         });
       },
 
-      startStarChallenge: async (id) => {
+      startStarChallenge: async (id, issueId) => {
         get().resetGame();
         set({ config: { ...defaultConfig, formation: '4-3-3', gameMode: id,
-          ratingMode: 'season', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
+          challengeIssueId: issueId, ratingMode: 'season', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
           dailyChallenge: null, lastDraftError: null });
         await get().startRun();
       },

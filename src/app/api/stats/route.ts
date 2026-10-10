@@ -5,12 +5,13 @@ export async function GET() {
   try {
     const activeYears = { startYear: { gte: 2006, lte: 2021 } };
     const activePlayers = { clubSeason: { season: activeYears } };
-    const [clubs, seasons, players, playerSeasons, gameRuns, years] = await Promise.all([
+    const [clubs, seasons, players, playerSeasons, gameRuns, simulatedSeasons, years] = await Promise.all([
       db.club.count({ where: { seasons: { some: { season: activeYears, players: { some: {} } } } } }),
       db.season.count({ where: { ...activeYears, clubSeasons: { some: { players: { some: {} } } } } }),
       db.player.count({ where: { seasons: { some: activePlayers } } }),
       db.playerSeason.count({ where: activePlayers }),
       db.gameRun.count(),
+      db.gameRun.count({ where: { completed: true } }),
       db.season.aggregate({ where: activeYears, _min: { startYear: true }, _max: { endYear: true } }),
     ]);
 
@@ -20,6 +21,7 @@ export async function GET() {
       players,
       playerSeasons,
       gameRuns,
+      simulatedSeasons,
       firstYear: years._min.startYear,
       lastYear: years._max.endYear,
     });

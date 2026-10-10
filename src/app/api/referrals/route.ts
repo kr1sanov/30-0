@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       referralCode: user.referralCode,
       referralCount: user.referralCount,
       referredBy: user.referredBy,
-      inviteUrl: user.referralCode ? `https://t.me/RPL30_bot?startapp=${encodeURIComponent(user.referralCode)}` : null,
+      inviteUrl: user.referralCode ? `https://30-0.рф/?ref=${encodeURIComponent(user.referralCode)}` : null,
       referredUsers,
     });
   } catch (error) {

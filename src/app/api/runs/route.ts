@@ -5,6 +5,8 @@ import { enforceRateLimit } from '@/lib/rateLimit';
 import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionUser } from '@/lib/telegramSession';
+import { challengeSucceeded, findWeeklyChallenge } from '@/lib/weeklyChallenges';
+import { getArchiveAccess } from '@/lib/challengeAccess';
 
 export async function GET(request: NextRequest) {
   try {
@@ -62,6 +64,10 @@ export async function GET(request: NextRequest) {
         .map(seat => seat.isBot ? seat.name : seat.user?.username ? `@${seat.user.username}` : seat.name) ?? [],
       gameMode: run.multiplayerSeat ? 'multiplayer' : run.gameMode.startsWith('challenge_') ? 'challenge' : run.clubFilter ? 'single_club' : 'classic',
       challengeId: run.gameMode.startsWith('challenge_') ? run.gameMode : null,
+      challengeIssueId: run.challengeIssueId,
+      challengeSucceeded: run.challengeIssueId && run.completed
+        ? (() => { const issue = findWeeklyChallenge(run.challengeIssueId); return issue ? challengeSucceeded(issue, run) : false; })()
+        : null,
       clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
     })));
   } catch (error) {
@@ -86,6 +92,16 @@ export async function POST(request: NextRequest) {
     const gameMode = body.gameMode || 'classic';
     if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
+    }
+    const isWeeklyChallenge = gameMode === 'challenge_vagner' || gameMode === 'challenge_dzyuba';
+    const issue = isWeeklyChallenge && typeof body.challengeIssueId === 'string'
+      ? findWeeklyChallenge(body.challengeIssueId) : null;
+    if (isWeeklyChallenge && (!issue || issue.mode !== gameMode)) {
+      return NextResponse.json({ error: 'Выбери действующий челлендж' }, { status: 400 });
+    }
+    if (issue && new Date(issue.endsAt).getTime() <= Date.now()) {
+      const access = await getArchiveAccess(userId);
+      if (!access.unlockedUntil) return NextResponse.json({ error: 'Архив закрыт. Пригласи одного игрока, чтобы открыть его на 24 часа.' }, { status: 403 });
     }
     if (gameMode === 'single_club' && !clubFilter) {
       return NextResponse.json({ error: 'Выбери клуб' }, { status: 400 });
@@ -166,6 +182,7 @@ export async function POST(request: NextRequest) {
         difficulty: safeDifficulty,
         draftMode: draftMode || 'squad_first',
         gameMode,
+        ...(issue ? { challengeIssueId: issue.id } : {}),
         ratingMode: ratingMode || 'season',
         eraFilter: gameMode === 'single_club' ? 'all' : eraFilter || 'all',
         eraStartYear: gameMode === 'single_club' ? 2000 : eraStartYear ?? 2006,

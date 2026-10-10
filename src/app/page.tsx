@@ -45,6 +45,7 @@ const STEPS = [
 const GAME_MODES = [
   { emoji: '⚔️', title: 'Обычный драфт', desc: 'Собери величайшую сборную РПЛ всех времён', active: true, color: '#3b82f6', gameMode: 'classic' as const },
   { emoji: '🏟️', title: 'Один клуб', desc: 'Собери состав из игроков одного клуба РПЛ', active: true, color: '#00C896', gameMode: 'single_club' as const },
+  { emoji: '🏆', title: 'Челленджи', desc: 'Новые футбольные задания каждую неделю', active: true, color: '#ef4444', gameMode: 'challenges' as const },
   { emoji: '👥', title: 'Мультиплеер', desc: 'Играй с друзьями. Драфт в режиме реального времени.', active: true, color: '#a78bfa', gameMode: 'multiplayer' as const },
 ];
 
@@ -285,7 +286,7 @@ function HomePage() {
   const { setScreen, setConfig, profileStats, runId, config, lastConfig, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-  const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number; firstYear: number | null; lastYear: number | null } | null>(null);
+  const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number; simulatedSeasons: number; firstYear: number | null; lastYear: number | null } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -297,6 +298,19 @@ function HomePage() {
       .then(stats => setDatabaseStats(stats))
       .catch(error => { if (error.name !== 'AbortError') console.error(error); });
     return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'hidden') return;
+      fetch('/api/stats/live', { cache: 'no-store' })
+        .then(response => response.ok ? response.json() : null)
+        .then(data => { if (typeof data?.simulatedSeasons === 'number') setDatabaseStats(previous => previous ? { ...previous, simulatedSeasons: data.simulatedSeasons } : previous); })
+        .catch(() => undefined);
+    };
+    const interval = window.setInterval(refresh, 5_000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { window.clearInterval(interval); document.removeEventListener('visibilitychange', refresh); };
   }, []);
 
   return (
@@ -322,7 +336,9 @@ function HomePage() {
           </span>
         </motion.div>
 
-        <img src="/brand-30-0.svg" alt="Эмблема 30-0 — Драфт Российской Премьер-лиги" width={112} height={112} className="mb-1 h-24 w-24 object-contain sm:h-28 sm:w-28" />
+        <div className="relative mb-2 h-24 w-[min(90vw,360px)] overflow-hidden sm:h-28 sm:w-[390px]">
+          <Image src="/brand-draft-rpl.png" alt="30-0 · Драфт РПЛ" width={1672} height={941} priority className="absolute left-1/2 top-1/2 h-auto w-full max-w-none -translate-x-1/2 -translate-y-1/2" />
+        </div>
         {/* Huge "30-0" Title */}
         <div className="relative mb-3">
           <h1
@@ -413,7 +429,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
-                if (mode.gameMode === 'multiplayer') { location.href = '/multiplayer'; return; }
+                if (mode.gameMode === 'multiplayer' || mode.gameMode === 'challenges') { location.href = `/${mode.gameMode}`; return; }
                 setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
                 setScreen('setup');
               }}
@@ -498,30 +514,13 @@ function HomePage() {
             <p className="mt-3 text-center text-xs text-[#9CA3AF]">Сезоны {databaseStats.firstYear}–{databaseStats.lastYear}</p>
           )}
           <p className="mt-2 text-center text-xs text-[#00C896]">Добавлены составы и рейтинги 2006–2009</p>
+          <div className="mt-5 border-t border-white/10 pt-5 text-center" aria-live="polite">
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-[#00C896]"><span className="h-2 w-2 rounded-full bg-[#00C896] animate-pulse" /> И счёт растёт</span>
+            <strong className="mt-2 block text-4xl font-black tabular-nums text-white sm:text-5xl">{databaseStats?.simulatedSeasons?.toLocaleString('ru-RU') ?? '…'}</strong>
+            <span className="mt-1 block text-sm text-[#9CA3AF]">сезонов уже сыграно</span>
+          </div>
         </div>
       </motion.section>
-
-      {/* ── Featured player challenges ── */}
-      <section className="px-4 py-6" aria-labelledby="star-challenges-title">
-        <h2 id="star-challenges-title" className="mb-2 text-center text-xl font-black text-white sm:text-2xl">Челленджи</h2>
-        <p className="mb-4 text-center text-sm text-[#9CA3AF]">Легенда уже в составе. Собери вокруг него команду и сыграй сезон.</p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={() => void useGameStore.getState().startStarChallenge('challenge_vagner')}
-            className="rounded-2xl border border-red-500/40 bg-gradient-to-br from-red-950/70 to-blue-950/70 p-5 text-left transition hover:border-red-400 focus-visible:outline-2 focus-visible:outline-red-400">
-            <span className="text-xs font-bold uppercase tracking-widest text-red-300">ПФК ЦСКА · 26.09.2026</span>
-            <strong className="mt-2 block text-xl text-white">❤️ Вагнер Лав · Легенда</strong>
-            <span className="mt-2 block text-sm leading-6 text-slate-300">После прощального матча на ВЭБ Арене верни Вагнера в атаку: его лучшая доступная карточка уже в составе. Стань чемпионом и получи достижение «Вагнер навсегда».</span>
-            <span className="mt-4 block font-bold text-red-300">Начать челлендж →</span>
-          </button>
-          <button type="button" onClick={() => void useGameStore.getState().startStarChallenge('challenge_dzyuba')}
-            className="rounded-2xl border border-sky-500/40 bg-gradient-to-br from-sky-950/70 to-slate-900 p-5 text-left transition hover:border-sky-400 focus-visible:outline-2 focus-visible:outline-sky-400">
-            <span className="text-xs font-bold uppercase tracking-widest text-sky-300">АРТЁМ ДЗЮБА · 01.10.2026</span>
-            <strong className="mt-2 block text-xl text-white">🎯 Голевая эпоха</strong>
-            <span className="mt-2 block text-sm leading-6 text-slate-300">После завершения выступлений в профессиональном футболе собери атаку вокруг лучшей доступной карточки Дзюбы. Стань чемпионом и забей командой 60 голов за сезон.</span>
-            <span className="mt-4 block font-bold text-sky-300">Начать челлендж →</span>
-          </button>
-        </div>
-      </section>
 
       {/* ── Playlists ── */}
       <motion.section
@@ -1314,7 +1313,8 @@ export default function Home() {
     if (!isAuthenticated || !epochChecked) return;
     void (async () => {
       await useGameStore.getState().loadProfileFromCloud();
-      await useGameStore.getState().loadActiveRunFromCloud();
+      const current = useGameStore.getState();
+      if (current.screen === 'home' && (!current.runId || current.config.gameMode === 'classic')) await current.loadActiveRunFromCloud();
     })();
   }, [isAuthenticated, epochChecked]);
 
