@@ -1358,7 +1358,11 @@ export const useGameStore = create<GameState>()(
             if (get().runId && get().config.gameMode === mode && (!issueId || get().config.challengeIssueId === issueId) && (mode !== 'single_club' || get().config.clubFilter === clubId)) get().resetGame();
             return;
           }
-          if (activeRun.id === get().runId && get().slots.length) return;
+          if (activeRun.id === get().runId && get().slots.length) {
+            if (mode.startsWith('challenge_') && get().config.ratingMode !== 'prime')
+              set(state => ({ config: { ...state.config, ratingMode: 'prime' } }));
+            return;
+          }
           const formation = FORMATIONS.find((item) => item.id === activeRun.formation);
           if (!formation) return;
           const config: GameConfig = {

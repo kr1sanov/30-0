@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
         formation: run.formation,
         difficulty: run.difficulty,
         draftMode: run.draftMode,
-        ratingMode: run.ratingMode,
+        ratingMode: run.gameMode.startsWith('challenge_') ? 'prime' : run.ratingMode,
         eraFilter: run.eraFilter,
         eraStartYear: run.eraStartYear,
         eraEndYear: run.eraEndYear,

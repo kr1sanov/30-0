@@ -51,7 +51,7 @@ export async function POST(
 
     // Build squad slots for simulation
     // When ratingMode is "prime", use playerPrimeRating instead of season rating
-    const ratingMode = run.ratingMode || 'season';
+    const ratingMode = run.gameMode.startsWith('challenge_') ? 'prime' : run.ratingMode || 'season';
     const squadSlots: SquadSlot[] = filledSlots.map((slot) => ({
       position: slot.slotPosition.split('_')[0],
       playerName: slot.playerName || 'Unknown',
