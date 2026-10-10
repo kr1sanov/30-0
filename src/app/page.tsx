@@ -32,6 +32,7 @@ import { clubThemeStyle } from '@/lib/clubThemes';
 import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import { useTelegram } from '@/hooks/use-telegram';
 import Image from 'next/image';
+import { findWeeklyChallenge } from '@/lib/weeklyChallenges';
 
 /* ─── Step data ─── */
 const STEPS = [
@@ -322,19 +323,7 @@ function HomePage() {
         transition={{ duration: 0.4 }}
         className="flex flex-col items-center justify-center text-center px-4 pt-4 sm:pt-8 pb-8"
       >
-        {/* Badge */}
         <LanguageSwitcher />
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
-          className="mb-4"
-        >
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#141414] border border-[#1E1E1E] text-xs font-medium text-[#9CA3AF]">
-            <span className="w-2 h-2 rounded-full bg-[#00C896] animate-pulse" />
-            Неофициальная драфт-игра для фанатов РПЛ
-          </span>
-        </motion.div>
 
         <div className="relative mb-2 h-24 w-[min(90vw,360px)] overflow-hidden sm:h-28 sm:w-[390px]">
           <Image src="/brand-draft-rpl.png" alt="30-0 · Драфт РПЛ" width={1672} height={941} priority className="absolute left-1/2 top-1/2 h-auto w-full max-w-none -translate-x-1/2 -translate-y-1/2" />
@@ -441,6 +430,7 @@ function HomePage() {
                 </span>
               )}
               {mode.gameMode === 'multiplayer' && <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/20">БЕТА</span>}
+              {mode.gameMode === 'challenges' && <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">ХИТ!</span>}
               <div className="flex items-center gap-4">
                 <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl sm:text-3xl"
@@ -1292,10 +1282,12 @@ export default function Home() {
   }, [screen, showBackButton, hideBackButton]);
 
   useEffect(() => {
+    if (new URLSearchParams(location.search).has('challenge')) return;
     const startParam = new URLSearchParams(location.search).get('tgWebAppStartParam') ||
       (window as Window & { Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.start_param || '';
     const invite = startParam.match(/^room_([A-HJ-NP-Z2-9]{6})$/i);
-    if (invite) location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
+    if (invite && sessionStorage.getItem('30-0-room-invite-consumed') !== invite[1].toUpperCase())
+      location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
   }, []);
 
   useEffect(() => {
@@ -1313,6 +1305,13 @@ export default function Home() {
     if (!isAuthenticated || !epochChecked) return;
     void (async () => {
       await useGameStore.getState().loadProfileFromCloud();
+      const issueId = new URLSearchParams(location.search).get('challenge');
+      const issue = issueId && findWeeklyChallenge(issueId);
+      if (issue) {
+        await useGameStore.getState().loadActiveRunFromCloud(issue.mode, undefined, issue.id);
+        window.history.replaceState(window.history.state, '', '/');
+        return;
+      }
       const current = useGameStore.getState();
       if (current.screen === 'home' && (!current.runId || current.config.gameMode === 'classic')) await current.loadActiveRunFromCloud();
     })();

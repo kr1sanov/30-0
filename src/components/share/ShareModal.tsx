@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas-pro';
 import { Metrics } from '@/lib/metrics';
 import { toast } from 'sonner';
 import { localizeShareText } from '@/lib/enTranslations';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const BG = '#0A0A0A';
 
@@ -18,6 +19,7 @@ interface ShareModalProps {
 }
 
 export default function ShareModal({ isOpen, onClose, shareText, cardContent, runId }: ShareModalProps) {
+  const { isTelegram } = useTelegram();
   const [isSharing, setIsSharing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -51,9 +53,9 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   useEffect(() => {
     if (!isOpen) return;
-    fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => setInviteUrl(data?.inviteUrl ?? null)).catch(() => setInviteUrl(null));
-  }, [isOpen]);
-  const ref = inviteUrl ? new URL(inviteUrl).searchParams.get('ref') : null;
+    fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => setInviteUrl((isTelegram ? data?.telegramInviteUrl : data?.inviteUrl) ?? null)).catch(() => setInviteUrl(null));
+  }, [isOpen, isTelegram]);
+  const ref = inviteUrl ? new URL(inviteUrl).searchParams.get(isTelegram ? 'startapp' : 'ref') : null;
   const resultUrl = runId ? `${typeof window !== 'undefined' ? window.location.origin : 'https://30-0.рф'}/share/${runId}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}` : (inviteUrl || 'https://30-0.рф');
   const fullText = `${localizeShareText(shareText).replace(/🎮 Играть: https:\/\/30-0\.рф/g, '').trim()}\n\n${resultUrl}\n🎮 ${inviteUrl || 'https://t.me/RPL30_bot?startapp'}`;
   const handleCopyText = useCallback(async () => {

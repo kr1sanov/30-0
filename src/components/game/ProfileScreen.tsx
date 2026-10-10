@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Metrics } from '@/lib/metrics';
+import { useTelegram } from '@/hooks/use-telegram';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -60,6 +61,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 };
 
 export default function ProfileScreen() {
+  const { isTelegram } = useTelegram();
   const { profileStats, resetGame, setScreen, setAvatarEmoji } = useGameStore();
   const { user, updateDisplayName, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
@@ -75,7 +77,7 @@ export default function ProfileScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(user?.displayName || '');
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
-  const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
+  const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; telegramInviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
   useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
   const [seriesWins, setSeriesWins] = useState(0);
   useEffect(() => { if (user) fetch('/api/multiplayer/series/stats').then(r => r.ok ? r.json() : null).then(data => setSeriesWins(data?.seriesWins ?? 0)).catch(() => undefined); }, [user]);
@@ -93,6 +95,7 @@ export default function ProfileScreen() {
 
   // Total earned trophies
   const hasReferralAchievement = (referrals?.referralCount ?? 0) > 0;
+  const referralLink = isTelegram ? referrals?.telegramInviteUrl : referrals?.inviteUrl;
   const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : id === 'multiplayer_series_champion' ? seriesWins > 0 : profileStats.achievements.includes(id);
   const earnedTrophies = TROPHIES.filter(t => hasTrophy(t.id)).length;
 
@@ -245,10 +248,10 @@ export default function ProfileScreen() {
             <div className="text-[10px] text-[#9CA3AF]">игроков пришло</div>
           </div>
         </div>
-        {referrals?.inviteUrl ? (
+        {referralLink ? (
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <input readOnly aria-label="Реферальная ссылка" value={referrals.inviteUrl} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
-            <Button onClick={async () => { try { await navigator.clipboard.writeText(referrals.inviteUrl!); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
+            <input readOnly aria-label="Реферальная ссылка" value={referralLink} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
+            <Button onClick={async () => { try { await navigator.clipboard.writeText(referralLink); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
           </div>
         ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем твою ссылку…</p>}
         {referrals?.referredUsers.length ? (

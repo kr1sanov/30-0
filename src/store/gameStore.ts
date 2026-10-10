@@ -1506,7 +1506,7 @@ export const useGameStore = create<GameState>()(
       startStarChallenge: async (id, issueId) => {
         get().resetGame();
         set({ config: { ...defaultConfig, formation: '4-3-3', gameMode: id,
-          challengeIssueId: issueId, ratingMode: 'season', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
+          challengeIssueId: issueId, ratingMode: 'prime', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
           dailyChallenge: null, lastDraftError: null });
         await get().startRun();
       },

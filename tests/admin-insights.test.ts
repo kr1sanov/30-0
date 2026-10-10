@@ -8,7 +8,7 @@ test('Moscow calendar boundaries keep today and seven-day metrics consistent', (
   const week = adminRange(new URLSearchParams('period=7d'), now);
   assert.equal(today.from?.toISOString(), '2026-10-08T21:00:00.000Z');
   assert.equal(week.from?.toISOString(), '2026-10-02T21:00:00.000Z');
-  assert.deepEqual(runWhere('classic', week.from, week.to), { multiplayerSeat: null, clubFilter: null, createdAt: { gte: week.from } });
+  assert.deepEqual(runWhere('classic', week.from, week.to), { multiplayerSeat: null, gameMode: 'classic', createdAt: { gte: week.from } });
 });
 
 test('custom periods include the entire last day and reject inverted dates', () => {
@@ -22,5 +22,6 @@ test('custom periods include the entire last day and reject inverted dates', () 
 
 test('multiplayer is identified by seat rather than the default gameMode column', () => {
   assert.deepEqual(modeWhere('multiplayer'), { multiplayerSeat: { isNot: null } });
-  assert.deepEqual(modeWhere('single_club'), { multiplayerSeat: null, clubFilter: { not: null } });
+  assert.deepEqual(modeWhere('single_club'), { multiplayerSeat: null, gameMode: 'single_club' });
+  assert.deepEqual(modeWhere('challenge'), { multiplayerSeat: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba'] } });
 });

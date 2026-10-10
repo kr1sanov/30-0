@@ -46,6 +46,7 @@ export async function GET(request: Request) {
       referralCount: user.referralCount,
       referredBy: user.referredBy,
       inviteUrl: user.referralCode ? `https://30-0.рф/?ref=${encodeURIComponent(user.referralCode)}` : null,
+      telegramInviteUrl: user.referralCode ? `https://t.me/RPL30_bot?startapp=${encodeURIComponent(user.referralCode)}` : null,
       referredUsers,
     });
   } catch (error) {

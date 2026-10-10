@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     const [total, runs] = await Promise.all([
       db.gameRun.count({ where }),
       db.gameRun.findMany({ where, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE,
-        orderBy: [orderBy, { id: 'asc' }], select: { id: true, createdAt: true, completed: true, gameMode: true,
+        orderBy: [orderBy, { id: 'asc' }], select: { id: true, createdAt: true, completed: true, gameMode: true, challengeIssueId: true,
           clubFilter: true, formation: true, teamName: true, wins: true, draws: true, losses: true, points: true, position: true,
           user: { select: { id: true, displayName: true, username: true, providerId: true } },
           multiplayerSeat: { select: { roomCode: true, isBot: true, name: true, room: { select: { status: true } } } } } }),

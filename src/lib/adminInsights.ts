@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client';
 
-export type AdminMode = 'all' | 'classic' | 'single_club' | 'multiplayer';
+export type AdminMode = 'all' | 'classic' | 'single_club' | 'challenge' | 'multiplayer';
 export type AdminPeriod = 'today' | '3d' | '7d' | '14d' | '30d' | '90d' | 'all' | 'custom';
 
 const DAY = 86_400_000;
@@ -8,7 +8,7 @@ const MOSCOW_OFFSET = 3 * 60 * 60 * 1000;
 const validPeriods = new Set<AdminPeriod>(['today', '3d', '7d', '14d', '30d', '90d', 'all', 'custom']);
 
 export function adminMode(value: string | null): AdminMode {
-  return value === 'classic' || value === 'single_club' || value === 'multiplayer' ? value : 'all';
+  return value === 'classic' || value === 'single_club' || value === 'challenge' || value === 'multiplayer' ? value : 'all';
 }
 
 export function adminRange(params: URLSearchParams, now = new Date()) {
@@ -37,8 +37,9 @@ export function dateWhere(from: Date | null, to: Date | null): Prisma.DateTimeFi
 
 export function modeWhere(mode: AdminMode): Prisma.GameRunWhereInput {
   if (mode === 'multiplayer') return { multiplayerSeat: { isNot: null } };
-  if (mode === 'single_club') return { multiplayerSeat: null, clubFilter: { not: null } };
-  if (mode === 'classic') return { multiplayerSeat: null, clubFilter: null };
+  if (mode === 'single_club') return { multiplayerSeat: null, gameMode: 'single_club' };
+  if (mode === 'challenge') return { multiplayerSeat: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba'] } };
+  if (mode === 'classic') return { multiplayerSeat: null, gameMode: 'classic' };
   return {};
 }
 

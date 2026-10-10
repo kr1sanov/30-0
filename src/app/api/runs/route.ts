@@ -183,7 +183,8 @@ export async function POST(request: NextRequest) {
         draftMode: draftMode || 'squad_first',
         gameMode,
         ...(issue ? { challengeIssueId: issue.id } : {}),
-        ratingMode: ratingMode || 'season',
+        // Weekly challenges always draft and simulate with each player's verified prime rating.
+        ratingMode: isWeeklyChallenge ? 'prime' : ratingMode || 'season',
         eraFilter: gameMode === 'single_club' ? 'all' : eraFilter || 'all',
         eraStartYear: gameMode === 'single_club' ? 2000 : eraStartYear ?? 2006,
         eraEndYear: gameMode === 'single_club' ? 2100 : eraEndYear ?? 2021,

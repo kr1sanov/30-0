@@ -26,13 +26,13 @@ export async function GET(request: Request) {
       db.gameRun.groupBy({ by: ['userId'], where: { ...where, userId: { not: null } } }),
       db.multiplayerRoom.count({ where: date ? { createdAt: date } : {} }),
       db.multiplayerRoom.count({ where: { status: { in: ['lobby', 'starting', 'drafting'] } } }),
-      db.gameRun.findMany({ where, take: 8, orderBy: { createdAt: 'desc' }, select: { id: true, createdAt: true, completed: true, wins: true, points: true, clubFilter: true, multiplayerSeat: { select: { roomCode: true } }, user: { select: { id: true, displayName: true, username: true } } } }),
+      db.gameRun.findMany({ where, take: 8, orderBy: { createdAt: 'desc' }, select: { id: true, createdAt: true, completed: true, gameMode: true, challengeIssueId: true, wins: true, points: true, clubFilter: true, multiplayerSeat: { select: { roomCode: true } }, user: { select: { id: true, displayName: true, username: true } } } }),
       db.multiplayerRoom.findMany({ where: date ? { createdAt: date } : {}, take: 5, orderBy: { createdAt: 'desc' }, select: { code: true, status: true, createdAt: true, seats: { select: { id: true, name: true, isBot: true } } } }),
-      Promise.all(['classic', 'single_club', 'multiplayer'].map(async id => {
+      Promise.all(['classic', 'single_club', 'challenge', 'multiplayer'].map(async id => {
         const groups = await db.gameRun.groupBy({ by: ['userId'], where: { ...runWhere(adminMode(id), range.from, range.to), userId: { not: null } }, _count: { id: true }, _sum: { wins: true }, _max: { points: true, createdAt: true } });
         return { id, groups: groups.sort((a, b) => b._count.id - a._count.id).slice(0, 8) };
       })),
-      Promise.all(['classic', 'single_club', 'multiplayer'].map(async id => {
+      Promise.all(['classic', 'single_club', 'challenge', 'multiplayer'].map(async id => {
         const filter = { ...where, ...modeWhere(adminMode(id)) };
         const [count, done] = await Promise.all([db.gameRun.count({ where: filter }), db.gameRun.count({ where: { ...filter, completed: true } })]);
         return { id, count, completed: done };
@@ -56,13 +56,17 @@ export async function GET(request: Request) {
       const i = index.get(moscowDay(entry.createdAt));
       if (i !== undefined) chart[i].runs++;
     }
+    const challengeWhere = runWhere('challenge', range.from, range.to);
+    const [challengeRuns, challengeCompleted] = await Promise.all([
+      db.gameRun.count({ where: challengeWhere }), db.gameRun.count({ where: { ...challengeWhere, completed: true } }),
+    ]);
     return NextResponse.json({
       range: { label: range.label, from: range.from, to: range.to, timezone: 'Москва (UTC+3)' },
       metrics: { totalUsers, newUsers, activeUsers, inactiveUsers: totalUsers - activeUsers, runs, completed,
         inProgress: runs - completed, completionRate: runs ? Math.round(completed / runs * 100) : 0, perfect,
         averagePoints: averages._avg.points === null ? null : Math.round(averages._avg.points * 10) / 10,
         averageWins: averages._avg.wins === null ? null : Math.round(averages._avg.wins * 10) / 10,
-        uniquePlayers: uniqueUsers.length, rooms, liveRooms },
+        uniquePlayers: uniqueUsers.length, rooms, liveRooms, challengeRuns, challengeCompleted },
       modes: modeCounts, chart, recentRuns, recentRooms,
       leaders: topGroups.map(entry => ({ id: entry.id, users: entry.groups.flatMap(group => {
         const user = group.userId ? names.get(group.userId) : null;

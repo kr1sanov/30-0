@@ -82,9 +82,11 @@ export default function MultiplayerPage() {
     const params = new URLSearchParams(location.search);
     const start = params.get('tgWebAppStartParam') ||
       (window as Window & { Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.start_param || '';
-    const value = params.get('room') || start.match(/^room_([A-HJ-NP-Z2-9]{6})$/i)?.[1];
+    const explicitRoom = params.get('room');
+    const value = explicitRoom || start.match(/^room_([A-HJ-NP-Z2-9]{6})$/i)?.[1];
     if (!value || !/^[A-HJ-NP-Z2-9]{6}$/i.test(value)) return;
     const nextCode = value.toUpperCase();
+    if (!explicitRoom && sessionStorage.getItem('30-0-room-invite-consumed') === nextCode) return;
     setJoinCode(nextCode);
     if (!user || openedLink.current === `${user.id}:${nextCode}`) return;
     openedLink.current = `${user.id}:${nextCode}`;
@@ -166,6 +168,7 @@ export default function MultiplayerPage() {
   };
 
   const backToMenu = useCallback(() => {
+    if (currentRoomCode.current) sessionStorage.setItem('30-0-room-invite-consumed', currentRoomCode.current);
     currentRoomCode.current = '';
     setCode(''); setRoom(null); setSpin(null); setError('');
     history.replaceState(null, '', '/multiplayer');
@@ -193,8 +196,14 @@ export default function MultiplayerPage() {
     await refresh();
   });
 
-  const home = () => { location.href = '/'; };
-  const profile = () => { useGameStore.getState().setScreen('profile'); location.href = '/'; };
+  const home = () => {
+    if (currentRoomCode.current) sessionStorage.setItem('30-0-room-invite-consumed', currentRoomCode.current);
+    location.href = '/';
+  };
+  const profile = () => {
+    if (currentRoomCode.current) sessionStorage.setItem('30-0-room-invite-consumed', currentRoomCode.current);
+    useGameStore.getState().setScreen('profile'); location.href = '/';
+  };
   const roomChoices = menu?.activeRooms ?? [];
   const continueRooms = roomChoices.length > 0 && <div className="space-y-2">
     <h2 className="text-sm font-bold text-[#9CA3AF]">Твои текущие игры</h2>
