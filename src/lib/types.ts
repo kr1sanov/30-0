@@ -6,7 +6,7 @@
 // Game Configuration
 // ---------------------------------------------------------------------------
 
-export type GameModeType = 'classic' | 'single_club' | 'daily' | 'nations_cup';
+export type GameModeType = 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'daily' | 'nations_cup';
 
 export interface GameConfig {
   formation: string;

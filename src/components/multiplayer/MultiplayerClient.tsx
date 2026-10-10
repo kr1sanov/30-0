@@ -186,7 +186,7 @@ export default function MultiplayerPage() {
     await json(`/api/multiplayer/rooms/${room.code}`, 'PATCH', {
       action: !room.isHost && changes.maxPlayers !== undefined ? 'capacity' : 'settings', maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
       draftMode: room.draftMode, showRatings: room.showRatings, eraFilter: room.eraFilter,
-      eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, withManager: room.withManager,
+      eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, withManager: false,
       seriesTargetWins: room.seriesTargetWins,
       ...changes,
     });

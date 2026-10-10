@@ -62,17 +62,27 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
   }, [fullText]);
 
   const handleSaveImage = useCallback(async () => {
+    const telegram = (window as Window & { Telegram?: { WebApp?: { downloadFile?: (params: { url: string; file_name: string }, callback?: (accepted: boolean) => void) => void } } }).Telegram?.WebApp;
+    if (runId && telegram?.downloadFile) {
+      const url = `${window.location.origin}/share/${encodeURIComponent(runId)}/photo?lang=${document.documentElement.lang === 'en' ? 'en' : 'ru'}`;
+      telegram.downloadFile({ url, file_name: '30-0-story-1080x1920.jpg' }, accepted => {
+        if (accepted) Metrics.shareResult('image_download');
+      });
+      return;
+    }
     const blob = await captureCard();
-    if (!blob) return;
+    if (!blob) { toast.error('Не удалось создать изображение'); return; }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = '30-0-rpl-share.png';
+    a.download = '30-0-story-1080x1920.png';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [captureCard]);
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    Metrics.shareResult('image_download');
+    toast.success('Изображение сохранено');
+  }, [captureCard, runId]);
 
   const handleTelegramShare = useCallback(async () => {
     const telegram = (window as Window & {
@@ -81,7 +91,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
     if (runId && telegram?.WebApp?.shareMessage) {
       setIsSharing(true);
       try {
-        const response = await fetch('/api/share/telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId }) });
+        const response = await fetch('/api/share/telegram', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ runId, lang: document.documentElement.lang }) });
         if (response.ok) {
           const { messageId } = await response.json();
           telegram.WebApp.shareMessage(messageId);
@@ -96,31 +106,6 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
     else window.location.assign(url);
     Metrics.shareResult('telegram');
   }, [runId, resultUrl, fullText]);
-
-  const handleCopyImage = useCallback(async () => {
-    setIsSharing(true);
-    const blob = await captureCard();
-    if (!blob) {
-      toast.error('Не удалось создать изображение');
-      setIsSharing(false);
-      return;
-    }
-    try {
-      if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
-        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-        Metrics.shareResult('image_clipboard');
-        toast.success('Изображение скопировано');
-      } else {
-        await handleSaveImage();
-        toast.info('Браузер сохранил PNG вместо копирования');
-      }
-    } catch {
-      await handleSaveImage();
-      toast.info('Копирование недоступно — PNG сохранён');
-    } finally {
-      setIsSharing(false);
-    }
-  }, [captureCard, handleSaveImage]);
 
   return (
     <AnimatePresence>
@@ -169,7 +154,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
               {/* Card preview */}
               <div
                 style={{
-                  height: 230,
+                  height: 370,
                   borderRadius: 12,
                   overflow: 'hidden',
                   border: '1px solid #1f1f1f',
@@ -180,22 +165,20 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
                   background: BG,
                 }}
               >
-                <div style={{ width: 208, height: 228, overflow: 'hidden', position: 'relative', flex: '0 0 auto' }}>
-                  <div aria-hidden="true" style={{ width: 400, transform: 'scale(.52)', transformOrigin: 'top left' }}>
+                <div style={{ width: 205, height: 365, overflow: 'hidden', position: 'relative', flex: '0 0 auto' }}>
+                  <div aria-hidden="true" style={{ width: 540, transform: 'scale(.38)', transformOrigin: 'top left' }}>
                   {cardContent}
                   </div>
                 </div>
               </div>
-              <div ref={cardRef} aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, width: 400, pointerEvents: 'none' }}>
+              <div ref={cardRef} aria-hidden="true" style={{ position: 'fixed', left: -10000, top: 0, width: 540, pointerEvents: 'none' }}>
                 {cardContent}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10 }}>
                 <button onClick={handleTelegramShare} disabled={isSharing} style={{ width: '100%', minHeight: 46, borderRadius: 10, background: '#229ED9', color: '#fff', border: 0, fontWeight: 700, cursor: 'pointer' }}>Поделиться в Telegram</button>
                 <button onClick={handleCopyText} style={{ width: '100%', minHeight: 46, borderRadius: 10, background: 'var(--club-primary)', color: 'var(--club-on-primary)', border: 0, fontWeight: 700, cursor: 'pointer' }}>Скопировать текст и ссылку</button>
-                <button onClick={handleCopyImage} disabled={isSharing} style={{ width: '100%', minHeight: 44, borderRadius: 10, background: '#1E1E1E', color: '#fff', border: 0, cursor: 'pointer' }}>{isSharing ? 'Готовим изображение…' : 'Скопировать изображение'}</button>
-                <button onClick={handleSaveImage} style={{ width: '100%', minHeight: 42, borderRadius: 10, background: 'transparent', color: '#9CA3AF', border: '1px solid #2a2a2a', cursor: 'pointer' }}>Сохранить PNG</button>
-                <button onClick={onClose} style={{ width: '100%', minHeight: 36, background: 'transparent', color: '#9CA3AF', border: 0, cursor: 'pointer' }}>Отмена</button>
+                <button onClick={handleSaveImage} style={{ width: '100%', minHeight: 42, borderRadius: 10, background: '#1E1E1E', color: '#fff', border: '1px solid #2a2a2a', cursor: 'pointer' }}>Сохранить изображение</button>
               </div>
             </div>
           </motion.div>

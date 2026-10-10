@@ -321,7 +321,10 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
     const pos = getPositionOrdinal(data.position);
     const lines = [
       `⚽ МОЙ СЕЗОН В 30–0`,
-      config.gameMode === 'single_club' ? `🏟️ Клуб: ${config.clubName ?? 'выбранный клуб'}` : `🏟️ Обычный драфт · ${config.formation}`,
+      config.gameMode === 'single_club' ? `🏟️ Клуб: ${config.clubName ?? 'выбранный клуб'}`
+        : config.gameMode === 'challenge_vagner' ? '❤️ Челлендж: Вагнер Лав'
+        : config.gameMode === 'challenge_dzyuba' ? '🎯 Челлендж: Артём Дзюба'
+        : `🏟️ Обычный драфт · ${config.formation}`,
       `🏆 Итог: ${pos} место · ${data.points} очков`,
       `✅ ${data.wins} побед · 🤝 ${data.draws} ничьих · ❌ ${data.losses} поражений`,
       `⚽ Голы: ${data.goalsFor}–${data.goalsAgainst}`,
@@ -693,8 +696,9 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
               }}
               trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
               teamName={config.teamName}
-              managerName={null}
-              mode={config.gameMode === 'single_club' ? 'single_club' : 'classic'}
+              managerName={useGameStore.getState().currentManager?.name}
+              mode={config.gameMode === 'single_club' ? 'single_club' : config.gameMode?.startsWith('challenge_') ? 'challenge' : 'classic'}
+              challengeId={config.gameMode}
               clubName={config.clubName}
               players={slots.filter(slot => slot.playerName).map(slot => ({
                 name: slot.playerName!,
@@ -725,8 +729,9 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
             }}
             trophies={earnedTrophies.map(t => ({ icon: t.icon, name: t.name }))}
             teamName={config.teamName}
-            managerName={null}
-            mode={config.gameMode === 'single_club' ? 'single_club' : 'classic'}
+            managerName={useGameStore.getState().currentManager?.name}
+            mode={config.gameMode === 'single_club' ? 'single_club' : config.gameMode?.startsWith('challenge_') ? 'challenge' : 'classic'}
+            challengeId={config.gameMode}
             clubName={config.clubName}
             players={slots.filter(slot => slot.playerName).map(slot => ({
               name: slot.playerName!,

@@ -102,7 +102,7 @@ export async function PATCH(request: Request, { params }: Context) {
       }
       await db.multiplayerRoom.update({ where: { code: room.code }, data: {
         maxPlayers, eraStartYear, eraEndYear, eraFilter, seriesTargetWins, ratingMode: body.ratingMode,
-        draftMode: body.draftMode, showRatings: Boolean(body.showRatings), withManager: Boolean(body.withManager),
+        draftMode: body.draftMode, showRatings: Boolean(body.showRatings), withManager: false,
       } });
       await db.multiplayerSeat.updateMany({ where: { roomCode: room.code, isBot: false }, data: { ready: false } });
     } else if (body.action === 'bot') {

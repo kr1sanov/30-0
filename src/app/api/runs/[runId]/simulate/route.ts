@@ -105,6 +105,25 @@ export async function POST(
       opponents,
     );
 
+    if (run.gameMode === 'challenge_vagner' || run.gameMode === 'challenge_dzyuba') {
+      const featuredNames = run.gameMode === 'challenge_vagner'
+        ? ['Vagner Love', 'Вагнер Лав'] : ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба'];
+      const featured = await db.playerSeason.findFirst({
+        where: { player: { fullName: { in: featuredNames } } },
+        orderBy: [{ rating: 'desc' }, { id: 'asc' }], select: { id: true },
+      });
+      const hasFeatured = !!featured && filledSlots.some(slot => slot.playerSeasonId === featured.id);
+      result.trophies.push(run.gameMode === 'challenge_vagner' ? {
+        id: 'vagner_legend', icon: '❤️', name: 'Вагнер навсегда',
+        description: 'Стань чемпионом в челлендже Вагнера Лава',
+        earned: hasFeatured && result.position === 1,
+      } : {
+        id: 'dzyuba_record', icon: '🎯', name: 'Голевая эпоха',
+        description: 'Стань чемпионом с Дзюбой и забей командой 60 голов',
+        earned: hasFeatured && result.position === 1 && result.goalsFor >= 60,
+      });
+    }
+
     // Calculate squad strength for overall rating
     const strength = calculateSquadStrength(squadSlots, managerRating ?? undefined);
 

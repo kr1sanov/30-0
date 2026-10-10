@@ -34,7 +34,7 @@ export async function publicRoom(code: string, userId: string) {
     seriesWinnerKey: room.seriesWinnerKey, nextRoomCode: room.nextRoomCode,
     ownResultViewed: Boolean(own?.resultViewedAt),
     eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, eraFilter: room.eraFilter,
-    draftMode: room.draftMode, showRatings: room.showRatings, withManager: room.withManager,
+    draftMode: room.draftMode, showRatings: room.showRatings, withManager: false,
     isHost: room.hostUserId === userId,
     seats: room.seats.map(seat => ({ id: seat.id, name: seat.name, formation: seat.formation,
       ready: seat.ready, forfeited: seat.forfeited, seriesMemberKey: seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}`,
@@ -42,8 +42,8 @@ export async function publicRoom(code: string, userId: string) {
       result: seat.run?.completed ? { wins: seat.run.wins, draws: seat.run.draws, losses: seat.run.losses,
         points: seat.run.points, overallRating: seat.run.overallRating } : null,
       isYou: seat.userId === userId, isHost: seat.userId === room.hostUserId, isBot: seat.isBot,
-      pickDeadline: seat.pickDeadline?.toISOString() ?? null, managerName: seat.managerName,
-      managerRating: seat.managerRating,
+      pickDeadline: seat.pickDeadline?.toISOString() ?? null, managerName: null,
+      managerRating: null,
     })),
     pendingSpin: own?.pendingSpinJson && room.status === 'drafting' ? JSON.parse(own.pendingSpinJson) : null,
     ownRun: own?.run ? { id: own.run.id, formation: own.run.formation, completed: own.run.completed,
@@ -88,8 +88,8 @@ export async function resolveRoom(code: string) {
     const slots: SquadSlot[] = seat.run!.slots.map(slot => ({ position: slot.slotPosition.split('_')[0],
       playerName: slot.playerName || '', playerRating: (room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating) || 0,
       isCompatible: slot.isCompatible }));
-    const rating = calculateSquadStrength(slots, seat.managerRating || undefined).overall;
-    const seasonResult = simulateSeason(slots, seat.managerRating || undefined, false, 0, opponents);
+    const rating = calculateSquadStrength(slots, undefined).overall;
+    const seasonResult = simulateSeason(slots, undefined, false, 0, opponents);
     // Replace the first 2*(n-1) regular fixtures with shared head-to-head
     // fixtures, keeping the season at 30 matches per participant.
     const replaced = 2 * (room.seats.length - 1);

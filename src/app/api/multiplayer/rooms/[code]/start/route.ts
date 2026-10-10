@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { createSeatRun } from '@/lib/multiplayer';
 import { draftBot } from '@/lib/multiplayerBots';
-import { getRandomManager } from '@/lib/managers';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 
@@ -25,10 +24,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
       if (!seat.seriesMemberKey) await db.multiplayerSeat.update({ where: { id: seat.id }, data: { seriesMemberKey: seat.userId ?? `bot:${seat.id}` } });
       const runId = await createSeatRun(seat, room, seat.userId || undefined);
       createdRunIds.push(runId);
-      if (room.withManager) {
-        const manager = getRandomManager();
-        if (manager) await db.multiplayerSeat.update({ where: { id: seat.id }, data: { managerName: manager.name, managerRating: manager.rating } });
-      }
       if (seat.isBot) await draftBot(runId, room.eraStartYear, room.eraEndYear);
       else await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: false } });
     }

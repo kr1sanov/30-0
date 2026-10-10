@@ -23,7 +23,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
         code: nextCode, hostUserId: userId, maxPlayers: old.maxPlayers, seatCount: 1 + bots.length,
         ratingMode: old.ratingMode, draftMode: old.draftMode, showRatings: old.showRatings,
         eraFilter: old.eraFilter, eraStartYear: old.eraStartYear, eraEndYear: old.eraEndYear,
-        withManager: old.withManager,
+        withManager: false,
         resultJson: JSON.stringify({ rematchOf: old.code }),
         seats: { create: [
           { userId, name: ownSeat.name, formation: ownSeat.formation, ready: false },

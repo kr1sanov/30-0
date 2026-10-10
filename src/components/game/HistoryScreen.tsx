@@ -44,7 +44,8 @@ interface GameRunData {
   overallRating: number | null;
   managerName: string | null;
   teamName: string | null;
-  gameMode?: 'classic' | 'single_club' | 'multiplayer';
+  gameMode?: 'classic' | 'single_club' | 'multiplayer' | 'challenge';
+  challengeId?: string | null;
   multiplayerSeat?: { roomCode: string } | null;
   opponents?: string[];
   clubName?: string | null;
@@ -192,7 +193,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [shareRun, setShareRun] = useState<GameRunData | null>(null);
-  const [mode, setMode] = useState<'all' | 'classic' | 'single_club' | 'multiplayer'>('all');
+  const [mode, setMode] = useState<'all' | 'classic' | 'single_club' | 'multiplayer' | 'challenge'>('all');
   const requestId = useRef(0);
 
   const fetchRuns = useCallback(async () => {
@@ -229,7 +230,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
     fetchRuns();
   }, [fetchRuns]);
 
-  const modes = [['all', 'Все'], ['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['multiplayer', 'Мультиплеер']] as const;
+  const modes = [['all', 'Все'], ['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['challenge', 'Челленджи'], ['multiplayer', 'Мультиплеер']] as const;
   const sections = [{ mode, items: runs }];
 
   const toggleExpand = (id: string) => {
@@ -384,6 +385,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-semibold text-[#9CA3AF]">{modes.find(([key]) => key === (run.gameMode ?? 'classic'))?.[1]}</span>
+                        {run.challengeId && <span className="text-[10px] font-bold text-sky-300">{run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба'}</span>}
                         {/* Formation */}
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
                           {run.formation}
@@ -594,7 +596,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
               }}
               teamName={shareRun.teamName}
               managerName={shareRun.managerName}
-              mode={shareRun.gameMode === 'single_club' ? 'single_club' : 'classic'}
+              mode={shareRun.gameMode === 'single_club' ? 'single_club' : shareRun.gameMode === 'challenge' ? 'challenge' : shareRun.gameMode === 'multiplayer' ? 'multiplayer' : 'classic'}
+              challengeId={shareRun.challengeId}
               clubName={shareRun.clubName}
               players={shareRun.slots
                 .filter((slot) => slot.playerName)

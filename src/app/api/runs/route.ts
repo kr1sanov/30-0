@@ -25,8 +25,9 @@ export async function GET(request: NextRequest) {
       where.difficulty = difficulty;
     }
     if (mode === 'multiplayer') where.multiplayerSeat = { isNot: null };
-    if (mode === 'single_club') { where.multiplayerSeat = { is: null }; where.clubFilter = { not: null }; }
-    if (mode === 'classic') { where.multiplayerSeat = { is: null }; where.clubFilter = null; }
+    if (mode === 'single_club') { where.multiplayerSeat = { is: null }; where.gameMode = 'single_club'; }
+    if (mode === 'classic') { where.multiplayerSeat = { is: null }; where.gameMode = 'classic'; }
+    if (mode === 'challenge') { where.multiplayerSeat = { is: null }; where.gameMode = { in: ['challenge_vagner', 'challenge_dzyuba'] }; }
 
     const orderBy: Record<string, string>[] =
       sort === 'points'
@@ -59,7 +60,8 @@ export async function GET(request: NextRequest) {
       opponents: run.multiplayerSeat?.room.seats
         .filter(seat => seat.userId !== userId)
         .map(seat => seat.isBot ? seat.name : seat.user?.username ? `@${seat.user.username}` : seat.name) ?? [],
-      gameMode: run.multiplayerSeat ? 'multiplayer' : run.clubFilter ? 'single_club' : 'classic',
+      gameMode: run.multiplayerSeat ? 'multiplayer' : run.gameMode.startsWith('challenge_') ? 'challenge' : run.clubFilter ? 'single_club' : 'classic',
+      challengeId: run.gameMode.startsWith('challenge_') ? run.gameMode : null,
       clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
     })));
   } catch (error) {
@@ -82,7 +84,7 @@ export async function POST(request: NextRequest) {
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const gameMode = body.gameMode || 'classic';
-    if (nationalityFilter || !['classic', 'single_club'].includes(gameMode)) {
+    if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
     if (gameMode === 'single_club' && !clubFilter) {
@@ -126,6 +128,21 @@ export async function POST(request: NextRequest) {
     };
     const rerollsTotal = rerollsMap[safeDifficulty] ?? 1;
 
+    const challengeNames = gameMode === 'challenge_vagner'
+      ? ['Vagner Love', 'Вагнер Лав']
+      : gameMode === 'challenge_dzyuba' ? ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба'] : null;
+    // The challenge card always comes from an imported edition, ordered by
+    // actual season rating. No invented rating or duplicate player record.
+    const featured = challengeNames ? await db.playerSeason.findFirst({
+      where: { player: { fullName: { in: challengeNames } } },
+      orderBy: [{ rating: 'desc' }, { id: 'asc' }],
+      include: { player: true, clubSeason: { include: { season: true } } },
+    }) : null;
+    if (challengeNames && !featured) return NextResponse.json({ error: 'Карточка игрока отсутствует в базе' }, { status: 503 });
+    const featuredIndex = featured ? formationData.slots.findIndex(slot =>
+      ['НП', 'ЦН'].includes(slot.position)) : -1;
+    if (featured && featuredIndex < 0) return NextResponse.json({ error: 'Для челленджа нужна схема с нападающим' }, { status: 400 });
+
     // Resolve the user exclusively from the signed Telegram session.
     let dbUserId: string | undefined;
     const effectiveUserId = userId;
@@ -168,6 +185,17 @@ export async function POST(request: NextRequest) {
       runId: run.id,
       slotPosition: `${slot.position}_${index}`,
       isCompatible: true,
+      ...(featured && index === featuredIndex ? {
+        playerSeasonId: featured.id,
+        playerSeasonYear: featured.clubSeason.season.startYear,
+        playerName: featured.player.alias || featured.player.fullName,
+        playerLastName: featured.player.alias || featured.player.lastName,
+        playerRating: featured.rating,
+        playerPrimeRating: featured.primeRating || featured.rating,
+        playerPosition: featured.mainPosition,
+        playerOtherPositions: featured.otherPositions,
+        playerNationality: featured.nationality || featured.player.nationality,
+      } : {}),
     }));
 
     await db.gameSlot.createMany({ data: slotsData });

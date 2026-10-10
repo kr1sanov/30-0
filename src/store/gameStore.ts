@@ -63,6 +63,8 @@ const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'russian_core', name: 'Русский костяк', description: 'Стать чемпионом с семью россиянами в составе', icon: '🇷🇺', condition: 'russianPlayers >= 7 && position === 1' },
   { id: 'army_season', name: 'Армейский сезон', description: 'Победить 20 раз за сезон в режиме «Один клуб» с ЦСКА', icon: '🔴', condition: 'singleClubCSKA && wins >= 20' },
   { id: 'neva_attack', name: 'Невская атака', description: 'Забить 60 голов за сезон в режиме «Один клуб» с «Зенитом»', icon: '🌊', condition: 'singleClubZenit && goalsFor >= 60' },
+  { id: 'vagner_legend', name: 'Вагнер навсегда', description: 'Стань чемпионом в челлендже Вагнера Лава', icon: '❤️', condition: 'challenge_vagner && position === 1' },
+  { id: 'dzyuba_record', name: 'Голевая эпоха', description: 'Стань чемпионом с Дзюбой и забей командой 60 голов', icon: '🎯', condition: 'challenge_dzyuba && position === 1 && goalsFor >= 60' },
 ];
 
 
@@ -181,7 +183,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => void;
-  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club', clubId?: string) => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -192,6 +194,7 @@ interface GameState {
   loadProfileFromCloud: () => Promise<void>;
   setAvatarEmoji: (emoji: string) => void;
   startDailyChallenge: (challenge: DailyChallenge) => void;
+  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba') => Promise<void>;
   clearError: () => void;
   setError: (error: string) => void;
 }
@@ -387,9 +390,7 @@ export const useGameStore = create<GameState>()(
             lastAssignedSlotIndex: null,
             justAssignedSlotIndex: null,
             seasonResult: null,
-            currentManager: runConfig.enableManagers
-              ? getRandomManager(runConfig.gameMode === 'single_club' ? runConfig.clubFilter : undefined) ?? null
-              : null,
+            currentManager: null,
             screen: 'draft',
             resumeScreen: 'draft',
             lastConfig: { ...runConfig },
@@ -595,6 +596,9 @@ export const useGameStore = create<GameState>()(
           lastAssignedSlotIndex: slotIndex,
           justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
+          currentManager: allFilled && get().config.enableManagers
+            ? getRandomManager(get().config.gameMode === 'single_club' ? get().config.clubFilter : undefined) ?? null
+            : get().currentManager,
           lastDraftState: allFilled ? null : undoState,
           lastDraftError: null,
         });
@@ -744,6 +748,9 @@ export const useGameStore = create<GameState>()(
           lastAssignedSlotIndex: slotIndex,
           justAssignedSlotIndex: slotIndex,
           screen: allFilled ? 'squad-complete' : 'draft',
+          currentManager: allFilled && get().config.enableManagers
+            ? getRandomManager(get().config.gameMode === 'single_club' ? get().config.clubFilter : undefined) ?? null
+            : get().currentManager,
           lastDraftState: allFilled ? null : undoState,
           lastDraftError: null,
         });
@@ -1316,7 +1323,7 @@ export const useGameStore = create<GameState>()(
 
         // Always clear ALL stale transient UI state on resume
         const clearTransient = {
-          config: { ...restored, gameMode: restored.clubFilter ? 'single_club' as const : 'classic' as const },
+          config: { ...restored, gameMode: restored.gameMode ?? (restored.clubFilter ? 'single_club' as const : 'classic' as const) },
           selectedPlayer: null,
           currentSpin: null,
           isSpinning: false,
@@ -1330,13 +1337,13 @@ export const useGameStore = create<GameState>()(
         set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
         // A changed setup screen can overwrite local presentation settings. The
         // server's run keeps the selected club, so restore it when rejoining.
-        if (runId) void fetch(`/api/runs/active?mode=${restored.clubFilter ? 'single_club&clubId=' + encodeURIComponent(restored.clubFilter) : 'classic'}`, { cache: 'no-store' }).then(async response => {
+        if (runId) void fetch(`/api/runs/active?mode=${restored.clubFilter ? 'single_club&clubId=' + encodeURIComponent(restored.clubFilter) : restored.gameMode ?? 'classic'}`, { cache: 'no-store' }).then(async response => {
           if (!response.ok) return;
           const { activeRun } = await response.json();
           if (!activeRun || activeRun.id !== get().runId || activeRun.id !== runId) return;
           set(state => ({ config: { ...state.config, formation: activeRun.formation,
             clubFilter: activeRun.clubFilter ?? undefined, clubName: activeRun.clubName ?? undefined,
-            gameMode: activeRun.clubFilter ? 'single_club' : 'classic',
+            gameMode: activeRun.gameMode,
             ratingMode: activeRun.ratingMode, eraStartYear: activeRun.eraStartYear,
             eraEndYear: activeRun.eraEndYear } }));
         }).catch(() => undefined);
@@ -1348,7 +1355,7 @@ export const useGameStore = create<GameState>()(
           if (!response.ok) return;
           const { activeRun } = await response.json();
           if (!activeRun) {
-            if (get().runId && (mode === 'classic' || get().config.clubFilter === clubId)) get().resetGame();
+            if (get().runId && get().config.gameMode === mode && (mode !== 'single_club' || get().config.clubFilter === clubId)) get().resetGame();
             return;
           }
           if (activeRun.id === get().runId && get().slots.length) return;
@@ -1367,7 +1374,7 @@ export const useGameStore = create<GameState>()(
             clubName: activeRun.clubName ?? undefined,
             nationalityFilter: activeRun.nationalityFilter ?? undefined,
             teamName: activeRun.teamName ?? undefined,
-            gameMode: activeRun.clubFilter ? 'single_club' : 'classic',
+            gameMode: activeRun.gameMode,
           };
           const savedByIndex = new Map<number, (typeof activeRun.slots)[number]>();
           for (const saved of activeRun.slots) {
@@ -1493,6 +1500,14 @@ export const useGameStore = create<GameState>()(
           dailyChallenge: challenge,
           config: { ...currentConfig, ...configOverrides },
         });
+      },
+
+      startStarChallenge: async (id) => {
+        get().resetGame();
+        set({ config: { ...defaultConfig, formation: '4-3-3', gameMode: id,
+          ratingMode: 'season', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
+          dailyChallenge: null, lastDraftError: null });
+        await get().startRun();
       },
 
       // Clear global error

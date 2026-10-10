@@ -55,6 +55,16 @@ export async function POST(
       targetSlot = filledSlots[filledSlots.length - 1];
     }
 
+    if (run.gameMode === 'challenge_vagner' || run.gameMode === 'challenge_dzyuba') {
+      const featuredNames = run.gameMode === 'challenge_vagner'
+        ? ['Vagner Love', 'Вагнер Лав'] : ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба'];
+      const featured = await db.playerSeason.findFirst({
+        where: { player: { fullName: { in: featuredNames } } },
+        orderBy: [{ rating: 'desc' }, { id: 'asc' }], select: { id: true },
+      });
+      if (targetSlot.playerSeasonId === featured?.id) return NextResponse.json({ error: 'Стартовая карточка челленджа закреплена' }, { status: 400 });
+    }
+
     // Remove the player from that slot — clear ALL player fields
     await db.gameSlot.update({
       where: { id: targetSlot.id },

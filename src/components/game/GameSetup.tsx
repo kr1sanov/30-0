@@ -782,7 +782,9 @@ export default function GameSetup() {
             <SectionHeader>Тренер</SectionHeader>
             <p className="-mt-1 text-xs text-[#64748b]">
               {config.enableManagers
-                ? 'Случайный тренер выберется автоматически и добавит +2 к силе команды.'
+                ? currentGameMode === 'single_club'
+                  ? 'После драфта случайно выберется тренер этого клуба и добавит +2 к силе команды.'
+                  : 'После драфта случайно выберется тренер РПЛ и добавит +2 к силе команды.'
                 : 'Игра без тренера и бонуса.'}
             </p>
           </div>

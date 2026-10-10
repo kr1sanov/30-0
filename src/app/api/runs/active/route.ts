@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const mode = request.nextUrl.searchParams.get('mode') ?? 'classic';
     const clubId = request.nextUrl.searchParams.get('clubId');
-    if (!['classic', 'single_club'].includes(mode) || (mode === 'single_club' && !clubId))
+    if (!['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba'].includes(mode) || (mode === 'single_club' && !clubId))
       return NextResponse.json({ error: 'Выбери режим и клуб' }, { status: 400 });
 
     // Find the latest in-progress run for this user

@@ -4,7 +4,9 @@ export async function sharedSeason(runId: string) {
   if (!/^c[a-z0-9]{15,40}$/.test(runId)) return null;
   return db.gameRun.findFirst({
     where: { id: runId, completed: true, userId: { not: null } },
-    select: { id: true, formation: true, teamName: true, clubFilter: true, wins: true, draws: true, losses: true, points: true, position: true, goalsFor: true, goalsAgainst: true },
+    select: { id: true, formation: true, teamName: true, clubFilter: true, gameMode: true,
+      slots: { select: { playerName: true, playerRating: true, slotPosition: true }, orderBy: { slotPosition: 'asc' } },
+      wins: true, draws: true, losses: true, points: true, position: true, goalsFor: true, goalsAgainst: true },
   });
 }
 

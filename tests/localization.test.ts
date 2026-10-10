@@ -26,6 +26,9 @@ test('translates live season, manager, and award labels without losing results',
 });
 
 test('keeps multiplayer entry, lobby and series UI in the selected language', () => {
+  assert.equal(translateInterface('Закрыть комнату'), 'Close room');
+  assert.equal(translateInterface('В ожидании противника'), 'Waiting for an opponent');
+  assert.equal(translateInterface('7/11 · Драфт продолжается'), '7/11 · Draft in progress');
   assert.equal(translateInterface('← Выбрать формат'), '← Choose a format');
   assert.equal(translateInterface('Мультиплеер · Бета-версия'), 'Multiplayer · Beta');
   assert.equal(translateInterface('Сыграй с другом'), 'Play with a friend');
@@ -42,6 +45,14 @@ test('keeps multiplayer entry, lobby and series UI in the selected language', ()
   assert.equal(translateInterface('Раунд 2 · до 3 побед'), 'Round 2 · First to 3 wins');
   assert.equal(translateInterface('Сыграем в 30-0? Код: LJD8HZ'), 'Play 30–0 with me! Code: LJD8HZ');
   assert.equal(translateInterface('Бот 2'), 'Бот 2');
+});
+
+test('translates challenge and story labels without changing results', () => {
+  assert.equal(translateInterface('Челленджи'), 'Challenges');
+  assert.equal(translateInterface('Вагнер навсегда'), 'Vagner Forever');
+  assert.equal(translateInterface('Сохранить изображение'), 'Save image');
+  assert.equal(translateInterface('Голы: 67–25 · 4-3-3'), 'Goals: 67–25 · 4-3-3');
+  assert.equal(translateInterface('30-0 · Драфт Российской Премьер-лиги'), '30–0 · Russian Premier League Draft');
 });
 
 test('translates positions, formations and player labels while preserving names', () => {

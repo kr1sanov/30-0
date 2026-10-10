@@ -13,7 +13,6 @@ import SquadStats from '@/components/game/SquadStats';
 import SimulationResult from '@/components/game/SimulationResult';
 import SeasonAwards from '@/components/game/SeasonAwards';
 import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
-import ManagerChoice from '@/components/game/ManagerChoice';
 import DailyChallengeScreen from '@/components/game/DailyChallengeScreen';
 import NationsCupScreen from '@/components/game/NationsCupScreen';
 import { Button } from '@/components/ui/button';
@@ -502,7 +501,27 @@ function HomePage() {
         </div>
       </motion.section>
 
-      {/* ── Challenges Section (hidden on home — only in Profile) ── */}
+      {/* ── Featured player challenges ── */}
+      <section className="px-4 py-6" aria-labelledby="star-challenges-title">
+        <h2 id="star-challenges-title" className="mb-2 text-center text-xl font-black text-white sm:text-2xl">Челленджи</h2>
+        <p className="mb-4 text-center text-sm text-[#9CA3AF]">Легенда уже в составе. Собери вокруг него команду и сыграй сезон.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button type="button" onClick={() => void useGameStore.getState().startStarChallenge('challenge_vagner')}
+            className="rounded-2xl border border-red-500/40 bg-gradient-to-br from-red-950/70 to-blue-950/70 p-5 text-left transition hover:border-red-400 focus-visible:outline-2 focus-visible:outline-red-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-red-300">ПФК ЦСКА · 26.09.2026</span>
+            <strong className="mt-2 block text-xl text-white">❤️ Вагнер Лав · Легенда</strong>
+            <span className="mt-2 block text-sm leading-6 text-slate-300">После прощального матча на ВЭБ Арене верни Вагнера в атаку: его лучшая доступная карточка уже в составе. Стань чемпионом и получи достижение «Вагнер навсегда».</span>
+            <span className="mt-4 block font-bold text-red-300">Начать челлендж →</span>
+          </button>
+          <button type="button" onClick={() => void useGameStore.getState().startStarChallenge('challenge_dzyuba')}
+            className="rounded-2xl border border-sky-500/40 bg-gradient-to-br from-sky-950/70 to-slate-900 p-5 text-left transition hover:border-sky-400 focus-visible:outline-2 focus-visible:outline-sky-400">
+            <span className="text-xs font-bold uppercase tracking-widest text-sky-300">АРТЁМ ДЗЮБА · 01.10.2026</span>
+            <strong className="mt-2 block text-xl text-white">🎯 Голевая эпоха</strong>
+            <span className="mt-2 block text-sm leading-6 text-slate-300">После завершения выступлений в профессиональном футболе собери атаку вокруг лучшей доступной карточки Дзюбы. Стань чемпионом и забей командой 60 голов за сезон.</span>
+            <span className="mt-4 block font-bold text-sky-300">Начать челлендж →</span>
+          </button>
+        </div>
+      </section>
 
       {/* ── Playlists ── */}
       <motion.section
@@ -914,6 +933,13 @@ function DraftScreen() {
 /* ─── Squad Complete Screen ─── */
 function SquadCompleteScreen() {
   const { slots, config, currentManager, setScreen } = useGameStore();
+  const managerStarted = useRef(false);
+  useEffect(() => {
+    if (config.enableManagers && !currentManager && !managerStarted.current && slots.length === 11 && slots.every(slot => slot.playerId)) {
+      managerStarted.current = true;
+      void useGameStore.getState().spinManager();
+    }
+  }, [config.enableManagers, currentManager, slots]);
 
   // Calculate squad stats for pre-season odds
   const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
@@ -975,15 +1001,6 @@ function SquadCompleteScreen() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {config.enableManagers && (
-            <Button
-              variant="outline"
-              onClick={() => setScreen('manager-choice')}
-              className="h-11 rounded-xl border-[#00C896]/50 text-[#00C896] hover:bg-[#00C896]/10"
-            >
-              Крутить тренера
-            </Button>
-          )}
           <Button
             onClick={() => setScreen('pre-match')}
             className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
@@ -1331,8 +1348,6 @@ export default function Home() {
         return <SquadCompleteScreen />;
       case 'pre-match':
         return <PreMatchAnalysis />;
-      case 'manager-choice':
-        return <ManagerChoice />;
       case 'simulation':
         return <SimulationScreen />;
       case 'result':
@@ -1361,7 +1376,6 @@ export default function Home() {
         const state = useGameStore.getState();
         if (screen === 'history' || screen === 'leaderboard') state.setScreen('profile');
         else if (screen === 'awards') state.setScreen('result');
-        else if (screen === 'manager-choice') state.setScreen('pre-match');
         else state.goHome();
       }} />
       <main
