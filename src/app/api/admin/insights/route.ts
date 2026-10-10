@@ -57,9 +57,10 @@ export async function GET(request: Request) {
       if (i !== undefined) chart[i].runs++;
     }
     const challengeWhere = runWhere('challenge', range.from, range.to);
-    const [challengeRuns, challengeCompleted] = await Promise.all([
-      db.gameRun.count({ where: challengeWhere }), db.gameRun.count({ where: { ...challengeWhere, completed: true } }),
-    ]);
+    const [challengeRuns, challengeCompleted] = mode === 'all' || mode === 'challenge'
+      ? await Promise.all([
+        db.gameRun.count({ where: challengeWhere }), db.gameRun.count({ where: { ...challengeWhere, completed: true } }),
+      ]) : [0, 0];
     return NextResponse.json({
       range: { label: range.label, from: range.from, to: range.to, timezone: 'Москва (UTC+3)' },
       metrics: { totalUsers, newUsers, activeUsers, inactiveUsers: totalUsers - activeUsers, runs, completed,
