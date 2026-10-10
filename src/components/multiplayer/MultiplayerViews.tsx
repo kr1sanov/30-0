@@ -38,7 +38,9 @@ export function Lobby({ room, busy, now, onSeat, onSettings, onBot, onRemoveBot,
       onSettings({ eraStartYear: draftStart, eraEndYear: draftEnd });
   };
   const copy = async (value: string) => { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  const link = `https://t.me/RPL30_bot?startapp=room_${room.code}`;
+  const link = telegramWebApp()
+    ? `https://t.me/RPL30_bot?startapp=room_${room.code}`
+    : `${typeof window === 'undefined' ? 'https://30-0.рф' : window.location.origin}/multiplayer?room=${room.code}`;
   const share = () => {
     const shareLink = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(localizeShareText(`Сыграем в 30-0? Код: ${room.code}`))}`;
     const app = telegramWebApp();
