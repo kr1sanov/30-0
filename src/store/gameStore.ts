@@ -1482,7 +1482,7 @@ export const useGameStore = create<GameState>()(
       },
 
       setAvatarEmoji: (emoji) => {
-        const allowed = ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🥊', '🏆', '🏅', '🤸', '🏋️', '🚴', '🏃', '🤾', '🧑', '👨', '👩', '🙂', '😎', '🤩', '🥳', '😄', '🧔'];
+        const allowed = ['⚽', '🏆', '🧤', '🥾', '🏟️', '🪈', '🥇', '🦅', '🦁', '🚀', '👑', '🔥', '💎'];
         if (!allowed.includes(emoji)) return;
         set((state) => ({ profileStats: { ...state.profileStats, avatarEmoji: emoji } }));
         void get().syncProfileToCloud();

@@ -9,6 +9,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Metrics } from '@/lib/metrics';
 import { useTelegram } from '@/hooks/use-telegram';
+import { AVATARS, STYLES } from '@/lib/profileEconomy';
+import Link from 'next/link';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -46,6 +48,13 @@ const TROPHIES = [
   { id: 'dzyuba_record', icon: '🎯', name: 'Голевая эпоха', desc: 'Стань чемпионом с Дзюбой и забей командой 60 голов' },
   { id: 'referral_invite', icon: '🤝', name: 'Первый приглашённый', desc: 'Пригласить первого игрока в 30-0' },
   { id: 'multiplayer_series_champion', icon: '🏅', name: 'Победитель серии', desc: 'Выиграть серию сезонов в мультиплеере' },
+  { id: 'club_crown', icon: '👑', name: 'Верность цветам', desc: 'Стать чемпионом с одним клубом' },
+  { id: 'club_unbeaten', icon: '🛡️', name: 'Неприступная крепость', desc: 'Стать чемпионом своего клуба без поражений' },
+  { id: 'club_attack', icon: '🚀', name: 'Трибуны ликуют', desc: 'Стать чемпионом своего клуба с 60 голами' },
+  { id: 'club_collector', icon: '🧭', name: 'Три герба', desc: 'Стать чемпионом с тремя разными клубами' },
+  { id: 'duel_winner', icon: '⚔️', name: 'Первый вызов', desc: 'Выиграть сезон против живого соперника' },
+  { id: 'duel_unbeaten', icon: '🧱', name: 'Стена в дерби', desc: 'Выиграть мультиплеерный сезон без поражений' },
+  { id: 'duel_hat_trick', icon: '🎩', name: 'Хет-трик дуэлей', desc: 'Трижды выиграть сезон против игроков' },
 ];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -79,6 +88,25 @@ export default function ProfileScreen() {
   const [showAvatarChoices, setShowAvatarChoices] = useState(false);
   const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; telegramInviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
   useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
+  type Economy = { tokenBalance: number; selectedAvatar: string; profileStyle: string; unlocks: string[] };
+  type Friend = { id: string; displayName: string; selectedAvatar: string; username: string | null };
+  const [economy, setEconomy] = useState<Economy | null>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [extraAchievements, setExtraAchievements] = useState<string[]>([]);
+  const [trophyMode, setTrophyMode] = useState('classic');
+  useEffect(() => { if (!user) return;
+    void fetch('/api/social/profile').then(r => r.ok ? r.json() : null).then(setEconomy).catch(() => undefined);
+    void fetch('/api/social/friends').then(r => r.ok ? r.json() : null).then(data => setFriends(data?.friends ?? [])).catch(() => undefined);
+    void fetch('/api/social/achievements').then(r => r.ok ? r.json() : null).then(data => setExtraAchievements(data?.ids ?? [])).catch(() => undefined);
+  }, [user]);
+  const chooseItem = async (kind: 'avatar' | 'style', key: string) => {
+    const response = await fetch('/api/social/profile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, key }) });
+    const data = await response.json();
+    if (!response.ok) { toast.error(data.error || 'Не удалось выбрать оформление'); return; }
+    setEconomy(previous => previous && ({ ...previous, ...data, unlocks: [...previous.unlocks, `${kind}:${key}`] }));
+    if (kind === 'avatar') { setAvatarEmoji(AVATARS.find(a => a.key === key)?.emoji ?? '⚽'); setShowAvatarChoices(false); }
+    toast.success('Оформление обновлено');
+  };
   const [seriesWins, setSeriesWins] = useState(0);
   useEffect(() => { if (user) fetch('/api/multiplayer/series/stats').then(r => r.ok ? r.json() : null).then(data => setSeriesWins(data?.seriesWins ?? 0)).catch(() => undefined); }, [user]);
 
@@ -96,7 +124,7 @@ export default function ProfileScreen() {
   // Total earned trophies
   const hasReferralAchievement = (referrals?.referralCount ?? 0) > 0;
   const referralLink = isTelegram ? referrals?.telegramInviteUrl : referrals?.inviteUrl;
-  const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : id === 'multiplayer_series_champion' ? seriesWins > 0 : profileStats.achievements.includes(id);
+  const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : id === 'multiplayer_series_champion' ? seriesWins > 0 : profileStats.achievements.includes(id) || extraAchievements.includes(id);
   const earnedTrophies = TROPHIES.filter(t => hasTrophy(t.id)).length;
 
   const handleSaveName = async () => {
@@ -115,7 +143,7 @@ export default function ProfileScreen() {
   const displayName = user?.displayName || 'Игрок';
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 animate-fade-in pb-8">
+    <div className={`mx-auto max-w-4xl space-y-6 animate-fade-in rounded-3xl border p-3 pb-8 sm:p-5 ${economy?.profileStyle === 'gold' ? 'border-amber-500/35 bg-gradient-to-b from-amber-950/25 to-transparent' : economy?.profileStyle === 'night' ? 'border-indigo-400/35 bg-gradient-to-b from-indigo-950/30 to-transparent' : economy?.profileStyle === 'pitch' ? 'border-emerald-400/35 bg-gradient-to-b from-emerald-950/30 to-transparent' : 'border-transparent'}`}>
       {/* Header with avatar */}
       <div className="text-center">
         <motion.div
@@ -129,7 +157,7 @@ export default function ProfileScreen() {
             aria-label="Выбрать аватар"
             className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden"
           >
-            {profileStats.avatarEmoji || '⚽'}
+            {AVATARS.find(a => a.key === economy?.selectedAvatar)?.emoji ?? profileStats.avatarEmoji ?? '⚽'}
           </button>
           {profileStats.titles > 0 && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
@@ -137,15 +165,10 @@ export default function ProfileScreen() {
             </div>
           )}
         </motion.div>
-        {showAvatarChoices && (
-          <div className="mx-auto mt-3 grid max-w-xs grid-cols-8 gap-1 rounded-xl border border-[#1E1E1E] bg-[#141414] p-2" aria-label="Выбери эмодзи">
-            {['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🥊', '🏆', '🏅', '🤸', '🏋️', '🚴', '🏃', '🤾', '🧑', '👨', '👩', '🙂', '😎', '🤩', '🥳', '😄', '🧔'].map((emoji) => (
-              <button key={emoji} type="button" onClick={() => { setAvatarEmoji(emoji); setShowAvatarChoices(false); }} className="rounded-lg p-1.5 text-xl hover:bg-[#00C896]/15" aria-label={`Выбрать ${emoji}`}>
-                {emoji}
-              </button>
-            ))}
-          </div>
-        )}
+        {showAvatarChoices && <div className="mx-auto mt-3 max-w-lg rounded-xl border border-[#00C896]/20 bg-[#141414] p-3 text-left">
+          <div className="mb-2 text-xs font-bold text-white">Аватары · 3 бесплатных</div>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">{AVATARS.map(item => { const unlocked = !item.price || economy?.unlocks.includes(`avatar:${item.key}`); return <button key={item.key} type="button" onClick={() => void chooseItem('avatar', item.key)} className={`rounded-xl border p-2 text-center text-xl transition hover:border-[#00C896] ${economy?.selectedAvatar === item.key ? 'border-[#00C896] bg-[#00C896]/15' : 'border-white/10'}`} title={item.ru} aria-label={`${item.ru}, ${unlocked ? 'доступен' : `${item.price} токенов`}`}>{item.emoji}<span className="block text-[9px] text-slate-400">{unlocked ? item.ru : `${item.price} 🪙`}</span></button>; })}</div>
+        </div>}
 
         {/* Display name with edit button */}
         <div className="flex items-center justify-center gap-2 mt-3">
@@ -190,6 +213,7 @@ export default function ProfileScreen() {
         <p className="text-sm text-[#9CA3AF] mt-1">Игрок 30-0</p>
       </div>
 
+      {user && <div className="flex flex-wrap justify-center gap-2 text-xs"><Link href={`/players/${encodeURIComponent(user.id)}`} className="rounded-lg border border-[#00C896]/35 px-3 py-2 text-[#00C896]">Открыть публичный профиль</Link><button onClick={() => void navigator.clipboard.writeText(`${location.origin}/players/${encodeURIComponent(user.id)}`).then(() => toast.success('Ссылка на профиль скопирована'))} className="rounded-lg border border-white/20 px-3 py-2 text-white">Поделиться профилем</button></div>}
       {/* Local profile info + reset button */}
       <div className="flex items-center justify-center gap-3 py-2">
         <span role="status" className="inline-flex items-center gap-2 rounded-lg bg-[#229ED9] px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-[#229ED9]/20">
@@ -269,45 +293,34 @@ export default function ProfileScreen() {
         ) : null}
       </section>
 
+      <section className="rounded-2xl border border-[#00C896]/25 bg-[#141414] p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3"><div><h3 className="font-bold text-white">🪙 Токены и оформление</h3><p className="mt-1 text-xs text-slate-400">Чемпион: драфт +20, один клуб +25, челлендж +30; мультиплеер +35 с игроком или +15 с ботом. Остальные результаты не начисляют токены.</p></div><strong className="shrink-0 text-xl text-[#00C896]">{economy?.tokenBalance ?? '—'} 🪙</strong></div>
+        <h4 className="mt-4 text-xs font-bold uppercase tracking-wider text-slate-400">Стили профиля</h4>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{STYLES.map(item => <button key={item.key} onClick={() => void chooseItem('style', item.key)} className={`rounded-xl border px-3 py-3 text-xs ${economy?.profileStyle === item.key ? 'border-[#00C896] bg-[#00C896]/15 text-white' : 'border-white/10 text-slate-300'}`}>{item.ru}<span className="block pt-1 text-[#00C896]">{!item.price || economy?.unlocks.includes(`style:${item.key}`) ? 'Доступен' : `${item.price} 🪙`}</span></button>)}</div>
+        <p className="mt-3 text-[11px] text-slate-500">Токены сохраняются в аккаунте. Позже ими можно будет открывать новые режимы и архивные челленджи.</p>
+      </section>
+      <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5"><h3 className="font-bold text-white">Друзья · {friends.length}</h3>
+        {friends.length ? <div className="mt-3 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={`/players/${friend.id}`} className="rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]">{AVATARS.find(a => a.key === friend.selectedAvatar)?.emoji ?? '⚽'} {friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Открой ссылку на профиль игрока, чтобы добавить его в друзья.</p>}
+        <Link href="/multiplayer" className="mt-3 inline-block text-xs font-semibold text-[#00C896]">Пригласить друзей в мультиплеер →</Link>
+      </section>
+
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
         <button type="button" onClick={() => setShowTrophies(open => !open)} aria-expanded={showTrophies} className="flex w-full items-center justify-between text-left">
           <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Витрина трофеев</h3>
           <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length} {showTrophies ? '▲' : '▼'}</span>
         </button>
-        {showTrophies && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-          {TROPHIES.map((trophy) => {
-            const earned = hasTrophy(trophy.id);
-            return (
-              <motion.div
-                key={trophy.id}
-                whileHover={{ scale: earned ? 1.08 : 1.02 }}
-                className={`rounded-xl p-2 text-center border transition-all relative ${
-                  earned
-                    ? 'bg-gradient-to-b from-yellow-500/15 to-yellow-500/5 border-yellow-500/30 shadow-[0_0_12px_rgba(234,179,8,0.15)] trophy-shimmer'
-                    : 'frosted-glass'
-                }`}
-              >
-                {earned ? (
-                  <div className="text-xl mb-0.5 drop-shadow-[0_0_6px_rgba(234,179,8,0.5)]">{trophy.icon}</div>
-                ) : (
-                  <div className="relative text-xl mb-0.5 grayscale opacity-40">
-                    {trophy.icon}
-                    <span className="absolute inset-0 flex items-center justify-center text-xs">🔒</span>
-                  </div>
-                )}
-                <div className={`text-[9px] font-bold leading-tight ${earned ? 'text-yellow-400' : 'text-[#9CA3AF]/40'}`}>
-                  {trophy.name}
-                </div>
-                <div className={`text-[8px] leading-tight mt-0.5 ${earned ? 'text-[#9CA3AF]/60' : 'text-[#9CA3AF]/20'}`}>
-                  {trophy.desc}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-        )}
+        {showTrophies && <div className="mt-4">
+          <div className="mb-4 flex flex-wrap gap-2">{[['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['challenge', 'Челленджи'], ['multiplayer', 'Мультиплеер'], ['social', 'Профиль']].map(([key, label]) => <button key={key} onClick={() => setTrophyMode(key)} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${trophyMode === key ? 'border-[#00C896] bg-[#00C896]/15 text-[#00C896]' : 'border-white/10 text-slate-400'}`}>{label}</button>)}</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">{TROPHIES.filter(trophy => {
+            if (trophyMode === 'single_club') return trophy.id.startsWith('club_') || ['army_season', 'neva_attack'].includes(trophy.id);
+            if (trophyMode === 'multiplayer') return trophy.id.startsWith('duel_') || trophy.id === 'multiplayer_series_champion';
+            if (trophyMode === 'challenge') return ['vagner_legend', 'dzyuba_record'].includes(trophy.id);
+            if (trophyMode === 'social') return trophy.id === 'referral_invite';
+            return !['army_season', 'neva_attack', 'vagner_legend', 'dzyuba_record', 'referral_invite', 'multiplayer_series_champion'].includes(trophy.id) && !trophy.id.startsWith('club_') && !trophy.id.startsWith('duel_');
+          }).map(trophy => { const earned = hasTrophy(trophy.id); return <motion.div key={trophy.id} whileHover={{ scale: 1.03 }} className={`relative rounded-xl border p-3 text-center ${earned ? 'border-yellow-500/30 bg-yellow-500/10' : 'border-white/10 bg-black/20 opacity-50'}`}><div className="text-2xl">{earned ? trophy.icon : '🔒'}</div><div className="mt-1 text-xs font-bold text-white">{trophy.name}</div><p className="mt-1 text-[10px] text-slate-400">{trophy.desc}</p></motion.div>; })}</div>
+        </div>}
+
       </div>
 
       {/* History */}

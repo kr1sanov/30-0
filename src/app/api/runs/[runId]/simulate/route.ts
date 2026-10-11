@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { awardRun, seasonReward } from '@/lib/profileEconomy';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
@@ -128,8 +129,8 @@ export async function POST(
     const strength = calculateSquadStrength(squadSlots, managerRating ?? undefined);
 
     // Update the game run with results
-    await db.gameRun.update({
-      where: { id: runId },
+    const saved = await db.gameRun.updateMany({
+      where: { id: runId, completed: false },
       data: {
         completed: true,
         wins: result.wins,
@@ -144,6 +145,9 @@ export async function POST(
         managerRating: managerRating || null,
       },
     });
+
+    if (!saved.count) return NextResponse.json({ error: 'Run is already completed' }, { status: 409 });
+    await awardRun(runId, run.userId, seasonReward(run.gameMode, result.position));
 
     // Build player list for result
     const players = filledSlots.map((slot) => ({

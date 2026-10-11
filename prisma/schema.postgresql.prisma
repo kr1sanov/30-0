@@ -119,6 +119,13 @@ model User {
   referredBy       String?
   referralJoinedAt DateTime?
   referralCount    Int      @default(0)
+  tokenBalance     Int      @default(0)
+  selectedAvatar   String   @default("ball")
+  profileStyle     String   @default("classic")
+  tokenEntries     TokenEntry[]
+  profileUnlocks   ProfileUnlock[]
+  sentFriendships  Friendship[] @relation("FriendFrom")
+  receivedFriendships Friendship[] @relation("FriendTo")
 
   runs             GameRun[]
   multiplayerSeats MultiplayerSeat[]
@@ -216,6 +223,7 @@ model GameRun {
 
   slots        GameSlot[]
   multiplayerSeat MultiplayerSeat?
+  tokenEntry TokenEntry?
 
   @@index([userId])
   @@index([completed])
@@ -295,4 +303,38 @@ model MultiplayerSeat {
 
   @@unique([roomCode, userId])
   @@index([roomCode])
+}
+
+
+// One reward per completed run. Purchases are separate negative entries.
+model TokenEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  runId     String?  @unique
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  run       GameRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  @@index([userId, createdAt])
+}
+
+model ProfileUnlock {
+  id        String   @id @default(cuid())
+  userId    String
+  key        String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, key])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  fromId    String
+  toId      String
+  createdAt DateTime @default(now())
+  from      User     @relation("FriendFrom", fields: [fromId], references: [id], onDelete: Cascade)
+  to        User     @relation("FriendTo", fields: [toId], references: [id], onDelete: Cascade)
+  @@unique([fromId, toId])
+  @@index([toId])
 }

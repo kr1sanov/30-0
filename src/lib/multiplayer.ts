@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { db } from '@/lib/db';
+import { awardRun, seasonReward } from '@/lib/profileEconomy';
 import { FORMATIONS } from '@/lib/positions';
 import { calculateSquadStrength, simulateMatch, simulateSeason, type SquadSlot } from '@/lib/simulation';
 import { ERA_MIN_YEAR, ERA_MAX_YEAR } from '@/lib/types';
@@ -136,5 +137,12 @@ export async function resolveRoom(code: string) {
     completed: true, wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,
     goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst, position: index + 1, overallRating: Math.round(result.rating),
   } })));
+  for (const result of results) {
+    const seat = room.seats.find(value => value.id === result.id)!;
+    if (seat.isBot || !seat.runId) continue;
+    const hasHuman = room.seats.some(value => !value.isBot && value.userId !== seat.userId);
+    try { await awardRun(seat.runId, seat.userId, seasonReward('multiplayer', result.id === results[0].id ? 1 : 2, hasHuman)); }
+    catch (error) { console.error('Multiplayer reward failed', error); }
+  }
   return true;
 }

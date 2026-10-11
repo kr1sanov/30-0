@@ -168,10 +168,10 @@ function getSeasonResultDescription(run: GameRunData): string {
     return 'Чемпион! Золотые медали!';
   }
   if (run.position <= 4) {
-    return 'Зона Лиги Чемпионов!';
+    return 'В четвёрке лучших!';
   }
   if (run.position <= 6) {
-    return 'Зона еврокубков';
+    return 'Шестёрка лучших';
   }
   if (run.position >= 14) {
     return 'Зона вылета...';
