@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Metrics } from '@/lib/metrics';
 import { useTelegram } from '@/hooks/use-telegram';
-import { AVATARS, STYLES } from '@/lib/profileEconomy';
+import { AVATARS, STYLES } from '@/lib/profileCatalog';
 import Link from 'next/link';
 import FootballAvatar from './FootballAvatar';
 

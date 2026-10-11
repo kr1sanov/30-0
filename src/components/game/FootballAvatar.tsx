@@ -1,4 +1,4 @@
-import { AVATARS } from '@/lib/profileEconomy';
+import { AVATARS } from '@/lib/profileCatalog';
 
 const palettes: Record<string, [string, string]> = {
   ball: ['#00c896', '#0d5447'], cup: ['#eab308', '#73460d'], glove: ['#60a5fa', '#173865'],
