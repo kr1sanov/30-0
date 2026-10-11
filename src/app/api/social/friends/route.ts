@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Авторизуйся' }, { status: 401 });
   const friends = await db.friendship.findMany({ where: { fromId: userId }, orderBy: { createdAt: 'desc' }, take: 100,
-    include: { to: { select: { id: true, displayName: true, username: true, selectedAvatar: true, profileStyle: true } } } });
+    include: { to: { select: { id: true, displayName: true, username: true, photoUrl: true } } } });
   return NextResponse.json({ friends: friends.map(item => item.to) });
 }
 

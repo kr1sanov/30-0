@@ -5,6 +5,7 @@ export interface TelegramIdentity {
   firstName: string;
   lastName?: string;
   username?: string;
+  photoUrl?: string;
 }
 
 // Production key published at https://core.telegram.org/bots/webapps#validating-data-for-third-party-use
@@ -47,6 +48,8 @@ function identity(user: Record<string, unknown>): TelegramIdentity | null {
     id, firstName: user.first_name,
     lastName: typeof user.last_name === 'string' ? user.last_name.slice(0, 256) : undefined,
     username: typeof user.username === 'string' ? user.username.slice(0, 64) : undefined,
+    photoUrl: typeof (user.photo_url ?? user.picture) === 'string' && /^https:\/\//.test(String(user.photo_url ?? user.picture))
+      ? String(user.photo_url ?? user.picture).slice(0, 2048) : undefined,
   };
 }
 

@@ -23,8 +23,11 @@ function token(overrides: Record<string, unknown> = {}, headerOverrides: Record<
 
 test('accepts Telegram RS256 ID token', () => {
   assert.deepEqual(verifyTelegramIdTokenWithKeys(token(), clientId, nonce, keys, now), {
-    id: '1234567', firstName: 'Никита', lastName: undefined, username: 'test_player',
+    id: '1234567', firstName: 'Никита', lastName: undefined, username: 'test_player', photoUrl: undefined,
   });
+});
+test('accepts a photo URL from verified profile claims', () => {
+  assert.equal(verifyTelegramIdTokenWithKeys(token({picture:'https://t.me/i/userpic/test.jpg'}), clientId, nonce, keys, now)?.photoUrl, 'https://t.me/i/userpic/test.jpg');
 });
 test('rejects wrong issuer', () => assert.equal(verifyTelegramIdTokenWithKeys(token({iss:'https://attacker.example'}), clientId, nonce, keys, now), null));
 test('rejects wrong audience', () => assert.equal(verifyTelegramIdTokenWithKeys(token({aud:'1'}), clientId, nonce, keys, now), null));

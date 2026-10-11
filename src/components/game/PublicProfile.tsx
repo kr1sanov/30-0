@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import FootballAvatar from './FootballAvatar';
+import TelegramAvatar from './TelegramAvatar';
 import { toast } from 'sonner';
 
-type Player = { id: string; displayName: string; username: string | null; avatar: string; style: string; createdAt: string; seasons: number; titles: number; bestPoints: number; modes: Record<string, number>; following: boolean; own: boolean };
+type Player = { id: string; displayName: string; username: string | null; createdAt: string; seasons: number; titles: number; bestPoints: number; modes: Record<string, number>; following: boolean; own: boolean };
 export default function PublicProfile({ id }: { id: string }) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [error, setError] = useState('');
@@ -20,8 +20,8 @@ export default function PublicProfile({ id }: { id: string }) {
   return <div className="min-h-screen bg-[#080b10] text-white"><Header/><main className="mx-auto max-w-3xl space-y-5 px-4 py-10">
     <Link href="/" className="text-sm text-[#00C896]">← На главную</Link>
     {error && <p role="alert">{error}</p>}{!player && !error && <p>Загружаем профиль…</p>}
-    {player && <div className={`rounded-3xl border p-6 text-center ${player.style === 'gold' ? 'border-amber-500/50 bg-gradient-to-br from-amber-950/70 to-[#111]' : player.style === 'night' ? 'border-indigo-400/40 bg-gradient-to-br from-indigo-950 to-[#111]' : player.style === 'pitch' ? 'border-emerald-400/40 bg-gradient-to-br from-emerald-950 to-[#111]' : 'border-white/10 bg-[#141414]'}`}>
-      <div className="flex justify-center"><FootballAvatar avatar={player.avatar} size={100}/></div><h1 className="mt-3 text-2xl font-black">{player.displayName}</h1>
+    {player && <div className={`rounded-3xl border p-6 text-center $border-white/10 bg-[#141414]`}>
+      <div className="flex justify-center"><TelegramAvatar key={player.id} id={player.id} name={player.displayName} size={100}/></div><h1 className="mt-3 text-2xl font-black">{player.displayName}</h1>
       {player.username && <p className="text-sm text-slate-400">@{player.username}</p>}
       <p className="mt-2 text-xs text-slate-500">В игре с {new Date(player.createdAt).toLocaleDateString('ru-RU')}</p>
       <div className="mt-5 grid grid-cols-3 gap-2">{[[player.seasons, 'Сезонов'], [player.titles, 'Титулов'], [player.bestPoints, 'Лучший результат']].map(([value, label]) => <div key={label} className="rounded-xl bg-black/30 p-3"><strong className="block text-xl text-[#00C896]">{value}</strong><span className="text-xs text-slate-400">{label}</span></div>)}</div>

@@ -1,5 +1,4 @@
 import { db } from '@/lib/db';
-import { awardRun, seasonReward } from '@/lib/profileEconomy';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
@@ -147,7 +146,6 @@ export async function POST(
     });
 
     if (!saved.count) return NextResponse.json({ error: 'Run is already completed' }, { status: 409 });
-    await awardRun(runId, run.userId, seasonReward(run.gameMode, result.position));
 
     // Build player list for result
     const players = filledSlots.map((slot) => ({

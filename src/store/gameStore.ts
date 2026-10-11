@@ -78,7 +78,6 @@ interface ProfileStats {
   totalGoals: number;
   favoriteFormation: string;
   achievements: string[];
-  avatarEmoji?: string;
   history: Array<{
     id: string;
     date: string;
@@ -192,7 +191,6 @@ interface GameState {
   resetProgress: () => void;
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
-  setAvatarEmoji: (emoji: string) => void;
   startDailyChallenge: (challenge: DailyChallenge) => void;
   startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba', issueId: string) => Promise<void>;
   clearError: () => void;
@@ -1479,13 +1477,6 @@ export const useGameStore = create<GameState>()(
           }
           localStorage.setItem('30-0-progress-epoch', epoch);
         } catch (error) { console.error('Failed to load profile progress:', error); }
-      },
-
-      setAvatarEmoji: (emoji) => {
-        const allowed = ['⚽', '🏆', '🧤', '🥾', '🏟️', '🪈', '🥇', '🦅', '🦁', '🚀', '👑', '🔥', '💎'];
-        if (!allowed.includes(emoji)) return;
-        set((state) => ({ profileStats: { ...state.profileStats, avatarEmoji: emoji } }));
-        void get().syncProfileToCloud();
       },
 
       // Start a daily challenge — transition to setup screen with challenge data

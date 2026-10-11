@@ -18,7 +18,12 @@ function widget(extra: Record<string, unknown> = {}) {
   return { ...fields, hash: createHmac('sha256', createHash('sha256').update(token).digest()).update(check).digest('hex') };
 }
 test('Mini App accepts a valid signature and Cyrillic name', () => {
-  assert.deepEqual(verifyMiniApp(mini(), token, now), {id:'1234567', firstName:'Никита', lastName:undefined, username:'test_player'});
+  assert.deepEqual(verifyMiniApp(mini(), token, now), {id:'1234567', firstName:'Никита', lastName:undefined, username:'test_player', photoUrl:undefined});
+});
+test('Mini App photo is taken only from signed Telegram data', () => {
+  const signed = mini({user: JSON.stringify({...user, photo_url:'https://t.me/i/userpic/test.jpg'})});
+  assert.equal(verifyMiniApp(signed, token, now)?.photoUrl, 'https://t.me/i/userpic/test.jpg');
+  assert.equal(verifyMiniApp(signed.replace('test.jpg','forged.jpg'), token, now), null);
 });
 test('Mini App rejects tampering', () => assert.equal(verifyMiniApp(mini().replace('1234567','7654321'), token, now), null));
 test('Mini App rejects duplicate fields', () => assert.equal(verifyMiniApp(mini()+'&auth_date='+now, token, now), null));

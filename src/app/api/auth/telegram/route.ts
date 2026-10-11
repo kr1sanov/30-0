@@ -36,6 +36,7 @@ export async function GET(request: Request) {
       displayName: user.displayName,
       username: user.username,
       firstName: user.firstName,
+      photoUrl: user.photoUrl,
       createdAt: user.createdAt.getTime(),
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
       notificationCadence: user.notificationCadence,
@@ -78,7 +79,8 @@ export async function POST(request: Request) {
           ? verifyLoginWidget(authData, process.env.TELEGRAM_BOT_TOKEN)
           : null;
     if (!verified) return NextResponse.json({ error: 'Не удалось подтвердить вход через Telegram' }, { status: 401 });
-    const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null };
+    const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null,
+      ...(verified.photoUrl ? { photoUrl: verified.photoUrl } : {}) };
     // Telegram signs start_param inside initData. Only attribute a referral after
     // the initData signature above has been verified.
     const signedReferralCode = typeof body.initData === 'string'
@@ -133,6 +135,7 @@ export async function POST(request: Request) {
       displayName: user.displayName,
       username: user.username,
       firstName: user.firstName,
+      photoUrl: user.photoUrl,
       createdAt: user.createdAt.getTime(),
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
       notificationCadence: user.notificationCadence,

@@ -39,6 +39,7 @@ export function verifyTelegramIdTokenWithKeys(token: string, clientId: string, n
       firstName: typeof claims.name === 'string' ? claims.name.slice(0, 256) : 'Игрок',
       lastName: undefined,
       username: typeof claims.preferred_username === 'string' ? claims.preferred_username.slice(0, 64) : undefined,
+      photoUrl: typeof claims.picture === 'string' && /^https:\/\//.test(claims.picture) ? claims.picture.slice(0, 2048) : undefined,
     };
   } catch { return null; }
 }
