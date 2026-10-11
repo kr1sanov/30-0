@@ -11,6 +11,7 @@ import { Metrics } from '@/lib/metrics';
 import { useTelegram } from '@/hooks/use-telegram';
 import { AVATARS, STYLES } from '@/lib/profileEconomy';
 import Link from 'next/link';
+import FootballAvatar from './FootballAvatar';
 
 const TROPHIES = [
   { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
@@ -157,7 +158,7 @@ export default function ProfileScreen() {
             aria-label="Выбрать аватар"
             className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00C896] to-[#00A67A] flex items-center justify-center text-3xl shadow-lg shadow-[#00C896]/20 avatar-conic-ring overflow-hidden"
           >
-            {AVATARS.find(a => a.key === economy?.selectedAvatar)?.emoji ?? profileStats.avatarEmoji ?? '⚽'}
+            <FootballAvatar avatar={economy?.selectedAvatar} size={78}/>
           </button>
           {profileStats.titles > 0 && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
@@ -167,7 +168,7 @@ export default function ProfileScreen() {
         </motion.div>
         {showAvatarChoices && <div className="mx-auto mt-3 max-w-lg rounded-xl border border-[#00C896]/20 bg-[#141414] p-3 text-left">
           <div className="mb-2 text-xs font-bold text-white">Аватары · 3 бесплатных</div>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">{AVATARS.map(item => { const unlocked = !item.price || economy?.unlocks.includes(`avatar:${item.key}`); return <button key={item.key} type="button" onClick={() => void chooseItem('avatar', item.key)} className={`rounded-xl border p-2 text-center text-xl transition hover:border-[#00C896] ${economy?.selectedAvatar === item.key ? 'border-[#00C896] bg-[#00C896]/15' : 'border-white/10'}`} title={item.ru} aria-label={`${item.ru}, ${unlocked ? 'доступен' : `${item.price} токенов`}`}>{item.emoji}<span className="block text-[9px] text-slate-400">{unlocked ? item.ru : `${item.price} 🪙`}</span></button>; })}</div>
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">{AVATARS.map(item => { const unlocked = !item.price || economy?.unlocks.includes(`avatar:${item.key}`); return <button key={item.key} type="button" onClick={() => void chooseItem('avatar', item.key)} className={`rounded-xl border p-2 text-center text-xl transition hover:border-[#00C896] ${economy?.selectedAvatar === item.key ? 'border-[#00C896] bg-[#00C896]/15' : 'border-white/10'}`} title={item.ru} aria-label={`${item.ru}, ${unlocked ? 'доступен' : `${item.price} токенов`}`}><FootballAvatar avatar={item.key} size={42}/><span className="block text-[9px] text-slate-400">{unlocked ? item.ru : `${item.price} 🪙`}</span></button>; })}</div>
         </div>}
 
         {/* Display name with edit button */}
@@ -300,7 +301,7 @@ export default function ProfileScreen() {
         <p className="mt-3 text-[11px] text-slate-500">Токены сохраняются в аккаунте. Позже ими можно будет открывать новые режимы и архивные челленджи.</p>
       </section>
       <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5"><h3 className="font-bold text-white">Друзья · {friends.length}</h3>
-        {friends.length ? <div className="mt-3 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={`/players/${friend.id}`} className="rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]">{AVATARS.find(a => a.key === friend.selectedAvatar)?.emoji ?? '⚽'} {friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Открой ссылку на профиль игрока, чтобы добавить его в друзья.</p>}
+        {friends.length ? <div className="mt-3 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={`/players/${friend.id}`} className="rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]"><FootballAvatar avatar={friend.selectedAvatar} size={24}/> {friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Открой ссылку на профиль игрока, чтобы добавить его в друзья.</p>}
         <Link href="/multiplayer" className="mt-3 inline-block text-xs font-semibold text-[#00C896]">Пригласить друзей в мультиплеер →</Link>
       </section>
 
