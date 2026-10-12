@@ -111,10 +111,19 @@ export async function flushSocialNotifications() {
         });
         return;
       }
+      const started =
+        user?.telegramChatStarted ||
+        (user &&
+          (
+            await db.user.findUnique({
+              where: { id: item.userId },
+              select: { telegramChatStarted: true },
+            })
+          )?.telegramChatStarted);
       if (
         !chatId ||
         !allowed ||
-        !user?.telegramChatStarted ||
+        !started ||
         user.deleteAfterAt ||
         activeRestriction(user)
       ) {
