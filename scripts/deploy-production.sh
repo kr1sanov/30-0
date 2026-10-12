@@ -200,6 +200,7 @@ cat > app.js << 'APPJS'
 // Passenger entrypoint for 30-0 RPL
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
+process.env.RPL_APP_ROOT = __dirname;
 const { loadEnvFile } = require('node:process');
 try {
   loadEnvFile(path.join(__dirname, '.env'));
