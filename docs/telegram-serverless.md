@@ -14,7 +14,8 @@ uploaded as a static Mini App build, so the frontend URL stays unchanged.
    `TELEGRAM_SERVERLESS_BRIDGE_SECRET` production secret to override it.
 4. A configured `TGCLOUD_TOKEN` selects Serverless transport automatically.
 5. Run the CI/CD Pipeline on main first to install the bridge secret on Jino.
-6. Run “Deploy Telegram Serverless bot” on main. This fetches deployment state,
+6. After a successful main push pipeline, “Deploy Telegram Serverless bot”
+   runs automatically; it can also be started manually on main. It fetches deployment state,
    pushes only our handlers and shared modules, and synchronizes the managed
    webhook without discarding queued updates. It does not migrate a database
    or change the Mini App URL.
