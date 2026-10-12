@@ -15,7 +15,8 @@ async function callTelegram(method: string, body: BodyInit, headers?: HeadersIni
   const timeout = setTimeout(() => controller.abort(), 7_000);
   try {
     const response = await fetch(`${API_ROOT}/bot${token}/${method}`, { method: 'POST', body, headers, signal: controller.signal, cache: 'no-store' });
-    return response.ok ? response : null;
+    const payload = await response.clone().json().catch(() => null) as { ok?: boolean } | null;
+    return response.ok && payload?.ok === true ? response : null;
   } catch { return null; } finally { clearTimeout(timeout); }
 }
 export type TelegramMessageSendResult =

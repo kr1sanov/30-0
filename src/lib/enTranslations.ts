@@ -992,6 +992,87 @@ Object.assign(TEXT, {
   'Собери команду из игроков РПЛ разных эпох и попробуй пройти сезон без поражений.':'Build an RPL squad from different eras and try to finish a season unbeaten.',
 });
 
+Object.assign(TEXT, {
+  "Заявка отклонена": "Request declined",
+  "Найди игрока по никнейму и добавь в друзья.": "Find a player by username and add them as a friend.",
+  "Разделы друзей": "Friend sections",
+  "Входящие": "Incoming",
+  "Отправленные": "Sent",
+  "Найти игрока": "Find player",
+  "Никнейм игрока": "Player username",
+  "Загрузка…": "Loading…",
+  "Не удалось загрузить игроков": "Could not load players",
+  "В друзьях": "Friends",
+  "Введи минимум 2 символа никнейма.": "Enter at least 2 username characters.",
+  "Игроки не найдены": "No players found",
+  "Новых заявок нет": "No new requests",
+  "Отправленных заявок нет": "No sent requests",
+  "игроков ·": "players ·",
+  "Поделиться профилем ↗": "Share profile ↗",
+  "Приглашения ·": "Invitations ·",
+  "🏆 Достижения": "🏆 Achievements",
+  "Профиль": "Profile",
+  "Любимый клуб ·": "Favourite club ·",
+  "сезонов в режиме «Один клуб»": "one club seasons",
+  "Друзья ·": "Friends ·",
+  "Достижения ·": "Achievements ·",
+  "Принять заявку": "Accept request",
+  "Пригласить": "Invite",
+  "Приглашения в игру ·": "Game invitations ·",
+  "приглашает тебя": "invites you",
+  "Лобби ·": "Lobby ·",
+  "Посмотреть результат сезона": "View season result",
+  "История матчей ·": "Match history ·",
+  "Драфт Российской Премьер-лиги": "Russian Premier League Draft",
+  "ПОБЕДЫ · НИЧЬИ · ПОРАЖЕНИЯ": "WINS · DRAWS · LOSSES",
+  "Один состав = один драфт": "One squad = one draft",
+  "Периоды и даты — по Москве (UTC+3). Данные доступны только в админке.": "Periods and dates use Moscow time (UTC+3). Data is available only in the admin panel.",
+  "Режим лидеров": "Leaderboard mode",
+  "игр": "games",
+  "участников": "participants",
+  "Пользователи ·": "Users ·",
+  "Игры и рекорды — за выбранный период; всего игр — за всё время.": "Games and records cover the selected period; total games covers all time.",
+  "заверш.)": "completed)",
+  "Один драфт — один состав; в мультиплеере у каждого участника свой состав.": "One draft creates one squad; each multiplayer participant has their own squad.",
+  "· бот": "· bot",
+  "Комната": "Room",
+  "Создатель:": "Created by:",
+  "Одна игра": "One game",
+  "Страница": "Page",
+  "Показано:": "Showing:",
+  "Дополнительные позиции": "Additional positions",
+  "СБРОСИТЬ ПРОГРЕСС ВСЕХ": "RESET ALL PROGRESS",
+  "Не удалось загрузить челленджи. Обнови страницу.": "Could not load challenges. Refresh the page.",
+  "Сначала войди через Telegram": "Sign in through Telegram first",
+  "Не удалось начать челлендж": "Could not start the challenge",
+  "Ошибка запуска": "Could not start",
+  "Ссылка приглашения скопирована": "Invitation link copied",
+  "Новые задания каждую субботу в 12:00 МСК. Собери состав, сыграй сезон и забери достижение.": "New challenges every Saturday at 12:00 Moscow time. Draft a squad, play a season and earn an achievement.",
+  "Загружаем челленджи…": "Loading challenges…",
+  "Активные челленджи": "Active challenges",
+  "Новые": "New",
+  "МСК": "MSK",
+  "За эту неделю уже сыграно сезонов": "Seasons played this week",
+  "Твой прогресс": "Your progress",
+  "Архив челленджей": "Challenge archive",
+  "Архив открыт до": "Archive unlocked until",
+  "Открой архив на 24 часа": "Unlock the archive for 24 hours",
+  "Пригласи одного человека по своей ссылке. Когда он авторизуется в игре, архив откроется на сутки. Новое приглашение продлит доступ.": "Invite someone using your link. When they sign in, the archive unlocks for 24 hours. Each new invitation extends access.",
+  "Архив появится после следующей субботы.": "The archive will appear after next Saturday.",
+  "Выполнено ✓": "Completed ✓",
+  "Играть снова →": "Play again →",
+  "Открывается по приглашению": "Unlocked with an invitation"
+});
+
+Object.assign(TEXT, {
+  'Уведомления Telegram': 'Telegram notifications', 'Включены': 'Enabled', 'Открыть Telegram': 'Open Telegram',
+  'Заявки в друзья и приглашения приходят в бот. Нажми «Начать» в Telegram, чтобы получать сообщения.': 'Friend requests and invitations arrive in the bot. Tap Start in Telegram to receive messages.',
+});
+
+export function translateClient(value: string): string {
+  return typeof document !== 'undefined' && document.documentElement.lang === 'en' ? translateInterface(value) : value;
+}
+
 export function translateInterface(value: string): string {
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';

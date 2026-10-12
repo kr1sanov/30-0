@@ -1,4 +1,5 @@
 'use client';
+import { translateClient } from '@/lib/enTranslations';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -166,7 +167,7 @@ export default function MultiplayerPage() {
   });
 
   const closeRoom = () => {
-    if (!room || !window.confirm('Закрыть комнату для всех участников? Текущий драфт будет остановлен.')) return;
+    if (!room || !window.confirm(translateClient('Закрыть комнату для всех участников? Текущий драфт будет остановлен.'))) return;
     void action(async () => { await json(`/api/multiplayer/rooms/${room.code}`, 'DELETE'); backToMenu(); });
   };
 

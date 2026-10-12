@@ -131,6 +131,7 @@ model User {
 
   runs             GameRun[]
   multiplayerSeats MultiplayerSeat[]
+  @@index([username])
 }
 
 model AdminCredential {
@@ -351,4 +352,17 @@ model Friendship {
   to        User     @relation("FriendTo", fields: [toId], references: [id], onDelete: Cascade)
   @@unique([fromId, toId])
   @@index([toId])
+}
+
+model TelegramOutbox {
+  id String @id @default(cuid())
+  eventKey String @unique
+  userId String
+  text String
+  startParam String
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  sentAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([sentAt, availableAt])
 }

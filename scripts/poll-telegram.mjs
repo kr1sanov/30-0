@@ -1,4 +1,5 @@
 import { open, readFile, stat, unlink, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -7,7 +8,6 @@ const lockPath = join(appDir, '.telegram-poll.lock');
 const offsetPath = join(appDir, '.telegram-update-offset');
 const photoPath = join(appDir, '.next/standalone/public/telegram-start.png');
 const caption = '<b>30-0 · Драфт РПЛ</b> ⚽\nСобери команду из игроков РПЛ разных сезонов, сыграй сезон из 30 матчей и попробуй победить во всех. Играй сам или с друзьями.';
-const replyMarkup = { inline_keyboard: [[{ text: 'Играть', url: 'https://t.me/RPL30_bot?startapp' }]] };
 
 async function telegram(token, method, options = {}) {
   const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
@@ -18,27 +18,45 @@ async function telegram(token, method, options = {}) {
   return result.result;
 }
 
-async function sendWelcome(token, chatId) {
+async function sendWelcome(token, chatId, language = 'ru') {
+  const welcomeCaption = language.startsWith('ru') ? caption : '<b>30-0 · RPL Draft</b> ⚽\nDraft a squad, play 30 matches and try to win them all. Play on your own or with friends.';
+  const markup = { inline_keyboard: [[{ text: language.startsWith('ru') ? 'Играть' : 'Play', url: 'https://t.me/RPL30_bot?startapp' }], [{ text: language.startsWith('ru') ? 'Мой профиль' : 'My profile', url: 'https://t.me/RPL30_bot?startapp=my_profile' }]] };
   const image = await readFile(photoPath).catch(() => readFile(join(appDir, 'public/telegram-start.png')).catch(() => null));
   if (image) {
     try {
       const form = new FormData();
       form.set('chat_id', String(chatId));
-      form.set('caption', caption);
+      form.set('caption', welcomeCaption);
       form.set('parse_mode', 'HTML');
-      form.set('reply_markup', JSON.stringify(replyMarkup));
+      form.set('reply_markup', JSON.stringify(markup));
       form.set('photo', new Blob([image], { type: 'image/png' }), '30-0.png');
       await telegram(token, 'sendPhoto', { method: 'POST', body: form });
       return;
     } catch (error) { console.error('Telegram photo failed, trying text:', error); }
   }
   await telegram(token, 'sendMessage', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: caption, parse_mode: 'HTML', reply_markup: replyMarkup }) });
+    body: JSON.stringify({ chat_id: chatId, text: welcomeCaption, parse_mode: 'HTML', reply_markup: markup }) });
+}
+
+async function syncProfile(user, enabled) {
+  let db;
+  try {
+    let PrismaClient;
+    try { ({ PrismaClient } = createRequire(join(appDir, '.next/standalone/server.js'))('@prisma/client')); }
+    catch { ({ PrismaClient } = createRequire(import.meta.url)('@prisma/client')); }
+    db = new PrismaClient();
+    const firstName = user.first_name || null;
+    const username = user.username || null;
+    await db.user.upsert({ where: { providerId: `telegram_${user.id}` }, create: { provider: 'telegram', providerId: `telegram_${user.id}`, firstName, lastName: user.last_name || null, username, displayName: firstName || username || 'Player', telegramChatStarted: true, ...(typeof enabled === 'boolean' ? { telegramNotificationsEnabled: enabled } : {}) },
+      update: { telegramChatStarted: true, lastActiveAt: new Date(), ...(typeof enabled === 'boolean' ? { telegramNotificationsEnabled: enabled } : {}) } });
+    return true;
+  } catch { console.warn('Telegram profile sync unavailable'); return false; }
+  finally { await db?.$disconnect(); }
 }
 
 export async function pollOnce() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) return;
+  if (!token || process.env.TELEGRAM_BOT_TRANSPORT === 'serverless') return;
   let lock;
   try {
     lock = await open(lockPath, 'wx', 0o600);
@@ -49,11 +67,13 @@ export async function pollOnce() {
     return;
   }
   try {
+    const webhook = await telegram(token, 'getWebhookInfo');
+    if (webhook.url) return; // Never compete with a platform-managed webhook.
     const stored = Number((await readFile(offsetPath, 'utf8').catch(() => '0')).trim());
     let offset = Number.isSafeInteger(stored) && stored >= 0 ? stored : 0;
     const updates = await telegram(token, 'getUpdates', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ offset, timeout: 0, limit: 100, allowed_updates: ['message'] }),
+      body: JSON.stringify({ offset, timeout: 0, limit: 100, allowed_updates: ['message', 'callback_query'] }),
     });
     // Several /start taps queued during the webhook outage become one greeting.
     const latestByChat = new Map();
@@ -66,8 +86,15 @@ export async function pollOnce() {
     for (const update of updates) {
       const message = update.message;
       if (message?.chat?.type === 'private' && latestByChat.get(String(message.chat.id)) === update.update_id) {
-        await sendWelcome(token, message.chat.id);
+        await sendWelcome(token, message.chat.id, message.from?.language_code || 'ru');
+        await syncProfile(message.from);
         delivered++;
+      }
+      const query = update.callback_query;
+      if (query?.from && query.message?.chat?.type === 'private' && ['notifications-on', 'notifications-off'].includes(query.data)) {
+        const enabled = query.data === 'notifications-on';
+        const saved = await syncProfile(query.from, enabled);
+        await telegram(token, 'answerCallbackQuery', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ callback_query_id: query.id, text: saved ? enabled ? 'Notifications on / Уведомления включены' : 'Notifications off / Уведомления отключены' : 'Open your profile / Открой профиль' }) });
       }
       offset = update.update_id + 1;
       await writeFile(offsetPath, String(offset), { mode: 0o600 });

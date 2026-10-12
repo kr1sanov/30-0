@@ -1,3 +1,5 @@
+import { after } from 'next/server';
+import { queueSocialNotification, flushSocialNotifications, escapeTelegramHtml } from '@/lib/socialNotifications';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { roomCode } from '@/lib/multiplayer';
@@ -42,7 +44,13 @@ export async function POST(request: Request) {
   }
   if (!room) return NextResponse.json({ error: 'Не удалось создать лобби' }, { status: 503 });
   if (await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: room.code, userId: toId } } })) return NextResponse.json({ code: room.code, status: 'joined' });
-  await db.multiplayerInvite.upsert({ where: { roomCode_toId: { roomCode: room.code, toId } }, create: { roomCode: room.code, toId, fromId: userId }, update: { fromId: userId, status: 'pending', createdAt: new Date() } });
+  const previous = await db.multiplayerInvite.findUnique({ where: { roomCode_toId: { roomCode: room.code, toId } } });
+  const activeRoom = room;
+  await db.$transaction(async tx => {
+    const invitation = await tx.multiplayerInvite.upsert({ where: { roomCode_toId: { roomCode: activeRoom.code, toId } }, create: { roomCode: activeRoom.code, toId, fromId: userId }, update: previous?.status === 'pending' ? {} : { fromId: userId, status: 'pending', createdAt: new Date() } });
+    if (previous?.status !== 'pending') await queueSocialNotification(`invite:${invitation.id}:${invitation.createdAt.getTime()}`, toId, `${escapeTelegramHtml(sender.displayName)} приглашает тебя в игру / invites you to play 30-0.`, `room_${activeRoom.code}`, tx);
+  });
+  after(flushSocialNotifications);
   return NextResponse.json({ code: room.code, status: 'pending' });
 }
 

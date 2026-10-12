@@ -119,3 +119,6 @@ Thumbs.db
 
 # Worklog (local only)
 worklog.md
+
+# Telegram Serverless credentials
+.tgcloud/

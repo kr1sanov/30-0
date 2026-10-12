@@ -33,3 +33,26 @@ test('switches to outbound polling without dropping pending /start updates', asy
     }
   }
 });
+
+test('website deploy preserves an existing Serverless webhook', async () => {
+  const previousFetch = globalThis.fetch;
+  const previousToken = process.env.TELEGRAM_BOT_TOKEN;
+  const previousTransport = process.env.TELEGRAM_BOT_TRANSPORT;
+  process.env.TELEGRAM_BOT_TOKEN = '123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12';
+  delete process.env.TELEGRAM_BOT_TRANSPORT;
+  const calls: string[] = [];
+  globalThis.fetch = (async input => {
+    const method = String(input).split('/').at(-1)!; calls.push(method);
+    return Response.json({ ok: true, result: method === 'getMe' ? { username: 'RPL30_bot' } : method === 'getWebhookInfo' ? { url: 'https://app123.tgcloud.ai/webhook' } : true });
+  }) as typeof fetch;
+  try {
+    const modulePath = '../scripts/set-telegram-webhook.mjs?preserve-serverless';
+    await import(modulePath);
+    assert.equal(calls.includes('deleteWebhook'), false);
+    assert.equal(calls.filter(method => method === 'setMyCommands').length, 3);
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN; else process.env.TELEGRAM_BOT_TOKEN = previousToken;
+    if (previousTransport === undefined) delete process.env.TELEGRAM_BOT_TRANSPORT; else process.env.TELEGRAM_BOT_TRANSPORT = previousTransport;
+  }
+});
