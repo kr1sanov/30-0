@@ -44,3 +44,25 @@ test("reverse preference synchronization uses authenticated management API witho
     else process.env.TGCLOUD_TOKEN = before;
   }
 });
+
+test("private runtime configuration takes precedence over a Passenger process started before secret rotation", async () => {
+  const path = "../scripts/telegram-cloud-client.mjs";
+  const { selectCloudConfig } = await import(path);
+  assert.deepEqual(
+    selectCloudConfig(
+      {
+        TGCLOUD_TOKEN: "app8197702906:fresh",
+        TELEGRAM_SERVERLESS_BRIDGE_SECRET: "fresh-bridge",
+      },
+      {
+        TGCLOUD_TOKEN: "app8197702906:stale",
+        TELEGRAM_SERVERLESS_BRIDGE_SECRET: "old-bridge",
+      },
+    ),
+    {
+      token: "app8197702906:fresh",
+      bridge: "fresh-bridge",
+      clientId: "8197702906",
+    },
+  );
+});

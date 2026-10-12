@@ -21,7 +21,7 @@
 
 ## Delivery and deployment
 
-Jino's existing Passenger timer is supplemented by a once-per-minute cron request to the authenticated worker endpoint. Outbox claims use a lease, five attempts and exponential backoff. Telegram does not provide a sendMessage idempotency key: a process crash after Telegram accepts a message but before the database confirmation can still duplicate delivery. The database queue itself is idempotent.
+Jino's existing Passenger timer is supplemented by a once-per-minute hosting cron when permitted and a GitHub Actions fallback scheduled every five minutes. Jino denied crontab installation over SSH in production. GitHub schedules may run late; interactive friend/invitation actions also flush immediately. The fallback wakes Passenger and calls the authenticated worker endpoint. Outbox claims use a lease, five attempts and exponential backoff. Telegram does not provide a sendMessage idempotency key: a process crash after Telegram accepts a message but before the database confirmation can still duplicate delivery. The database queue itself is idempotent.
 
 `TGCLOUD_TOKEN` is delivered only through the SSH deployment package into the existing `.env` (mode 600). It is never bundled into client code. The preference-service bridge secret is explicit or derived consistently from this token. The separate Bot API token remains necessary for Jino's outgoing photo/message delivery.
 
@@ -29,7 +29,7 @@ The Serverless deployment workflow fetches the current revision, deploys only pr
 
 ## Validation
 
-- 91 automated tests, including preference validation, marketing opt-in, automatic ban expiry, safe Telegram HTML, schedule timing and authenticated management API requests.
+- 94 automated tests, including preference validation, marketing opt-in, automatic ban expiry, safe Telegram HTML, schedule timing and authenticated management API requests.
 - TypeScript, ESLint, production build, deployment shell syntax and Prisma schema synchronization.
 - Local production API checks: session and CSRF enforcement, preference persistence, restriction enforcement/history, image upload, HTML rejection, campaign request deduplication, opt-in audience selection, archive cancellation and completion-based ranking.
 - No real campaigns or moderation actions were performed during verification; API checks used isolated SQLite fixtures and disabled Telegram credentials.

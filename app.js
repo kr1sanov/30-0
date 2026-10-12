@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 const path = require('path');
+process.env.RPL_APP_ROOT = __dirname;
 const { loadEnvFile } = require('node:process');
 
 // Passenger does not automatically load the application root .env file.

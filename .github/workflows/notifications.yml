@@ -1,0 +1,37 @@
+name: Process notification queue
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['CI/CD Pipeline', 'Deploy Telegram Serverless bot']
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: notification-queue
+  cancel-in-progress: false
+jobs:
+  process:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 3
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wake Jino and process eligible notifications
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createHash } from 'node:crypto';
+          if(!process.env.TGCLOUD_TOKEN)throw new Error('Notification worker credentials are not configured');
+          const secret=process.env.BRIDGE_SECRET||createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
+          const res=await fetch('https://30-0.xn--p1ai/api/telegram/worker',{method:'POST',headers:{'X-30-0-Worker':secret},signal:AbortSignal.timeout(60000)});
+          if(!res.ok)throw new Error('Notification worker unavailable: HTTP '+res.status);
+          console.log('Notification queue processed');
+          JS

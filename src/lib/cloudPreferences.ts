@@ -4,19 +4,21 @@ import {
   preferenceData,
   type NotificationPreferences,
 } from "./notificationPreferences";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { parseEnv } from "node:util";
 import { createHash } from "node:crypto";
 // Kept outside the standalone bundle so the same audited sources run on Telegram.
-async function client() {
-  const root = existsSync(
-    join(process.cwd(), "scripts/telegram-cloud-client.mjs"),
-  )
+function applicationRoot() {
+  if (process.env.RPL_APP_ROOT) return process.env.RPL_APP_ROOT;
+  return existsSync(join(process.cwd(), "scripts/telegram-cloud-client.mjs"))
     ? process.cwd()
     : join(process.cwd(), "../..");
-  return import(
-    /* webpackIgnore: true */ `${root}/scripts/telegram-cloud-client.mjs`
-  );
+}
+async function client() {
+  const file = join(applicationRoot(), "scripts/telegram-cloud-client.mjs");
+  const revision = statSync(file).mtimeMs;
+  return import(/* webpackIgnore: true */ `${file}?revision=${revision}`);
 }
 type CloudRecord = {
   tgId: number;
@@ -112,20 +114,49 @@ export async function syncCloudPreferences() {
   });
 }
 export function workerSecret() {
+  let file: Record<string, string | undefined> = {};
+  try {
+    file = parseEnv(readFileSync(join(applicationRoot(), ".env"), "utf8"));
+  } catch {}
+  const token = file.TGCLOUD_TOKEN || process.env.TGCLOUD_TOKEN;
   return (
+    file.TELEGRAM_SERVERLESS_BRIDGE_SECRET ||
     process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET ||
-    (process.env.TGCLOUD_TOKEN
+    (token
       ? createHash("sha256")
-          .update("30-0 bridge:" + process.env.TGCLOUD_TOKEN)
+          .update("30-0 bridge:" + token)
           .digest("hex")
       : process.env.TELEGRAM_WEBHOOK_SECRET)
   );
+}
+export function cloudErrorReason(error: unknown) {
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? String(error.code)
+      : "";
+  if (
+    [
+      "configuration",
+      "source_unavailable",
+      "identity_mismatch",
+      "cloud_execution_error",
+      "invalid_response",
+      "network_unavailable",
+    ].includes(code) ||
+    /^cloud_http_\d{3}$/.test(code)
+  )
+    return code;
+  if (["ERR_MODULE_NOT_FOUND", "ENOENT"].includes(code))
+    return "source_unavailable";
+  return "unavailable";
 }
 
 export async function verifyCloudPreferences() {
   const cloud = await client();
   if (!cloud.cloudConfigured())
-    throw new Error("Serverless credentials unavailable");
+    throw Object.assign(new Error("Serverless credentials unavailable"), {
+      code: "configuration",
+    });
   const result = await cloud.callCloudPreferences("health");
   if (result?.ok !== true) throw new Error("Preference storage unavailable");
   return true;

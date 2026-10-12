@@ -66,7 +66,7 @@ jobs:
           const secret=process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
           const res=await fetch('https://30-0.xn--p1ai/api/telegram/worker',{headers:{'X-30-0-Worker':secret},signal:AbortSignal.timeout(30000)});
           const result=await res.json().catch(()=>null);
-          if(!res.ok||result?.ok!==true)throw new Error('Jino outbound preference check failed: HTTP '+res.status);
+          if(!res.ok||result?.ok!==true)throw new Error('Jino outbound preference check failed: HTTP '+res.status+' '+(/^[a-z0-9_]{1,40}$/.test(result?.reason||'')?result.reason:'unavailable'));
           console.log('Jino can read native Telegram preferences');
           JS
       - name: Sync platform webhook without discarding updates
