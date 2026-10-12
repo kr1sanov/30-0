@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   const activeRoom = room;
   await db.$transaction(async tx => {
     const invitation = await tx.multiplayerInvite.upsert({ where: { roomCode_toId: { roomCode: activeRoom.code, toId } }, create: { roomCode: activeRoom.code, toId, fromId: userId }, update: previous?.status === 'pending' ? {} : { fromId: userId, status: 'pending', createdAt: new Date() } });
-    if (previous?.status !== 'pending') await queueSocialNotification(`invite:${invitation.id}:${invitation.createdAt.getTime()}`, toId, `${escapeTelegramHtml(sender.displayName)} приглашает тебя в игру / invites you to play 30-0.`, `room_${activeRoom.code}`, tx);
+    if (previous?.status !== 'pending') await queueSocialNotification(`invite:${invitation.id}:${invitation.createdAt.getTime()}`, toId, `${escapeTelegramHtml(sender.displayName)} invites you to play 30-0.`, `room_${activeRoom.code}`, tx);
   });
   after(flushSocialNotifications);
   return NextResponse.json({ code: room.code, status: 'pending' });

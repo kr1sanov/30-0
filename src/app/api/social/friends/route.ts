@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   if (reverse?.status === 'pending') {
     await db.$transaction(async tx => {
       const changed = await tx.friendship.updateMany({ where: { id: reverse.id, status: 'pending' }, data: { status: 'accepted' } });
-      if (changed.count) await queueSocialNotification(`accepted:${reverse.id}`, id, 'Твоя заявка в друзья принята / Your friend request was accepted.', `profile_${userId}`, tx);
+      if (changed.count) await queueSocialNotification(`accepted:${reverse.id}`, id, 'Your friend request was accepted.', `profile_${userId}`, tx);
     });
     after(flushSocialNotifications);
     return NextResponse.json({ status: 'accepted' });
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   const sender = await db.user.findUnique({ where: { id: userId }, select: { username: true, displayName: true } });
   await db.$transaction(async tx => {
     const friendship = await tx.friendship.upsert({ where: { fromId_toId: { fromId: userId, toId: id } }, create: { fromId: userId, toId: id, status: 'pending' }, update: {} });
-    await queueSocialNotification(`friend:${friendship.id}`, id, `${escapeTelegramHtml(sender?.username ? '@' + sender.username : sender?.displayName || 'Player')} отправил заявку в друзья / sent you a friend request.`, `profile_${userId}`, tx);
+    await queueSocialNotification(`friend:${friendship.id}`, id, `${escapeTelegramHtml(sender?.username ? '@' + sender.username : sender?.displayName || 'Player')} sent you a friend request.`, `profile_${userId}`, tx);
   });
   after(flushSocialNotifications);
   return NextResponse.json({ status: 'pending' });
@@ -63,7 +63,7 @@ export async function PATCH(request: Request) {
   const changed = await db.$transaction(async tx => {
     const friendship = await tx.friendship.findFirst({ where: filter, select: { id: true } });
     const changed = action === 'accept' ? await tx.friendship.updateMany({ where: filter, data: { status: 'accepted' } }) : await tx.friendship.deleteMany({ where: filter });
-    if (changed.count && action === 'accept' && friendship) await queueSocialNotification(`accepted:${friendship.id}`, id, 'Твоя заявка в друзья принята / Your friend request was accepted.', `profile_${userId}`, tx);
+    if (changed.count && action === 'accept' && friendship) await queueSocialNotification(`accepted:${friendship.id}`, id, 'Your friend request was accepted.', `profile_${userId}`, tx);
     return changed;
   });
   if (changed.count && action === 'accept') after(flushSocialNotifications);

@@ -106,6 +106,15 @@ model User {
   profileStatsJson             String?
   telegramNotificationsEnabled Boolean   @default(true)
   telegramChatStarted          Boolean   @default(false)
+  notifyNews Boolean @default(false)
+  notifyInvites Boolean @default(true)
+  notifyResults Boolean @default(true)
+  notifyFriends Boolean @default(true)
+  notifyFriendReplies Boolean @default(true)
+  notificationsRevision Int @default(0)
+  bannedAt DateTime?
+  bannedUntil DateTime?
+  banReason String?
   notificationCadence          String    @default("weekly")
   deletionRequestedAt          DateTime?
   deleteAfterAt                DateTime?
@@ -179,6 +188,13 @@ model NotificationCampaign {
   enabled   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  format String @default("text")
+  imageId String?
+  buttonText String @default("Play")
+  buttonUrl String @default("https://t.me/RPL30_bot?startapp")
+  scheduledAt DateTime?
+  archivedAt DateTime?
+
 }
 
 model NotificationDispatch {
@@ -203,6 +219,7 @@ model GameRun {
   rerollsTotal Int    @default(1)
   rerollsUsed  Int    @default(0)
 
+  completedAt DateTime?
   completed     Boolean @default(false)
   wins          Int?
   draws         Int?
@@ -368,4 +385,40 @@ model TelegramOutbox {
   sentAt DateTime?
   createdAt DateTime @default(now())
   @@index([sentAt, availableAt])
+  category String @default("friends")
+  imageId String?
+  campaignId String?
+  status String @default("pending")
+  buttonText String @default("Open 30-0")
+  buttonUrl String?
+  lastError String?
+  @@index([campaignId, status])
+
+}
+
+model MediaAsset {
+  id String @id @default(cuid())
+  mime String
+  data Bytes
+  createdBy String
+  createdAt DateTime @default(now())
+}
+model CampaignJob {
+  id String @id
+  campaignId String
+  payloadJson String
+  cursor String?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  @@index([completedAt])
+}
+model ModerationAction {
+  id String @id @default(cuid())
+  userId String
+  actor String
+  action String
+  reason String
+  until DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
 }

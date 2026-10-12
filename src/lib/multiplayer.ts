@@ -1,3 +1,4 @@
+import { queueSeasonResult } from './seasonResultNotification';
 import { randomBytes } from 'node:crypto';
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
@@ -140,8 +141,9 @@ export async function resolveRoom(code: string) {
     ...(room.seriesTargetWins > 0 ? { seriesScoreJson: JSON.stringify(scores), seriesWinnerKey } : {}) } });
   if (!changed.count) return false;
   await db.$transaction(results.map((result, index) => db.gameRun.update({ where: { id: room.seats.find(seat => seat.id === result.id)!.runId! }, data: {
-    completed: true, wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,
+    completed: true, completedAt:new Date(), wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,
     goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst, position: index + 1, overallRating: Math.round(result.rating),
   } })));
+  await Promise.all(room.seats.filter(seat=>seat.runId&&!seat.isBot).map(seat=>queueSeasonResult(seat.runId!).catch(()=>console.error('Result notification queued for retry'))));
   return true;
 }

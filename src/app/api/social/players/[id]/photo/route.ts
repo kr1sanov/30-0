@@ -10,6 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const user = await db.user.findUnique({ where: { id }, select: { provider: true, providerId: true, photoUrl: true } });
   if (user?.provider !== 'telegram') return missing();
 
+  if (user.photoUrl) { try { const url=new URL(user.photoUrl); if(url.protocol==='https:' && (url.hostname==='t.me'||url.hostname==='telegram.org'||url.hostname.endsWith('.telegram.org')||url.hostname.endsWith('.telesco.pe')))return NextResponse.redirect(url,{headers:{'Cache-Control':'public, max-age=300'}}); }catch{} }
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const telegramId = user.providerId.match(/^telegram_([1-9]\d{0,15})$/)?.[1];
   if (token && telegramId) {
@@ -26,13 +27,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
           if (typeof path === 'string' && /^[\w/.-]+$/.test(path)) {
             const imageResponse = await fetch(`https://api.telegram.org/file/bot${token}/${path}`, { signal: AbortSignal.timeout(5000), cache: 'no-store' });
             if (imageResponse.ok && imageResponse.body && (Number(imageResponse.headers.get('content-length')) || 0) < 2_000_000) {
-              return new NextResponse(imageResponse.body, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300, s-maxage=300' } });
+              const bytes=new Uint8Array(await imageResponse.arrayBuffer());
+              if(bytes.length>2_000_000)return missing();
+              return new NextResponse(bytes, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=300, s-maxage=300' } });
             }
           }
         }
       }
     } catch { /* Telegram may not expose a photo to this bot. */ }
   }
-  if (user.photoUrl && /^https:\/\//.test(user.photoUrl)) return NextResponse.redirect(user.photoUrl, { headers: { 'Cache-Control': 'public, max-age=120' } });
   return missing();
 }

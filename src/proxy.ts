@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { db } from '@/lib/db';
+import { activeRestriction } from '@/lib/moderation';
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -10,9 +11,15 @@ export async function proxy(request: NextRequest) {
   if (path === '/api/auth/telegram') return NextResponse.next();
   // Telegram posts updates without our browser session or Origin header.
   // The route validates Telegram's secret-token header itself.
-  if (path === '/api/telegram/webhook' || path === '/api/telegram/serverless') return NextResponse.next();
+  if (path === '/api/telegram/webhook' || path === '/api/telegram/serverless' || path === '/api/telegram/worker') return NextResponse.next();
   if (path.startsWith('/api/daily')) {
     return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 403 });
+  }
+  const actor = sessionUser(request);
+  if(actor && !path.startsWith('/api/admin') && !path.startsWith('/api/auth') && !path.startsWith('/api/users/notifications')) {
+    const user=await db.user.findUnique({where:{id:actor},select:{bannedAt:true,bannedUntil:true,banReason:true}});
+    const restriction=user && activeRestriction(user);
+    if(restriction && !['GET','HEAD'].includes(request.method)) return NextResponse.json({error:restriction.reason,restriction},{status:403});
   }
   const protectedPath = path.startsWith('/api/runs') || path.startsWith('/api/users') || path.startsWith('/api/telegram') || path.startsWith('/api/referrals') || path === '/api/auth/profile';
   if (!protectedPath) return NextResponse.next();

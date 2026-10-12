@@ -1,3 +1,5 @@
+import { queueTriggeredCampaigns } from '@/lib/notificationScheduler';
+import { activeRestriction } from '@/lib/moderation';
 import { NextResponse } from 'next/server';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { db } from '@/lib/db';
@@ -42,6 +44,7 @@ export async function GET(request: Request) {
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
       notificationCadence: user.notificationCadence,
       telegramChatStarted: user.telegramChatStarted,
+      restriction: activeRestriction(user),
     } : null,
     botUsername: process.env.TELEGRAM_BOT_USERNAME ?? null,
     clientId: process.env.TELEGRAM_CLIENT_ID ?? null,
@@ -130,6 +133,7 @@ export async function POST(request: Request) {
       }
       return created;
     });
+    await queueTriggeredCampaigns('new_user',user.id,user.id,user.createdAt);
     const response = NextResponse.json({ user: {
       id: user.id,
       provider: 'telegram',
@@ -142,6 +146,7 @@ export async function POST(request: Request) {
       telegramNotificationsEnabled: user.telegramNotificationsEnabled,
       notificationCadence: user.notificationCadence,
       telegramChatStarted: user.telegramChatStarted,
+      restriction: activeRestriction(user),
       referralCount: user.referralCount,
     } }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(SESSION_COOKIE, createSession(user.id), { ...options, maxAge: SESSION_SECONDS });

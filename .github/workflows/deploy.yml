@@ -207,6 +207,8 @@ jobs:
           cp -r docs/research/rpl-2006-2009 deploy-package/docs/research/
           cp scripts/set-telegram-webhook.mjs deploy-package/scripts/
           cp scripts/poll-telegram.mjs deploy-package/scripts/
+          cp scripts/telegram-cloud-client.mjs scripts/notification-worker.mjs deploy-package/scripts/
+          cp -r tgcloud deploy-package/tgcloud
 
           # Copy package.json for reference
           cp build-artifact/package.json deploy-package/
@@ -232,6 +234,7 @@ jobs:
             if [ -z "${TELEGRAM_SERVERLESS_BRIDGE_SECRET:-}" ]; then
               TELEGRAM_SERVERLESS_BRIDGE_SECRET=$(node -e "process.stdout.write(require('node:crypto').createHash('sha256').update('30-0 bridge:' + process.env.TGCLOUD_TOKEN).digest('hex'))")
             fi
+            printf 'TGCLOUD_TOKEN=%s\n' "$TGCLOUD_TOKEN" >> deploy-package/telegram-runtime.env
             TELEGRAM_BOT_TRANSPORT=serverless
           fi
           if [ -n "${TELEGRAM_SERVERLESS_BRIDGE_SECRET:-}" ]; then

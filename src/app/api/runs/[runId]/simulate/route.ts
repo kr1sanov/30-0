@@ -2,7 +2,9 @@ import { db } from '@/lib/db';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
-import { NextResponse } from 'next/server';
+import { queueSeasonResult } from '@/lib/seasonResultNotification';
+import { queueTriggeredCampaigns } from '@/lib/notificationScheduler';
+import { NextResponse, after } from 'next/server';
 
 export async function POST(
   request: Request,
@@ -132,6 +134,7 @@ export async function POST(
       where: { id: runId, completed: false },
       data: {
         completed: true,
+        completedAt: new Date(),
         wins: result.wins,
         draws: result.draws,
         losses: result.losses,
@@ -147,6 +150,7 @@ export async function POST(
 
     if (!saved.count) return NextResponse.json({ error: 'Run is already completed' }, { status: 409 });
 
+    after(async()=>{try{await queueSeasonResult(runId);if(run.userId)await queueTriggeredCampaigns('season_complete',run.userId,runId,new Date(),result.wins);}catch{console.error('Season notification will retry in worker');}});
     // Build player list for result
     const players = filledSlots.map((slot) => ({
       name: slot.playerName || 'Unknown',
