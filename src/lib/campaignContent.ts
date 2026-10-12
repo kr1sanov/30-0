@@ -20,6 +20,7 @@ export function validTelegramHtml(text: string) {
       return "";
     }
     if (m[1]) {
+      if (m[3]) valid = false;
       if (stack.pop() !== m[2]) valid = false;
     } else stack.push(m[2]);
     return "";

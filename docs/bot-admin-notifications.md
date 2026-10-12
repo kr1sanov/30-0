@@ -29,7 +29,7 @@ The Serverless deployment workflow fetches the current revision, deploys only pr
 
 ## Validation
 
-- 90 automated tests, including preference validation, marketing opt-in, automatic ban expiry, safe Telegram HTML, schedule timing and authenticated management API requests.
+- 91 automated tests, including preference validation, marketing opt-in, automatic ban expiry, safe Telegram HTML, schedule timing and authenticated management API requests.
 - TypeScript, ESLint, production build, deployment shell syntax and Prisma schema synchronization.
 - Local production API checks: session and CSRF enforcement, preference persistence, restriction enforcement/history, image upload, HTML rejection, campaign request deduplication, opt-in audience selection, archive cancellation and completion-based ranking.
 - No real campaigns or moderation actions were performed during verification; API checks used isolated SQLite fixtures and disabled Telegram credentials.
