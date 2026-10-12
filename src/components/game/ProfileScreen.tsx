@@ -34,6 +34,8 @@ export default function ProfileScreen() {
   const { user, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [showTrophies, setShowTrophies] = useState(false);
+  const [showCosmetics, setShowCosmetics] = useState(false);
+  const [showReferrals, setShowReferrals] = useState(false);
   const [deleteAfterAt, setDeleteAfterAt] = useState<string | null>(null);
   const [clock, setClock] = useState(Date.now());
   const [deletionBusy, setDeletionBusy] = useState(false);
@@ -94,21 +96,18 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <TelegramAvatar username={user?.username} name={displayName} color={avatarColor} size={80} />
+          <button type="button" onClick={() => setShowCosmetics(true)} aria-label="Настроить аватар и статус" className="rounded-full"><TelegramAvatar username={user?.username} name={displayName} color={avatarColor} size={80} /></button>
           {statusEmoji && (
-            <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
+            <button type="button" onClick={() => setShowCosmetics(true)} aria-label="Изменить статус" className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
               {statusEmoji}
-            </div>
+            </button>
           )}
         </motion.div>
         <h2 className="mt-3 text-xl font-bold text-white">{displayName}</h2>
         {(user?.firstName || user?.lastName) && <p className="mt-1 text-sm text-slate-300">{[user.firstName, user.lastName].filter(Boolean).join(' ')}</p>}
-        <div className="mx-auto mt-3 max-w-sm space-y-2 text-xs">
-          <p className="text-slate-400">Цвет аватара</p><div className="flex flex-wrap justify-center gap-2">{AVATAR_COLORS.map(color => <button key={color} type="button" aria-label={`Цвет аватара ${color}`} aria-pressed={avatarColor === color} onClick={() => void updateStyle({ avatarColor: color })} className={`h-7 w-7 rounded-full ${avatarColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141414]' : ''}`} style={{ backgroundColor: color }} />)}</div>
-          <p className="pt-2 text-slate-400">Статус</p><div className="flex flex-wrap justify-center gap-2">{STATUS_EMOJIS.map(emoji => <button key={emoji} type="button" aria-label={`Статус ${emoji}`} aria-pressed={statusEmoji === emoji} onClick={() => void updateStyle({ statusEmoji: emoji })} className={`rounded-lg border px-2 py-1 text-lg ${statusEmoji === emoji ? 'border-[#00C896]' : 'border-white/10'}`}>{emoji}</button>)}</div>
-        </div>
         <p className="text-sm text-[#9CA3AF] mt-1">Игрок 30-0</p>
       </div>
+      {showCosmetics && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4" onMouseDown={event => { if (event.target === event.currentTarget) setShowCosmetics(false); }}><div role="dialog" aria-modal="true" aria-label="Аватар и статус" className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#171717] p-5 text-center shadow-2xl"><div className="flex items-center justify-between"><h3 className="font-bold text-white">Аватар и статус</h3><button type="button" aria-label="Закрыть" onClick={() => setShowCosmetics(false)}>✕</button></div><p className="mt-5 text-sm text-slate-400">Цвет аватара</p><div className="mt-3 flex flex-wrap justify-center gap-3">{AVATAR_COLORS.map(color => <button key={color} type="button" aria-label={`Цвет аватара ${color}`} aria-pressed={avatarColor === color} onClick={() => void updateStyle({ avatarColor: color })} className={`h-9 w-9 rounded-full ${avatarColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#171717]' : ''}`} style={{ backgroundColor: color }}/>)}</div><p className="mt-6 text-sm text-slate-400">Статус</p><div className="mt-3 flex flex-wrap justify-center gap-2">{STATUS_EMOJIS.map(emoji => <button key={emoji} type="button" aria-label={`Статус ${emoji}`} aria-pressed={statusEmoji === emoji} onClick={() => void updateStyle({ statusEmoji: emoji })} className={`rounded-lg border px-2 py-1 text-lg ${statusEmoji === emoji ? 'border-[#00C896]' : 'border-white/10'}`}>{emoji}</button>)}</div></div></div>}
 
       {user && <div className="flex flex-wrap justify-center gap-2 text-xs"><Link href={playerPath(user)} className="rounded-lg border border-[#00C896]/35 px-3 py-2 text-[#00C896]">Открыть публичный профиль</Link><button onClick={() => void shareProfile()} className="rounded-lg border border-white/20 px-3 py-2 text-white">Поделиться профилем</button></div>}
       {/* Local profile info + reset button */}
@@ -157,42 +156,13 @@ export default function ProfileScreen() {
         ))}
       </div>
 
-      {/* Referrals */}
-      <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-bold text-white">Друзья и приглашения</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделись ссылкой, найди игроков и отправь заявку в друзья.</p>
-          </div>
-          <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
-            <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
-            <div className="text-[10px] text-[#9CA3AF]">игроков пришло</div>
-          </div>
-        </div>
-        {referralLink ? (
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <input readOnly aria-label="Реферальная ссылка" value={referralLink} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
-            <Button onClick={async () => { try { await navigator.clipboard.writeText(referralLink); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
-          </div>
-        ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем твою ссылку…</p>}
-        {referrals?.referredUsers.length ? (
-          <div className="mt-4 border-t border-[#252525] pt-3">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Присоединились по ссылке</p>
-            <ul className="space-y-1.5">
-              {referrals.referredUsers.map((invite, index) => (
-                <li key={`${invite.id}-${index}`} className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]">
-                  <Link href={playerPath(invite)} className="truncate text-[#00C896] hover:underline">{invite.username ? `@${invite.username}` : invite.displayName || 'Игрок'}</Link>
-                  <span className="shrink-0 text-[#64748b]">{new Date(invite.createdAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+      <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
+        <h3 className="text-sm font-bold text-white">Друзья · {friends.length}</h3>
+        <p className="mt-1 text-xs text-slate-400">Знакомые по игре и заявки в друзья.</p>
         {incoming.length > 0 && <div className="mt-4 border-t border-white/10 pt-3"><h4 className="mb-2 font-semibold text-white">Заявки в друзья · {incoming.length}</h4><div className="space-y-2">{incoming.map(friend => <div key={friend.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white/5 p-2"><Link href={playerPath(friend)} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-white"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={32}/><span className="truncate">{friend.username ? `@${friend.username}` : friend.displayName}</span></Link><button onClick={() => void respondFriend(friend.id, 'accept')} className="rounded-lg bg-[#00C896] px-3 py-2 text-xs font-bold text-black">Принять</button><button onClick={() => void respondFriend(friend.id, 'decline')} className="rounded-lg border border-white/20 px-3 py-2 text-xs">Отклонить</button></div>)}</div></div>}
-        <div className="mt-4 border-t border-white/10 pt-3"><h4 className="font-semibold text-white">Друзья · {friends.length}</h4>{friends.length ? <div className="mt-2 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={playerPath(friend)} className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={28}/>{friend.username ? `@${friend.username}` : friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Пока никого нет. Открой профиль игрока и отправь заявку.</p>}</div>
+        <div className="mt-4 border-t border-white/10 pt-3"><h4 className="font-semibold text-white">Твои друзья</h4>{friends.length ? <div className="mt-2 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={playerPath(friend)} className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={28}/>{friend.username ? `@${friend.username}` : friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Пока никого нет. Открой профиль игрока и отправь заявку.</p>}</div>
         {outgoing.length > 0 && <div className="mt-4"><h4 className="text-xs font-semibold text-slate-400">Отправленные заявки</h4><div className="mt-2 flex flex-wrap gap-2">{outgoing.map(friend => <Link key={friend.id} href={playerPath(friend)} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300">{friend.username ? `@${friend.username}` : friend.displayName} · ожидает</Link>)}</div></div>}
         {suggestions.length > 0 && <div className="mt-4"><h4 className="text-xs font-semibold text-slate-400">Игроки, с которыми ты играл или которых пригласил</h4><div className="mt-2 flex flex-wrap gap-2">{suggestions.map(friend => <Link key={friend.id} href={playerPath(friend)} className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={24}/>{friend.username ? `@${friend.username}` : friend.displayName}</Link>)}</div></div>}
-        <Link href="/multiplayer" className="mt-4 inline-block text-xs font-semibold text-[#00C896]">Перейти в мультиплеер →</Link>
       </section>
 
       {/* Trophy Cabinet */}
@@ -213,6 +183,40 @@ export default function ProfileScreen() {
         </div>}
 
       </div>
+
+      {/* Referrals */}
+      <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <button type="button" onClick={() => setShowReferrals(value => !value)} aria-expanded={showReferrals} className="text-left text-sm font-bold text-white">Приглашения · {referrals?.referralCount ?? 0} {showReferrals ? "▲" : "▼"}</button>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Пригласи игрока по ссылке.</p>
+          </div>
+          <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
+            <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
+            <div className="text-[10px] text-[#9CA3AF]">игроков пришло</div>
+          </div>
+        </div>
+        {showReferrals && <div>{referralLink ? (
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <input readOnly aria-label="Реферальная ссылка" value={referralLink} className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]" />
+            <Button onClick={async () => { try { await navigator.clipboard.writeText(referralLink); toast.success('Ссылка скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } }} className="bg-[#00C896] text-black hover:bg-[#00b386]">Скопировать ссылку</Button>
+          </div>
+        ) : <p className="mt-3 text-xs text-[#64748b]">Загружаем твою ссылку…</p>}
+        {referrals?.referredUsers.length ? (
+          <div className="mt-4 border-t border-[#252525] pt-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Присоединились по ссылке</p>
+            <ul className="space-y-1.5">
+              {referrals.referredUsers.map((invite, index) => (
+                <li key={`${invite.id}-${index}`} className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]">
+                  <Link href={playerPath(invite)} className="truncate text-[#00C896] hover:underline">{invite.username ? `@${invite.username}` : invite.displayName || 'Игрок'}</Link>
+                  <span className="shrink-0 text-[#64748b]">{new Date(invite.createdAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        <Link href="/multiplayer" className="mt-4 inline-block text-xs font-semibold text-[#00C896]">Перейти в мультиплеер →</Link></div>}
+      </section>
 
       {/* History */}
       {(

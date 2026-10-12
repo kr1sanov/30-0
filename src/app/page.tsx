@@ -1269,12 +1269,16 @@ export default function Home() {
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
   const [epochChecked, setEpochChecked] = useState(false);
+  const [reopenResult, setReopenResult] = useState(false);
 
   // Initialize the server-verified Telegram session
   useAutoAuth();
   useEffect(() => {
     if (screen === 'home') return;
-    const back = () => useGameStore.getState().goHome();
+    const back = () => {
+      if (screen === 'awards') { setReopenResult(true); useGameStore.getState().setScreen('result'); }
+      else useGameStore.getState().goHome();
+    };
     showBackButton(back);
     return () => hideBackButton(back);
   }, [screen, showBackButton, hideBackButton]);
@@ -1319,6 +1323,7 @@ export default function Home() {
 
   // ── Yandex.Metrika SPA navigation tracking ──
   useEffect(() => {
+    if (screen === 'simulation') setReopenResult(false);
     if (prevScreen.current !== screen) {
       setDirection(getDirection(prevScreen.current, screen));
       prevScreen.current = screen;
@@ -1350,7 +1355,7 @@ export default function Home() {
       case 'simulation':
         return <SimulationScreen />;
       case 'result':
-        return <SimulationResult />;
+        return <SimulationResult startComplete={reopenResult} />;
       case 'awards':
         return <SeasonAwards />;
       case 'profile':
@@ -1362,7 +1367,7 @@ export default function Home() {
       default:
         return <HomePage />;
     }
-  }, [screen]);
+  }, [screen, reopenResult]);
 
   return (
     <div
@@ -1374,7 +1379,7 @@ export default function Home() {
       <Header onBack={screen === 'home' ? undefined : () => {
         const state = useGameStore.getState();
         if (screen === 'history' || screen === 'leaderboard') state.setScreen('profile');
-        else if (screen === 'awards') state.setScreen('result');
+        else if (screen === 'awards') { setReopenResult(true); state.setScreen('result'); }
         else state.goHome();
       }} />
       <main

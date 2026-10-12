@@ -17,7 +17,8 @@ const input = 'w-full rounded-xl border border-white/20 bg-[#0A0A0A] px-4 py-3 t
 
 type Invitation = { id: string; code: string; from?: { id: string; displayName: string; username: string | null }; createdAt: string };
 type Menu = {
-  activeRooms: { code: string; status: string; deadline: string | null; drafted: number; participants: string[] }[];
+  activeRooms: { code: string; status: string; deadline: string | null; drafted: number; participants: string[]; invitations: { name: string; status: string }[] }[];
+  historyRooms: { code: string; date: string; participants: string[] }[];
 };
 
 async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
@@ -42,6 +43,7 @@ export default function MultiplayerPage() {
   const [menu, setMenu] = useState<Menu | null>(null);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [showMatchHistory, setShowMatchHistory] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [busy, setBusy] = useState(false);
   const [joiningLink, setJoiningLink] = useState(false);
@@ -214,8 +216,10 @@ export default function MultiplayerPage() {
         {active.deadline && active.status === 'drafting' && <span className="font-mono tabular-nums">{Math.floor(Math.max(0, Math.ceil((Date.parse(active.deadline) - now) / 1000)) / 60)}:{String(Math.max(0, Math.ceil((Date.parse(active.deadline) - now) / 1000)) % 60).padStart(2, '0')}</span>}
       </span>
       <span className="mt-1 block text-sm text-[#9CA3AF]">{active.status === 'lobby' ? active.participants.join(', ') : active.status === 'drafting' ? `${active.drafted}/11 · Драфт продолжается` : 'Посмотреть результат сезона'}</span>
+      {active.status === 'lobby' && active.invitations?.map(invite => <span key={invite.name} className={`mt-1 block text-xs ${invite.status === 'declined' ? 'text-rose-400' : 'text-amber-300'}`}>{invite.name} · {invite.status === 'declined' ? 'отклонил приглашение' : 'ожидаем ответа'}</span>)}
     </button>)}
   </div>;
+  const matchHistory = Boolean(menu?.historyRooms?.length) && <div className={`${card} mx-auto max-w-2xl`}><button type="button" onClick={() => setShowMatchHistory(value => !value)} aria-expanded={showMatchHistory} className="flex w-full items-center justify-between text-left text-sm font-bold"><span>История матчей · {menu?.historyRooms.length}</span><span>{showMatchHistory ? '▲' : '▼'}</span></button>{showMatchHistory && <div className="mt-3 space-y-2">{menu?.historyRooms.map(past => <button key={past.code} onClick={() => openRoom(past.code)} className="w-full rounded-lg border border-white/10 p-3 text-left text-sm hover:border-[#00C896]/40"><strong>{past.participants.join(' · ')}</strong><span className="mt-1 block text-xs text-slate-400">{new Date(past.date).toLocaleDateString('ru-RU')} · {past.code}</span></button>)}</div>}</div>;
 
   return <main className="club-theme-shell flex min-h-[100dvh] flex-col bg-[#0A0A0A] text-white">
     <div className="football-field-bg"/>
@@ -228,6 +232,7 @@ export default function MultiplayerPage() {
         <button onClick={() => setShowCreate(true)} className={`${card} group w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl sm:text-2xl">Драфт с друзьями</strong><span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500"/>Прямой эфир</span></span><span className="mt-3 block text-sm leading-6 text-slate-400">Соревнуйся в режиме реального времени с участием до 6 игроков. Все находятся онлайн одновременно и собирают лучшую команду из 11 игроков.</span></button>
         {invitationList}
         {continueRooms}
+        {matchHistory}
       </div>}
 
       {!code && !joiningLink && showCreate && <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">
@@ -239,6 +244,7 @@ export default function MultiplayerPage() {
 
         {invitationList}
         {continueRooms}
+        {matchHistory}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>
           <TelegramLogin compact startParam={joinCode ? `room_${joinCode}` : undefined}/>

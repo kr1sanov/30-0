@@ -119,7 +119,7 @@ const trophyVariants = {
 // Season Result — 38-0 style
 // ---------------------------------------------------------------------------
 
-export default function SimulationResult({ multiplayer }: { multiplayer?: {
+export default function SimulationResult({ multiplayer, startComplete = false }: { startComplete?: boolean; multiplayer?: {
   data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
   onHome: () => void; onReplay: () => void; friendNames?: string[];
 } }) {
@@ -131,7 +131,7 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
   const setScreen = store.setScreen;
   const config = multiplayer ? multiplayer.config : store.config;
   const { haptic, notify, showConfirm } = useTelegram();
-  const [currentMatchweek, setCurrentMatchweek] = useState(0);
+  const [currentMatchweek, setCurrentMatchweek] = useState(() => startComplete ? ((seasonResult as SeasonResultData | null)?.matches?.length ?? 0) : 0);
   const [showTable, setShowTable] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -161,6 +161,10 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
 
   // Auto-play through matchweeks
   useEffect(() => {
+    if (startComplete) {
+      setCurrentMatchweek(totalMatches);
+      return;
+    }
     intervalRef.current = setInterval(() => {
       setCurrentMatchweek((prev) => {
         if (prev >= totalMatches) {
@@ -174,7 +178,7 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [totalMatches]);
+  }, [totalMatches, startComplete]);
 
   const isComplete = currentMatchweek >= totalMatches;
 
@@ -583,7 +587,7 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
                                   }`}
                                 >
                                   <td className="py-1.5 pr-2">{team.position}</td>
-                                  <td className="py-1.5">{team.name}{multiplayer?.friendNames?.includes(team.name) ? ' · друг' : ''}</td>
+                                  <td className="py-1.5">{team.name}</td>
                                   <td className="text-center py-1.5 px-1">{team.played}</td>
                                   <td className="text-center py-1.5 px-1">{team.won}</td>
                                   <td className="text-center py-1.5 px-1">{team.drawn}</td>

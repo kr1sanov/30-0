@@ -17,7 +17,7 @@ export async function syncLobbyCountdown(code: string) {
   if (seats.length < 2 || seats.some(seat => !seat.ready)) {
     if (room.draftStartAt) await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby' }, data: { draftStartAt: null } });
   } else if (!room.draftStartAt) {
-    await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby', draftStartAt: null }, data: { draftStartAt: new Date(Date.now() + 10_000) } });
+    await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby', draftStartAt: null }, data: { draftStartAt: new Date(Date.now() + 5_000) } });
   }
 }
 
@@ -29,6 +29,10 @@ export async function publicRoom(code: string, userId: string) {
   const own = room.seats.find(seat => seat.userId === userId);
   const friends = await db.friendship.findMany({ where: { status: 'accepted', OR: [{ fromId: userId }, { toId: userId }] }, select: { fromId: true, toId: true } });
   const friendIds = new Set(friends.map(item => item.fromId === userId ? item.toId : item.fromId));
+  const invites = room.status === 'lobby' && room.hostUserId === userId
+    ? await db.multiplayerInvite.findMany({ where: { roomCode: code, status: { in: ['pending', 'declined'] } } }) : [];
+  const invitees = invites.length ? await db.user.findMany({ where: { id: { in: invites.map(invite => invite.toId) } }, select: { id: true, displayName: true, username: true } }) : [];
+  const inviteeNames = new Map(invitees.map(person => [person.id, person.username ? `@${person.username}` : person.displayName]));
   return {
     code: room.code, status: room.status, draftStartAt: room.draftStartAt?.toISOString() ?? null, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
     seriesTargetWins: room.seriesTargetWins, seriesRound: room.seriesRound,
@@ -38,6 +42,7 @@ export async function publicRoom(code: string, userId: string) {
     eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, eraFilter: room.eraFilter,
     draftMode: room.draftMode, showRatings: room.showRatings, withManager: false,
     isHost: room.hostUserId === userId,
+    invitations: invites.map(invite => ({ name: inviteeNames.get(invite.toId) ?? 'Игрок', status: invite.status })),
     seats: room.seats.map(seat => ({ id: seat.id, name: seat.name, formation: seat.formation,
       ready: seat.ready, forfeited: seat.forfeited, seriesMemberKey: seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}`,
       drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
