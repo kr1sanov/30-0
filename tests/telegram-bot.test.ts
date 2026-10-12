@@ -1,21 +1,36 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { sendTelegramMessageDetailed, telegramChatId } from '../src/lib/telegramBot.ts';
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  sendTelegramMessageDetailed,
+  sendTelegramPhoto,
+  telegramChatId,
+} from "../src/lib/telegramBot.ts";
 
-test('extracts a Telegram chat id only from a Telegram provider id', () => {
-  assert.equal(telegramChatId('telegram_123456789'), '123456789');
-  assert.equal(telegramChatId('telegram_0001'), null);
-  assert.equal(telegramChatId('google_123456789'), null);
-  assert.equal(telegramChatId('telegram_123-not-valid'), null);
+test("extracts a Telegram chat id only from a Telegram provider id", () => {
+  assert.equal(telegramChatId("telegram_123456789"), "123456789");
+  assert.equal(telegramChatId("telegram_0001"), null);
+  assert.equal(telegramChatId("google_123456789"), null);
+  assert.equal(telegramChatId("telegram_123-not-valid"), null);
 });
 
-test('reports when Telegram has not seen the admin start the bot', async () => {
+test("reports when Telegram has not seen the admin start the bot", async () => {
   const previousToken = process.env.TELEGRAM_BOT_TOKEN;
   const previousFetch = globalThis.fetch;
-  process.env.TELEGRAM_BOT_TOKEN = '123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12';
-  globalThis.fetch = (async () => new Response(JSON.stringify({ ok: false, description: "Forbidden: bot can't initiate conversation with a user" }), { status: 403 })) as typeof fetch;
+  process.env.TELEGRAM_BOT_TOKEN =
+    "123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12";
+  globalThis.fetch = (async () =>
+    new Response(
+      JSON.stringify({
+        ok: false,
+        description: "Forbidden: bot can't initiate conversation with a user",
+      }),
+      { status: 403 },
+    )) as typeof fetch;
   try {
-    assert.deepEqual(await sendTelegramMessageDetailed('361912433', 'test'), { ok: false, reason: 'start_required' });
+    assert.deepEqual(await sendTelegramMessageDetailed("361912433", "test"), {
+      ok: false,
+      reason: "start_required",
+    });
   } finally {
     globalThis.fetch = previousFetch;
     if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN;
@@ -23,13 +38,20 @@ test('reports when Telegram has not seen the admin start the bot', async () => {
   }
 });
 
-test('does not expose Telegram credentials in send failures', async () => {
+test("does not expose Telegram credentials in send failures", async () => {
   const previousToken = process.env.TELEGRAM_BOT_TOKEN;
   const previousFetch = globalThis.fetch;
-  process.env.TELEGRAM_BOT_TOKEN = '123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12';
-  globalThis.fetch = (async () => new Response(JSON.stringify({ ok: false, description: 'Unauthorized' }), { status: 401 })) as typeof fetch;
+  process.env.TELEGRAM_BOT_TOKEN =
+    "123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12";
+  globalThis.fetch = (async () =>
+    new Response(JSON.stringify({ ok: false, description: "Unauthorized" }), {
+      status: 401,
+    })) as typeof fetch;
   try {
-    assert.deepEqual(await sendTelegramMessageDetailed('361912433', 'test'), { ok: false, reason: 'unavailable' });
+    assert.deepEqual(await sendTelegramMessageDetailed("361912433", "test"), {
+      ok: false,
+      reason: "unavailable",
+    });
   } finally {
     globalThis.fetch = previousFetch;
     if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN;
@@ -37,15 +59,44 @@ test('does not expose Telegram credentials in send failures', async () => {
   }
 });
 
-test('does not treat an HTTP 200 Bot API rejection as a delivered notification', async () => {
-  const { sendTelegramMessage } = await import('../src/lib/telegramBot.ts');
+test("does not treat an HTTP 200 Bot API rejection as a delivered notification", async () => {
+  const { sendTelegramMessage } = await import("../src/lib/telegramBot.ts");
   const previousToken = process.env.TELEGRAM_BOT_TOKEN;
   const previousFetch = globalThis.fetch;
-  process.env.TELEGRAM_BOT_TOKEN = '123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12';
-  globalThis.fetch = (async () => Response.json({ ok: false, description: 'Too Many Requests' })) as typeof fetch;
-  try { assert.equal(await sendTelegramMessage('361912433', 'Test'), false); }
-  finally {
+  process.env.TELEGRAM_BOT_TOKEN =
+    "123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12";
+  globalThis.fetch = (async () =>
+    Response.json({
+      ok: false,
+      description: "Too Many Requests",
+    })) as typeof fetch;
+  try {
+    assert.equal(await sendTelegramMessage("361912433", "Test"), false);
+  } finally {
     globalThis.fetch = previousFetch;
-    if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN; else process.env.TELEGRAM_BOT_TOKEN = previousToken;
+    if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN;
+    else process.env.TELEGRAM_BOT_TOKEN = previousToken;
+  }
+});
+
+test("photo delivery preserves complete HTML entities instead of slicing source markup", async () => {
+  const previous = process.env.TELEGRAM_BOT_TOKEN,
+    oldFetch = globalThis.fetch;
+  process.env.TELEGRAM_BOT_TOKEN =
+    "123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12";
+  const caption = "<b>" + "&amp;".repeat(240) + "</b>";
+  globalThis.fetch = (async (_input, init) => {
+    assert.equal((init?.body as FormData).get("caption"), caption);
+    return Response.json({ ok: true });
+  }) as typeof fetch;
+  try {
+    assert.equal(
+      await sendTelegramPhoto("900000", new Uint8Array(300), caption),
+      true,
+    );
+  } finally {
+    globalThis.fetch = oldFetch;
+    if (previous === undefined) delete process.env.TELEGRAM_BOT_TOKEN;
+    else process.env.TELEGRAM_BOT_TOKEN = previous;
   }
 });

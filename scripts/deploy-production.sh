@@ -169,6 +169,9 @@ mkdir -p docs/research/rpl-2006-2009
 cp -r "$DEPLOY_STAGE/docs/research/rpl-2006-2009/." docs/research/rpl-2006-2009/
 cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
 cp "$DEPLOY_STAGE/scripts/poll-telegram.mjs" scripts/poll-telegram.mjs
+cp "$DEPLOY_STAGE/scripts/telegram-cloud-client.mjs" "$DEPLOY_STAGE/scripts/notification-worker.mjs" scripts/
+rm -rf "$APP_DIR/tgcloud"
+cp -r "$DEPLOY_STAGE/tgcloud" "$APP_DIR/tgcloud"
 
 # The deployment workflow can provide bot credentials as a short-lived file.
 # Keep it private and outside the release tree until the persistent .env is updated.
@@ -236,7 +239,7 @@ fi
 if [ -f .telegram-runtime.env ]; then
   while IFS='=' read -r key value; do
     case "$key" in
-      TELEGRAM_BOT_TOKEN|TELEGRAM_WEBHOOK_SECRET|TELEGRAM_SERVERLESS_BRIDGE_SECRET|TELEGRAM_BOT_TRANSPORT) ;;
+      TELEGRAM_BOT_TOKEN|TELEGRAM_WEBHOOK_SECRET|TELEGRAM_SERVERLESS_BRIDGE_SECRET|TELEGRAM_BOT_TRANSPORT|TGCLOUD_TOKEN) ;;
       *) continue ;;
     esac
     if grep -q "^${key}=" .env; then
@@ -271,6 +274,8 @@ echo "✅ Required production variables are present (values are not printed)"
 # Passenger can sleep while the site is idle. Cron keeps bot commands flowing
 # even with no website traffic; both workers share an atomic poll lock.
 if command -v crontab >/dev/null 2>&1; then
+  WORKER_CRON="* * * * * cd '$APP_DIR' && $(command -v node) --env-file=.env scripts/notification-worker.mjs # rpl30-notification-worker"
+  { crontab -l 2>/dev/null | grep -v 'rpl30-notification-worker' || true; echo "$WORKER_CRON"; } | crontab - >/dev/null 2>&1 || true
   POLL_CRON="* * * * * cd '$APP_DIR' && $(command -v node) --env-file=.env scripts/poll-telegram.mjs >> '$APP_DIR/telegram-poll.log' 2>&1 # rpl30-telegram-poll"
   if { crontab -l 2>/dev/null | grep -v 'rpl30-telegram-poll' || true; echo "$POLL_CRON"; } | crontab - >/dev/null 2>&1; then
     echo "✅ Telegram polling cron installed"

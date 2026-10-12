@@ -56,7 +56,8 @@ export async function sendTelegramMessage(chatId: string, text: string, replyMar
 export async function sendTelegramPhoto(chatId: string, image: Uint8Array, caption: string, replyMarkup?: unknown): Promise<boolean> {
   const form = new FormData();
   form.set('chat_id', chatId);
-  form.set('caption', caption.slice(0, 1024));
+  // Callers bound visible caption length; slicing HTML can break tags/entities.
+  form.set('caption', caption);
   form.set('parse_mode', 'HTML');
   const bytes = new Uint8Array(image.byteLength); bytes.set(image);
   form.set('photo', new Blob([bytes.buffer], { type: 'image/png' }), '30-0-result.png');

@@ -30,34 +30,45 @@ jobs:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: |
           node --input-type=module <<'JS'
-          import { writeFileSync, mkdirSync } from 'node:fs';
+          import { writeFileSync } from 'node:fs';
           import { createHash } from 'node:crypto';
           if (!process.env.TGCLOUD_TOKEN) throw new Error('Add TGCLOUD_TOKEN to production secrets first');
           const bridgeSecret = process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:' + process.env.TGCLOUD_TOKEN).digest('hex');
           writeFileSync('tgcloud/lib/config.js', `export const bridgeSecret = ${JSON.stringify(bridgeSecret)};\nexport const bridgeUrl = 'https://30-0.xn--p1ai/api/telegram/serverless';\n`);
-          mkdirSync('tgcloud/endpoints', { recursive: true });
-          writeFileSync('tgcloud/endpoints/verifyBridge.js', `
-          import { fetch } from 'sdk';
-          import { bridgeSecret, bridgeUrl } from '../lib/config.js';
-          export default async function () {
-            const response = await fetch(bridgeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-30-0-Bridge-Secret': bridgeSecret }, body: JSON.stringify({ user: { id: 0 } }) });
-            if (response.status !== 400) throw new Error('Jino bridge check failed: HTTP ' + response.status);
-            return { bridgeReachable: true, credentialsAccepted: true };
-          }
-          `);
           JS
       - name: Fetch deployment state
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: npx tgcloud fetch
-      - name: Verify bridge from Telegram without changing user data
+      - name: Deploy bot modules and preferences schema
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-        run: npx tgcloud run endpoints/verifyBridge '{}'
-      - name: Deploy only project bot modules
+        run: |
+          npx tgcloud push tgcloud/schema.js tgcloud/handlers/message.js tgcloud/handlers/callback_query.js tgcloud/lib/config.js tgcloud/lib/preferences.js tgcloud/lib/menu.js tgcloud/lib/welcomeImage.js tgcloud/endpoints/preferenceService.js
+          npx tgcloud migrate --safe
+      - name: Verify native preference storage without messaging users
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-        run: npx tgcloud push tgcloud/handlers/message.js tgcloud/handlers/callback_query.js tgcloud/lib/config.js tgcloud/lib/bridge.js
+        run: |
+          node --input-type=module <<'JS'
+          import { callCloudPreferences } from './scripts/telegram-cloud-client.mjs';
+          const result=await callCloudPreferences('health');
+          if(result?.ok!==true)throw new Error('Preference storage check failed');
+          console.log('Native notification storage verified');
+          JS
+      - name: Verify Jino outbound connection to native preference storage
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createHash } from 'node:crypto';
+          const secret=process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
+          const res=await fetch('https://30-0.xn--p1ai/api/telegram/worker',{headers:{'X-30-0-Worker':secret},signal:AbortSignal.timeout(30000)});
+          const result=await res.json().catch(()=>null);
+          if(!res.ok||result?.ok!==true)throw new Error('Jino outbound preference check failed: HTTP '+res.status);
+          console.log('Jino can read native Telegram preferences');
+          JS
       - name: Sync platform webhook without discarding updates
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}

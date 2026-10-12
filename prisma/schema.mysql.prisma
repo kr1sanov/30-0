@@ -107,6 +107,15 @@ model User {
   profileStatsJson String?  @db.Text
   telegramNotificationsEnabled Boolean @default(true)
   telegramChatStarted Boolean @default(false)
+  notifyNews Boolean @default(false)
+  notifyInvites Boolean @default(true)
+  notifyResults Boolean @default(true)
+  notifyFriends Boolean @default(true)
+  notifyFriendReplies Boolean @default(true)
+  notificationsRevision Int @default(0)
+  bannedAt DateTime?
+  bannedUntil DateTime?
+  banReason String? @db.Text
   notificationCadence String @default("weekly")
   deletionRequestedAt DateTime?
   deleteAfterAt DateTime?
@@ -174,11 +183,18 @@ model AdminLoginChallenge {
 model NotificationCampaign {
   id        String   @id @default(cuid())
   title     String   @db.VarChar(120)
-  message   String   @db.Text
+  message   String @db.Text
   cadence   String   @default("weekly") @db.VarChar(20)
   enabled   Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  format String @default("text")
+  imageId String?
+  buttonText String @default("Play")
+  buttonUrl String @db.Text @default("https://t.me/RPL30_bot?startapp")
+  scheduledAt DateTime?
+  archivedAt DateTime?
+
 }
 
 model NotificationDispatch {
@@ -191,6 +207,7 @@ model NotificationDispatch {
 }
 
 model GameRun {
+  completedAt DateTime?
   id           String   @id @default(cuid())
   formation    String   @default("4-3-3") @db.VarChar(20)
   difficulty   String   @default("normal") @db.VarChar(20)
@@ -360,11 +377,47 @@ model TelegramOutbox {
   id String @id @default(cuid())
   eventKey String @unique
   userId String
-  text String
+  text String @db.Text
   startParam String
   attempts Int @default(0)
   availableAt DateTime @default(now())
   sentAt DateTime?
   createdAt DateTime @default(now())
   @@index([sentAt, availableAt])
+  category String @default("friends")
+  imageId String?
+  campaignId String?
+  status String @default("pending")
+  buttonText String @default("Open 30-0")
+  buttonUrl String?
+  lastError String?
+  @@index([campaignId, status])
+
+}
+
+model MediaAsset {
+  id String @id @default(cuid())
+  mime String
+  data Bytes @db.LongBlob
+  createdBy String
+  createdAt DateTime @default(now())
+}
+model CampaignJob {
+  id String @id
+  campaignId String
+  payloadJson String @db.LongText
+  cursor String?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  @@index([completedAt])
+}
+model ModerationAction {
+  id String @id @default(cuid())
+  userId String
+  actor String
+  action String
+  reason String @db.Text
+  until DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
 }

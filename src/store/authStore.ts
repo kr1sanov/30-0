@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export interface AppUser { id: string; provider: 'telegram'; username?: string | null; firstName?: string | null; lastName?: string | null; photoUrl?: string | null; displayName: string; createdAt: number; telegramNotificationsEnabled: boolean; notificationCadence?: string; telegramChatStarted?: boolean; }
+export interface AppUser { id: string; provider: 'telegram'; username?: string | null; firstName?: string | null; lastName?: string | null; photoUrl?: string | null; displayName: string; createdAt: number; telegramNotificationsEnabled: boolean; notificationCadence?: string; telegramChatStarted?: boolean; restriction?: {reason:string;until:string|null}|null; }
 interface AuthState {
   user: AppUser | null; isAuthenticated: boolean; _hasHydrated: boolean;
   setUser: (user: AppUser | null) => void;

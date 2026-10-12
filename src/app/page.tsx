@@ -1265,7 +1265,7 @@ const pageVariants = {
 export default function Home() {
   const { screen, config } = useGameStore();
   const { showBackButton, hideBackButton } = useTelegram();
-  const { isAuthenticated, _hasHydrated } = useAuthStore();
+  const { isAuthenticated, _hasHydrated, user: account } = useAuthStore();
   const prevScreen = useRef(screen);
   const [direction, setDirection] = useState(0);
   const [epochChecked, setEpochChecked] = useState(false);
@@ -1291,6 +1291,8 @@ export default function Home() {
     if (invite && sessionStorage.getItem('30-0-room-invite-consumed') !== invite[1].toUpperCase())
       location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
     if (startParam === 'my_profile') useGameStore.getState().setScreen('profile');
+    const sharedResult=startParam.match(/^result_([A-Za-z0-9_-]{1,100})$/);
+    if(sharedResult)location.replace(`/share/${encodeURIComponent(sharedResult[1])}`);
     const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_-]{1,100})$/);
     if (sharedProfile) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
   }, []);
@@ -1375,6 +1377,7 @@ export default function Home() {
       className="club-theme-shell min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
       style={clubThemeStyle(config.gameMode === 'single_club' ? config.clubName : undefined)}
     >
+      {account?.restriction && <div role="alert" className="relative z-20 border-b border-red-500/30 bg-red-950/80 p-4 text-center text-sm text-red-200"><strong>Account restricted</strong><p>{account.restriction.reason}</p><p>{account.restriction.until?`Until ${new Date(account.restriction.until).toLocaleString()}`:'Permanent restriction'}</p></div>}
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header onBack={screen === 'home' ? undefined : () => {

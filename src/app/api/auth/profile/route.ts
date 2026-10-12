@@ -1,3 +1,4 @@
+import { currentPreferences } from '@/lib/cloudPreferences';
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
@@ -20,11 +21,12 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Имя должно содержать от 2 до 30 символов' }, { status: 400 });
     }
 
+    if(telegramNotificationsEnabled !== undefined) await currentPreferences(userId,{enabled:telegramNotificationsEnabled});
     const user = await db.user.update({
       where: { id: userId },
       data: {
         ...(displayName !== undefined ? { displayName } : {}),
-        ...(telegramNotificationsEnabled !== undefined ? { telegramNotificationsEnabled } : {}),
+
         ...(notificationCadence !== undefined ? { notificationCadence } : {}),
       },
     });
