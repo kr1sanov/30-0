@@ -10,8 +10,6 @@ type Friend = {
   id: string;
   displayName: string;
   username: string | null;
-  avatarColor: string;
-  statusEmoji: string;
 };
 type Group = "friends" | "incoming" | "outgoing" | "search";
 type Lists = Record<Exclude<Group, "search">, Friend[]>;
@@ -197,7 +195,6 @@ export default function FriendsPanel() {
                     id={friend.id}
                     username={friend.username}
                     name={friend.displayName}
-                    color={friend.avatarColor}
                     size={32}
                   />
                   <span className="truncate">

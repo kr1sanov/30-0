@@ -183,7 +183,7 @@ model AdminLoginChallenge {
 model NotificationCampaign {
   id        String   @id @default(cuid())
   title     String   @db.VarChar(120)
-  message   String @db.Text   @db.Text
+  message   String @db.Text
   cadence   String   @default("weekly") @db.VarChar(20)
   enabled   Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -191,7 +191,7 @@ model NotificationCampaign {
   format String @default("text")
   imageId String?
   buttonText String @default("Play")
-  buttonUrl String @default("https://t.me/RPL30_bot?startapp")
+  buttonUrl String @db.Text @default("https://t.me/RPL30_bot?startapp")
   scheduledAt DateTime?
   archivedAt DateTime?
 
@@ -207,6 +207,7 @@ model NotificationDispatch {
 }
 
 model GameRun {
+  completedAt DateTime?
   id           String   @id @default(cuid())
   formation    String   @default("4-3-3") @db.VarChar(20)
   difficulty   String   @default("normal") @db.VarChar(20)

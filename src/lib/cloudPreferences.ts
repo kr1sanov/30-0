@@ -121,3 +121,12 @@ export function workerSecret() {
       : process.env.TELEGRAM_WEBHOOK_SECRET)
   );
 }
+
+export async function verifyCloudPreferences() {
+  const cloud = await client();
+  if (!cloud.cloudConfigured())
+    throw new Error("Serverless credentials unavailable");
+  const result = await cloud.callCloudPreferences("health");
+  if (result?.ok !== true) throw new Error("Preference storage unavailable");
+  return true;
+}

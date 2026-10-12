@@ -17,8 +17,6 @@ type Friend = {
   id: string;
   displayName: string;
   username: string | null;
-  avatarColor: string;
-  statusEmoji: string;
 };
 type Player = {
   id: string;
@@ -27,8 +25,6 @@ type Player = {
   username: string | null;
   firstName: string | null;
   lastName: string | null;
-  avatarColor: string;
-  statusEmoji: string;
   createdAt: string;
   seasons: number;
   titles: number;
@@ -218,7 +214,6 @@ export default function PublicProfile({ id }: { id: string }) {
                   id={player.id}
                   username={player.username}
                   name={player.displayName}
-                  color={player.avatarColor}
                   size={92}
                 />
               </div>
@@ -341,7 +336,6 @@ export default function PublicProfile({ id }: { id: string }) {
                           id={friend.id}
                           username={friend.username}
                           name={friend.displayName}
-                          color={friend.avatarColor}
                           size={32}
                         />
                         {friend.username
@@ -440,7 +434,6 @@ export default function PublicProfile({ id }: { id: string }) {
                 id={preview.id}
                 username={preview.username}
                 name={preview.displayName}
-                color={preview.avatarColor}
                 size={72}
               />
               <h3 className="mt-3 text-xl font-bold">

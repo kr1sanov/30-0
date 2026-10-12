@@ -9,7 +9,6 @@ export default function TelegramAvatar({
   id?: string;
   username?: string | null;
   name?: string | null;
-  color?: string;
   size?: number;
 }) {
   const [failed, setFailed] = useState(false);

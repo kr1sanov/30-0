@@ -56,6 +56,19 @@ jobs:
           if(result?.ok!==true)throw new Error('Preference storage check failed');
           console.log('Native notification storage verified');
           JS
+      - name: Verify Jino outbound connection to native preference storage
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          import { createHash } from 'node:crypto';
+          const secret=process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
+          const res=await fetch('https://30-0.xn--p1ai/api/telegram/worker',{headers:{'X-30-0-Worker':secret},signal:AbortSignal.timeout(30000)});
+          const result=await res.json().catch(()=>null);
+          if(!res.ok||result?.ok!==true)throw new Error('Jino outbound preference check failed: HTTP '+res.status);
+          console.log('Jino can read native Telegram preferences');
+          JS
       - name: Sync platform webhook without discarding updates
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}

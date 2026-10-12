@@ -42,6 +42,12 @@ jobs:
       - name: Switch to MySQL schema
         run: cp prisma/schema.mysql.prisma prisma/schema.prisma
 
+      - name: Validate all database schema variants
+        run: |
+          DATABASE_URL='mysql://qa:qa@127.0.0.1:3306/qa' npx prisma validate --schema prisma/schema.mysql.prisma
+          DIRECT_URL='postgresql://qa:qa@127.0.0.1:5432/qa' DATABASE_URL='postgresql://qa:qa@127.0.0.1:5432/qa' npx prisma validate --schema prisma/schema.postgresql.prisma
+          DATABASE_URL='file:/tmp/schema-validation.db' npx prisma validate --schema prisma/schema.sqlite.prisma
+
       - name: Generate Prisma Client
         run: npx prisma generate
 
