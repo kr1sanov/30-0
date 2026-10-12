@@ -23,6 +23,7 @@ import HistoryScreen from '@/components/game/HistoryScreen';
 import { toast } from 'sonner';
 import { canFillSlot } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
+import { consumeMiniAppDestination } from '@/lib/miniAppDestination';
 import { useAutoAuth } from '@/hooks/use-telegram-auth';
 import { useAuthStore } from '@/store/authStore';
 import { Metrics } from '@/lib/metrics';
@@ -1285,16 +1286,17 @@ export default function Home() {
 
   useEffect(() => {
     if (new URLSearchParams(location.search).has('challenge')) return;
-    const startParam = new URLSearchParams(location.search).get('tgWebAppStartParam') ||
+    const explicitStart = new URLSearchParams(location.search).get('tgWebAppStartParam');
+    const startParam = explicitStart ||
       (window as Window & { Telegram?: { WebApp?: { initDataUnsafe?: { start_param?: string } } } }).Telegram?.WebApp?.initDataUnsafe?.start_param || '';
     const invite = startParam.match(/^room_([A-HJ-NP-Z2-9]{6})$/i);
     if (invite && sessionStorage.getItem('30-0-room-invite-consumed') !== invite[1].toUpperCase())
       location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
     if (startParam === 'my_profile') useGameStore.getState().setScreen('profile');
     const sharedResult=startParam.match(/^result_([A-Za-z0-9_-]{1,100})$/);
-    if(sharedResult)location.replace(`/share/${encodeURIComponent(sharedResult[1])}`);
+    if(sharedResult && consumeMiniAppDestination('result',sharedResult[1],sessionStorage,Boolean(explicitStart)))location.replace(`/share/${encodeURIComponent(sharedResult[1])}`);
     const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_-]{1,100})$/);
-    if (sharedProfile) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
+    if (sharedProfile && consumeMiniAppDestination('profile',sharedProfile[1],sessionStorage,Boolean(explicitStart))) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
   }, []);
 
   useEffect(() => {
