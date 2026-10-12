@@ -376,10 +376,10 @@ function HomePage() {
 
           {/* Secondary — dark outline */}
           <button
-            onClick={() => setShowHowToPlay(true)}
+            onClick={() => document.getElementById('how-to-play')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             className="w-full h-12 text-base font-semibold text-[#9CA3AF] bg-[#141414] border border-[#1E1E1E] rounded-2xl transition-colors hover:bg-[#1E1E1E] hover:text-[#FFFFFF] hover:border-[#2A2A2A] active:scale-[0.97]"
           >
-            Как это работает
+            Как играть?
           </button>
 
           {/* Resume draft button — only if there's an unfinished draft */}
@@ -456,13 +456,14 @@ function HomePage() {
 
       {/* ── How to Play Section ── */}
       <motion.section
+        id="how-to-play"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.15 }}
         className="px-4 py-6"
       >
         <h2 className="text-xl sm:text-2xl font-black text-center text-[#FFFFFF] mb-4">
-          Как играть
+          Как играть?
         </h2>
         <div className="space-y-3">
           {STEPS.map((step, i) => (
@@ -1285,6 +1286,8 @@ export default function Home() {
     const invite = startParam.match(/^room_([A-HJ-NP-Z2-9]{6})$/i);
     if (invite && sessionStorage.getItem('30-0-room-invite-consumed') !== invite[1].toUpperCase())
       location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
+    const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_]{5,32})$/);
+    if (sharedProfile) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
   }, []);
 
   useEffect(() => {

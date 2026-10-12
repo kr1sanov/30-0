@@ -121,6 +121,8 @@ model User {
   referralJoinedAt DateTime?
   referralCount    Int      @default(0)
   tokenBalance     Int      @default(0)
+  avatarColor      String   @default("#00C896")
+  statusEmoji      String   @default("🏆")
   selectedAvatar   String   @default("ball")
   profileStyle     String   @default("classic")
   tokenEntries     TokenEntry[]
@@ -330,11 +332,23 @@ model ProfileUnlock {
   @@unique([userId, key])
 }
 
+model MultiplayerInvite {
+  id String @id @default(cuid())
+  roomCode String
+  fromId String
+  toId String
+  status String @default("pending")
+  createdAt DateTime @default(now())
+  @@unique([roomCode, toId])
+  @@index([toId, status])
+}
+
 model Friendship {
   id        String   @id @default(cuid())
   fromId    String
   toId      String
   createdAt DateTime @default(now())
+  status    String @default("accepted")
   from      User     @relation("FriendFrom", fields: [fromId], references: [id], onDelete: Cascade)
   to        User     @relation("FriendTo", fields: [toId], references: [id], onDelete: Cascade)
   @@unique([fromId, toId])

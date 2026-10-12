@@ -10,52 +10,11 @@ import { toast } from 'sonner';
 import { Metrics } from '@/lib/metrics';
 import { useTelegram } from '@/hooks/use-telegram';
 import Link from 'next/link';
+import { playerPath, AVATAR_COLORS, STATUS_EMOJIS } from '@/lib/profileLinks';
+import { telegramWebApp } from '@/hooks/use-telegram';
 import TelegramAvatar from './TelegramAvatar';
+import { TROPHIES } from '@/lib/trophyCatalog';
 
-const TROPHIES = [
-  { id: 'perfect_30_0', icon: '🏆', name: '30-0', desc: 'Выиграть все 30 матчей' },
-  { id: 'invincible', icon: '🛡️', name: 'Непобедимый', desc: '0 поражений за сезон' },
-  { id: 'champion', icon: '🥇', name: 'Чемпион', desc: 'Занять 1-е место' },
-  { id: 'top4', icon: '⭐', name: 'Топ-4', desc: 'Попасть в топ-4' },
-  { id: 'goal_machine', icon: '⚽', name: 'Голевая машина', desc: '60+ голов за сезон' },
-  { id: 'iron_defense', icon: '🧱', name: 'Железная оборона', desc: '20 или менее пропущенных' },
-  { id: 'iron_curtain', icon: '🥅', name: 'Железный занавес', desc: '10 или менее пропущенных' },
-  { id: 'personal_best', icon: '📈', name: 'Взлёт', desc: 'Новый личный рекорд очков' },
-  { id: 'win_streak', icon: '🔥', name: 'Серия побед', desc: '5+ побед подряд' },
-  { id: 'minimalist', icon: '🎯', name: 'Минималист', desc: 'Сезон без перебросов' },
-  { id: 'hard_champion', icon: '💎', name: 'Бриллиант', desc: 'Чемпион на сложности' },
-  { id: 'squad_builder', icon: '🏗️', name: 'Архитектор', desc: 'Средний рейтинг 80+' },
-  { id: 'centurion', icon: '💯', name: 'Центурион', desc: '100+ очков за сезон' },
-  { id: 'clean_sheet', icon: '🧤', name: 'Сухарь', desc: '10+ сухих матчей' },
-  { id: 'comeback_king', icon: '👑', name: 'Король камбэков', desc: '5+ побед после пропуска' },
-  { id: 'globetrotter', icon: '🌍', name: 'Путешественник', desc: 'Игроки 5+ национальностей' },
-  { id: 'veteran', icon: '🎖️', name: 'Ветеран', desc: '10+ сезонов сыграно' },
-  { id: 'legend', icon: '🌟', name: 'Легенда', desc: '3+ чемпионских титула' },
-  { id: 'marathon_5', icon: '🏃', name: 'Пятая дистанция', desc: 'Сыграть 5 сезонов' },
-  { id: 'marathon_25', icon: '🦁', name: 'Главный ветеран', desc: 'Сыграть 25 сезонов' },
-  { id: 'hundred_wins', icon: '💯', name: 'Клуб ста побед', desc: '100 побед за карьеру' },
-  { id: 'three_hundred_wins', icon: '🏅', name: 'Победитель', desc: '300 побед за карьеру' },
-  { id: 'goal_collector', icon: '🥅', name: 'Коллекционер голов', desc: '500 голов за карьеру' },
-  { id: 'three_titles', icon: '👑', name: 'Династия', desc: '5 чемпионских титулов' },
-  { id: 'points_1000', icon: '📊', name: 'Тысяча очков', desc: '1 000 очков за карьеру' },
-  { id: 'perfect_twice', icon: '✨', name: 'Безупречная серия', desc: 'Два идеальных сезона' },
-  { id: 'top_four_10', icon: '🎖️', name: 'Постоянство', desc: '10 раз попасть в топ-4' },
-  { id: 'samba_attack', icon: '🇧🇷', name: 'Самба в атаке', desc: '3 бразильца в составе и 50 голов команды за сезон' },
-  { id: 'russian_core', icon: '🇷🇺', name: 'Русский костяк', desc: 'Чемпионство с 7 россиянами в составе' },
-  { id: 'army_season', icon: '🔴', name: 'Армейский сезон', desc: '20 побед за ЦСКА в режиме «Один клуб»' },
-  { id: 'neva_attack', icon: '🌊', name: 'Невская атака', desc: '60 голов за «Зенит» в режиме «Один клуб»' },
-  { id: 'vagner_legend', icon: '❤️', name: 'Вагнер навсегда', desc: 'Стань чемпионом в челлендже Вагнера Лава' },
-  { id: 'dzyuba_record', icon: '🎯', name: 'Голевая эпоха', desc: 'Стань чемпионом с Дзюбой и забей командой 60 голов' },
-  { id: 'referral_invite', icon: '🤝', name: 'Первый приглашённый', desc: 'Пригласить первого игрока в 30-0' },
-  { id: 'multiplayer_series_champion', icon: '🏅', name: 'Победитель серии', desc: 'Выиграть серию сезонов в мультиплеере' },
-  { id: 'club_crown', icon: '👑', name: 'Верность цветам', desc: 'Стать чемпионом с одним клубом' },
-  { id: 'club_unbeaten', icon: '🛡️', name: 'Неприступная крепость', desc: 'Стать чемпионом своего клуба без поражений' },
-  { id: 'club_attack', icon: '🚀', name: 'Трибуны ликуют', desc: 'Стать чемпионом своего клуба с 60 голами' },
-  { id: 'club_collector', icon: '🧭', name: 'Три герба', desc: 'Стать чемпионом с тремя разными клубами' },
-  { id: 'duel_winner', icon: '⚔️', name: 'Первый вызов', desc: 'Выиграть сезон против живого соперника' },
-  { id: 'duel_unbeaten', icon: '🧱', name: 'Стена в дерби', desc: 'Выиграть мультиплеерный сезон без поражений' },
-  { id: 'duel_hat_trick', icon: '🎩', name: 'Хет-трик дуэлей', desc: 'Трижды выиграть сезон против игроков' },
-];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   easy: 'Легко',
@@ -72,7 +31,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 export default function ProfileScreen() {
   const { isTelegram } = useTelegram();
   const { profileStats, resetGame, setScreen } = useGameStore();
-  const { user, updateDisplayName, resetProfile } = useAuthStore();
+  const { user, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(false);
   const [showTrophies, setShowTrophies] = useState(false);
   const [deleteAfterAt, setDeleteAfterAt] = useState<string | null>(null);
@@ -83,16 +42,23 @@ export default function ProfileScreen() {
     const timer = window.setInterval(() => setClock(Date.now()), 60000);
     return () => clearInterval(timer);
   }, []);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editName, setEditName] = useState(user?.displayName || '');
-  const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; telegramInviteUrl: string | null; referredUsers: Array<{ displayName: string; username: string | null; createdAt: string }> } | null>(null);
+  const [referrals, setReferrals] = useState<{ referralCount: number; inviteUrl: string | null; telegramInviteUrl: string | null; referredUsers: Array<{ id: string; displayName: string; username: string | null; createdAt: string }> } | null>(null);
   useEffect(() => { if (user) fetch('/api/referrals').then(r => r.ok ? r.json() : null).then(data => { if (data && typeof data.referralCount === 'number') setReferrals(data); }).catch(() => undefined); }, [user]);
-  type Friend = { id: string; displayName: string; username: string | null };
+  type Friend = { id: string; displayName: string; username: string | null; avatarColor: string; statusEmoji: string };
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [incoming, setIncoming] = useState<Friend[]>([]);
+  const [outgoing, setOutgoing] = useState<Friend[]>([]);
+  const [suggestions, setSuggestions] = useState<Friend[]>([]);
+  const [avatarColor, setAvatarColor] = useState('#00C896');
+  const [statusEmoji, setStatusEmoji] = useState('🏆');
+  const loadFriends = () => void fetch('/api/social/friends').then(r => r.ok ? r.json() : null).then(data => { if (data) { setFriends(data.friends ?? []); setIncoming(data.incoming ?? []); setOutgoing(data.outgoing ?? []); setSuggestions(data.suggestions ?? []); } }).catch(() => undefined);
+  const updateStyle = async (changes: { avatarColor?: string; statusEmoji?: string }) => { const response = await fetch('/api/social/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(changes) }); if (!response.ok) { toast.error('Не удалось обновить профиль'); return; } const data = await response.json(); setAvatarColor(data.avatarColor); setStatusEmoji(data.statusEmoji); };
+  const respondFriend = async (id: string, action: 'accept' | 'decline') => { const response = await fetch('/api/social/friends', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, action }) }); if (response.ok) loadFriends(); else toast.error('Не удалось обработать заявку'); };
+  useEffect(() => { if (!user) return; fetch('/api/social/players/' + encodeURIComponent(user.id)).then(r => r.ok ? r.json() : null).then(data => { if (data) { setAvatarColor(data.avatarColor); setStatusEmoji(data.statusEmoji); } }).catch(() => undefined); }, [user]);
   const [extraAchievements, setExtraAchievements] = useState<string[]>([]);
   const [trophyMode, setTrophyMode] = useState('classic');
   useEffect(() => { if (!user) return;
-    void fetch('/api/social/friends').then(r => r.ok ? r.json() : null).then(data => setFriends(data?.friends ?? [])).catch(() => undefined);
+    loadFriends();
     void fetch('/api/social/achievements').then(r => r.ok ? r.json() : null).then(data => setExtraAchievements(data?.ids ?? [])).catch(() => undefined);
   }, [user]);
   const [seriesWins, setSeriesWins] = useState(0);
@@ -115,20 +81,9 @@ export default function ProfileScreen() {
   const hasTrophy = (id: string) => id === 'referral_invite' ? hasReferralAchievement : id === 'multiplayer_series_champion' ? seriesWins > 0 : profileStats.achievements.includes(id) || extraAchievements.includes(id);
   const earnedTrophies = TROPHIES.filter(t => hasTrophy(t.id)).length;
 
-  const handleSaveName = async () => {
-    if (editName.trim().length >= 2) {
-      try {
-        await updateDisplayName(editName.trim());
-        setIsEditingName(false);
-        toast.success('Никнейм обновлён!');
-      } catch { toast.error('Не удалось сохранить имя'); }
-    } else {
-      toast.error('Минимум 2 символа');
-    }
-  };
-
-  // Telegram profile photo is retrieved by the server; initials cover private or missing photos.
-  const displayName = user?.displayName || 'Игрок';
+  const displayName = user?.username ? `@${user.username}` : user?.displayName || 'Игрок';
+  const profileUrl = user ? `${typeof location === 'undefined' ? 'https://30-0.рф' : location.origin}${playerPath(user)}` : '';
+  const shareProfile = async () => { const app = telegramWebApp(); if (app?.openTelegramLink) { const deepLink = `https://t.me/RPL30_bot?startapp=profile_${encodeURIComponent(user?.username || user?.id || '')}`; app.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent('Посмотри мой профиль в 30-0')}`); } else { try { await navigator.clipboard.writeText(profileUrl); toast.success('Ссылка на профиль скопирована'); } catch { toast.error('Не удалось скопировать ссылку'); } } };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 animate-fade-in rounded-3xl border border-transparent p-3 pb-8 sm:p-5">
@@ -139,57 +94,23 @@ export default function ProfileScreen() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative inline-block"
         >
-          <TelegramAvatar id={user?.id} name={displayName} size={80} />
-          {profileStats.titles > 0 && (
+          <TelegramAvatar username={user?.username} name={displayName} color={avatarColor} size={80} />
+          {statusEmoji && (
             <div className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-yellow-500 flex items-center justify-center text-sm shadow-lg">
-              🏆
+              {statusEmoji}
             </div>
           )}
         </motion.div>
-        {/* Display name with edit button */}
-        <div className="flex items-center justify-center gap-2 mt-3">
-          {isEditingName ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                className="ym-disable-keys bg-[#141414] border border-[#00C896]/30 rounded-lg px-3 py-1.5 text-sm font-bold text-[#FFFFFF] focus:outline-none focus:border-[#00C896] w-40"
-                autoFocus
-                maxLength={20}
-              />
-              <button
-                onClick={handleSaveName}
-                className="text-xs font-bold text-[#00C896] hover:text-[#00A67A]"
-              >
-                ✓
-              </button>
-              <button
-                onClick={() => { setIsEditingName(false); setEditName(user?.displayName || ''); }}
-                className="text-xs font-bold text-[#ef4444] hover:text-[#dc2626]"
-              >
-                ✕
-              </button>
-            </div>
-          ) : (
-            <>
-              <h2 className="text-xl font-bold text-[#FFFFFF]">{displayName}</h2>
-              <button
-                onClick={() => { setIsEditingName(true); setEditName(displayName); }}
-                className="text-[10px] text-[#64748b] hover:text-[#9CA3AF] transition-colors"
-                title="Изменить никнейм"
-              >
-                ✏️
-              </button>
-            </>
-          )}
+        <h2 className="mt-3 text-xl font-bold text-white">{displayName}</h2>
+        {(user?.firstName || user?.lastName) && <p className="mt-1 text-sm text-slate-300">{[user.firstName, user.lastName].filter(Boolean).join(' ')}</p>}
+        <div className="mx-auto mt-3 max-w-sm space-y-2 text-xs">
+          <p className="text-slate-400">Цвет аватара</p><div className="flex flex-wrap justify-center gap-2">{AVATAR_COLORS.map(color => <button key={color} type="button" aria-label={`Цвет аватара ${color}`} aria-pressed={avatarColor === color} onClick={() => void updateStyle({ avatarColor: color })} className={`h-7 w-7 rounded-full ${avatarColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-[#141414]' : ''}`} style={{ backgroundColor: color }} />)}</div>
+          <p className="pt-2 text-slate-400">Статус</p><div className="flex flex-wrap justify-center gap-2">{STATUS_EMOJIS.map(emoji => <button key={emoji} type="button" aria-label={`Статус ${emoji}`} aria-pressed={statusEmoji === emoji} onClick={() => void updateStyle({ statusEmoji: emoji })} className={`rounded-lg border px-2 py-1 text-lg ${statusEmoji === emoji ? 'border-[#00C896]' : 'border-white/10'}`}>{emoji}</button>)}</div>
         </div>
-
         <p className="text-sm text-[#9CA3AF] mt-1">Игрок 30-0</p>
       </div>
 
-      {user && <div className="flex flex-wrap justify-center gap-2 text-xs"><Link href={`/players/${encodeURIComponent(user.id)}`} className="rounded-lg border border-[#00C896]/35 px-3 py-2 text-[#00C896]">Открыть публичный профиль</Link><button onClick={() => void navigator.clipboard.writeText(`${location.origin}/players/${encodeURIComponent(user.id)}`).then(() => toast.success('Ссылка на профиль скопирована'))} className="rounded-lg border border-white/20 px-3 py-2 text-white">Поделиться профилем</button></div>}
+      {user && <div className="flex flex-wrap justify-center gap-2 text-xs"><Link href={playerPath(user)} className="rounded-lg border border-[#00C896]/35 px-3 py-2 text-[#00C896]">Открыть публичный профиль</Link><button onClick={() => void shareProfile()} className="rounded-lg border border-white/20 px-3 py-2 text-white">Поделиться профилем</button></div>}
       {/* Local profile info + reset button */}
       <div className="flex items-center justify-center gap-3 py-2">
         <span role="status" className="inline-flex items-center gap-2 rounded-lg bg-[#229ED9] px-3 py-2 text-xs font-semibold text-white shadow-sm shadow-[#229ED9]/20">
@@ -240,8 +161,8 @@ export default function ProfileScreen() {
       <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white">Приглашай друзей</h3>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделись ссылкой — здесь появятся твои друзья.</p>
+            <h3 className="text-sm font-bold text-white">Друзья и приглашения</h3>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">Поделись ссылкой, найди игроков и отправь заявку в друзья.</p>
           </div>
           <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
             <div className="text-xl font-black text-[#00C896]">{referrals?.referralCount ?? '—'}</div>
@@ -259,25 +180,25 @@ export default function ProfileScreen() {
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">Присоединились по ссылке</p>
             <ul className="space-y-1.5">
               {referrals.referredUsers.map((invite, index) => (
-                <li key={`${invite.username ?? invite.displayName}-${index}`} className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]">
-                  <span className="truncate">{invite.displayName || 'Игрок'}{invite.username ? ` · @${invite.username}` : ''}</span>
+                <li key={`${invite.id}-${index}`} className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]">
+                  <Link href={playerPath(invite)} className="truncate text-[#00C896] hover:underline">{invite.username ? `@${invite.username}` : invite.displayName || 'Игрок'}</Link>
                   <span className="shrink-0 text-[#64748b]">{new Date(invite.createdAt).toLocaleDateString('ru-RU', { timeZone: 'UTC' })}</span>
                 </li>
               ))}
             </ul>
           </div>
         ) : null}
-      </section>
-
-      <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5"><h3 className="font-bold text-white">Друзья · {friends.length}</h3>
-        {friends.length ? <div className="mt-3 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={`/players/${friend.id}`} className="rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]"><TelegramAvatar id={friend.id} name={friend.displayName} size={24}/> {friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Открой ссылку на профиль игрока, чтобы добавить его в друзья.</p>}
-        <Link href="/multiplayer" className="mt-3 inline-block text-xs font-semibold text-[#00C896]">Пригласить друзей в мультиплеер →</Link>
+        {incoming.length > 0 && <div className="mt-4 border-t border-white/10 pt-3"><h4 className="mb-2 font-semibold text-white">Заявки в друзья · {incoming.length}</h4><div className="space-y-2">{incoming.map(friend => <div key={friend.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white/5 p-2"><Link href={playerPath(friend)} className="flex min-w-0 flex-1 items-center gap-2 text-sm text-white"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={32}/><span className="truncate">{friend.username ? `@${friend.username}` : friend.displayName}</span></Link><button onClick={() => void respondFriend(friend.id, 'accept')} className="rounded-lg bg-[#00C896] px-3 py-2 text-xs font-bold text-black">Принять</button><button onClick={() => void respondFriend(friend.id, 'decline')} className="rounded-lg border border-white/20 px-3 py-2 text-xs">Отклонить</button></div>)}</div></div>}
+        <div className="mt-4 border-t border-white/10 pt-3"><h4 className="font-semibold text-white">Друзья · {friends.length}</h4>{friends.length ? <div className="mt-2 flex flex-wrap gap-2">{friends.map(friend => <Link key={friend.id} href={playerPath(friend)} className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm text-white hover:border-[#00C896]"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={28}/>{friend.username ? `@${friend.username}` : friend.displayName}</Link>)}</div> : <p className="mt-2 text-xs text-slate-400">Пока никого нет. Открой профиль игрока и отправь заявку.</p>}</div>
+        {outgoing.length > 0 && <div className="mt-4"><h4 className="text-xs font-semibold text-slate-400">Отправленные заявки</h4><div className="mt-2 flex flex-wrap gap-2">{outgoing.map(friend => <Link key={friend.id} href={playerPath(friend)} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300">{friend.username ? `@${friend.username}` : friend.displayName} · ожидает</Link>)}</div></div>}
+        {suggestions.length > 0 && <div className="mt-4"><h4 className="text-xs font-semibold text-slate-400">Игроки, с которыми ты играл или которых пригласил</h4><div className="mt-2 flex flex-wrap gap-2">{suggestions.map(friend => <Link key={friend.id} href={playerPath(friend)} className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300"><TelegramAvatar username={friend.username} name={friend.displayName} color={friend.avatarColor} size={24}/>{friend.username ? `@${friend.username}` : friend.displayName}</Link>)}</div></div>}
+        <Link href="/multiplayer" className="mt-4 inline-block text-xs font-semibold text-[#00C896]">Перейти в мультиплеер →</Link>
       </section>
 
       {/* Trophy Cabinet */}
       <div className="rounded-2xl p-5 border glass-showcase">
         <button type="button" onClick={() => setShowTrophies(open => !open)} aria-expanded={showTrophies} className="flex w-full items-center justify-between text-left">
-          <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Витрина трофеев</h3>
+          <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Достижения</h3>
           <span className="text-xs text-[#9CA3AF]">{earnedTrophies}/{TROPHIES.length} {showTrophies ? '▲' : '▼'}</span>
         </button>
         {showTrophies && <div className="mt-4">

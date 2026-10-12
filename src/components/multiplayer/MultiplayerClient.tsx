@@ -15,6 +15,7 @@ const card = 'rounded-2xl border border-[#1E1E1E] bg-[#141414] p-5 sm:p-6';
 const button = 'rounded-xl bg-[#00C896] px-5 py-3.5 font-bold text-[#07130f] transition hover:bg-[#00A67A] disabled:opacity-40';
 const input = 'w-full rounded-xl border border-white/20 bg-[#0A0A0A] px-4 py-3 text-white focus:border-[#00C896] focus:outline-none';
 
+type Invitation = { id: string; code: string; from?: { id: string; displayName: string; username: string | null }; createdAt: string };
 type Menu = {
   activeRooms: { code: string; status: string; deadline: string | null; drafted: number; participants: string[] }[];
 };
@@ -32,13 +33,14 @@ async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T>
 
 export default function MultiplayerPage() {
   useAutoAuth();
-  const { user, _hasHydrated, updateDisplayName } = useAuthStore();
+  const { user, _hasHydrated } = useAuthStore();
   const [name, setName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [code, setCode] = useState('');
   const [room, setRoom] = useState<Room | null>(null);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,7 +59,7 @@ export default function MultiplayerPage() {
 
   const refreshMenu = useCallback(async () => {
     if (!user) return;
-    try { setMenu(await json<Menu>('/api/multiplayer/active')); }
+    try { const [rooms, invites] = await Promise.all([json<Menu>('/api/multiplayer/active'), json<{ invitations: Invitation[] }>('/api/multiplayer/invitations')]); setMenu(rooms); setInvitations(invites.invitations); }
     catch { /* The room remains playable if the menu is unavailable. */ }
   }, [user]);
 
@@ -144,7 +146,6 @@ export default function MultiplayerPage() {
     await action(async () => {
       const cleanName = name.trim() || user?.displayName || '';
       if (cleanName.length < 2) throw new Error('Введи имя от 2 символов');
-      if (cleanName !== user?.displayName) await updateDisplayName(cleanName);
       const result = await json<{ code: string }>('/api/multiplayer/rooms', 'POST', {
         name: cleanName, ...(targetCode ? { code: targetCode } : { maxPlayers: 2, seriesTargetWins: 0 }),
       });
@@ -205,6 +206,7 @@ export default function MultiplayerPage() {
     useGameStore.getState().setScreen('profile'); location.href = '/';
   };
   const roomChoices = menu?.activeRooms ?? [];
+  const invitationList = invitations.length > 0 && <section className={`${card} space-y-3`}><h2 className="font-bold">Приглашения в игру · {invitations.length}</h2>{invitations.map(invite => <div key={invite.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 p-3"><div className="min-w-0 flex-1"><strong className="block truncate">{invite.from?.username ? `@${invite.from.username}` : invite.from?.displayName || 'Игрок'} приглашает тебя</strong><span className="text-xs text-slate-400">Лобби · {invite.code}</span></div><button onClick={() => void action(async () => { const result = await json<{ code: string }>('/api/multiplayer/invitations', 'PATCH', { id: invite.id, action: 'accept' }); openRoom(result.code); setInvitations(old => old.filter(item => item.id !== invite.id)); })} className="rounded-lg bg-[#00C896] px-3 py-2 text-sm font-bold text-black">Присоединиться</button><button onClick={() => void action(async () => { await json('/api/multiplayer/invitations', 'PATCH', { id: invite.id, action: 'decline' }); setInvitations(old => old.filter(item => item.id !== invite.id)); })} className="rounded-lg border border-white/20 px-3 py-2 text-sm">Отклонить</button></div>)}</section>;
   const continueRooms = roomChoices.length > 0 && <div className="space-y-2">
     <h2 className="text-sm font-bold text-[#9CA3AF]">Твои текущие игры</h2>
     {roomChoices.map(active => <button key={active.code} onClick={() => openRoom(active.code)} className="w-full rounded-2xl border border-[#00C896]/40 bg-[#00C896]/10 p-4 text-left transition hover:bg-[#00C896]/20">
@@ -224,6 +226,7 @@ export default function MultiplayerPage() {
       {!code && !joiningLink && !showCreate && <div className="mx-auto max-w-2xl space-y-6 animate-fade-in">
         <div className="text-center"><h1 className="text-3xl font-black sm:text-4xl">Мультиплеер</h1><p className="mt-2 text-base text-[#9CA3AF]">Выбери формат игры</p></div>
         <button onClick={() => setShowCreate(true)} className={`${card} group w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl sm:text-2xl">Драфт с друзьями</strong><span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500"/>Прямой эфир</span></span><span className="mt-3 block text-sm leading-6 text-slate-400">Соревнуйся в режиме реального времени с участием до 6 игроков. Все находятся онлайн одновременно и собирают лучшую команду из 11 игроков.</span></button>
+        {invitationList}
         {continueRooms}
       </div>}
 
@@ -234,6 +237,7 @@ export default function MultiplayerPage() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#9CA3AF]">Собери <strong className="text-white">команду из 11 игроков</strong>, сыграй сезон и узнай, кто собрал лучший состав.</p>
         </div>
 
+        {invitationList}
         {continueRooms}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>

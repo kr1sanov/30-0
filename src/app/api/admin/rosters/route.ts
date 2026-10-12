@@ -42,10 +42,10 @@ export async function PATCH(request: Request) {
  if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник' }, { status: 403 });
  try {
   const b = await request.json(); const id = String(b.id ?? '');
-  const rating = Number(b.rating); const primeRating = Number(b.primeRating); const mainPosition = String(b.mainPosition ?? '').trim(); const otherPositions = String(b.otherPositions ?? '').trim();
+  const rating = Number(b.rating); const primeRating = Number(b.primeRating); const mainPosition = String(b.mainPosition ?? '').trim(); const otherPositions = String(b.otherPositions ?? '').trim().replaceAll('|', ',');
   if (!id || !Number.isInteger(rating) || rating < 1 || rating > 100 || !Number.isInteger(primeRating) || primeRating < rating || primeRating > 100 ||
     !ALL_POSITIONS.includes(mainPosition as typeof ALL_POSITIONS[number]) || otherPositions.length > 255 ||
-    (otherPositions && otherPositions.split(',').some((pos: string) => !ALL_POSITIONS.includes(pos.trim() as typeof ALL_POSITIONS[number])))) return NextResponse.json({ error: 'Проверь рейтинги и позиции игрока' }, { status: 400 });
+    (otherPositions && otherPositions.split(',').some((pos: string) => !ALL_POSITIONS.includes(pos.trim() as typeof ALL_POSITIONS[number]) || pos.trim() === mainPosition))) return NextResponse.json({ error: 'Проверь рейтинги и позиции игрока' }, { status: 400 });
   const row = await db.playerSeason.update({ where: { id }, data: { rating, primeRating, mainPosition, otherPositions: otherPositions || null } });
   return NextResponse.json({ ok: true, id: row.id });
  } catch { return NextResponse.json({ error: 'Не удалось обновить запись игрока' }, { status: 500 }); }

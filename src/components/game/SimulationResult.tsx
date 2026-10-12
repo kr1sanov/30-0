@@ -121,7 +121,7 @@ const trophyVariants = {
 
 export default function SimulationResult({ multiplayer }: { multiplayer?: {
   data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
-  onHome: () => void; onReplay: () => void;
+  onHome: () => void; onReplay: () => void; friendNames?: string[];
 } }) {
   const store = useGameStore();
   const seasonResult = multiplayer ? multiplayer.data : store.seasonResult;
@@ -579,11 +579,11 @@ export default function SimulationResult({ multiplayer }: { multiplayer?: {
                                   className={`${
                                     isPlayer
                                       ? 'bg-[#00C896]/10 font-bold text-[#00C896]'
-                                      : 'text-[#9CA3AF]'
+                                      : multiplayer?.friendNames?.includes(team.name) ? 'bg-sky-500/10 font-bold text-sky-300' : 'text-[#9CA3AF]'
                                   }`}
                                 >
                                   <td className="py-1.5 pr-2">{team.position}</td>
-                                  <td className="py-1.5">{team.name}</td>
+                                  <td className="py-1.5">{team.name}{multiplayer?.friendNames?.includes(team.name) ? ' · друг' : ''}</td>
                                   <td className="text-center py-1.5 px-1">{team.played}</td>
                                   <td className="text-center py-1.5 px-1">{team.won}</td>
                                   <td className="text-center py-1.5 px-1">{team.drawn}</td>

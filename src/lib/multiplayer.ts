@@ -27,6 +27,8 @@ export async function publicRoom(code: string, userId: string) {
   } });
   if (!room || !room.seats.some(seat => seat.userId === userId)) return null;
   const own = room.seats.find(seat => seat.userId === userId);
+  const friends = await db.friendship.findMany({ where: { status: 'accepted', OR: [{ fromId: userId }, { toId: userId }] }, select: { fromId: true, toId: true } });
+  const friendIds = new Set(friends.map(item => item.fromId === userId ? item.toId : item.fromId));
   return {
     code: room.code, status: room.status, draftStartAt: room.draftStartAt?.toISOString() ?? null, maxPlayers: room.maxPlayers, ratingMode: room.ratingMode,
     seriesTargetWins: room.seriesTargetWins, seriesRound: room.seriesRound,
@@ -41,7 +43,7 @@ export async function publicRoom(code: string, userId: string) {
       drafted: seat.run?.slots.filter(slot => slot.playerSeasonId).length ?? 0,
       result: seat.run?.completed ? { wins: seat.run.wins, draws: seat.run.draws, losses: seat.run.losses,
         points: seat.run.points, overallRating: seat.run.overallRating } : null,
-      isYou: seat.userId === userId, isHost: seat.userId === room.hostUserId, isBot: seat.isBot,
+      isFriend: Boolean(seat.userId && friendIds.has(seat.userId)), isYou: seat.userId === userId, isHost: seat.userId === room.hostUserId, isBot: seat.isBot,
       pickDeadline: seat.pickDeadline?.toISOString() ?? null, managerName: null,
       managerRating: null,
     })),

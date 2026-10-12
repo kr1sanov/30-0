@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     // Count referred users
     const referredUsers = user.referralCode ? await db.user.findMany({
       where: { referredBy: user.referralCode },
-      select: { displayName: true, username: true, createdAt: true },
+      select: { id: true, displayName: true, username: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
       take: 20,
     }) : [];
