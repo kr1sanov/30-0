@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import TelegramAvatar from './TelegramAvatar';
-import { telegramWebApp, useTelegram } from '@/hooks/use-telegram';
+import { useTelegram } from '@/hooks/use-telegram';
+import { sharePlayerProfile } from '@/lib/sharePlayerProfile';
 import { playerPath } from '@/lib/profileLinks';
 import { TROPHIES } from '@/lib/trophyCatalog';
 import { useGameStore } from '@/store/gameStore';
@@ -56,18 +57,7 @@ export default function PublicProfile({ id }: { id: string }) {
       router.push(`/multiplayer?room=${data.code}`);
     } catch (e) { toast.error((e as Error).message); setBusy(false); }
   };
-  const share = async () => {
-    if (!player) return;
-    const app = telegramWebApp();
-    const url = `${location.origin}${player.path}`;
-    if (app?.openTelegramLink) {
-      const deepLink = `https://t.me/RPL30_bot?startapp=profile_${encodeURIComponent(player.username || player.id)}`;
-      app.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(deepLink)}&text=${encodeURIComponent('Профиль игрока 30-0')}`);
-    } else {
-      try { await navigator.clipboard.writeText(url); toast.success('Ссылка на профиль скопирована'); }
-      catch { toast.error('Не удалось скопировать ссылку'); }
-    }
-  };
+  const share = async () => { if (player) await sharePlayerProfile(player); };
   const stats = player ? [[player.seasons,'Всего сезонов'],[player.bestPoints,'Лучший результат'],[player.titles,'Титулы'],[`${player.winRate}%`,'Процент побед'],[player.totalWins,'Всего побед'],[player.totalGoals,'Всего голов'],[player.avgGoals,'Среднее голов за сезон'],[player.favoriteFormation || '—','Часто используемая схема']] : [];
   const trophies = player ? TROPHIES.filter(t => player.achievements.includes(t.id)) : [];
   return <div className="min-h-screen bg-[#080b10] text-white"><Header onBack={back} onProfile={() => { useGameStore.getState().setScreen('profile'); router.push('/'); }}/><main className="mx-auto max-w-4xl space-y-5 px-4 py-8 pb-28 sm:py-10">

@@ -78,3 +78,9 @@ test('translates informal copy on the home, profile and legal pages', () => {
   assert.equal(translateInterface('Собери состав только из эпохи 2010–2014. Плюс 2 игроков из 🇷🇺 Россия'), 'Build a squad from the 2010–2014 era. Include 2 players from 🇷🇺 Russia');
   assert.equal(translateInterface('Собери состав в схеме 4-3-3 + 2 из 🇧🇷'), 'Build a squad in a 4-3-3 formation + 2 from 🇧🇷');
 });
+
+test('translates friend management, invitations and challenge navigation', () => {
+  for (const text of ['Найди игрока по никнейму и добавь в друзья.', 'Входящие', 'Отправленные', 'Найти игрока', 'Никнейм игрока', 'Новых заявок нет', 'Отправленных заявок нет', 'Поделиться профилем ↗', 'Приглашения ·', 'Друзья ·', '🏆 Достижения', 'Активные челленджи', 'Загружаем челленджи…', 'Уведомления Telegram']) {
+    assert.equal(/[А-Яа-яЁё]/.test(translateInterface(text)), false, text);
+  }
+});

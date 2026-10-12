@@ -11,8 +11,7 @@ let originalDescription = '';
 let renderedTitle = '';
 let renderedDescription = '';
 
-function translatePage(language: Language) {
-  const root = document.body;
+function translatePage(language: Language, root: Node = document.body) {
   if (!root) return;
   if (!originalTitle || document.title !== renderedTitle) originalTitle = document.title;
   renderedTitle = language === 'en' ? translateInterface(originalTitle) : originalTitle;
@@ -24,8 +23,8 @@ function translatePage(language: Language) {
     description.content = renderedDescription;
   }
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  let current: Node | null;
-  while ((current = walker.nextNode())) {
+  let current: Node | null = root.nodeType === Node.TEXT_NODE ? root : walker.nextNode();
+  for (; current; current = walker.nextNode()) {
     const node = current as Text;
     if (node.parentElement?.closest('script, style, noscript, textarea, [data-no-translate]')) continue;
     const rendered = node.nodeValue ?? '';
@@ -35,7 +34,8 @@ function translatePage(language: Language) {
     originals.set(node, { source, rendered: translated });
     if (rendered !== translated) node.nodeValue = translated;
   }
-  for (const element of root.querySelectorAll('*')) {
+  const elements = root instanceof Element ? [root, ...root.querySelectorAll('[aria-label], [placeholder], [title], [alt]')] : [];
+  for (const element of elements) {
     if (element.closest('script, style, noscript, [data-no-translate]')) continue;
     const records = originalAttributes.get(element) ?? new Map();
     for (const name of attributeNames) {
@@ -60,25 +60,37 @@ export function LanguageController() {
     document.documentElement.lang = selected;
     document.documentElement.dataset.language = selected;
     translatePage(selected);
-    let scheduled = false;
-    const observer = new MutationObserver(() => {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(() => {
-        scheduled = false;
-        translatePage(document.documentElement.lang === 'en' ? 'en' : 'ru');
+    let frame = 0;
+    const pending = new Set<Node>();
+    const observe = () => observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: attributeNames });
+    const observer = new MutationObserver(records => {
+      for (const record of records) {
+        if (record.type === 'childList') record.addedNodes.forEach(node => pending.add(node));
+        else pending.add(record.target);
+      }
+      if (frame || !pending.size) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        observer.disconnect();
+        const language = document.documentElement.lang === 'en' ? 'en' : 'ru';
+        for (const node of pending) if (node.isConnected) translatePage(language, node);
+        pending.clear();
+        observe();
       });
     });
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: attributeNames });
+    observe();
     const onLanguageChange = (event: Event) => {
       const next = (event as CustomEvent<Language>).detail;
       document.documentElement.lang = next;
       document.documentElement.dataset.language = next;
+      observer.disconnect();
       translatePage(next);
+      observe();
     };
     window.addEventListener(LANGUAGE_EVENT, onLanguageChange);
     return () => {
       observer.disconnect();
+      cancelAnimationFrame(frame);
       window.removeEventListener(LANGUAGE_EVENT, onLanguageChange);
     };
   }, []);

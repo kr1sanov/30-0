@@ -154,6 +154,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          TELEGRAM_BOT_TRANSPORT: ${{ vars.TELEGRAM_BOT_TRANSPORT }}
         run: |
           # Next.js standalone deployment on Jino (Apache + Phusion Passenger):
           # APP_DIR/app.js                        <- Passenger entrypoint (starts standalone server)
@@ -225,6 +228,21 @@ jobs:
             echo "Telegram runtime secrets are not both configured; existing server values will be kept."
           fi
 
+          if [ -n "${TGCLOUD_TOKEN:-}" ]; then
+            if [ -z "${TELEGRAM_SERVERLESS_BRIDGE_SECRET:-}" ]; then
+              TELEGRAM_SERVERLESS_BRIDGE_SECRET=$(node -e "process.stdout.write(require('node:crypto').createHash('sha256').update('30-0 bridge:' + process.env.TGCLOUD_TOKEN).digest('hex'))")
+            fi
+            TELEGRAM_BOT_TRANSPORT=serverless
+          fi
+          if [ -n "${TELEGRAM_SERVERLESS_BRIDGE_SECRET:-}" ]; then
+            umask 077
+            printf 'TELEGRAM_SERVERLESS_BRIDGE_SECRET=%s\n' "$TELEGRAM_SERVERLESS_BRIDGE_SECRET" >> deploy-package/telegram-runtime.env
+          fi
+          if [ -n "${TELEGRAM_BOT_TRANSPORT:-}" ]; then
+            umask 077
+            printf 'TELEGRAM_BOT_TRANSPORT=%s\n' "$TELEGRAM_BOT_TRANSPORT" >> deploy-package/telegram-runtime.env
+          fi
+
           # Verify structure
           echo "Deploy package structure:"
           ls -la deploy-package/
@@ -256,6 +274,7 @@ jobs:
       - name: Enable Telegram polling
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_TRANSPORT: ${{ vars.TELEGRAM_BOT_TRANSPORT }}
         run: node scripts/set-telegram-webhook.mjs
 
       - name: Deliver queued /start commands during polling migration

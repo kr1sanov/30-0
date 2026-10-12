@@ -1290,7 +1290,8 @@ export default function Home() {
     const invite = startParam.match(/^room_([A-HJ-NP-Z2-9]{6})$/i);
     if (invite && sessionStorage.getItem('30-0-room-invite-consumed') !== invite[1].toUpperCase())
       location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
-    const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_]{5,32})$/);
+    if (startParam === 'my_profile') useGameStore.getState().setScreen('profile');
+    const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_-]{1,100})$/);
     if (sharedProfile) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
   }, []);
 

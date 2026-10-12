@@ -1,0 +1,43 @@
+name: Deploy Telegram Serverless bot
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: telegram-serverless
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Configure Jino bridge
+        env:
+          BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          import { writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          if (!process.env.TGCLOUD_TOKEN) throw new Error('Add TGCLOUD_TOKEN to production secrets first');
+          const bridgeSecret = process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:' + process.env.TGCLOUD_TOKEN).digest('hex');
+          writeFileSync('tgcloud/lib/config.js', `export const bridgeSecret = ${JSON.stringify(bridgeSecret)};\nexport const bridgeUrl = 'https://30-0.xn--p1ai/api/telegram/serverless';\n`);
+          JS
+      - name: Fetch deployment state
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: npx tgcloud fetch
+      - name: Deploy only project bot modules
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: npx tgcloud push tgcloud/handlers/message.js tgcloud/handlers/callback_query.js tgcloud/lib/config.js tgcloud/lib/bridge.js
+      - name: Sync platform webhook without discarding updates
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: npx tgcloud webhook sync

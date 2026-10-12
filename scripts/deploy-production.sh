@@ -236,7 +236,7 @@ fi
 if [ -f .telegram-runtime.env ]; then
   while IFS='=' read -r key value; do
     case "$key" in
-      TELEGRAM_BOT_TOKEN|TELEGRAM_WEBHOOK_SECRET) ;;
+      TELEGRAM_BOT_TOKEN|TELEGRAM_WEBHOOK_SECRET|TELEGRAM_SERVERLESS_BRIDGE_SECRET|TELEGRAM_BOT_TRANSPORT) ;;
       *) continue ;;
     esac
     if grep -q "^${key}=" .env; then

@@ -36,3 +36,16 @@ test('does not expose Telegram credentials in send failures', async () => {
     else process.env.TELEGRAM_BOT_TOKEN = previousToken;
   }
 });
+
+test('does not treat an HTTP 200 Bot API rejection as a delivered notification', async () => {
+  const { sendTelegramMessage } = await import('../src/lib/telegramBot.ts');
+  const previousToken = process.env.TELEGRAM_BOT_TOKEN;
+  const previousFetch = globalThis.fetch;
+  process.env.TELEGRAM_BOT_TOKEN = '123456789:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12';
+  globalThis.fetch = (async () => Response.json({ ok: false, description: 'Too Many Requests' })) as typeof fetch;
+  try { assert.equal(await sendTelegramMessage('361912433', 'Test'), false); }
+  finally {
+    globalThis.fetch = previousFetch;
+    if (previousToken === undefined) delete process.env.TELEGRAM_BOT_TOKEN; else process.env.TELEGRAM_BOT_TOKEN = previousToken;
+  }
+});

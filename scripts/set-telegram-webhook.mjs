@@ -17,14 +17,21 @@ if (beforeInfo.ok) {
     lastError: beforeInfo.result?.last_error_message, lastErrorAt: beforeInfo.result?.last_error_date,
   }));
 }
-// Jino is not reachable from Telegram's webhook network. Poll outbound instead.
-const response = await fetch(`https://api.telegram.org/bot${token}/deleteWebhook`, {
-  method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ drop_pending_updates: false }),
-});
-const result = await response.json();
-if (!response.ok || !result.ok) throw new Error(`Telegram polling setup failed: ${result.description || response.status}`);
-console.log('Telegram webhook removed; pending /start updates preserved for outbound polling.');
+// Preserve Telegram Serverless's managed webhook. A website deploy must never
+// silently switch a Serverless bot back to polling.
+const webhookUrl = beforeInfo.result?.url || '';
+const serverless = process.env.TELEGRAM_BOT_TRANSPORT === 'serverless' || Boolean(webhookUrl) && process.env.TELEGRAM_BOT_TRANSPORT !== 'polling';
+if (serverless) {
+  console.log('Serverless transport: preserving the managed webhook.');
+} else {
+  const response = await fetch(`https://api.telegram.org/bot${token}/deleteWebhook`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ drop_pending_updates: false }),
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) throw new Error(`Telegram polling setup failed: ${result.description || response.status}`);
+  console.log('Telegram webhook removed; pending updates preserved for polling.');
+}
 
 // Keep the private-chat command picker focused on the one supported command.
 // The Main Mini App button configured in BotFather is not changed here.
