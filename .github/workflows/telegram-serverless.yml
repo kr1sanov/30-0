@@ -30,16 +30,30 @@ jobs:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: |
           node --input-type=module <<'JS'
-          import { writeFileSync } from 'node:fs';
+          import { writeFileSync, mkdirSync } from 'node:fs';
           import { createHash } from 'node:crypto';
           if (!process.env.TGCLOUD_TOKEN) throw new Error('Add TGCLOUD_TOKEN to production secrets first');
           const bridgeSecret = process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:' + process.env.TGCLOUD_TOKEN).digest('hex');
           writeFileSync('tgcloud/lib/config.js', `export const bridgeSecret = ${JSON.stringify(bridgeSecret)};\nexport const bridgeUrl = 'https://30-0.xn--p1ai/api/telegram/serverless';\n`);
+          mkdirSync('tgcloud/endpoints', { recursive: true });
+          writeFileSync('tgcloud/endpoints/verifyBridge.js', `
+          import { fetch } from 'sdk';
+          import { bridgeSecret, bridgeUrl } from '../lib/config.js';
+          export default async function () {
+            const response = await fetch(bridgeUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-30-0-Bridge-Secret': bridgeSecret }, body: JSON.stringify({ user: { id: 0 } }) });
+            if (response.status !== 400) throw new Error('Jino bridge check failed: HTTP ' + response.status);
+            return { bridgeReachable: true, credentialsAccepted: true };
+          }
+          `);
           JS
       - name: Fetch deployment state
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: npx tgcloud fetch
+      - name: Verify bridge from Telegram without changing user data
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+        run: npx tgcloud run endpoints/verifyBridge '{}'
       - name: Deploy only project bot modules
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
@@ -47,4 +61,12 @@ jobs:
       - name: Sync platform webhook without discarding updates
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-        run: npx tgcloud webhook sync
+        run: |
+          for attempt in 1 2 3; do
+            if npx tgcloud webhook sync; then
+              npx tgcloud webhook
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1

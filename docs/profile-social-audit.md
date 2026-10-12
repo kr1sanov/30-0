@@ -40,3 +40,18 @@ Real iOS/Android Telegram sessions, authenticated visual layouts and actual
 Telegram delivery still require checking on the deployed version. Serverless
 runtime execution requires the user's separate CLI access token. This review
 is not a claim that every project flow or device has been audited.
+
+## Dependency follow-up
+
+The installation audit reported one critical and ten high dependency findings.
+Next.js is updated to 16.3.8, Sharp to 0.35.5 and source-map-js to 1.2.2.
+Prisma's config dependency is constrained to deepmerge-ts 8.0.0; client
+regeneration and database sync pass with that version. The final
+`npm audit --omit=dev` reports zero findings. Development-only glob tooling
+still has upstream advisory warnings; this is not a claim that the complete
+build dependency tree has zero findings.
+
+The Serverless workflow retries webhook synchronization and probes the Jino
+bridge from Telegram using an invalid user ID. A 400 response proves the
+bridge accepted its secret and reached validation without modifying user data.
+The diagnostic endpoint is used only by `tgcloud run`, never deployed.
