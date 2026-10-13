@@ -1,4 +1,5 @@
 "use client";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { translateClient } from "@/lib/enTranslations";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -122,7 +123,7 @@ export default function AdminPage() {
         Загружаем админку…
       </main>
     );
-  if (!dashboard) return <AdminPasswordLogin />;
+  if (!dashboard) return <><div className="p-4"><LanguageSwitcher admin /></div><AdminPasswordLogin /></>;
   const role = dashboard.role;
   const canAlias = role !== "viewer";
   const canManage = role === "owner" || role === "admin";
@@ -130,8 +131,8 @@ export default function AdminPage() {
     ["overview", "Обзор"],
     ["users", "Пользователи"],
     ["games", "Игры"],
-    ["leaderboard", "Activity ranking"],
-    ["moderation", "Moderation"],
+    ["leaderboard", "Рейтинг активности"],
+    ["moderation", "Модерация"],
     ["players", "Игроки"],
     ...(canManage
       ? [
@@ -147,6 +148,7 @@ export default function AdminPage() {
     <main className="min-h-screen bg-[#09110e] px-4 pb-16 pt-6 text-white md:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
+          <LanguageSwitcher admin />
           <div>
             <p className="text-sm font-semibold text-emerald-400">
               Управление продуктом

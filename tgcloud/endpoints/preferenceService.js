@@ -16,6 +16,7 @@ export default async function preferenceService(input) {
           tgId: row.tgId,
           user: JSON.parse(row.userJson),
           preferences: normalize(row.prefsJson),
+          language: JSON.parse(row.prefsJson || "{}").language || "ru",
           revision: row.revision,
           started: Boolean(row.started),
         }

@@ -2,7 +2,7 @@
 
 ## User experience
 
-- `/start` sends the project logo, an English introduction and Play / My profile / Notifications buttons.
+- `/start` first asks for Русский / English. Choosing a language saves it in native preferences and sends the project image, localized introduction and Play / My profile / Notifications / Language buttons. `/language` and the menu button can change it later. Game and admin browser languages are independent.
 - Notification categories: project news (explicit opt-in), game invitations, season results, friend requests and request responses. A master switch preserves category choices.
 - Bot choices persist in native Telegram Serverless SQLite immediately. Jino pulls changes and acknowledges only the exact revision saved. Profile writes update the same native preferences. Delivery checks current consent again; an unavailable preference service defers delivery.
 - No Serverless handler fetches Jino: the previous connection consistently failed. Jino uses the authenticated Telegram management execution API, with fixed audited preference-service sources. The owner token remains in a private server environment and GitHub secrets.
@@ -26,6 +26,14 @@ Jino's existing Passenger timer is supplemented by a once-per-minute hosting cro
 `TGCLOUD_TOKEN` is delivered only through the SSH deployment package into the existing `.env` (mode 600). It is never bundled into client code. The preference-service bridge secret is explicit or derived consistently from this token. The separate Bot API token remains necessary for Jino's outgoing photo/message delivery.
 
 The Serverless deployment workflow fetches the current revision, deploys only project modules, applies safe schema migrations, verifies native storage without sending user messages and preserves pending webhook updates. The old reverse bridge is retained for compatibility but is no longer used by Serverless handlers.
+
+## Language and draft stability (13 October 2026)
+
+- Automatic social/result notifications select the current bot language at delivery time. Result images are rendered in that language too. Campaigns now have separate Russian and English heading/message/button fields; missing English versions are skipped for English recipients rather than delivering Russian copy. Existing campaigns should be edited to add their English version before resending.
+- `/admin` stores its language under `30-0-admin-language`; game language remains under `30-0-language`. New notification and administration screens use Russian source copy with English translations.
+- The pitch, roulette and player list translate inside React. The legacy DOM observer does not mutate these rapidly changing subtrees. Reels remain mounted across idle/spinning/result phases, their timers clean up correctly, keyboard shortcuts ignore focused controls, position buttons keep a 44px touch target, and delayed auto-scroll was removed.
+- Pitch height uses aspect ratio, so its capped width determines its height correctly. One Club can resume from home after a pick; server restoration selects a run with at least one filled slot and does not let a newer empty run hide it.
+- Local verification: 96 Node tests, TypeScript, ESLint (three pre-existing navigation warnings), production build, React DOM interaction checks in RU/EN and API checks using isolated SQLite fixtures. Cloud Browser cannot reach this container's localhost, so mobile/browser visual verification and live Telegram delivery remain to be checked after deployment. No real users were messaged in testing.
 
 ## Validation
 

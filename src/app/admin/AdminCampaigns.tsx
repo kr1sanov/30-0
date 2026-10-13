@@ -1,9 +1,13 @@
 "use client";
+import { translateClient } from "@/lib/enTranslations";
 import { validTelegramHtml } from "@/lib/campaignContent";
 import { useEffect, useState, useRef } from "react";
 type Campaign = {
   id?: string;
   title: string;
+  titleEn: string;
+  messageEn: string;
+  buttonTextEn: string;
   message: string;
   cadence: string;
   format: string;
@@ -16,11 +20,14 @@ type Campaign = {
 };
 const empty: Campaign = {
   title: "",
+  titleEn: "",
+  messageEn: "",
+  buttonTextEn: "Play",
   message: "",
   cadence: "manual",
   format: "text",
   imageId: null,
-  buttonText: "Play",
+  buttonText: "Играть",
   buttonUrl: "https://t.me/RPL30_bot?startapp",
   scheduledAt: null,
   enabled: false,
@@ -60,7 +67,7 @@ export default function AdminCampaigns() {
       await fn();
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Request failed");
+      setError(e instanceof Error ? e.message : "Ошибка запроса");
     } finally {
       setBusy(false);
     }
@@ -71,12 +78,11 @@ export default function AdminCampaigns() {
     <div className="grid items-start gap-5 lg:grid-cols-2">
       <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
         <h2 className="text-xl font-bold">
-          {draft.id ? "Edit campaign" : "New campaign"}
+          {draft.id ? "Редактировать рассылку" : "Новая рассылка"}
         </h2>
         <p className="mt-2 text-sm text-white/50">
-          Only players who started the bot and opted into Project news receive
-          campaigns. Times are shown in your local timezone.
-        </p>
+Рассылки получают только игроки, которые запустили бота и включили новости проекта. Время указано в твоём часовом поясе.
+</p>
         {error && (
           <p role="alert" className="mt-3 text-red-300">
             {error}
@@ -94,13 +100,20 @@ export default function AdminCampaigns() {
             void run(async () => {
               const data = await api("/api/admin/campaigns", "POST", draft);
               setDraft(data.campaign);
-              setNotice("Campaign saved.");
+              setNotice("Рассылка сохранена.");
             });
           }}
         >
+          <fieldset className="space-y-3 rounded-xl border border-white/15 p-3">
+            <legend>Английская версия поста</legend>
+            <label className="block text-sm">Заголовок EN<input data-no-translate required minLength={2} maxLength={120} className={field} value={draft.titleEn || ""} onChange={e => setDraft({ ...draft, titleEn: e.target.value })} /></label>
+            <label className="block text-sm">Сообщение EN<textarea data-no-translate required minLength={2} maxLength={draft.imageId ? 800 : 3500} className={field} value={draft.messageEn || ""} onChange={e => setDraft({ ...draft, messageEn: e.target.value })} /></label>
+            <label className="block text-sm">Текст кнопки EN<input data-no-translate required maxLength={40} className={field} value={draft.buttonTextEn || ""} onChange={e => setDraft({ ...draft, buttonTextEn: e.target.value })} /></label>
+            <p className="text-xs text-white/50">Бот отправит версию на языке, выбранном получателем.</p>
+          </fieldset>
           <label className="block text-sm">
-            Heading
-            <input
+Заголовок
+<input
               required
               minLength={2}
               maxLength={120}
@@ -110,22 +123,22 @@ export default function AdminCampaigns() {
             />
           </label>
           <label className="block text-sm">
-            Trigger
-            <select
+Триггер
+<select
               className={field}
               value={draft.cadence}
               onChange={(e) => update({ cadence: e.target.value })}
             >
               {[
-                ["manual", "Manual send"],
-                ["scheduled", "Scheduled date"],
-                ["daily", "Daily · 09:00 UTC"],
-                ["weekly", "Weekly · Monday 09:00 UTC"],
-                ["monthly", "Monthly · first day 09:00 UTC"],
-                ["return", "Inactive for 7 days · weekly"],
-                ["new_user", "New player"],
-                ["season_complete", "Completed season"],
-                ["perfect_season", "30 wins in a season"],
+                ["manual", "Ручная отправка"],
+                ["scheduled", "По расписанию"],
+                ["daily", "Ежедневно · 12:00 МСК"],
+                ["weekly", "Еженедельно · понедельник 12:00 МСК"],
+                ["monthly", "Ежемесячно · первое число 12:00 МСК"],
+                ["return", "Неактивные 7 дней · еженедельно"],
+                ["new_user", "Новый игрок"],
+                ["season_complete", "Завершение сезона"],
+                ["perfect_season", "30 побед за сезон"],
               ].map(([k, v]) => (
                 <option key={k} value={k}>
                   {v}
@@ -135,8 +148,8 @@ export default function AdminCampaigns() {
           </label>
           {draft.cadence === "scheduled" && (
             <label className="block text-sm">
-              Send at
-              <input
+Дата отправки
+<input
                 required
                 type="datetime-local"
                 className={field}
@@ -161,19 +174,21 @@ export default function AdminCampaigns() {
             </label>
           )}
           <label className="block text-sm">
-            Formatting
-            <select
+Форматирование
+<select
               className={field}
               value={draft.format}
               onChange={(e) => update({ format: e.target.value })}
             >
-              <option value="text">Plain text</option>
+              <option value="text">
+Обычный текст
+</option>
               <option value="html">Telegram HTML</option>
             </select>
           </label>
           <label className="block text-sm">
-            Message
-            <textarea
+Сообщение
+<textarea
               ref={textarea}
               required
               rows={7}
@@ -186,11 +201,11 @@ export default function AdminCampaigns() {
           {draft.format === "html" && (
             <div className="flex flex-wrap gap-2">
               {[
-                ["b", "Bold"],
-                ["i", "Italic"],
-                ["u", "Underline"],
-                ["s", "Strike"],
-                ["code", "Code"],
+                ["b", "Жирный"],
+                ["i", "Курсив"],
+                ["u", "Подчёркнутый"],
+                ["s", "Зачёркнутый"],
+                ["code", "Код"],
               ].map(([tag, label]) => (
                 <button
                   key={tag}
@@ -218,13 +233,12 @@ export default function AdminCampaigns() {
             </div>
           )}
           <p className="text-xs text-white/50">
-            Variables: {"{{name}}, {{username}}"}. HTML supports b, i, u, s,
-            code, pre, blockquote and HTTPS links. {draft.message.length}/
+            Переменные: {"{{name}}, {{username}}"}. HTML поддерживает b, i, u, s, code, pre, blockquote и HTTPS-ссылки. {draft.message.length}/
             {draft.imageId ? 800 : 3500}
           </p>
           <label className="block text-sm">
-            Post image
-            <input
+Картинка поста
+<input
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={busy}
@@ -251,7 +265,7 @@ export default function AdminCampaigns() {
             <div>
               <img
                 src={`/api/admin/media/${draft.imageId}`}
-                alt="Post image preview"
+                alt="Предпросмотр картинки"
                 className="max-h-60 w-full rounded-xl object-contain"
               />
               <button
@@ -259,13 +273,13 @@ export default function AdminCampaigns() {
                 className={button}
                 onClick={() => update({ imageId: null })}
               >
-                Remove image
-              </button>
+Удалить картинку
+</button>
             </div>
           )}
           <label className="block text-sm">
-            Button label
-            <input
+Текст кнопки
+<input
               required
               maxLength={40}
               value={draft.buttonText}
@@ -274,8 +288,8 @@ export default function AdminCampaigns() {
             />
           </label>
           <label className="block text-sm">
-            Button HTTPS link
-            <input
+HTTPS-ссылка кнопки
+<input
               required
               type="url"
               value={draft.buttonUrl}
@@ -289,26 +303,28 @@ export default function AdminCampaigns() {
               checked={draft.enabled}
               onChange={(e) => update({ enabled: e.target.checked })}
             />
-            Enable automatic trigger
-          </label>
+Включить автоматический триггер
+</label>
           <div className="flex flex-wrap gap-2">
             <button
               disabled={busy}
               className={`${button} bg-emerald-500 text-black`}
             >
-              Save campaign
-            </button>
+Сохранить рассылку
+</button>
             <button
               type="button"
               className={button}
               onClick={() => setDraft(empty)}
             >
-              New draft
-            </button>
+Новый черновик
+</button>
           </div>
         </form>
         <details className="mt-5">
-          <summary className="cursor-pointer text-sm">Text preview</summary>
+          <summary className="cursor-pointer text-sm">
+Предпросмотр текста
+</summary>
           <div className="mt-3 whitespace-pre-wrap break-words rounded-xl bg-black/30 p-4">
             <strong>{draft.title}</strong>
             {draft.format === "html" && validTelegramHtml(draft.message) ? (
@@ -326,8 +342,12 @@ export default function AdminCampaigns() {
         </details>
       </section>
       <section className="space-y-3">
-        <h2 className="text-xl font-bold">Campaigns</h2>
-        {!items.length && <p className="text-white/50">No campaigns yet.</p>}
+        <h2 className="text-xl font-bold">
+Рассылки
+</h2>
+        {!items.length && <p className="text-white/50">
+Пока нет рассылок.
+</p>}
         {items.map((c) => (
           <article
             key={c.id}
@@ -335,14 +355,13 @@ export default function AdminCampaigns() {
           >
             <h3 className="font-bold">{c.title}</h3>
             <p className="mt-1 text-sm text-white/50">
-              {c.cadence} · {c.enabled ? "Active" : "Paused"}
+              {c.cadence} · {c.enabled ? "Активна" : "На паузе"}
               {c.scheduledAt
                 ? ` · ${new Date(c.scheduledAt).toLocaleString()}`
                 : ""}
             </p>
             <p className="mt-3 text-xs text-white/60">
-              Sent: {c.stats?.sent || 0} · Pending: {c.stats?.pending || 0} ·
-              Failed: {c.stats?.failed || 0} · Skipped: {c.stats?.skipped || 0}
+              Отправлено: {c.stats?.sent || 0} · В очереди: {c.stats?.pending || 0} · Ошибки: {c.stats?.failed || 0} · Пропущено: {c.stats?.skipped || 0}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
@@ -350,8 +369,8 @@ export default function AdminCampaigns() {
                 disabled={busy}
                 onClick={() => setDraft(c)}
               >
-                Edit
-              </button>
+Изменить
+</button>
               <button
                 className={button}
                 disabled={busy}
@@ -364,7 +383,7 @@ export default function AdminCampaigns() {
                   })
                 }
               >
-                {c.enabled ? "Pause" : "Enable"}
+                {c.enabled ? "Приостановить" : "Включить"}
               </button>
               <button
                 className={button}
@@ -372,7 +391,7 @@ export default function AdminCampaigns() {
                 onClick={() => {
                   if (
                     confirm(
-                      `Queue “${c.title}” for all eligible subscribers now?`,
+                      translateClient(`Отправить «${c.title}» всем подписчикам сейчас?`),
                     )
                   )
                     void run(async () => {
@@ -381,12 +400,12 @@ export default function AdminCampaigns() {
                         id: c.id,
                         requestId: crypto.randomUUID(),
                       });
-                      setNotice("Campaign queued for eligible subscribers.");
+                      setNotice("Рассылка добавлена в очередь для подписчиков.");
                     });
                 }}
               >
-                Send now
-              </button>
+Отправить сейчас
+</button>
               {Boolean(c.stats?.failed) && (
                 <button
                   className={button}
@@ -400,22 +419,22 @@ export default function AdminCampaigns() {
                     })
                   }
                 >
-                  Retry failed
-                </button>
+Повторить с ошибками
+</button>
               )}
               <button
                 className={`${button} text-red-300`}
                 disabled={busy}
                 onClick={() => {
-                  if (confirm("Archive campaign and cancel unsent messages?"))
+                  if (confirm("Архивировать рассылку и отменить неотправленные сообщения?"))
                     void run(async () => {
                       await api("/api/admin/campaigns", "DELETE", { id: c.id });
                       if (draft.id === c.id) setDraft(empty);
                     });
                 }}
               >
-                Archive
-              </button>
+В архив
+</button>
             </div>
           </article>
         ))}

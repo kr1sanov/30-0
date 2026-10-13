@@ -109,6 +109,9 @@ export async function runNotificationSchedule(now = new Date()) {
           (_, key) => escapeHtml(vars[key]),
         );
         const text = `<b>${escapeHtml(c.title)}</b>\n\n${c.format === "html" ? message : escapeHtml(c.message).replace(/\{\{(name|username)\}\}/g, (_, key) => escapeHtml(vars[key]))}`;
+        const textEn = c.titleEn && c.messageEn
+          ? `<b>${escapeHtml(c.titleEn)}</b>\n\n${(c.format === "html" ? c.messageEn : escapeHtml(c.messageEn)).replace(/\{\{(name|username)\}\}/g, (_, key) => escapeHtml(vars[key]))}`
+          : null;
         const eventKey = `campaign:${job.id}:${user.id}`;
         await tx.telegramOutbox.upsert({
           where: { eventKey },
@@ -116,6 +119,8 @@ export async function runNotificationSchedule(now = new Date()) {
             eventKey,
             userId: user.id,
             text,
+            textEn,
+            buttonTextEn: c.buttonTextEn,
             startParam: "",
             category: "news",
             campaignId: c.id,

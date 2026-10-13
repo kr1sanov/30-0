@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
         userId,
         multiplayerSeat: null,
         gameMode: mode,
+        ...(mode === 'single_club' ? { slots: { some: { playerSeasonId: { not: null } } } } : {}),
         ...(mode.startsWith('challenge_') && issueId ? { challengeIssueId: issueId } : {}),
         clubFilter: mode === 'single_club' ? clubId : null,
       },

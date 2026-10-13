@@ -1,4 +1,6 @@
-import { currentPreferences } from "./cloudPreferences";
+import { localizeBotMessage, localizeBotButton } from "./botLanguage";
+import { seasonResultImage } from "./seasonResultNotification";
+import { currentBotLanguage, currentPreferences } from "./cloudPreferences";
 import {
   notificationAllowed,
   type NotificationCategory,
@@ -88,7 +90,9 @@ export async function flushSocialNotifications() {
       });
       const chatId = user && telegramChatId(user.providerId);
       let allowed = false;
+      let language: 'ru' | 'en' = 'ru';
       try {
+        language = await currentBotLanguage(item.userId);
         allowed = Boolean(
           user &&
           notificationAllowed(
@@ -133,6 +137,10 @@ export async function flushSocialNotifications() {
         });
         return;
       }
+      if (item.category === "news" && language === "en" && !item.textEn) {
+        await db.telegramOutbox.update({ where: { id: item.id }, data: { sentAt: now, status: "skipped", lastError: "English campaign version missing" } });
+        return;
+      }
       const bot = (process.env.TELEGRAM_BOT_USERNAME || "RPL30_bot").replace(
         /^@/,
         "",
@@ -141,7 +149,7 @@ export async function flushSocialNotifications() {
         inline_keyboard: [
           [
             {
-              text: item.buttonText || "Open 30-0",
+              text: item.category === "news" ? (language === "en" ? item.buttonTextEn || item.buttonText : item.buttonText) : localizeBotButton(item.buttonText || "Open 30-0", language),
               url:
                 item.buttonUrl ||
                 `https://t.me/${bot}?startapp=${encodeURIComponent(item.startParam)}`,
@@ -152,9 +160,15 @@ export async function flushSocialNotifications() {
       const image = item.imageId
         ? await db.mediaAsset.findUnique({ where: { id: item.imageId } })
         : null;
-      const sent = image
-        ? await sendTelegramPhoto(chatId, image.data, item.text, keyboard)
-        : await sendTelegramMessage(chatId, item.text, keyboard);
+      let imageData = image?.data;
+      if (item.category === "results" && item.eventKey.startsWith("result:")) {
+        const run = await db.gameRun.findUnique({ where: { id: item.eventKey.slice(7) }, include: { user: true } });
+        if (run?.user) imageData = await seasonResultImage({ ...run, user: run.user }, language);
+      }
+      const message = item.category === "news" ? (language === "en" ? item.textEn || item.text : item.text) : localizeBotMessage(item.text, language);
+      const sent = imageData
+        ? await sendTelegramPhoto(chatId, imageData, message, keyboard)
+        : await sendTelegramMessage(chatId, message, keyboard);
       await db.telegramOutbox.update({
         where: { id: item.id },
         data: sent
