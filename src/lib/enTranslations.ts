@@ -2,6 +2,8 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Период аналитики': 'Analytics period', 'Закрыта': 'Closed',
+
   'ЦСКА': 'CSKA Moscow', 'Динамо': 'Dynamo Moscow', 'Спартак': 'Spartak Moscow', 'Локомотив': 'Lokomotiv Moscow', 'Рубин': 'Rubin Kazan', 'Торпедо': 'Torpedo Moscow', 'СКА-Хабаровск': 'SKA Khabarovsk', 'Сатурн': 'Saturn Ramenskoye', 'Мордовия': 'Mordovia Saransk', 'Сибирь': 'Sibir Novosibirsk', 'Терек': 'Terek Grozny', 'Волга': 'Volga', 'Москва': 'FC Moscow', 'Тосно': 'Tosno',
 
   'Пари НН': 'Pari NN', 'Спартак-Нальчик': 'Spartak Nalchik', 'Шинник': 'Shinnik', 'Луч-Энергия': 'Luch-Energiya',
@@ -1221,6 +1223,7 @@ export function translateInterface(value: string): string {
   const matchOpponent = normalized.match(/^(.+) \((д|в)\)$/);
   if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
+    [/^Последние (\d+) дней$/, 'Last $1 days'],
     [/^До (?!первого места:)(.+)$/, 'Until $1'],
     [/^Приглашения · (\d+)$/, 'Invitations · $1'],
     [/^Друзья · (\d+)$/, 'Friends · $1'],

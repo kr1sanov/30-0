@@ -54,7 +54,7 @@ const name = (user: Person | null) => user ? telegramUrl(user.username)
 const dateTime = (value: string | null | undefined) => value ? new Date(value).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 const dateOnly = (value: string) => new Date(`${value}T12:00:00+03:00`).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
 const modeOf = (run: { multiplayerSeat: unknown; gameMode: string }) => run.multiplayerSeat ? 'Мультиплеер' : run.gameMode.startsWith('challenge_') ? 'Челленджи' : run.gameMode === 'single_club' ? 'Один клуб' : 'Обычный драфт';
-const roomStatus: Record<string, string> = { lobby: 'Лобби', starting: 'Запуск', drafting: 'Драфт идёт', completed: 'Завершена' };
+const roomStatus: Record<string, string> = { lobby: 'Лобби', starting: 'Запуск', drafting: 'Драфт идёт', completed: 'Завершена', closed: 'Закрыта' };
 
 function useAdminData<T>(url: string | null) {
   const [result, setResult] = useState<{ url: string; value: T } | null>(null);
@@ -127,7 +127,7 @@ export default function AdminInsights({ section }: { section: Section }) {
     <section className={`${card} space-y-4`} aria-label="Фильтры аналитики">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-lg font-semibold">{section === 'overview' ? 'Обзор продукта' : section === 'users' ? 'Пользователи' : 'История игр'}</h2><p className="mt-1 text-xs text-white/50">Периоды и даты — по Москве (UTC+3). Данные доступны только в админке.</p></div><button type="button" onClick={current.refresh} className="rounded-lg border border-white/15 px-3 py-2 text-sm hover:bg-white/10">Обновить ↻</button></div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="text-xs text-white/60">Период<select className={`${control} mt-1`} value={period} onChange={e => change(() => setPeriod(e.target.value as AdminPeriod))}>{Object.entries(periodNames).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
+        <label className="text-xs text-white/60">Период аналитики<select className={`${control} mt-1`} value={period} onChange={e => change(() => setPeriod(e.target.value as AdminPeriod))}>{Object.entries(periodNames).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
         <label className="text-xs text-white/60">Режим<select className={`${control} mt-1`} value={mode} disabled={section === 'games' && kind === 'rooms'} onChange={e => change(() => setMode(e.target.value as AdminMode))}>{Object.entries(modeNames).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label>
         {period === 'custom' && <><label className="text-xs text-white/60">С<input type="date" className={`${control} mt-1`} value={from} onChange={e => change(() => setFrom(e.target.value))} /></label><label className="text-xs text-white/60">По<input type="date" className={`${control} mt-1`} value={to} onChange={e => change(() => setTo(e.target.value))} /></label></>}
         {section !== 'overview' && <label className="text-xs text-white/60">Поиск<input className={`${control} mt-1`} value={search} onChange={e => change(() => setSearch(e.target.value))} placeholder={section === 'users' ? 'Ник, имя или Telegram ID' : 'Ник, игрок или код'} /></label>}
