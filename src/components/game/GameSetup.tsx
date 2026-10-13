@@ -320,10 +320,11 @@ export default function GameSetup() {
   // Club list for single_club mode
   const [clubs, setClubs] = useState<ClubData[]>([]);
   const [clubsLoading, setClubsLoading] = useState(false);
+  const [clubsLoaded, setClubsLoaded] = useState(false);
   const [clubsError, setClubsError] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
-  const [activeClubRunId, setActiveClubRunId] = useState<string | null>(null);
+  const [activeClubRun, setActiveClubRun] = useState<{ id: string; clubFilter: string; clubName?: string } | null>(null);
 
   // Current game mode
   const currentGameMode: GameModeType = config.gameMode ?? 'classic';
@@ -337,6 +338,7 @@ export default function GameSetup() {
       const data: unknown = await response.json();
       if (!Array.isArray(data)) throw new Error('Некорректный ответ');
       setClubs(data as ClubData[]);
+      setClubsLoaded(true);
     } catch (error) {
       console.error('Failed to load clubs:', error);
       setClubsError('Не удалось загрузить клубы. Проверь соединение и повтори.');
@@ -347,34 +349,71 @@ export default function GameSetup() {
 
   // Fetch clubs when single_club mode is selected
   useEffect(() => {
-    if (currentGameMode === 'single_club' && clubs.length === 0 && !clubsLoading && !clubsError) {
+    if (currentGameMode === 'single_club' && !clubsLoaded && !clubsLoading && !clubsError) {
       void loadClubs();
     }
-  }, [currentGameMode, clubs.length, clubsLoading, clubsError, loadClubs]);
+  }, [currentGameMode, clubsLoaded, clubsLoading, clubsError, loadClubs]);
 
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
   useEffect(() => {
+    if (currentGameMode !== "single_club") {
+      setActiveClubRun(null);
+      return;
+    }
     const local = useGameStore.getState();
-    const savedConfig = local.lastConfig ?? local.config;
-    const localId = savedConfig.gameMode === 'single_club' && savedConfig.clubFilter === selectedClub?.id && local.slots.some(slot => !!slot.playerId) && !local.seasonResult ? local.runId : null;
-    setActiveClubRunId(localId);
-    if (currentGameMode !== 'single_club' || !selectedClub || !user) return;
+    const saved = local.lastConfig ?? local.config;
+    const localRun =
+      saved.gameMode === "single_club" &&
+      saved.clubFilter &&
+      local.runId &&
+      local.slots.some((slot) => !!slot.playerId) &&
+      !local.seasonResult
+        ? {
+            id: local.runId,
+            clubFilter: saved.clubFilter,
+            clubName: saved.clubName,
+          }
+        : null;
+    setActiveClubRun(localRun);
+    if (!user) return;
     const controller = new AbortController();
-    fetch(`/api/runs/active?mode=single_club&clubId=${encodeURIComponent(selectedClub.id)}`, { cache: 'no-store', signal: controller.signal })
-      .then(response => response.ok ? response.json() : null)
-      .then(data => { if (!controller.signal.aborted) setActiveClubRunId(localId ?? data?.activeRun?.id ?? null); })
+    fetch("/api/runs/active?mode=single_club", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!controller.signal.aborted)
+          setActiveClubRun(localRun ?? data?.activeRun ?? null);
+      })
       .catch(() => undefined);
     return () => controller.abort();
-  }, [currentGameMode, selectedClub?.id, user?.id]);
+  }, [currentGameMode, user?.id]);
 
   const resumeClubRun = async () => {
-    if (!selectedClub || !activeClubRunId) return;
-    const local = useGameStore.getState();
-    if (local.runId === activeClubRunId && local.slots.some(slot => !!slot.playerId)) { await resumeGame(); return; }
-    await local.loadActiveRunFromCloud('single_club', selectedClub.id);
-    if (useGameStore.getState().runId === activeClubRunId) resumeGame();
-    else setActiveClubRunId(null);
+    if (!activeClubRun || isStarting) return;
+    setIsStarting(true);
+    try {
+      const local = useGameStore.getState();
+      if (
+        local.runId === activeClubRun.id &&
+        local.slots.some((slot) => !!slot.playerId)
+      ) {
+        await resumeGame();
+        return;
+      }
+      await local.loadActiveRunFromCloud(
+        "single_club",
+        activeClubRun.clubFilter,
+        undefined,
+        true,
+      );
+      if (useGameStore.getState().runId !== activeClubRun.id)
+        setStartError("Не удалось продолжить драфт. Попробуй ещё раз.");
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   // Local profile — always available
@@ -542,9 +581,9 @@ export default function GameSetup() {
               )}
 
               {/* Club grid */}
-              {selectedClub && activeClubRunId && (
-                <button type="button" onClick={() => void resumeClubRun()} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
-                  ▶ Продолжить драфт
+              {activeClubRun && (
+                <button type="button" disabled={isStarting} onClick={() => void resumeClubRun()} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
+                  ▶ Продолжить драфт · {activeClubRun.clubName ?? clubs.find(club => club.id === activeClubRun.clubFilter)?.nameRu}
                 </button>
               )}
               {selectedClub ? null : clubsLoading ? (

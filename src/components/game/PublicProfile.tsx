@@ -1,4 +1,6 @@
 "use client";
+import { russianClubName } from "@/lib/clubDisplayName";
+import { useUiTranslation, useUiLanguage } from "@/hooks/use-ui-translation";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,12 +18,14 @@ import { toast } from "sonner";
 type Friend = {
   id: string;
   displayName: string;
+  photoUrl?: string | null;
   username: string | null;
 };
 type Player = {
   id: string;
   path: string;
   displayName: string;
+  photoUrl?: string | null;
   username: string | null;
   firstName: string | null;
   lastName: string | null;
@@ -50,6 +54,8 @@ type Player = {
 };
 
 export default function PublicProfile({ id }: { id: string }) {
+  const t = useUiTranslation();
+  const locale = useUiLanguage() === "en" ? "en-GB" : "ru-RU";
   const router = useRouter();
   const { showBackButton, hideBackButton } = useTelegram();
   const [player, setPlayer] = useState<Player | null>(null);
@@ -199,19 +205,23 @@ export default function PublicProfile({ id }: { id: string }) {
           router.push("/");
         }}
       />
-      <main className="mx-auto max-w-4xl space-y-5 px-4 py-8 pb-28 sm:py-10">
+      <main
+        data-no-translate
+        className="mx-auto max-w-4xl space-y-5 px-4 py-8 pb-28 sm:py-10"
+      >
         {error && (
           <p role="alert" className="rounded-xl border border-red-500/30 p-4">
             {error}
           </p>
         )}
-        {!player && !error && <p>Загружаем профиль…</p>}
+        {!player && !error && <p>{t("Загружаем профиль…")}</p>}
         {player && (
           <>
             <section className="rounded-3xl border border-white/10 bg-[#141414] p-6 text-center">
               <div className="relative mx-auto w-fit">
                 <TelegramAvatar
                   id={player.id}
+                  photoUrl={player.photoUrl}
                   username={player.username}
                   name={player.displayName}
                   size={92}
@@ -228,8 +238,8 @@ export default function PublicProfile({ id }: { id: string }) {
                 </p>
               )}
               <p className="mt-2 text-xs text-slate-500">
-                В игре с{" "}
-                {new Date(player.createdAt).toLocaleDateString("ru-RU")}
+                {t("В игре с")}{" "}
+                {new Date(player.createdAt).toLocaleDateString(locale)}
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 {!player.own && (
@@ -239,19 +249,19 @@ export default function PublicProfile({ id }: { id: string }) {
                     className="rounded-xl bg-[#00C896] px-4 py-2 font-bold text-black disabled:opacity-50"
                   >
                     {player.friendshipStatus === "friends"
-                      ? "✓ В друзьях · удалить"
+                      ? t("✓ В друзьях · удалить")
                       : player.friendshipStatus === "incoming"
-                        ? "✓ Принять заявку"
+                        ? t("✓ Принять заявку")
                         : player.friendshipStatus === "outgoing"
-                          ? "Отменить заявку"
-                          : "+ Добавить в друзья"}
+                          ? t("Отменить заявку")
+                          : t("+ Добавить в друзья")}
                   </button>
                 )}
                 <button
                   onClick={() => void share()}
                   className="rounded-xl border border-white/20 px-4 py-2"
                 >
-                  Поделиться профилем
+                  {t("Поделиться профилем")}
                 </button>
                 {!player.own && (
                   <button
@@ -259,7 +269,7 @@ export default function PublicProfile({ id }: { id: string }) {
                     onClick={() => void invite(player.id)}
                     className="rounded-xl border border-[#00C896]/50 px-4 py-2 text-[#00C896] disabled:opacity-50"
                   >
-                    Пригласить в игру
+                    {t("Пригласить в игру")}
                   </button>
                 )}
               </div>
@@ -291,17 +301,14 @@ export default function PublicProfile({ id }: { id: string }) {
                   </span>
                   <div>
                     <h2 className="font-bold">
-                      Любимый клуб ·{" "}
-                      <span className="club-name-ru" data-no-translate>
-                        {player.favoriteClub.nameRu}
-                      </span>
-                      <span className="club-name-en" data-no-translate>
-                        {player.favoriteClub.nameEn ||
-                          player.favoriteClub.nameRu}
+                      {t("Любимый клуб ·")}{" "}
+                      <span data-no-translate>
+                        {t(russianClubName(player.favoriteClub.nameRu))}
                       </span>
                     </h2>
                     <p className="text-sm text-slate-300">
-                      {player.favoriteClub.games} сезонов в режиме «Один клуб»
+                      {player.favoriteClub.games}{" "}
+                      {t(" сезонов в режиме «Один клуб»")}
                     </p>
                   </div>
                 </div>
@@ -310,18 +317,23 @@ export default function PublicProfile({ id }: { id: string }) {
             <section className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {stats.map(([value, label]) => (
                 <div
-                  key={label}
+                  key={t(String(label))}
                   className="rounded-xl border border-white/5 bg-[#141414] p-3 text-center"
                 >
                   <strong className="block text-xl text-[#00C896]">
                     {value}
                   </strong>
-                  <span className="text-xs text-slate-400">{label}</span>
+                  <span className="text-xs text-slate-400">
+                    {t(String(label))}
+                  </span>
                 </div>
               ))}
             </section>
             <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
-              <h2 className="font-bold">Друзья · {player.friends.length}</h2>
+              <h2 className="font-bold">
+                {t("Друзья · ")}
+                {player.friends.length}
+              </h2>
               {player.friends.length ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {player.friends
@@ -334,6 +346,7 @@ export default function PublicProfile({ id }: { id: string }) {
                       >
                         <TelegramAvatar
                           id={friend.id}
+                          photoUrl={friend.photoUrl}
                           username={friend.username}
                           name={friend.displayName}
                           size={32}
@@ -345,7 +358,9 @@ export default function PublicProfile({ id }: { id: string }) {
                     ))}
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-slate-400">Пока нет друзей.</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  {t("Пока нет друзей.")}
+                </p>
               )}
               {player.friends.length > 3 && (
                 <button
@@ -354,14 +369,17 @@ export default function PublicProfile({ id }: { id: string }) {
                   aria-expanded={allFriends}
                   className="mt-3 text-sm font-semibold text-[#00C896]"
                 >
-                  {allFriends ? "Скрыть" : "Показать всех"}
+                  {allFriends ? t("Скрыть") : t("Показать всех")}
                 </button>
               )}
             </section>
             <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
-              <h2 className="font-bold">Достижения · {trophies.length}</h2>
+              <h2 className="font-bold">
+                {t("Достижения · ")}
+                {trophies.length}
+              </h2>
               <div
-                aria-label="Achievement categories"
+                aria-label={t("Категории достижений")}
                 className="mt-3 flex gap-2 overflow-x-auto pb-2"
               >
                 {trophySections.map(([key, label]) => (
@@ -373,7 +391,7 @@ export default function PublicProfile({ id }: { id: string }) {
                     }}
                     className={`min-h-11 shrink-0 whitespace-nowrap rounded-xl border px-3 text-xs ${section === key ? "border-emerald-400 text-emerald-300" : "border-white/15 text-white/60"}`}
                   >
-                    {label}
+                    {t(String(label))}
                   </button>
                 ))}
               </div>
@@ -381,22 +399,24 @@ export default function PublicProfile({ id }: { id: string }) {
                 <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {trophies
                     .slice(0, allTrophies ? undefined : 6)
-                    .map((t, index) => (
+                    .map((trophy, index) => (
                       <div
-                        key={t.id}
+                        key={trophy.id}
                         className={`${!allTrophies && index >= 4 ? "hidden sm:block" : ""} rounded-xl border border-amber-400/20 bg-amber-500/10 p-3`}
                       >
-                        <span className="text-xl">{t.icon}</span>
+                        <span className="text-xl">{trophy.icon}</span>
                         <strong className="ml-2 text-sm text-white">
-                          {t.name}
+                          {t(trophy.name)}
                         </strong>
-                        <p className="mt-1 text-xs text-slate-300">{t.desc}</p>
+                        <p className="mt-1 text-xs text-slate-300">
+                          {t(trophy.desc)}
+                        </p>
                       </div>
                     ))}
                 </div>
               ) : (
                 <p className="mt-2 text-sm text-slate-400">
-                  Пока нет достижений.
+                  {t("Пока нет достижений.")}
                 </p>
               )}
               {trophies.length > 4 && (
@@ -406,7 +426,7 @@ export default function PublicProfile({ id }: { id: string }) {
                   aria-expanded={allTrophies}
                   className={`mt-3 text-sm font-semibold text-[#00C896] ${!allTrophies && trophies.length <= 6 ? "sm:hidden" : ""}`}
                 >
-                  {allTrophies ? "Скрыть" : "Показать все"}
+                  {allTrophies ? t("Скрыть") : t("Показать все")}
                 </button>
               )}
             </section>
@@ -422,16 +442,20 @@ export default function PublicProfile({ id }: { id: string }) {
             <div
               role="dialog"
               aria-modal="true"
-              aria-label="Игрок"
+              aria-label={t("Игрок")}
               className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#171717] p-5 text-center shadow-xl"
             >
               <div className="flex justify-end">
-                <button aria-label="Закрыть" onClick={() => setPreview(null)}>
-                  ✕
+                <button
+                  aria-label={t("Закрыть")}
+                  onClick={() => setPreview(null)}
+                >
+                  {t("✕")}
                 </button>
               </div>
               <TelegramAvatar
                 id={preview.id}
+                photoUrl={preview.photoUrl}
                 username={preview.username}
                 name={preview.displayName}
                 size={72}
@@ -442,7 +466,7 @@ export default function PublicProfile({ id }: { id: string }) {
                   : preview.displayName}
               </h3>
               <p className="mt-1 text-sm text-slate-400">
-                {preview.seasons} сезонов · {preview.titles} титулов
+                {t(`${preview.seasons} сезонов · ${preview.titles} титулов`)}
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-2">
                 {!preview.own && (
@@ -452,19 +476,19 @@ export default function PublicProfile({ id }: { id: string }) {
                     className="rounded-lg bg-[#00C896] px-3 py-2 text-sm font-bold text-black"
                   >
                     {preview.friendshipStatus === "friends"
-                      ? "Удалить из друзей"
+                      ? t("Удалить из друзей")
                       : preview.friendshipStatus === "outgoing"
-                        ? "Отменить заявку"
+                        ? t("Отменить заявку")
                         : preview.friendshipStatus === "incoming"
-                          ? "Принять заявку"
-                          : "Добавить в друзья"}
+                          ? t("Принять заявку")
+                          : t("Добавить в друзья")}
                   </button>
                 )}
                 <Link
                   href={playerPath(preview)}
                   className="rounded-lg border border-white/20 px-3 py-2 text-sm"
                 >
-                  Полный профиль
+                  {t("Полный профиль")}
                 </Link>
                 {!preview.own && (
                   <button
@@ -472,7 +496,7 @@ export default function PublicProfile({ id }: { id: string }) {
                     onClick={() => void invite(preview.id)}
                     className="rounded-lg border border-[#00C896]/40 px-3 py-2 text-sm text-[#00C896]"
                   >
-                    Пригласить
+                    {t("Пригласить")}
                   </button>
                 )}
               </div>

@@ -1,10 +1,10 @@
 export const trophySections = [
-  ["all", "All"],
-  ["classic", "Classic"],
-  ["single_club", "One Club"],
-  ["challenge", "Challenges"],
-  ["multiplayer", "Multiplayer"],
-  ["social", "Profile"],
+  ["all", "Все"],
+  ["classic", "Обычный драфт"],
+  ["single_club", "Один клуб"],
+  ["challenge", "Челленджи"],
+  ["multiplayer", "Мультиплеер"],
+  ["social", "Профиль"],
 ] as const;
 export function trophySection(id: string) {
   if (id === "referral_invite") return "social";

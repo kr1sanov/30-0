@@ -299,7 +299,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
       if (canFill) {
         haptic('light');
         notify('success');
-        toast.success(`${selectedPlayer.fullName} → ${slot.positionLabel}`);
+        toast.success(`${selectedPlayer.fullName} → ${t(slot.positionLabel)}`);
         assignToSlot(index);
       } else {
         haptic('heavy');
@@ -495,8 +495,8 @@ export default function FormationView({ compact = false, multiplayer }: { compac
               whileTap={isFilled || isCompatible || isMoveTarget ? { scale: 0.9 } : undefined}
               aria-label={
                 isFilled
-                  ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
-                  : t(`Пустая позиция ${slot.positionLabel}`)
+                  ? `${slot.playerName ?? 'Игрок'}, ${t(slot.positionLabel)}, рейтинг ${slot.playerRating ?? '?'}`
+                  : t(`Пустая позиция ${t(slot.positionLabel)}`)
               }
             >
               {/* Just-assigned glow burst */}
@@ -628,7 +628,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                       textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                     }}
                   >
-                    {slot.positionLabel}
+                    {t(slot.positionLabel)}
                   </span>
                 </div>
               )}
@@ -645,7 +645,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             <span className="font-bold" style={{ color: ACCENT }}>{filledCount}</span>/11
           </span>
           {avgRating !== null && config.showRatings !== false && (
-            <span className="text-[10px] text-[#94a3b8]">{t("· Ср.")}<span className="font-bold text-white">{avgRating}</span>
+            <span className="text-[10px] text-[#94a3b8]">{t("· Ср.")} <span className="font-bold text-white">{avgRating}</span>
             </span>
           )}
         </div>

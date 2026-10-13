@@ -4,12 +4,14 @@ import { languageFor, languageMenu, sendWelcome, preferenceMenu, preferenceText 
 export default async function handleCallback(query) {
   if (query.message?.chat?.type !== "private" || !query.from) return;
   const language = await languageFor(query.from.id);
-  if (query.data === "language" || ["language:ru", "language:en"].includes(query.data)) {
+  const selection = String(query.data).match(/^language:(ru|en)(:notifications)?$/);
+  if (query.data === "language" || selection) {
     if (query.data === "language") await api.sendMessage({ chat_id: query.message.chat.id, text: "Выбери язык / Choose your language", reply_markup: languageMenu });
     else {
-      const next = query.data.slice(9);
+      const next = selection[1];
       await changePreferences(query.from.id, { language: next }, query.from);
-      await sendWelcome(query.message.chat.id, next);
+      if (selection[2]) await api.sendMessage({ chat_id: query.message.chat.id, text: preferenceText(next), reply_markup: await preferenceMenu(query.from.id) });
+      else await sendWelcome(query.message.chat.id, next);
     }
     await api.answerCallbackQuery({ callback_query_id: query.id });
     return;

@@ -47,6 +47,9 @@ test('start asks for a language before welcome; language and preferences survive
     await callback({ id: '1', from, message: { chat }, data: 'language:en' });
     assert.match(String(messages.find(item => item.method === 'sendPhoto')?.caption), /30 wins/);
     assert.equal(JSON.parse(row.prefsJson).language, 'en');
+    await message({ chat, from, text: '/start notifications' });
+    assert.match(String(messages.at(-1)?.text), /Your notifications/);
+    assert.ok((messages.at(-1)?.reply_markup as { inline_keyboard: unknown[][] }).inline_keyboard.length > 1);
     await callback({ id: '2', from, message: { chat }, data: 'pref:news' });
     assert.equal(JSON.parse(row.prefsJson).news, true);
     assert.equal(JSON.parse(row.prefsJson).language, 'en');
@@ -56,5 +59,11 @@ test('start asks for a language before welcome; language and preferences survive
     assert.equal(JSON.parse(row.prefsJson).news, true);
     await callback({ id: '4', from, message: { chat }, data: 'preferences' });
     assert.match(String(messages.at(-2)?.text), /Твои уведомления/);
+    row.prefsJson = JSON.stringify({ news: true });
+    await message({ chat, from, text: '/start notifications' });
+    assert.match(String(messages.at(-1)?.text), /Choose your language/);
+    await callback({ id: '5', from, message: { chat }, data: 'language:en:notifications' });
+    assert.ok(messages.some(message => String(message.text).includes('Your notifications')));
+    assert.equal(JSON.parse(row.prefsJson).language, 'en');
   } finally { delete globalFixture.botLanguageFixture; }
 });

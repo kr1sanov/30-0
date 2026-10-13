@@ -9,6 +9,7 @@ export const languageMenu = { inline_keyboard: [[
   { text: "🇷🇺 Русский", callback_data: "language:ru" },
   { text: "🇬🇧 English", callback_data: "language:en" },
 ]] };
+export const notificationLanguageMenu = { inline_keyboard: languageMenu.inline_keyboard.map(row => row.map(button => ({ ...button, callback_data: button.callback_data + ":notifications" }))) };
 export async function mainMenu(language = "ru") {
   const me = await api.getMe();
   const base = `https://t.me/${me.username}?startapp`;
