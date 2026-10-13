@@ -1,15 +1,22 @@
 import { api } from "sdk";
 import { changePreferences, defaults } from "../lib/preferences.js";
-import { mainMenu, preferenceMenu, preferenceText } from "../lib/menu.js";
+import { languageFor, languageMenu, sendWelcome, preferenceMenu, preferenceText } from "../lib/menu.js";
 export default async function handleCallback(query) {
   if (query.message?.chat?.type !== "private" || !query.from) return;
+  const language = await languageFor(query.from.id);
+  if (query.data === "language" || ["language:ru", "language:en"].includes(query.data)) {
+    if (query.data === "language") await api.sendMessage({ chat_id: query.message.chat.id, text: "Выбери язык / Choose your language", reply_markup: languageMenu });
+    else {
+      const next = query.data.slice(9);
+      await changePreferences(query.from.id, { language: next }, query.from);
+      await sendWelcome(query.message.chat.id, next);
+    }
+    await api.answerCallbackQuery({ callback_query_id: query.id });
+    return;
+  }
   if (query.data === "menu") {
     await api.answerCallbackQuery({ callback_query_id: query.id });
-    await api.sendMessage({
-      chat_id: query.message.chat.id,
-      text: "30-0 · Build your squad and play.",
-      reply_markup: await mainMenu(),
-    });
+    await sendWelcome(query.message.chat.id, language);
     return;
   }
   if (query.data !== "preferences" && !String(query.data).startsWith("pref:"))
@@ -24,24 +31,24 @@ export default async function handleCallback(query) {
     if (query.data === "preferences" || query.message.photo)
       await api.sendMessage({
         chat_id: query.message.chat.id,
-        text: preferenceText,
+        text: preferenceText(language),
         reply_markup,
       });
     else
       await api.editMessageText({
         chat_id: query.message.chat.id,
         message_id: query.message.message_id,
-        text: preferenceText,
+        text: preferenceText(language),
         reply_markup,
       });
     await api.answerCallbackQuery({
       callback_query_id: query.id,
-      text: query.data === "preferences" ? "" : "Saved",
+      text: query.data === "preferences" ? "" : language === "ru" ? "Сохранено" : "Saved",
     });
   } catch {
     await api.answerCallbackQuery({
       callback_query_id: query.id,
-      text: "Could not update settings. Please retry.",
+      text: language === "ru" ? "Не удалось сохранить. Попробуй ещё раз." : "Could not update settings. Please retry.",
     });
   }
 }

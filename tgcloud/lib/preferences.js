@@ -49,7 +49,10 @@ export async function changePreferences(tgId, patch, user = null) {
   for (let attempt = 0; attempt < 5; attempt++) {
     const previous = await ensurePreferences(tgId);
     const prefs = normalize(previous.prefsJson);
+    const saved = JSON.parse(previous.prefsJson || "{}");
+    if (saved.language === "ru" || saved.language === "en") prefs.language = saved.language;
     for (const [key, value] of Object.entries(patch || {})) {
+      if (key === "language" && ["ru", "en"].includes(value)) { prefs.language = value; continue; }
       if (
         !Object.hasOwn(defaults, key) ||
         ![true, false, "toggle"].includes(value)

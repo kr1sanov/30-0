@@ -1,4 +1,5 @@
 "use client";
+import { translateClient } from "@/lib/enTranslations";
 import { useEffect, useState } from "react";
 type User = {
   id: string;
@@ -19,7 +20,7 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
     [users, setUsers] = useState<User[]>([]),
     [history, setHistory] = useState<Action[]>([]),
     [selected, setSelected] = useState<User | null>(null),
-    [reason, setReason] = useState("Insults or harassment"),
+    [reason, setReason] = useState("Оскорбления или травля"),
     [duration, setDuration] = useState("1d"),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -68,7 +69,7 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
       await load();
       setSelected(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Action failed");
+      setError(e instanceof Error ? e.message : "Не удалось выполнить действие");
     } finally {
       setBusy(false);
     }
@@ -76,17 +77,17 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
   const input = "min-h-11 rounded-xl border border-white/15 bg-black/30 p-3";
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold">Player moderation</h2>
+      <h2 className="text-xl font-bold">
+Модерация игроков
+</h2>
       <p className="text-sm text-white/50">
-        Search by nickname, name or user ID. Without a search, players with
-        moderation history are shown. Blocks restrict game actions; progress is
-        preserved.
-      </p>
+Поиск по нику, имени или ID. Без поиска показаны игроки с историей модерации. Блокировка ограничивает игровые действия; прогресс сохраняется.
+</p>
       <input
-        aria-label="Search players"
+        aria-label="Поиск игроков"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="@nickname or user ID"
+        placeholder="@ник или ID игрока"
         className={`${input} w-full max-w-lg`}
       />
       {error && (
@@ -102,8 +103,8 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
               <p className="mt-1 break-all text-xs text-white/40">{u.id}</p>
               <p className="mt-2 text-sm text-white/60">
                 {u.restriction
-                  ? `${u.restriction.reason} · ${u.restriction.until ? new Date(u.restriction.until).toLocaleString() : "Permanent"}`
-                  : "No active block"}
+                  ? `${u.restriction.reason} · ${u.restriction.until ? new Date(u.restriction.until).toLocaleString() : "Бессрочно"}`
+                  : "Нет активной блокировки"}
               </p>
               {editable && (
                 <button
@@ -111,19 +112,21 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
                     setSelected(u);
                     setReason(
                       u.restriction
-                        ? "Restriction reviewed"
-                        : "Insults or harassment",
+                        ? "Ограничение пересмотрено"
+                        : "Оскорбления или травля",
                     );
                   }}
                   className={`${input} mt-3`}
                 >
-                  Manage restriction
-                </button>
+Управлять ограничением
+</button>
               )}
             </div>
           ))}
           {!users.length && (
-            <p className="text-white/50">No matching players.</p>
+            <p className="text-white/50">
+Игроки не найдены.
+</p>
           )}
         </div>
         {selected && editable && (
@@ -133,7 +136,7 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
               e.preventDefault();
               if (
                 confirm(
-                  `Block ${selected.username || selected.displayName} for ${duration}? Reason: ${reason}`,
+                  translateClient(`Заблокировать ${selected.username || selected.displayName} на ${duration}? Причина: ${reason}`),
                 )
               )
                 void act("ban");
@@ -145,27 +148,29 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
                 : selected.displayName}
             </h3>
             <label className="block text-sm">
-              Reason
-              <select
+Причина
+<select
                 className={`${input} mt-1 w-full`}
                 onChange={(e) => setReason(e.target.value)}
                 value={
                   [
-                    "Insults or harassment",
-                    "Violation of project rules",
-                    "Spam",
-                    "Cheating",
+                    "Оскорбления или травля",
+                    "Нарушение правил проекта",
+                    "Спам",
+                    "Нечестная игра",
                   ].includes(reason)
                     ? reason
                     : ""
                 }
               >
-                <option value="">Custom reason</option>
+                <option value="">
+Своя причина
+</option>
                 {[
-                  "Insults or harassment",
-                  "Violation of project rules",
-                  "Spam",
-                  "Cheating",
+                  "Оскорбления или травля",
+                  "Нарушение правил проекта",
+                  "Спам",
+                  "Нечестная игра",
                 ].map((v) => (
                   <option key={v}>{v}</option>
                 ))}
@@ -180,19 +185,19 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
               />
             </label>
             <label className="block text-sm">
-              Duration
-              <select
+Срок
+<select
                 className={`${input} mt-1 w-full`}
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
               >
                 {[
-                  ["1h", "1 hour"],
-                  ["1d", "1 day"],
-                  ["3d", "3 days"],
-                  ["7d", "1 week"],
-                  ["30d", "30 days"],
-                  ["permanent", "Permanent"],
+                  ["1h", "1 час"],
+                  ["1d", "1 день"],
+                  ["3d", "3 дня"],
+                  ["7d", "1 неделя"],
+                  ["30d", "30 дней"],
+                  ["permanent", "Бессрочно"],
                 ].map(([k, v]) => (
                   <option key={k} value={k}>
                     {v}
@@ -202,8 +207,8 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
             </label>
             <div className="flex flex-wrap gap-2">
               <button disabled={busy} className={`${input} text-red-300`}>
-                Block player
-              </button>
+Заблокировать игрока
+</button>
               {selected.restriction && (
                 <button
                   type="button"
@@ -211,24 +216,24 @@ export default function AdminModeration({ editable }: { editable: boolean }) {
                   onClick={() => void act("unban")}
                   className={`${input} text-emerald-300`}
                 >
-                  Remove block
-                </button>
+Снять блокировку
+</button>
               )}
               <button
                 type="button"
                 onClick={() => setSelected(null)}
                 className={input}
               >
-                Cancel
-              </button>
+Отмена
+</button>
             </div>
           </form>
         )}
       </div>
       <details>
         <summary className="min-h-11 cursor-pointer py-3">
-          Moderation history
-        </summary>
+История модерации
+</summary>
         <div className="space-y-2">
           {history.map((h) => (
             <p key={h.id} className="rounded-lg bg-white/5 p-3 text-xs">

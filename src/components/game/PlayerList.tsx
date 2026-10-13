@@ -1,4 +1,5 @@
 'use client';
+import { useUiTranslation } from '@/hooks/use-ui-translation';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -54,6 +55,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
   onAssign: (index: number) => void; onSkip: () => void; disabled: boolean;
   targetSlotIndex?: number | null; showRatings?: boolean;
 } }) {
+  const t = useUiTranslation();
   const store = useGameStore();
   const currentSpin = multiplayer ? multiplayer.currentSpin : store.currentSpin;
   const slots = multiplayer ? multiplayer.slots : store.slots;
@@ -163,7 +165,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
   if (!currentSpin) return null;
 
   return (
-    <div className="space-y-3">
+    <div data-no-translate className="space-y-3">
       {/* ── No compatible players banner + skip button ── */}
       {!anyCompatible && (
         <motion.div
@@ -172,27 +174,19 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
           className="rounded-xl p-4 text-center space-y-2"
           style={{ backgroundColor: '#1a0a0a', border: '2px solid #ef4444/40' }}
         >
-          <p className="text-sm font-bold text-[#ef4444]">
-            Нет подходящих игроков
-          </p>
-          <p className="text-xs text-[#9CA3AF]">
-            Ни один игрок не подходит на оставшиеся позиции
-          </p>
+          <p className="text-sm font-bold text-[#ef4444]">{t("Нет подходящих игроков")}</p>
+          <p className="text-xs text-[#9CA3AF]">{t("Ни один игрок не подходит на оставшиеся позиции")}</p>
           <button
             onClick={skipSpin}
             className="mt-2 px-4 py-2 rounded-lg text-sm font-bold text-white active:scale-95 transition-all"
             style={{ backgroundColor: ACCENT }}
-          >
-            Пропустить и крутить снова
-          </button>
+          >{t("Пропустить и крутить снова")}</button>
         </motion.div>
       )}
 
       {/* ── Sort controls ── */}
       <div className="flex items-center gap-3">
-        <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">
-          Сортировка
-        </span>
+        <span className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold">{t("Сортировка")}</span>
         <div
           className="flex rounded-lg overflow-hidden"
           style={{ border: '1px solid #1f1f1f' }}
@@ -204,9 +198,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
               backgroundColor: sortMode === 'rating' ? accentMix(14) : 'transparent',
               color: sortMode === 'rating' ? ACCENT : '#64748b',
             }}
-          >
-            Рейтинг
-          </button>
+          >{t("Рейтинг")}</button>
           <button
             onClick={() => setSortMode('name')}
             className="px-3 py-1 text-xs font-bold transition-all"
@@ -214,9 +206,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
               backgroundColor: sortMode === 'name' ? accentMix(14) : 'transparent',
               color: sortMode === 'name' ? ACCENT : '#64748b',
             }}
-          >
-            Фамилия А-Я
-          </button>
+          >{t("Фамилия А-Я")}</button>
         </div>
       </div>
 
@@ -233,9 +223,9 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
             <div key={player.playerSeasonId}>
               {/* ── Player card row ── */}
               <motion.button
-                disabled={multiplayer?.disabled}
+                disabled={multiplayer?.disabled || store.isSpinning || !player.canFillAny}
                 onClick={() => handlePlayerClick(player)}
-                initial={{ opacity: 0, y: 6 }}
+                initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(idx * 0.03, 0.5) }}
                 className="w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left"
@@ -341,7 +331,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                              className="relative min-h-[44px] min-w-[56px] px-4 py-2.5 rounded-lg font-bold text-white text-sm
+                              className="relative min-h-[44px] min-w-[48px] px-3 py-1.5 rounded-lg font-bold text-white text-sm
                                 active:scale-95 transition-all duration-150"
                               style={{
                                 backgroundColor: catColor,
@@ -349,7 +339,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                                 boxShadow: '0 0 10px var(--club-glow)',
                               }}
                             >
-                              <span className="relative z-10">{slot.label}</span>
+                              <span className="relative z-10">{t(slot.label)}</span>
                             </motion.button>
                           );
                         })}

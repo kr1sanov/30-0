@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { translateInterface } from '@/lib/enTranslations';
 
 type Language = 'ru' | 'en';
@@ -54,8 +55,10 @@ function translatePage(language: Language, root: Node = document.body) {
 const LANGUAGE_EVENT = '30-0-language-change';
 
 export function LanguageController() {
+  const pathname = usePathname();
+  const admin = pathname?.startsWith('/admin');
   useEffect(() => {
-    const saved = localStorage.getItem('30-0-language');
+    const saved = localStorage.getItem(admin ? '30-0-admin-language' : '30-0-language');
     const selected: Language = saved === 'en' ? 'en' : 'ru';
     document.documentElement.lang = selected;
     document.documentElement.dataset.language = selected;
@@ -87,25 +90,26 @@ export function LanguageController() {
       translatePage(next);
       observe();
     };
-    window.addEventListener(LANGUAGE_EVENT, onLanguageChange);
+    const eventName = admin ? '30-0-admin-language-change' : LANGUAGE_EVENT;
+    window.addEventListener(eventName, onLanguageChange);
     return () => {
       observer.disconnect();
       cancelAnimationFrame(frame);
-      window.removeEventListener(LANGUAGE_EVENT, onLanguageChange);
+      window.removeEventListener(eventName, onLanguageChange);
     };
-  }, []);
+  }, [admin]);
   return null;
 }
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ admin = false }: { admin?: boolean }) {
   const [language, setLanguage] = useState<Language>('ru');
   useEffect(() => {
-    setLanguage(localStorage.getItem('30-0-language') === 'en' ? 'en' : 'ru');
+    setLanguage(localStorage.getItem(admin ? '30-0-admin-language' : '30-0-language') === 'en' ? 'en' : 'ru');
   }, []);
   function choose(next: Language) {
-    localStorage.setItem('30-0-language', next);
+    localStorage.setItem(admin ? '30-0-admin-language' : '30-0-language', next);
     setLanguage(next);
-    window.dispatchEvent(new CustomEvent(LANGUAGE_EVENT, { detail: next }));
+    window.dispatchEvent(new CustomEvent(admin ? '30-0-admin-language-change' : LANGUAGE_EVENT, { detail: next }));
   }
   return <div data-no-translate className="language-switcher" role="group" aria-label="Language / Язык">
     <button type="button" onClick={() => choose('ru')} aria-pressed={language === 'ru'}>🇷🇺 RU</button>

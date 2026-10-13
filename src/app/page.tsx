@@ -285,7 +285,7 @@ function RecentResults() {
 
 /* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
-  const { setScreen, setConfig, profileStats, runId, config, lastConfig, resumeGame } = useGameStore();
+  const { setScreen, setConfig, profileStats, runId, slots, config, lastConfig, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [databaseStats, setDatabaseStats] = useState<{ seasons: number; clubs: number; players: number; simulatedSeasons: number; firstYear: number | null; lastYear: number | null } | null>(null);
@@ -384,7 +384,7 @@ function HomePage() {
           </button>
 
           {/* Resume draft button — only if there's an unfinished draft */}
-          {runId && (lastConfig?.gameMode ?? config.gameMode) === 'classic' && !lastConfig?.clubFilter && (
+          {runId && (lastConfig?.gameMode ?? config.gameMode) && ['classic', 'single_club'].includes(lastConfig?.gameMode ?? config.gameMode ?? 'classic') && slots.some(slot => !!slot.playerId) && (
             <motion.button
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -626,22 +626,6 @@ function DraftScreen() {
       categoryRatings[cat].count++;
     }
   });
-
-  // Auto-scroll: when player is assigned, scroll to spin button for next spin
-  // This is the ONLY auto-scroll — removed scroll-to-players and scroll-to-pitch
-  // to prevent competing scroll effects that caused jittering.
-  useEffect(() => {
-    if (lastAssignedSlotIndex !== null && lastAssignedSlotIndex !== prevLastAssignedSlot.current) {
-      const timer = setTimeout(() => {
-        requestAnimationFrame(() => {
-          spinWheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-      }, 800);
-      prevLastAssignedSlot.current = lastAssignedSlotIndex;
-      return () => clearTimeout(timer);
-    }
-    prevLastAssignedSlot.current = lastAssignedSlotIndex;
-  }, [lastAssignedSlotIndex]);
 
   // Show "player placed" success banner briefly
   useEffect(() => {

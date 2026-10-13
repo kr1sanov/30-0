@@ -83,8 +83,15 @@ export async function POST(request: Request) {
       format = b.format === "html" ? "html" : "text",
       buttonText = String(b.buttonText || "Play").trim(),
       buttonUrl = String(b.buttonUrl || "https://t.me/RPL30_bot?startapp");
+    const titleEn = typeof b.titleEn === "string" ? b.titleEn.trim() : "";
+    const messageEn = typeof b.messageEn === "string" ? b.messageEn.trim() : "";
+    const buttonTextEn = typeof b.buttonTextEn === "string" ? b.buttonTextEn.trim() : "";
     const scheduledAt = b.scheduledAt ? new Date(b.scheduledAt) : null;
     if (
+      titleEn.length < 2 || titleEn.length > 120 ||
+      messageEn.length < 2 || messageEn.length > (b.imageId ? 800 : 3500) ||
+      buttonTextEn.length < 1 || buttonTextEn.length > 40 ||
+      (format === "html" && !validTelegramHtml(messageEn)) ||
       title.length < 2 ||
       title.length > 120 ||
       message.length < 2 ||
@@ -111,6 +118,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Image not found" }, { status: 400 });
     const data = {
       title,
+      titleEn,
+      messageEn,
+      buttonTextEn,
       message,
       cadence,
       format,

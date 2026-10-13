@@ -69,11 +69,11 @@ export async function POST(request: Request) {
       );
 
     const caption = [
-      "<b>Season complete!</b> ⚽",
+      "<b>Season complete! ⚽</b>",
       `${run.wins ?? 0} wins · ${run.draws ?? 0} draws · ${run.losses ?? 0} losses`,
-      `<b>${run.points ?? 0} points · ${run.position ?? "—"} place</b>`,
+      `<b>${run.points ?? 0} points · Place ${run.position ?? "—"}</b>`,
       "",
-      "Can you beat your score? Open 30-0 and play again.",
+      "Can you beat your score?",
     ].join("\n");
     const existing = await db.telegramOutbox.findUnique({
       where: { eventKey: `result:${run.id}` },

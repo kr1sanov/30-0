@@ -355,19 +355,24 @@ export default function GameSetup() {
   // Selected club name
   const selectedClub = clubs.find((c) => c.id === config.clubFilter);
   useEffect(() => {
-    setActiveClubRunId(null);
+    const local = useGameStore.getState();
+    const savedConfig = local.lastConfig ?? local.config;
+    const localId = savedConfig.gameMode === 'single_club' && savedConfig.clubFilter === selectedClub?.id && local.slots.some(slot => !!slot.playerId) && !local.seasonResult ? local.runId : null;
+    setActiveClubRunId(localId);
     if (currentGameMode !== 'single_club' || !selectedClub || !user) return;
     const controller = new AbortController();
     fetch(`/api/runs/active?mode=single_club&clubId=${encodeURIComponent(selectedClub.id)}`, { cache: 'no-store', signal: controller.signal })
       .then(response => response.ok ? response.json() : null)
-      .then(data => { if (!controller.signal.aborted) setActiveClubRunId(data?.activeRun?.id ?? null); })
+      .then(data => { if (!controller.signal.aborted) setActiveClubRunId(localId ?? data?.activeRun?.id ?? null); })
       .catch(() => undefined);
     return () => controller.abort();
   }, [currentGameMode, selectedClub?.id, user?.id]);
 
   const resumeClubRun = async () => {
     if (!selectedClub || !activeClubRunId) return;
-    await useGameStore.getState().loadActiveRunFromCloud('single_club', selectedClub.id);
+    const local = useGameStore.getState();
+    if (local.runId === activeClubRunId && local.slots.some(slot => !!slot.playerId)) { await resumeGame(); return; }
+    await local.loadActiveRunFromCloud('single_club', selectedClub.id);
     if (useGameStore.getState().runId === activeClubRunId) resumeGame();
     else setActiveClubRunId(null);
   };

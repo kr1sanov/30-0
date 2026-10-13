@@ -35,18 +35,19 @@ export default function AdminLeaderboard() {
   }, [period]);
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-bold">Most active players</h2>
+      <h2 className="text-xl font-bold">
+Самые активные игроки
+</h2>
       <p className="text-sm text-white/50">
-        Ranked by completed seasons in the selected rolling period. Ties are
-        ordered by user ID. Up to 50 players.
-      </p>
+Рейтинг по завершённым сезонам за выбранный период. При равенстве учитывается ID игрока. До 50 игроков.
+</p>
       <div className="flex gap-2 overflow-x-auto pb-2">
         {[
-          ["1", "Day"],
-          ["3", "3 days"],
-          ["7", "Week"],
-          ["30", "Month"],
-          ["365", "Year"],
+          ["1", "День"],
+          ["3", "3 дня"],
+          ["7", "Неделя"],
+          ["30", "Месяц"],
+          ["365", "Год"],
         ].map(([k, v]) => (
           <button
             key={k}
@@ -63,16 +64,26 @@ export default function AdminLeaderboard() {
         </p>
       )}
       {loading ? (
-        <p>Loading…</p>
+        <p>
+Загрузка…
+</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[360px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/15">
-                <th className="p-3">Rank</th>
-                <th>Player</th>
-                <th>Seasons</th>
-                <th>Points</th>
+                <th className="p-3">
+Место
+</th>
+                <th>
+Игрок
+</th>
+                <th>
+Сезоны
+</th>
+                <th>
+Очки
+</th>
               </tr>
             </thead>
             <tbody>
@@ -88,8 +99,8 @@ export default function AdminLeaderboard() {
           </table>
           {!rows.length && (
             <p className="py-5 text-white/50">
-              No completed seasons in this period.
-            </p>
+За этот период нет завершённых сезонов.
+</p>
           )}
         </div>
       )}

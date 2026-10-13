@@ -537,7 +537,7 @@ export const useGameStore = create<GameState>()(
         if (!runId || !selectedPlayer) return;
 
         const slot = slots[slotIndex];
-        if (!slot) return;
+        if (!slot || slot.playerId || !currentSpin || get().isSpinning) return;
 
         // Validate that the selected player can fill this slot position — STRICT matching
         const canFill = canFillSlotStrict(

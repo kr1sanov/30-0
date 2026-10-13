@@ -1,4 +1,5 @@
 'use client';
+import { useUiTranslation } from '@/hooks/use-ui-translation';
 
 import { useState, useCallback, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -212,6 +213,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
   onAssign: (index: number) => void; onMove?: (from: number, to: number) => void;
   onChooseSlot?: (index: number) => void; targetSlotIndex?: number | null;
 } }) {
+  const t = useUiTranslation();
   const store = useGameStore();
   const config = multiplayer?.config ?? store.config;
   const slots = multiplayer?.slots ?? store.slots;
@@ -279,7 +281,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             movePlayer(movingPlayerSlotIndex, index);
           } else {
             triggerShake(index);
-            toast.error(`${sourceSlot.playerName} не может играть на ${slot.positionLabel}`);
+            toast.error(`${sourceSlot.playerName} не может играть на ${t(slot.positionLabel)}`);
           }
         }
       }
@@ -303,7 +305,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
         haptic('heavy');
         notify('error');
         triggerShake(index);
-        toast.error('Несовместимая позиция');
+        toast.error(t('Несовместимая позиция'));
       }
       return;
     }
@@ -368,7 +370,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
   }, [movingPlayerSlotIndex, movingTargets, layout]);
 
   return (
-    <div className="relative w-full flex flex-col items-center">
+    <div data-no-translate className="relative w-full flex flex-col items-center">
       {/* Moving player prompt */}
       <AnimatePresence>
         {movingPlayerSlotIndex !== null && movingPlayerSlotIndex >= 0 && (
@@ -379,7 +381,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             className="mb-2 px-3 py-1.5 rounded-lg flex items-center gap-1.5 flex-wrap"
             style={{ backgroundColor: '#1a150a', border: '1px solid #facc1525' }}
           >
-            <span className="text-[10px] text-[#94a3b8]">Выбери позицию для обмена с</span>
+            <span className="text-[10px] text-[#94a3b8]">{t("Выбери позицию для обмена с")}</span>
             <span className="text-[10px] font-bold text-[#facc15]">
               {slots[movingPlayerSlotIndex]?.playerName}
             </span>
@@ -390,7 +392,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
       {/* ===== Green Pitch with White Lines ===== */}
       <div
         className={`relative w-full rounded-xl overflow-hidden border border-[#1a5c30]/50 ${compact ? 'aspect-[3/4]' : ''}`}
-        style={compact ? { maxWidth: 'min(100%, 280px)', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined } : { maxWidth: 'min(100%, 520px)', paddingBottom: '145%', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined }}
+        style={compact ? { maxWidth: 'min(100%, 280px)', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined } : { maxWidth: 'min(100%, 520px)', aspectRatio: '100 / 145', borderColor: config.gameMode === 'single_club' ? 'var(--club-secondary)' : undefined }}
       >
         {/* Pitch base — green */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a6b2a] via-[#186326] to-[#145a20]" />
@@ -494,7 +496,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
               aria-label={
                 isFilled
                   ? `${slot.playerName ?? 'Игрок'}, ${slot.positionLabel}, рейтинг ${slot.playerRating ?? '?'}`
-                  : `Пустая позиция ${slot.positionLabel}`
+                  : t(`Пустая позиция ${slot.positionLabel}`)
               }
             >
               {/* Just-assigned glow burst */}
@@ -615,7 +617,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                         color: isCompatible || isMoveTarget ? ACCENT : undefined,
                       }}
                     >
-                      {slot.position}
+                      {t(slot.position)}
                     </span>
                   </div>
                   {/* Position label below circle */}
@@ -643,8 +645,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             <span className="font-bold" style={{ color: ACCENT }}>{filledCount}</span>/11
           </span>
           {avgRating !== null && config.showRatings !== false && (
-            <span className="text-[10px] text-[#94a3b8]">
-              · Ср. <span className="font-bold text-white">{avgRating}</span>
+            <span className="text-[10px] text-[#94a3b8]">{t("· Ср.")}<span className="font-bold text-white">{avgRating}</span>
             </span>
           )}
         </div>
@@ -656,19 +657,19 @@ export default function FormationView({ compact = false, multiplayer }: { compac
       <div className="flex items-center justify-center gap-3 sm:gap-4 mt-2 flex-wrap" style={{ maxWidth: '400px' }}>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#fbbf24', boxShadow: '0 0 4px #fbbf24' }} />
-          <span className="text-[9px] text-[#94a3b8]">ВР</span>
+          <span className="text-[9px] text-[#94a3b8]">{t("ВР")}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#3b82f6', boxShadow: '0 0 4px #3b82f6' }} />
-          <span className="text-[9px] text-[#94a3b8]">Защита</span>
+          <span className="text-[9px] text-[#94a3b8]">{t("Защита")}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#22c55e', boxShadow: '0 0 4px #22c55e' }} />
-          <span className="text-[9px] text-[#94a3b8]">Полузащита</span>
+          <span className="text-[9px] text-[#94a3b8]">{t("Полузащита")}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#f97316', boxShadow: '0 0 4px #f97316' }} />
-          <span className="text-[9px] text-[#94a3b8]">Атака</span>
+          <span className="text-[9px] text-[#94a3b8]">{t("Атака")}</span>
         </div>
       </div>
     </div>

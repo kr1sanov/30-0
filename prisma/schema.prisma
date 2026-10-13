@@ -183,6 +183,9 @@ model AdminLoginChallenge {
 model NotificationCampaign {
   id        String   @id @default(cuid())
   title     String
+  titleEn   String?
+  messageEn String?
+  buttonTextEn String?
   message   String
   cadence   String   @default("weekly")
   enabled   Boolean  @default(false)
@@ -379,6 +382,8 @@ model TelegramOutbox {
   eventKey String @unique
   userId String
   text String
+  textEn String?
+  buttonTextEn String?
   startParam String
   attempts Int @default(0)
   availableAt DateTime @default(now())

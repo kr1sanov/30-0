@@ -1,35 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useUiTranslation } from "@/hooks/use-ui-translation";
 import { toast } from "sonner";
 import type { NotificationPreferences } from "@/lib/notificationPreferences";
 const categories = [
   {
     key: "news",
-    title: "Project news",
-    description: "Updates, announcements and project newsletters.",
+    title: "Новости проекта",
+    description: "Обновления, анонсы и новости проекта.",
   },
   {
     key: "invitations",
-    title: "Game invitations",
-    description: "Invitations from your friends.",
+    title: "Приглашения в игры",
+    description: "Приглашения от твоих друзей.",
   },
   {
     key: "results",
-    title: "Game results",
-    description: "Season results with an image and a link.",
+    title: "Результаты игр",
+    description: "Итоги сезона с картинкой и ссылкой.",
   },
   {
     key: "friends",
-    title: "Friend requests",
-    description: "New incoming requests.",
+    title: "Заявки в друзья",
+    description: "Новые входящие заявки.",
   },
   {
     key: "friend_updates",
-    title: "Request updates",
-    description: "A player accepts your request.",
+    title: "Ответы на заявки",
+    description: "Игрок принял твою заявку.",
   },
 ] as const;
 export default function TelegramNotifications() {
+  const t = useUiTranslation();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -41,7 +43,7 @@ export default function TelegramNotifications() {
       if (!res.ok) throw new Error(data.error);
       setPrefs(data.preferences);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not load settings");
+      setError(t(e instanceof Error ? e.message : "Не удалось загрузить настройки"));
     }
   };
   useEffect(() => {
@@ -59,29 +61,32 @@ export default function TelegramNotifications() {
       if (!res.ok) throw new Error(data.error);
       setPrefs(data.preferences);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not save settings");
+      toast.error(t(e instanceof Error ? e.message : "Не удалось сохранить настройки"));
     } finally {
       setBusy(false);
     }
   }
   return (
     <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
-      <h3 className="font-bold text-white">Telegram notifications</h3>
+      <h3 className="font-bold text-white">
+Уведомления Telegram
+</h3>
       <p className="mt-1 text-xs text-slate-400">
-        Manage the same preferences here or in the bot. Start the bot to receive
-        messages.
-      </p>
+Настройки общие для профиля и бота. Нажми «Начать» в боте, чтобы получать сообщения.
+</p>
       {error ? (
         <div role="alert" className="mt-3 text-sm text-red-300">
           {error}
           <button onClick={load} className="ml-3 min-h-11 underline">
-            Retry
-          </button>
+Повторить
+</button>
         </div>
       ) : prefs ? (
         <div className="mt-3 divide-y divide-white/10">
           <label className="flex min-h-14 items-center justify-between gap-4">
-            <span className="font-semibold">Allow notifications</span>
+            <span className="font-semibold">
+Получать уведомления
+</span>
             <input
               type="checkbox"
               className="h-5 w-5 accent-emerald-400"
@@ -110,14 +115,16 @@ export default function TelegramNotifications() {
           ))}
         </div>
       ) : (
-        <p className="py-4 text-sm text-slate-400">Loading settings…</p>
+        <p className="py-4 text-sm text-slate-400">
+Загрузка настроек…
+</p>
       )}
       <a
         href="https://t.me/RPL30_bot?start=notifications"
         className="mt-3 inline-flex min-h-11 items-center rounded-xl border border-sky-500/40 px-4 text-sm text-sky-300"
       >
-        Open Telegram
-      </a>
+Открыть Telegram
+</a>
     </section>
   );
 }

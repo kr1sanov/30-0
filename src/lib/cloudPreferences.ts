@@ -161,3 +161,12 @@ export async function verifyCloudPreferences() {
   if (result?.ok !== true) throw new Error("Preference storage unavailable");
   return true;
 }
+
+/** Bot language is independent from either browser interface language. */
+export async function currentBotLanguage(userId: string): Promise<'ru' | 'en'> {
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { providerId: true } });
+  const cloud = await client();
+  if (!cloud.cloudConfigured()) return 'ru';
+  const record = await cloud.callCloudPreferences('get', { tgId: Number(user.providerId.replace('telegram_', '')) });
+  return record.language === 'en' ? 'en' : 'ru';
+}
