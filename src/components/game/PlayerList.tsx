@@ -212,7 +212,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
 
       {/* ── Player list with inline position expansion ── */}
       <div className="space-y-1.5">
-        {processedPlayers.map((player, idx) => {
+        {processedPlayers.map((player) => {
           const isExpanded = selectedPlayer?.playerSeasonId === player.playerSeasonId;
           const posCategory = getCategory(player.mainPosition);
           const posColor = CATEGORY_BG[posCategory];
@@ -227,7 +227,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                 onClick={() => handlePlayerClick(player)}
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.03, 0.5) }}
+                transition={{ duration: 0.15 }}
                 className="w-full flex items-center gap-2.5 p-2.5 rounded-xl transition-all duration-200 text-left"
                 style={{
                   backgroundColor: isExpanded
@@ -269,7 +269,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                           className="text-[9px] font-bold px-1.5 py-0.5 rounded text-white/90"
                           style={{ backgroundColor: `${CATEGORY_BG[cat]}99` }}
                         >
-                          {pos}
+                          {t(pos)}
                         </span>
                       );
                     })}

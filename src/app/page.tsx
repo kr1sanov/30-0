@@ -837,7 +837,7 @@ function DraftScreen() {
 
       {/* ── Spin Section ── */}
       <div ref={spinWheelRef} className="space-y-2">
-        <SpinWheel />
+        <SpinWheel>{currentSpin && <PlayerList />}</SpinWheel>
         {/* Restart run link */}
         <div className="text-center">
           <button
@@ -850,9 +850,7 @@ function DraftScreen() {
       </div>
 
       {/* ── Player List ── */}
-      <div>
-        {currentSpin && <PlayerList />}
-      </div>
+
         </div>
       </div>
 
@@ -1363,7 +1361,7 @@ export default function Home() {
       className="club-theme-shell min-h-[100dvh] flex flex-col bg-[#0A0A0A]"
       style={clubThemeStyle(config.gameMode === 'single_club' ? config.clubName : undefined)}
     >
-      {account?.restriction && <div role="alert" className="relative z-20 border-b border-red-500/30 bg-red-950/80 p-4 text-center text-sm text-red-200"><strong>Account restricted</strong><p>{account.restriction.reason}</p><p>{account.restriction.until?`Until ${new Date(account.restriction.until).toLocaleString()}`:'Permanent restriction'}</p></div>}
+      {account?.restriction && <div role="alert" className="relative z-20 border-b border-red-500/30 bg-red-950/80 p-4 text-center text-sm text-red-200"><strong>Доступ ограничен</strong><p>{account.restriction.reason}</p><p>{account.restriction.until?`До ${new Date(account.restriction.until).toLocaleString()}`:'Бессрочное ограничение'}</p></div>}
       {/* Semi-transparent football field background */}
       <div className="football-field-bg" />
       <Header onBack={screen === 'home' ? undefined : () => {

@@ -2,6 +2,21 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'ЦСКА': 'CSKA Moscow', 'Динамо': 'Dynamo Moscow', 'Спартак': 'Spartak Moscow', 'Локомотив': 'Lokomotiv Moscow', 'Рубин': 'Rubin Kazan', 'Торпедо': 'Torpedo Moscow', 'СКА-Хабаровск': 'SKA Khabarovsk', 'Сатурн': 'Saturn Ramenskoye', 'Мордовия': 'Mordovia Saransk', 'Сибирь': 'Sibir Novosibirsk', 'Терек': 'Terek Grozny', 'Волга': 'Volga', 'Москва': 'FC Moscow', 'Тосно': 'Tosno',
+
+  'Пари НН': 'Pari NN', 'Спартак-Нальчик': 'Spartak Nalchik', 'Шинник': 'Shinnik', 'Луч-Энергия': 'Luch-Energiya',
+
+  'Категории достижений': 'Achievement categories',
+  '▶ Продолжить драфт ·': '▶ Resume draft ·',
+  'Просмотр — статистика и игроки; модератор — также псевдонимы и модерация пользователей; администратор — также составы, рассылки и доступ сотрудников; владелец — общий сброс.': 'Viewer: stats and players. Moderator: aliases and user moderation. Administrator: rosters, campaigns and staff access. Owner: global reset.',
+  'Для подтверждения введи «СБРОСИТЬ ПРОГРЕСС ВСЕХ»': 'To confirm, enter «СБРОСИТЬ ПРОГРЕСС ВСЕХ»',
+
+  'Позиций осталось': 'Positions left',
+  'Настройки уведомлений': 'Notification settings',
+  'Выбери нужные уведомления и язык сообщений в боте.': 'Choose your notifications and message language in the bot.',
+  'Доступ ограничен': 'Account restricted',
+  'Бессрочное ограничение': 'Permanent restriction',
+  'Не удалось продолжить драфт. Попробуй ещё раз.': 'Could not resume your draft. Please retry.',
 '1 час': '1 hour',
 '1 день': '1 day',
 '1 неделя': '1 week',
@@ -1206,6 +1221,7 @@ export function translateInterface(value: string): string {
   const matchOpponent = normalized.match(/^(.+) \((д|в)\)$/);
   if (matchOpponent) return `${leading}${TEXT[matchOpponent[1]] ?? matchOpponent[1]} (${matchOpponent[2] === 'д' ? 'H' : 'A'})${trailing}`;
   const patterns: Array<[RegExp, string]> = [
+    [/^До (?!первого места:)(.+)$/, 'Until $1'],
     [/^Приглашения · (\d+)$/, 'Invitations · $1'],
     [/^Друзья · (\d+)$/, 'Friends · $1'],
     [/^История матчей · (\d+)$/, 'Match history · $1'],

@@ -1,4 +1,5 @@
 "use client";
+import { useUiTranslation, useUiLanguage } from "@/hooks/use-ui-translation";
 
 import { useGameStore } from "@/store/gameStore";
 import HistoryScreen from "@/components/game/HistoryScreen";
@@ -19,6 +20,8 @@ import { playerPath } from "@/lib/profileLinks";
 import { TROPHIES } from "@/lib/trophyCatalog";
 
 export default function ProfileScreen() {
+  const t = useUiTranslation();
+  const locale = useUiLanguage() === "en" ? "en-GB" : "ru-RU";
   const { isTelegram } = useTelegram();
   const profileStats = useGameStore((state) => state.profileStats);
   const { user, resetProfile } = useAuthStore();
@@ -124,18 +127,23 @@ export default function ProfileScreen() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 animate-fade-in rounded-3xl border border-transparent p-3 pb-8 sm:p-5">
+    <div
+      data-no-translate
+      className="mx-auto max-w-4xl space-y-6 animate-fade-in rounded-3xl border border-transparent p-3 pb-8 sm:p-5"
+    >
       {user?.restriction && (
         <div
           role="alert"
           className="rounded-xl border border-red-500/30 bg-red-950/30 p-4 text-sm text-red-200"
         >
-          <strong>Account restricted</strong>
+          <strong>{t("Доступ ограничен")}</strong>
           <p className="mt-1">{user.restriction.reason}</p>
           <p className="mt-1">
             {user.restriction.until
-              ? `Until ${new Date(user.restriction.until).toLocaleString()}`
-              : "Permanent restriction"}
+              ? t(
+                  `До ${new Date(user.restriction.until).toLocaleString(locale)}`,
+                )
+              : t("Бессрочное ограничение")}
           </p>
         </div>
       )}
@@ -148,6 +156,7 @@ export default function ProfileScreen() {
         >
           <TelegramAvatar
             id={user?.id}
+            photoUrl={user?.photoUrl}
             username={user?.username}
             name={displayName}
             size={80}
@@ -159,7 +168,7 @@ export default function ProfileScreen() {
             {[user.firstName, user.lastName].filter(Boolean).join(" ")}
           </p>
         )}
-        <p className="text-sm text-[#9CA3AF] mt-1">Игрок 30-0</p>
+        <p className="text-sm text-[#9CA3AF] mt-1">{t("Игрок 30-0")}</p>
       </div>
 
       {user && (
@@ -169,7 +178,7 @@ export default function ProfileScreen() {
             onClick={() => void shareProfile()}
             className="min-h-11 rounded-xl border border-[#00C896]/35 bg-[#00C896]/10 px-5 py-2 text-sm font-semibold text-[#00C896] disabled:opacity-50"
           >
-            Поделиться профилем ↗
+            {t("Поделиться профилем ↗")}
           </button>
         </div>
       )}
@@ -190,7 +199,7 @@ export default function ProfileScreen() {
               d="m49 116 137-53c7-3 13 2 10 11l-23 111c-2 8-7 10-14 6l-38-28-18 18c-3 3-6 3-7 0l4-40 73-66c3-3-1-4-5-2l-90 57-39-12c-9-3-9-9 2-12Z"
             />
           </svg>
-          <span>Авторизован через Telegram</span>
+          <span>{t("Авторизован через Telegram")}</span>
         </span>
         <button
           onClick={async () => {
@@ -202,7 +211,7 @@ export default function ProfileScreen() {
           }}
           className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
         >
-          Выйти
+          {t("Выйти")}
         </button>
       </div>
 
@@ -211,35 +220,35 @@ export default function ProfileScreen() {
         {[
           {
             value: profileStats.totalSeasons,
-            label: "Сезоны",
+            label: t("Сезоны"),
             color: "#00C896",
           },
           {
             value: profileStats.bestPoints,
-            label: "Лучший результат",
+            label: t("Лучший результат"),
             color: "#FFFFFF",
           },
-          { value: profileStats.titles, label: "Титулы", color: "#f97316" },
+          { value: profileStats.titles, label: t("Титулы"), color: "#f97316" },
           { value: profileStats.perfect, label: "30-0", color: "#fbbf24" },
-          { value: `${winRate}%`, label: "Процент побед", color: "#00C896" },
+          { value: `${winRate}%`, label: t("Процент побед"), color: "#00C896" },
           {
             value: profileStats.totalWins,
-            label: "Всего побед",
+            label: t("Всего побед"),
             color: "#3b82f6",
           },
           {
             value: profileStats.totalGoals,
-            label: "Всего голов",
+            label: t("Всего голов"),
             color: "#8b5cf6",
           },
           {
             value: avgGoals,
-            label: "Среднее голов за сезон",
+            label: t("Среднее голов за сезон"),
             color: "#f97316",
           },
           {
             value: profileStats.favoriteFormation || "—",
-            label: "Часто используемая схема",
+            label: t("Часто используемая схема"),
             color: "#FFFFFF",
           },
         ].map((stat, i) => (
@@ -258,7 +267,9 @@ export default function ProfileScreen() {
         ))}
       </div>
 
-      <FriendsPanel />
+      <div data-translate>
+        <FriendsPanel />
+      </div>
 
       {/* Referrals */}
       <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
@@ -270,18 +281,20 @@ export default function ProfileScreen() {
               aria-expanded={showReferrals}
               className="text-left text-sm font-bold text-white"
             >
-              Приглашения · {referrals?.referralCount ?? 0}{" "}
-              {showReferrals ? "▲" : "▼"}
+              {t("Приглашения · ")}
+              {referrals?.referralCount ?? 0} {showReferrals ? "▲" : "▼"}
             </button>
             <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">
-              Пригласи игрока по ссылке.
+              {t("Пригласи игрока по ссылке.")}
             </p>
           </div>
           <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
             <div className="text-xl font-black text-[#00C896]">
               {referrals?.referralCount ?? "—"}
             </div>
-            <div className="text-[10px] text-[#9CA3AF]">игроков пришло</div>
+            <div className="text-[10px] text-[#9CA3AF]">
+              {t("игроков пришло")}
+            </div>
           </div>
         </div>
         {showReferrals && (
@@ -290,7 +303,7 @@ export default function ProfileScreen() {
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   readOnly
-                  aria-label="Реферальная ссылка"
+                  aria-label={t("Реферальная ссылка")}
                   value={referralLink}
                   className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]"
                 />
@@ -305,20 +318,20 @@ export default function ProfileScreen() {
                   }}
                   className="bg-[#00C896] text-black hover:bg-[#00b386]"
                 >
-                  Скопировать ссылку
+                  {t("Скопировать ссылку")}
                 </Button>
               </div>
             ) : (
               <p className="mt-3 text-xs text-[#64748b]">
-                Загружаем твою ссылку…
+                {t("Загружаем твою ссылку…")}
               </p>
             )}
             {referrals?.referredUsers.length ? (
               <div className="mt-4 border-t border-[#252525] pt-3">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
-                  Присоединились по ссылке
+                  {t("Присоединились по ссылке")}
                 </p>
-                <ul className="space-y-1.5">
+                <ul data-no-translate className="space-y-1.5">
                   {referrals.referredUsers.map((invite, index) => (
                     <li
                       key={`${invite.id}-${index}`}
@@ -330,7 +343,7 @@ export default function ProfileScreen() {
                       >
                         {invite.username
                           ? `@${invite.username}`
-                          : invite.displayName || "Игрок"}
+                          : invite.displayName || t("Игрок")}
                       </Link>
                       <span className="shrink-0 text-[#64748b]">
                         {new Date(invite.createdAt).toLocaleDateString(
@@ -347,7 +360,7 @@ export default function ProfileScreen() {
               href="/multiplayer"
               className="mt-4 inline-block text-xs font-semibold text-[#00C896]"
             >
-              Перейти в мультиплеер →
+              {t("Перейти в мультиплеер →")}
             </Link>
           </div>
         )}
@@ -361,27 +374,31 @@ export default function ProfileScreen() {
           aria-expanded={showTrophies}
           className="flex w-full items-center justify-between text-left"
         >
-          <h3 className="text-sm font-bold text-[#FFFFFF]">🏆 Достижения</h3>
+          <h3 className="text-sm font-bold text-[#FFFFFF]">
+            {t("🏆 Достижения")}
+          </h3>
           <span className="text-xs text-[#9CA3AF]">
-            {earnedTrophies}/{TROPHIES.length} {showTrophies ? "▲" : "▼"}
+            {earnedTrophies}
+            {t("/")}
+            {TROPHIES.length} {showTrophies ? "▲" : "▼"}
           </span>
         </button>
         {showTrophies && (
           <div className="mt-4">
             <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
               {[
-                ["classic", "Обычный драфт"],
-                ["single_club", "Один клуб"],
-                ["challenge", "Челленджи"],
-                ["multiplayer", "Мультиплеер"],
-                ["social", "Профиль"],
+                ["classic", t("Обычный драфт")],
+                ["single_club", t("Один клуб")],
+                ["challenge", t("Челленджи")],
+                ["multiplayer", t("Мультиплеер")],
+                ["social", t("Профиль")],
               ].map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setTrophyMode(key)}
                   className={`shrink-0 whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold ${trophyMode === key ? "border-[#00C896] bg-[#00C896]/15 text-[#00C896]" : "border-white/10 text-slate-400"}`}
                 >
-                  {label}
+                  {t(String(label))}
                 </button>
               ))}
             </div>
@@ -425,10 +442,10 @@ export default function ProfileScreen() {
                       {earned ? trophy.icon : "🔒"}
                     </div>
                     <div className="mt-1 text-xs font-bold text-white">
-                      {trophy.name}
+                      {t(trophy.name)}
                     </div>
                     <p className="mt-1 text-[10px] text-slate-400">
-                      {trophy.desc}
+                      {t(trophy.desc)}
                     </p>
                   </motion.div>
                 );
@@ -438,8 +455,6 @@ export default function ProfileScreen() {
         )}
       </div>
 
-      <TelegramNotifications />
-
       {/* History */}
       {
         <div className="rounded-2xl bg-[#141414] border border-[#141414] overflow-hidden">
@@ -447,17 +462,21 @@ export default function ProfileScreen() {
             onClick={() => setShowHistory(!showHistory)}
             className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0A0A0A]/30 transition-colors"
           >
-            <span className="text-sm font-bold text-[#FFFFFF]">📜 История</span>
+            <span className="text-sm font-bold text-[#FFFFFF]">
+              {t("📜 История")}
+            </span>
             <motion.span
               animate={{ rotate: showHistory ? 180 : 0 }}
               className="text-[#9CA3AF]"
             >
-              ▼
+              {t("▼")}
             </motion.span>
           </button>
           {showHistory && (
             <div className="px-3 pb-3">
-              <HistoryScreen embedded />
+              <div data-translate>
+                <HistoryScreen embedded />
+              </div>
             </div>
           )}
         </div>
@@ -466,18 +485,19 @@ export default function ProfileScreen() {
         {deleteAfterAt ? (
           <div className="space-y-2 text-xs text-[#9CA3AF]">
             <p>
-              Удаление профиля запланировано на{" "}
-              {new Date(deleteAfterAt).toLocaleString("ru-RU")}.
+              {t("Удаление профиля запланировано на")}{" "}
+              {new Date(deleteAfterAt).toLocaleString(locale)}
+              {t(".")}
             </p>
             <p>
-              Осталось{" "}
+              {t("Осталось")}{" "}
               {Math.max(
                 0,
                 Math.ceil(
                   (new Date(deleteAfterAt).getTime() - clock) / 86400000,
                 ),
               )}{" "}
-              дн. До удаления прогресс сохраняется.
+              {t("дн. До удаления прогресс сохраняется.")}
             </p>
             <button
               disabled={deletionBusy}
@@ -500,7 +520,7 @@ export default function ProfileScreen() {
               }}
               className="rounded-lg border border-[#00C896]/40 px-4 py-2 text-[#00C896]"
             >
-              Восстановить профиль
+              {t("Восстановить профиль")}
             </button>
           </div>
         ) : (
@@ -534,10 +554,11 @@ export default function ProfileScreen() {
             }}
             className="text-xs text-[#64748b] underline underline-offset-4 hover:text-[#ef4444]"
           >
-            Удалить профиль
+            {t("Удалить профиль")}
           </button>
         )}
       </div>
+      <TelegramNotifications />
     </div>
   );
 }

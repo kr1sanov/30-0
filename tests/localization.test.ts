@@ -13,7 +13,7 @@ test('translates core game, account and legal interface', () => {
   assert.equal(translateInterface('Приглашённые по ссылке появятся здесь.'), 'Players who join through your link will appear here.');
   assert.equal(translateInterface('Политика конфиденциальности'), 'Privacy policy');
   assert.equal(translateInterface('  Сменить пароль  '), '  Change password  ');
-  assert.equal(translateInterface('ЦСКА'), 'ЦСКА');
+  assert.equal(translateInterface('ЦСКА'), 'CSKA Moscow');
 });
 
 test('translates live season, manager, and award labels without losing results', () => {
@@ -63,7 +63,7 @@ test('translates positions, formations and player labels while preserving names'
   assert.equal(translateInterface('ЛФЗ'), 'LWB');
   assert.equal(translateInterface('Welliton, НП, рейтинг 85'), 'Welliton, ST, rating 85');
   assert.equal(translateInterface('Павлюченко, ЛЗ, рейтинг 75'), 'Павлюченко, LB, rating 75');
-  assert.equal(translateInterface('ЦСКА'), 'ЦСКА');
+  assert.equal(translateInterface('ЦСКА'), 'CSKA Moscow');
   assert.equal(translateInterface('Собери 3 игроков из 🇷🇺 Россия'), 'Draft 3 players from 🇷🇺 Russia');
   assert.equal(translateInterface('Импорт завершён: добавлено 4, обновлено 6.'), 'Import complete: 4 added, 6 updated.');
 });

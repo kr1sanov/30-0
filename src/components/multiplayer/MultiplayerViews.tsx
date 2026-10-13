@@ -120,7 +120,7 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
         setLastPlaced(`${player.fullName} → ${slots[index].positionLabel}`);
         setSelected(null);
         setTargetSlotIndex(null);
-        setTimeout(() => spinRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 800);
+
       }
     } finally { pendingPick.current = false; }
   };
@@ -152,10 +152,11 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
       <div className="mt-3 space-y-3 lg:mt-0">
         {filled === 11 || locked && remaining <= 0 ? <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-6 text-center"><h2 className="text-xl font-black">{filled === 11 ? 'Состав готов' : 'Время драфта истекло'}</h2><p className="my-3 text-sm text-[#9CA3AF]">{filled === 11 ? 'Когда все закончат, начнётся отсчёт 10 секунд.' : 'Оставшиеся позиции заполнятся автоматически.'}</p>{filled === 11 && <button disabled={busy || room.seats.find(value => value.isYou)?.ready} onClick={onFinish} className={primary}>{room.seats.find(value => value.isYou)?.ready ? `Сезон начнётся через ${remaining} с` : 'Готово · ждать сезон'}</button>}</div> : <>
           <div ref={spinRef}><SpinWheel multiplayer={{ currentSpin: spin, isSpinning: spinning, rerollsLeft: run.rerollsLeft,
-            openCount: 11-filled, disabled: locked || room.draftMode === 'position_first' && targetSlotIndex === null, onSpin: () => play(false), onReroll: () => play(true) }}/></div>
+            openCount: 11-filled, disabled: locked || room.draftMode === 'position_first' && targetSlotIndex === null, onSpin: () => play(false), onReroll: () => play(true) }}>
           {spin && !spinning && <PlayerList multiplayer={{ currentSpin: spin, slots, ratingMode: config.ratingMode,
             selectedPlayer: selected, targetSlotIndex: room.draftMode === 'position_first' ? targetSlotIndex : null,
-            showRatings: room.showRatings, onSelect: setSelected, onAssign: assign, onSkip, disabled: locked }}/>}
+            showRatings: room.showRatings, onSelect: setSelected, onAssign: assign, onSkip, disabled: locked }}/> }
+          </SpinWheel></div>
         </>}
       </div>
     </div>
