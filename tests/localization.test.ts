@@ -9,6 +9,9 @@ test('translates result ordinals and preserves numeric values', () => {
 });
 
 test('translates core game, account and legal interface', () => {
+  assert.equal(translateInterface('Последние 14 дней'), 'Last 14 days');
+  assert.equal(translateInterface('Закрыта'), 'Closed');
+  assert.equal(translateInterface('Период аналитики'), 'Analytics period');
   assert.equal(translateInterface('Один клуб'), 'One club');
   assert.equal(translateInterface('Приглашённые по ссылке появятся здесь.'), 'Players who join through your link will appear here.');
   assert.equal(translateInterface('Политика конфиденциальности'), 'Privacy policy');
