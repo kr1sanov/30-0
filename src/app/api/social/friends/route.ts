@@ -1,9 +1,12 @@
+import { publicAvatarUrl } from '@/lib/avatarUrl';
 import { after } from 'next/server';
 import { queueSocialNotification, flushSocialNotifications, escapeTelegramHtml } from '@/lib/socialNotifications';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
+
+const safePerson = <T extends { photoUrl: string | null }>(user: T) => ({ ...user, photoUrl: publicAvatarUrl(user.photoUrl) });
 
 const person = { id: true, displayName: true, photoUrl: true, username: true, avatarColor: true, statusEmoji: true } as const;
 
@@ -17,8 +20,8 @@ export async function GET(request: Request) {
   const friends = new Map<string, typeof outgoing[number]['to']>();
   for (const item of outgoing) if (item.status === 'accepted') friends.set(item.toId, item.to);
   for (const item of incoming) if (item.status === 'accepted') friends.set(item.fromId, item.from);
-  return NextResponse.json({ friends: [...friends.values()], incoming: incoming.filter(item => item.status === 'pending').map(item => item.from),
-    outgoing: outgoing.filter(item => item.status === 'pending').map(item => item.to) }, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json({ friends: [...friends.values()].map(safePerson), incoming: incoming.filter(item => item.status === 'pending').map(item => safePerson(item.from)),
+    outgoing: outgoing.filter(item => item.status === 'pending').map(item => safePerson(item.to)) }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
 export async function POST(request: Request) {
