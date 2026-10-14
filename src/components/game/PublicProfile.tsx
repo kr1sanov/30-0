@@ -74,7 +74,7 @@ export default function PublicProfile({ id }: { id: string }) {
       if (!r.ok) throw new Error();
       setPreview(await r.json());
     } catch {
-      toast.error("Не удалось открыть игрока");
+      toast.error(t("Не удалось открыть игрока"));
     }
   };
   const back = useCallback(() => {
@@ -141,7 +141,7 @@ export default function PublicProfile({ id }: { id: string }) {
                 ? "outgoing"
                 : "none",
         });
-      toast.success(
+      toast.success(t(
         status === "none"
           ? "Заявка в друзья отправлена"
           : status === "incoming"
@@ -149,9 +149,9 @@ export default function PublicProfile({ id }: { id: string }) {
             : status === "outgoing"
               ? "Заявка отменена"
               : "Друг удалён",
-      );
+      ));
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(t((e as Error).message));
     } finally {
       setBusy(false);
     }
@@ -167,10 +167,10 @@ export default function PublicProfile({ id }: { id: string }) {
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Не удалось пригласить игрока");
-      toast.success("Приглашение отправлено");
+      toast.success(t("Приглашение отправлено"));
       router.push(`/multiplayer?room=${data.code}`);
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(t((e as Error).message));
       setBusy(false);
     }
   };
@@ -211,7 +211,7 @@ export default function PublicProfile({ id }: { id: string }) {
       >
         {error && (
           <p role="alert" className="rounded-xl border border-red-500/30 p-4">
-            {error}
+            {t(error)}
           </p>
         )}
         {!player && !error && <p>{t("Загружаем профиль…")}</p>}
@@ -314,64 +314,20 @@ export default function PublicProfile({ id }: { id: string }) {
                 </div>
               </section>
             )}
-            <section className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {stats.map(([value, label]) => (
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {stats.map(([value, label], index) => (
                 <div
                   key={t(String(label))}
-                  className="rounded-xl border border-white/5 bg-[#141414] p-3 text-center"
+                  className={`rounded-2xl border p-4 text-center ${index < 4 ? "border-[#00C896]/25 bg-[#00C896]/5" : "border-white/10 bg-[#141414]"}`}
                 >
-                  <strong className="block text-xl text-[#00C896]">
+                  <strong className="block text-2xl font-black text-[#00C896]">
                     {value}
                   </strong>
-                  <span className="text-xs text-slate-400">
+                  <span className="mt-1 block text-xs text-slate-400">
                     {t(String(label))}
                   </span>
                 </div>
               ))}
-            </section>
-            <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
-              <h2 className="font-bold">
-                {t("Друзья · ")}
-                {player.friends.length}
-              </h2>
-              {player.friends.length ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {player.friends
-                    .slice(0, allFriends ? undefined : 3)
-                    .map((friend) => (
-                      <button
-                        key={friend.id}
-                        onClick={() => void openPreview(friend)}
-                        className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:border-[#00C896]"
-                      >
-                        <TelegramAvatar
-                          id={friend.id}
-                          photoUrl={friend.photoUrl}
-                          username={friend.username}
-                          name={friend.displayName}
-                          size={32}
-                        />
-                        {friend.username
-                          ? `@${friend.username}`
-                          : friend.displayName}
-                      </button>
-                    ))}
-                </div>
-              ) : (
-                <p className="mt-2 text-sm text-slate-400">
-                  {t("Пока нет друзей.")}
-                </p>
-              )}
-              {player.friends.length > 3 && (
-                <button
-                  type="button"
-                  onClick={() => setAllFriends((value) => !value)}
-                  aria-expanded={allFriends}
-                  className="mt-3 text-sm font-semibold text-[#00C896]"
-                >
-                  {allFriends ? t("Скрыть") : t("Показать всех")}
-                </button>
-              )}
             </section>
             <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
               <h2 className="font-bold">
@@ -427,6 +383,50 @@ export default function PublicProfile({ id }: { id: string }) {
                   className={`mt-3 text-sm font-semibold text-[#00C896] ${!allTrophies && trophies.length <= 6 ? "sm:hidden" : ""}`}
                 >
                   {allTrophies ? t("Скрыть") : t("Показать все")}
+                </button>
+              )}
+            </section>
+            <section className="rounded-2xl border border-white/10 bg-[#141414] p-5">
+              <h2 className="font-bold">
+                {t("Друзья · ")}
+                {player.friends.length}
+              </h2>
+              {player.friends.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {player.friends
+                    .slice(0, allFriends ? undefined : 3)
+                    .map((friend) => (
+                      <button
+                        key={friend.id}
+                        onClick={() => void openPreview(friend)}
+                        className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-sm hover:border-[#00C896]"
+                      >
+                        <TelegramAvatar
+                          id={friend.id}
+                          photoUrl={friend.photoUrl}
+                          username={friend.username}
+                          name={friend.displayName}
+                          size={32}
+                        />
+                        {friend.username
+                          ? `@${friend.username}`
+                          : friend.displayName}
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">
+                  {t("Пока нет друзей.")}
+                </p>
+              )}
+              {player.friends.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setAllFriends((value) => !value)}
+                  aria-expanded={allFriends}
+                  className="mt-3 text-sm font-semibold text-[#00C896]"
+                >
+                  {allFriends ? t("Скрыть") : t("Показать всех")}
                 </button>
               )}
             </section>

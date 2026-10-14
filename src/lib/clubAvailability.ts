@@ -1,4 +1,4 @@
-import { canFillSlot } from '@/lib/positions';
+import { getRosterPositions } from './rosterPositions.ts';
 import type { ClubSeasonWithPlayers } from '@/lib/wheel';
 
 type ClubSeasonRecord = {
@@ -33,18 +33,9 @@ export function getClubSeasonOptions(
       if (draftedPlayerIds.has(playerSeason.playerId)) continue;
       if (nationalityFilter && (playerSeason.nationality ?? playerSeason.player.nationality) !== nationalityFilter) continue;
 
-      const positions = [playerSeason.mainPosition, ...(playerSeason.otherPositions ?? '').split(',')]
-        .map((position) => position.trim())
-        .filter(Boolean);
-
-      for (const playerPosition of positions) {
-        if (openPositions.some((slotPosition) => canFillSlot(
-          playerPosition as Parameters<typeof canFillSlot>[0],
-          [],
-          slotPosition as Parameters<typeof canFillSlot>[2],
-        ).canFill)) {
-          availablePositions.add(playerPosition);
-        }
+      const positions = getRosterPositions(playerSeason, clubSeason.club.nameRu, clubSeason.season.startYear);
+      for (const position of positions) {
+        if (openPositions.includes(position)) availablePositions.add(position);
       }
     }
 

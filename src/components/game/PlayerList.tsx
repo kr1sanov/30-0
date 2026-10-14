@@ -3,7 +3,7 @@ import { useUiTranslation } from '@/hooks/use-ui-translation';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { POSITION_CATEGORY, POSITION_COLOR, canFillSlotStrict } from '@/lib/positions';
+import { POSITION_CATEGORY, POSITION_COLOR, canFillSlotStrict, expandPositionRoles } from '@/lib/positions';
 import type { Position, PositionCategory } from '@/lib/positions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -128,12 +128,12 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
   // Show soft warning toast when draft API fails (non-blocking — game continues)
   useEffect(() => {
     if (lastDraftError) {
-      toast.warning('Сохранение', {
-        description: lastDraftError,
+      toast.warning(t('Сохранение'), {
+        description: t(lastDraftError),
         duration: 3000,
       });
     }
-  }, [lastDraftError]);
+  }, [lastDraftError, t]);
 
   const handlePlayerClick = useCallback((player: ProcessedPlayer) => {
     // If player can't fill any position, do nothing (grayed out)
@@ -261,7 +261,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    {[...new Set([player.mainPosition, ...player.otherPositions])].map((pos, posIdx) => {
+                    {expandPositionRoles(player.mainPosition, player.otherPositions).map((pos, posIdx) => {
                       const cat = getCategory(pos);
                       return (
                         <span

@@ -5,7 +5,7 @@ import { db } from '@/lib/db';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 
-const person = { id: true, displayName: true, username: true, avatarColor: true, statusEmoji: true } as const;
+const person = { id: true, displayName: true, photoUrl: true, username: true, avatarColor: true, statusEmoji: true } as const;
 
 export async function GET(request: Request) {
   const userId = sessionUser(request);

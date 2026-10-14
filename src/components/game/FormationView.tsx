@@ -5,6 +5,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import {
   POSITION_CATEGORY,
+  POSITION_NAMES,
   POSITION_COLOR,
   canFillSlotStrict,
   getPitchColumn,
@@ -622,13 +623,13 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                   </div>
                   {/* Position label below circle */}
                   <span
-                    className="max-w-[70px] text-center text-[8px] sm:text-[9px] font-bold leading-tight mt-0.5"
+                    className="max-w-[64px] sm:max-w-[86px] text-center text-[9px] sm:text-[10px] font-bold leading-tight mt-0.5"
                     style={{
                       color: isCompatible || isMoveTarget ? ACCENT : isIncompatible ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.8)',
                       textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                     }}
                   >
-                    {t(slot.positionLabel)}
+                    {t(POSITION_NAMES[slot.position as Position] || slot.positionLabel)}
                   </span>
                 </div>
               )}

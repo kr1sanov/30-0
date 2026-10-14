@@ -2,6 +2,20 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Центральный защитник': 'Centre-back',
+  'Правый защитник': 'Right-back',
+  'Левый защитник': 'Left-back',
+  'Правый фланговый защитник': 'Right wing-back',
+  'Левый фланговый защитник': 'Left wing-back',
+  'Центральный полузащитник': 'Central midfielder',
+  'Атакующий полузащитник': 'Attacking midfielder',
+  'Левый полузащитник': 'Left midfielder',
+  'Правый полузащитник': 'Right midfielder',
+  'Левый вингер': 'Left winger',
+  'Правый вингер': 'Right winger',
+  'Центральный нападающий': 'Centre-forward',
+  'Опорный полузащитник': 'Defensive midfielder',
+  '&copy; 2026 30-0. Все права защищены.': '&copy; 2026 30-0. All rights reserved.',
   'Период аналитики': 'Analytics period', 'Закрыта': 'Closed',
 
   'ЦСКА': 'CSKA Moscow', 'Динамо': 'Dynamo Moscow', 'Спартак': 'Spartak Moscow', 'Локомотив': 'Lokomotiv Moscow', 'Рубин': 'Rubin Kazan', 'Торпедо': 'Torpedo Moscow', 'СКА-Хабаровск': 'SKA Khabarovsk', 'Сатурн': 'Saturn Ramenskoye', 'Мордовия': 'Mordovia Saransk', 'Сибирь': 'Sibir Novosibirsk', 'Терек': 'Terek Grozny', 'Волга': 'Volga', 'Москва': 'FC Moscow', 'Тосно': 'Tosno',
