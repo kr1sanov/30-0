@@ -1,3 +1,4 @@
+import { getRosterPositions } from '@/lib/rosterPositions';
 import { db } from '@/lib/db';
 import { filterCompatibleClubSeasons, spinWheel } from '@/lib/wheel';
 import { getClubSeasonOptions } from '@/lib/clubAvailability';
@@ -169,7 +170,7 @@ export async function POST(
       primeRating: ps.primeRating || ps.rating,
       primeSeason: ps.primeSeason || selectedClubSeason.season.label,
       mainPosition: ps.mainPosition,
-      otherPositions: ps.otherPositions ? ps.otherPositions.split(',').map((p) => p.trim()) : [],
+      otherPositions: getRosterPositions(ps, selectedClubSeason.club.nameRu, selectedClubSeason.season.startYear).filter(pos => pos !== ps.mainPosition),
       nationality: ps.nationality ?? ps.player.nationality,
     }));
 

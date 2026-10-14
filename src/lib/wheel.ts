@@ -5,8 +5,8 @@
 // draft slots and performing the weighted random selection ("spin").
 // ============================================================================
 
-import type { Position } from './positions';
-import { canFillSlot } from './positions';
+import type { Position } from './positions.ts';
+import { canFillSlotStrict } from './positions.ts';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,11 +45,10 @@ export function filterCompatibleClubSeasons(
 
   return allClubSeasons.filter((cs) => {
     // A club-season is compatible if any of its available positions
-    // can fill any of the open slots (even partially)
+    // can fill any of the open slots using the same roles as player cards
     for (const playerPos of cs.availablePositions) {
       for (const slotPos of openPositions) {
-        const { canFill } = canFillSlot(playerPos, [], slotPos as Position);
-        if (canFill) return true;
+        if (canFillSlotStrict(playerPos, [], slotPos as Position)) return true;
       }
     }
     return false;

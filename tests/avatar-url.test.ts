@@ -42,3 +42,12 @@ test("public profile achievement sections have Russian sources and complete Engl
     "Krasnodar",
   );
 });
+
+test('built-in fallback avatar stays stable per user and needs no remote image', async () => {
+  const { avatarFallback } = await import('../src/lib/avatarFallback.ts');
+  assert.deepEqual(avatarFallback('same-user'), avatarFallback('same-user'));
+  for (const identity of ['', '361912433', 'Никита', '⚽']) {
+    assert.match(avatarFallback(identity).primary, /^#[0-9a-f]{6}$/);
+    assert.match(avatarFallback(identity).secondary, /^#[0-9a-f]{6}$/);
+  }
+});

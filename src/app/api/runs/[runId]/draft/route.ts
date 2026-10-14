@@ -1,5 +1,6 @@
+import { getRosterPositions } from '@/lib/rosterPositions';
 import { db } from '@/lib/db';
-import { canFillSlot } from '@/lib/positions';
+import { canFillSlotStrict } from '@/lib/positions';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
@@ -73,7 +74,7 @@ export async function POST(
     // Get the player season data
     const playerSeason = await db.playerSeason.findUnique({
       where: { id: playerSeasonId },
-      include: { player: true, clubSeason: { include: { season: true } } },
+      include: { player: true, clubSeason: { include: { season: true, club: true } } },
     });
 
     if (!playerSeason) {
@@ -107,18 +108,15 @@ export async function POST(
       );
     }
 
-    // Check position compatibility using the compatibility matrix
-    // Players can fill slots based on their positions + matrix rules
-    // 'full' = no penalty, 'partial' = 0.8x rating penalty
+    // Use the same advertised roles as the wheel, card and pitch.
     const slotPos = slotPosition.split('_')[0];
-    const otherPositions = playerSeason.otherPositions
-      ? playerSeason.otherPositions.split(',').map((p) => p.trim())
-      : [];
+    const otherPositions = getRosterPositions(playerSeason, playerSeason.clubSeason.club.nameRu, playerSeason.clubSeason.season.startYear)
+      .filter(pos => pos !== playerSeason.mainPosition);
 
-    const { canFill, penalty } = canFillSlot(
-      playerSeason.mainPosition as Parameters<typeof canFillSlot>[0],
-      otherPositions as Parameters<typeof canFillSlot>[1],
-      slotPos as Parameters<typeof canFillSlot>[2],
+    const canFill = canFillSlotStrict(
+      playerSeason.mainPosition as Parameters<typeof canFillSlotStrict>[0],
+      otherPositions as Parameters<typeof canFillSlotStrict>[1],
+      slotPos as Parameters<typeof canFillSlotStrict>[2],
     );
 
     if (!canFill) {
@@ -128,7 +126,7 @@ export async function POST(
       );
     }
 
-    const isCompatible = penalty === 1; // full = compatible, partial = not fully compatible
+    const isCompatible = true;
 
     // Update the game slot with player info — including otherPositions, nationality and primeRating
     await db.$transaction(async (tx) => {
@@ -146,7 +144,7 @@ export async function POST(
         playerRating: playerSeason.rating,
         playerPrimeRating: playerSeason.primeRating || playerSeason.rating,
         playerPosition: playerSeason.mainPosition,
-        playerOtherPositions: playerSeason.otherPositions ?? null,
+        playerOtherPositions: otherPositions.join(',') || null,
         playerNationality: playerSeason.nationality ?? playerSeason.player.nationality ?? null,
         isCompatible,
         },

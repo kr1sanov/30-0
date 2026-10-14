@@ -206,7 +206,7 @@ export default function ProfileScreen() {
             try {
               await resetProfile();
             } catch {
-              toast.error("Не удалось выйти");
+              toast.error(t("Не удалось выйти"));
             }
           }}
           className="text-xs text-[#9CA3AF] hover:text-[#ef4444] transition-colors"
@@ -267,107 +267,37 @@ export default function ProfileScreen() {
         ))}
       </div>
 
-      <div data-translate>
-        <FriendsPanel />
-      </div>
+      <FriendsPanel />
 
-      {/* Referrals */}
-      <section className="rounded-2xl border border-[#00C896]/20 bg-[#141414] p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowReferrals((value) => !value)}
-              aria-expanded={showReferrals}
-              className="text-left text-sm font-bold text-white"
+      {/* History */}
+      {
+        <div className="rounded-2xl bg-[#141414] border border-white/10 overflow-hidden">
+          <button
+            aria-expanded={showHistory}
+            onClick={() => setShowHistory(!showHistory)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0A0A0A]/30 transition-colors"
+          >
+            <span className="text-sm font-bold text-[#FFFFFF]">
+              {t("📜 История")}
+            </span>
+            <motion.span
+              animate={{ rotate: showHistory ? 180 : 0 }}
+              className="text-[#9CA3AF]"
             >
-              {t("Приглашения · ")}
-              {referrals?.referralCount ?? 0} {showReferrals ? "▲" : "▼"}
-            </button>
-            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">
-              {t("Пригласи игрока по ссылке.")}
-            </p>
-          </div>
-          <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
-            <div className="text-xl font-black text-[#00C896]">
-              {referrals?.referralCount ?? "—"}
+              {t("▼")}
+            </motion.span>
+          </button>
+          {showHistory && (
+            <div className="px-3 pb-3">
+              <div data-translate>
+                <HistoryScreen embedded />
+              </div>
             </div>
-            <div className="text-[10px] text-[#9CA3AF]">
-              {t("игроков пришло")}
-            </div>
-          </div>
+          )}
         </div>
-        {showReferrals && (
-          <div>
-            {referralLink ? (
-              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                <input
-                  readOnly
-                  aria-label={t("Реферальная ссылка")}
-                  value={referralLink}
-                  className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]"
-                />
-                <Button
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(referralLink);
-                      toast.success("Ссылка скопирована");
-                    } catch {
-                      toast.error("Не удалось скопировать ссылку");
-                    }
-                  }}
-                  className="bg-[#00C896] text-black hover:bg-[#00b386]"
-                >
-                  {t("Скопировать ссылку")}
-                </Button>
-              </div>
-            ) : (
-              <p className="mt-3 text-xs text-[#64748b]">
-                {t("Загружаем твою ссылку…")}
-              </p>
-            )}
-            {referrals?.referredUsers.length ? (
-              <div className="mt-4 border-t border-[#252525] pt-3">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
-                  {t("Присоединились по ссылке")}
-                </p>
-                <ul data-no-translate className="space-y-1.5">
-                  {referrals.referredUsers.map((invite, index) => (
-                    <li
-                      key={`${invite.id}-${index}`}
-                      className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]"
-                    >
-                      <Link
-                        href={playerPath(invite)}
-                        className="truncate text-[#00C896] hover:underline"
-                      >
-                        {invite.username
-                          ? `@${invite.username}`
-                          : invite.displayName || t("Игрок")}
-                      </Link>
-                      <span className="shrink-0 text-[#64748b]">
-                        {new Date(invite.createdAt).toLocaleDateString(
-                          "ru-RU",
-                          { timeZone: "UTC" },
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            <Link
-              href="/multiplayer"
-              className="mt-4 inline-block text-xs font-semibold text-[#00C896]"
-            >
-              {t("Перейти в мультиплеер →")}
-            </Link>
-          </div>
-        )}
-      </section>
-
+      }
       {/* Trophy Cabinet */}
-      <div className="rounded-2xl p-5 border glass-showcase">
+      <div className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
         <button
           type="button"
           onClick={() => setShowTrophies((open) => !open)}
@@ -455,32 +385,102 @@ export default function ProfileScreen() {
         )}
       </div>
 
-      {/* History */}
-      {
-        <div className="rounded-2xl bg-[#141414] border border-[#141414] overflow-hidden">
-          <button
-            onClick={() => setShowHistory(!showHistory)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#0A0A0A]/30 transition-colors"
-          >
-            <span className="text-sm font-bold text-[#FFFFFF]">
-              {t("📜 История")}
-            </span>
-            <motion.span
-              animate={{ rotate: showHistory ? 180 : 0 }}
-              className="text-[#9CA3AF]"
+      {/* Referrals */}
+      <section className="rounded-2xl border border-white/10 bg-[#141414] p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowReferrals((value) => !value)}
+              aria-expanded={showReferrals}
+              className="text-left text-sm font-bold text-white"
             >
-              {t("▼")}
-            </motion.span>
-          </button>
-          {showHistory && (
-            <div className="px-3 pb-3">
-              <div data-translate>
-                <HistoryScreen embedded />
-              </div>
+              {t("Приглашения · ")}
+              {referrals?.referralCount ?? 0} {showReferrals ? "▲" : "▼"}
+            </button>
+            <p className="mt-1 text-xs leading-relaxed text-[#9CA3AF]">
+              {t("Пригласи игрока по ссылке.")}
+            </p>
+          </div>
+          <div className="rounded-xl bg-[#00C896]/10 px-4 py-2 text-center">
+            <div className="text-xl font-black text-[#00C896]">
+              {referrals?.referralCount ?? "—"}
             </div>
-          )}
+            <div className="text-[10px] text-[#9CA3AF]">
+              {t("игроков пришло")}
+            </div>
+          </div>
         </div>
-      }
+        {showReferrals && (
+          <div>
+            {referralLink ? (
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  readOnly
+                  aria-label={t("Реферальная ссылка")}
+                  value={referralLink}
+                  className="min-w-0 flex-1 rounded-lg border border-[#2a2a2a] bg-[#0b0b0b] px-3 py-2 text-xs text-[#d1d5db]"
+                />
+                <Button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(referralLink);
+                      toast.success(t("Ссылка скопирована"));
+                    } catch {
+                      toast.error(t("Не удалось скопировать ссылку"));
+                    }
+                  }}
+                  className="bg-[#00C896] text-black hover:bg-[#00b386]"
+                >
+                  {t("Скопировать ссылку")}
+                </Button>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-[#64748b]">
+                {t("Загружаем твою ссылку…")}
+              </p>
+            )}
+            {referrals?.referredUsers.length ? (
+              <div className="mt-4 border-t border-[#252525] pt-3">
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
+                  {t("Присоединились по ссылке")}
+                </p>
+                <ul data-no-translate className="space-y-1.5">
+                  {referrals.referredUsers.map((invite, index) => (
+                    <li
+                      key={`${invite.id}-${index}`}
+                      className="flex items-center justify-between gap-3 text-xs text-[#D1D5DB]"
+                    >
+                      <Link
+                        href={playerPath(invite)}
+                        className="truncate text-[#00C896] hover:underline"
+                      >
+                        {invite.username
+                          ? `@${invite.username}`
+                          : invite.displayName || t("Игрок")}
+                      </Link>
+                      <span className="shrink-0 text-[#64748b]">
+                        {new Date(invite.createdAt).toLocaleDateString(
+                          "ru-RU",
+                          { timeZone: "UTC" },
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <Link
+              href="/multiplayer"
+              className="mt-4 inline-block text-xs font-semibold text-[#00C896]"
+            >
+              {t("Перейти в мультиплеер →")}
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <TelegramNotifications />
       <div className="border-t border-white/5 pt-5 text-center">
         {deleteAfterAt ? (
           <div className="space-y-2 text-xs text-[#9CA3AF]">
@@ -509,7 +509,7 @@ export default function ProfileScreen() {
                   });
                   if (!res.ok) throw new Error();
                   setDeleteAfterAt(null);
-                  toast.success("Профиль восстановлен вместе с прогрессом");
+                  toast.success(t("Профиль восстановлен вместе с прогрессом"));
                 } catch {
                   toast.error(
                     "Срок восстановления истёк или сервер недоступен",
@@ -547,7 +547,7 @@ export default function ProfileScreen() {
                   "Удаление запланировано. Ты можешь восстановить профиль в течение недели.",
                 );
               } catch {
-                toast.error("Не удалось запланировать удаление");
+                toast.error(t("Не удалось запланировать удаление"));
               } finally {
                 setDeletionBusy(false);
               }
@@ -558,7 +558,6 @@ export default function ProfileScreen() {
           </button>
         )}
       </div>
-      <TelegramNotifications />
     </div>
   );
 }

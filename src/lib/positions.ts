@@ -34,6 +34,33 @@ export const ALL_POSITIONS: readonly Position[] = [
   'НП', 'ЦН',
 ] as const;
 
+/** Full labels used below the abbreviated marker on the pitch. */
+export const POSITION_NAMES: Record<Position, string> = {
+  'ВР': 'Вратарь', 'ЦЗ': 'Центральный защитник',
+  'ПЗ': 'Правый защитник', 'ЛЗ': 'Левый защитник',
+  'ПФЗ': 'Правый фланговый защитник', 'ЛФЗ': 'Левый фланговый защитник',
+  'ОП': 'Опорный полузащитник', 'ЦП': 'Центральный полузащитник',
+  'АП': 'Атакующий полузащитник', 'ЛП': 'Левый полузащитник',
+  'ПП': 'Правый полузащитник', 'ЛВ': 'Левый вингер', 'ПВ': 'Правый вингер',
+  'НП': 'Нападающий', 'ЦН': 'Центральный нападающий',
+};
+
+/** Equivalent game roles; preserve the player's flank and line of play.
+ * These are displayed in the card as well as accepted by wheel/placement. */
+const EQUIVALENT_ROLES: readonly (readonly Position[])[] = [
+  ['ПЗ', 'ПФЗ'], ['ЛЗ', 'ЛФЗ'], ['ПП', 'ПВ'], ['ЛП', 'ЛВ'], ['НП', 'ЦН'],
+];
+export function expandPositionRoles(main: string, other: readonly string[] = []): Position[] {
+  const result = new Set<Position>();
+  for (const raw of [main, ...other]) {
+    const pos = raw.trim() as Position;
+    if (!ALL_POSITIONS.includes(pos)) continue;
+    result.add(pos);
+    for (const group of EQUIVALENT_ROLES) if (group.includes(pos)) for (const role of group) result.add(role);
+  }
+  return [...result];
+}
+
 // ---------------------------------------------------------------------------
 // Position → Category mapping
 // ---------------------------------------------------------------------------
@@ -244,9 +271,8 @@ export function canFillSlot(
 // ---------------------------------------------------------------------------
 
 /**
- * STRICT position matching — a player can only fill a slot if the slot's
- * position is explicitly listed as one of the player's positions
- * (mainPosition or otherPositions). No compatibility matrix lookup.
+ * A player can fill the roles advertised in their card, including equivalent
+ * same-flank roles. The partial compatibility matrix is not consulted.
  *
  * This enforces the rule: "Нельзя игрока ставить на позиции которые
  * не указаны у него в карточке."
@@ -256,13 +282,7 @@ export function canFillSlotStrict(
   playerOtherPos: Position[],
   slotPos: Position,
 ): boolean {
-  // Direct match on main position
-  if (playerMainPos === slotPos) return true;
-  // Direct match on any other position
-  for (const pos of playerOtherPos) {
-    if (pos === slotPos) return true;
-  }
-  return false;
+  return expandPositionRoles(playerMainPos, playerOtherPos).includes(slotPos);
 }
 
 // ---------------------------------------------------------------------------
