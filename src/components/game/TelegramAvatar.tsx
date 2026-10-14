@@ -28,10 +28,10 @@ export default function TelegramAvatar({
   );
   const [loadedSource, setLoadedSource] = useState<string | null>(null);
   useEffect(() => {
-    if (!source || loadedSource === source) return;
+    if (!source || source === proxy || loadedSource === source) return;
     const timer = window.setTimeout(() => setFailures(previous => [...previous, source]), 8000);
     return () => window.clearTimeout(timer);
-  }, [source, loadedSource]);
+  }, [source, proxy, loadedSource]);
   return (
     <span
       role="img"
