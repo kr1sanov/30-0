@@ -4,7 +4,10 @@ import { callCloudPreferences } from './telegram-cloud-client.mjs';
 const secret = process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET || process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token || !process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
-const worker = (body = {}) => postNotificationWorker('https://30-0.xn--p1ai/api/telegram/worker', secret, body);
+async function worker(body = {}) {
+  try { return await callCloudPreferences('worker', { body }); }
+  catch { return postNotificationWorker('https://30-0.xn--p1ai/api/telegram/worker', secret, body); }
+}
 
 let deferred = 0, synchronized = 0;
 const { patches } = await worker({ action: 'patches' });
