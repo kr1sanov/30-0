@@ -1,4 +1,4 @@
-import { db } from "sdk";
+import { db, fetch } from "sdk";
 import { botPreferences } from "../schema.js";
 import {
   normalize,
