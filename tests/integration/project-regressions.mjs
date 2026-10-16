@@ -48,8 +48,8 @@ try {
     const years=club===0?Array.from({length:9},(_,i)=>2017+i):club===1?Array.from({length:8},(_,i)=>2018+i):[2025];
     for(const year of years) await db.clubSeason.create({data:{id:`qa-cs-${club}-${year}`,clubId:`qa-club-${club}`,seasonId:`qa-season-${year}`}});
     for(let i=0;i<24;i++) {
-      const name=club===0&&i===0?'Maksim Borisko':club===0&&i===6?'Ivan Oblyakov':`QA Player ${club}-${i}`;
-      await db.player.create({data:{id:`qa-p-${club}-${i}`,fullName:name,lastName:name}});
+      const name=club===0&&i===0?'Maksim Borisko':club===0&&i===6?'Ivan Oblyakov':club===1&&i===0?'Тереховский Игнат':`QA Player ${club}-${i}`;
+      await db.player.create({data:{id:`qa-p-${club}-${i}`,fullName:name,lastName:name==='Тереховский Игнат'?'Тереховский':name}});
       for(const year of years) await db.playerSeason.create({data:{id:`qa-ps-${club}-${year}-${i}`,playerId:`qa-p-${club}-${i}`,clubSeasonId:`qa-cs-${club}-${year}`,rating:75+i%10,primeRating:85+i%5,mainPosition:positions[i%12]}});
     }
   }
@@ -98,7 +98,7 @@ try {
   await api('/api/admin/challenges','PATCH',{id:issue,visibility:'open'},true);
   assert.ok((await api('/api/challenges')).active.some(i=>i.id===issue));
   const challenge=await api('/api/runs','POST',challengeBody,false,201);
-  assert.ok(challenge.slots.some(s=>s.playerName==='Ignat Terekhovskiy'&&s.playerPrimeRating===90));
+  assert.ok(challenge.slots.some(s=>s.playerName==='Тереховский Игнат'&&s.playerPrimeRating===85));
   await api('/api/admin/challenges','PATCH',{id:issue,visibility:'hidden'},true);
   assert.ok(!(await api('/api/challenges')).active.some(i=>i.id===issue));
   await api('/api/runs','POST',challengeBody,false,400);
