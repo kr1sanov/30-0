@@ -110,7 +110,7 @@ export default function MultiplayerPage() {
   }, [user]);
 
   const refresh = useCallback(async () => {
-    if (!code) return;
+    if (!code || document.hidden) return;
     try {
       const value = await json<Room>(`/api/multiplayer/rooms/${code}`);
       if (currentRoomCode.current !== code) return;
@@ -128,12 +128,21 @@ export default function MultiplayerPage() {
   }, [code, refresh]);
 
   useEffect(() => {
-    if (!code || room?.status !== 'lobby' || !room.draftStartAt) return;
+    if (!code) return;
+    const leave = () => navigator.sendBeacon(`/api/multiplayer/rooms/${code}/presence`);
+    const visibility = () => { if (document.hidden) leave(); else void refresh(); };
+    window.addEventListener('pagehide', leave);
+    document.addEventListener('visibilitychange', visibility);
+    return () => { leave(); window.removeEventListener('pagehide', leave); document.removeEventListener('visibilitychange', visibility); };
+  }, [code, refresh]);
+
+  useEffect(() => {
+    if (document.hidden || !code || room?.status !== 'lobby' || !room.draftStartAt) return;
     const key = `${code}:${room.draftStartAt}`;
     if (now < Date.parse(room.draftStartAt) || startedCountdown.current === key) return;
     startedCountdown.current = key;
     void json(`/api/multiplayer/rooms/${code}/start`, 'POST')
-      .catch(() => undefined)
+      .catch(() => { startedCountdown.current = ''; })
       .finally(() => void refresh());
   }, [code, room?.status, room?.draftStartAt, now, refresh]);
 
@@ -161,7 +170,7 @@ export default function MultiplayerPage() {
     openRoom(next.code);
   });
   const nextRound = (source: string) => void action(async () => {
-    const next = await json<{ code: string }>(`/api/multiplayer/rooms/${source}/next`, 'POST');
+    const next = await json<{ code: string }>(`/api/multiplayer/rooms/${source}/next`, 'POST', { round: room?.seriesRound });
     if (!next.code) throw new Error('Следующий раунд ещё создаётся. Попробуй снова.');
     openRoom(next.code);
   });
@@ -233,7 +242,6 @@ export default function MultiplayerPage() {
         <button onClick={() => setShowCreate(true)} className={`${card} group w-full text-left transition hover:border-[#00C896]/60 hover:bg-[#00C896]/10`}><span className="flex flex-wrap items-center justify-between gap-3"><strong className="text-xl sm:text-2xl">Драфт с друзьями</strong><span className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-bold text-red-300"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500"/>Прямой эфир</span></span><span className="mt-3 block text-sm leading-6 text-slate-400">Соревнуйся в режиме реального времени с участием до 6 игроков. Все находятся онлайн одновременно и собирают лучшую команду из 11 игроков.</span></button>
         {invitationList}
         {continueRooms}
-        {matchHistory}
       </div>}
 
       {!code && !joiningLink && showCreate && <div className="mx-auto max-w-2xl space-y-5 animate-fade-in">

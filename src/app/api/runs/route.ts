@@ -6,6 +6,7 @@ import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionUser } from '@/lib/telegramSession';
 import { challengeSucceeded, findWeeklyChallenge } from '@/lib/weeklyChallenges';
+import { visibleChallenge } from '@/lib/challengeCatalog';
 import { getArchiveAccess } from '@/lib/challengeAccess';
 
 export async function GET(request: NextRequest) {
@@ -26,10 +27,10 @@ export async function GET(request: NextRequest) {
     if (difficulty && ['easy', 'normal', 'hard'].includes(difficulty)) {
       where.difficulty = difficulty;
     }
-    if (mode === 'multiplayer') where.multiplayerSeat = { isNot: null };
-    if (mode === 'single_club') { where.multiplayerSeat = { is: null }; where.gameMode = 'single_club'; }
-    if (mode === 'classic') { where.multiplayerSeat = { is: null }; where.gameMode = 'classic'; }
-    if (mode === 'challenge') { where.multiplayerSeat = { is: null }; where.gameMode = { in: ['challenge_vagner', 'challenge_dzyuba'] }; }
+    if (mode === 'multiplayer') where.OR = [{ multiplayerSeat: { isNot: null } }, { multiplayerRoomCode: { not: null } }];
+    if (mode === 'single_club') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = 'single_club'; }
+    if (mode === 'classic') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = 'classic'; }
+    if (mode === 'challenge') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'] }; }
 
     const orderBy: Record<string, string>[] =
       sort === 'points'
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
         slots: {
           orderBy: { slotPosition: 'asc' },
         },
-        multiplayerSeat: { select: { roomCode: true, room: { select: { seats: {
+        multiplayerSeat: { select: { roomCode: true, room: { select: { seriesRootCode: true, seriesTargetWins: true, seats: {
           select: { userId: true, name: true, isBot: true, user: { select: { username: true } } },
         } } } } },
       },
@@ -56,13 +57,16 @@ export async function GET(request: NextRequest) {
       : [];
     const clubNames = new Map(clubs.map((club) => [club.id, club.nameRu]));
 
-    return NextResponse.json(runs.map((run) => ({
+    const historyKey = (run: typeof runs[number]) => run.multiplayerSeat?.room.seriesRootCode || run.multiplayerRoomCode || run.multiplayerSeat?.roomCode;
+    const grouped = runs.filter((run, index) => !historyKey(run) || runs.findIndex(other => historyKey(other) === historyKey(run)) === index);
+    return NextResponse.json(grouped.map((run) => ({
       ...run,
-      multiplayerSeat: run.multiplayerSeat ? { roomCode: run.multiplayerSeat.roomCode } : null,
+      multiplayerSeat: historyKey(run) ? { roomCode: run.multiplayerSeat?.roomCode || run.multiplayerRoomCode } : null,
+      seriesRounds: historyKey(run) ? runs.filter(other => historyKey(other) === historyKey(run)).map(other => ({ id: other.id, round: other.multiplayerRound, points: other.points, position: other.position, slots: other.slots })) : [],
       opponents: run.multiplayerSeat?.room.seats
         .filter(seat => seat.userId !== userId)
         .map(seat => seat.isBot ? seat.name : seat.user?.username ? `@${seat.user.username}` : seat.name) ?? [],
-      gameMode: run.multiplayerSeat ? 'multiplayer' : run.gameMode.startsWith('challenge_') ? 'challenge' : run.clubFilter ? 'single_club' : 'classic',
+      gameMode: historyKey(run) ? 'multiplayer' : run.gameMode.startsWith('challenge_') ? 'challenge' : run.clubFilter ? 'single_club' : 'classic',
       challengeId: run.gameMode.startsWith('challenge_') ? run.gameMode : null,
       challengeIssueId: run.challengeIssueId,
       challengeSucceeded: run.challengeIssueId && run.completed
@@ -90,16 +94,16 @@ export async function POST(request: NextRequest) {
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const gameMode = body.gameMode || 'classic';
-    if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba'].includes(gameMode)) {
+    if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
-    const isWeeklyChallenge = gameMode === 'challenge_vagner' || gameMode === 'challenge_dzyuba';
+    const isWeeklyChallenge = gameMode.startsWith('challenge_');
     const issue = isWeeklyChallenge && typeof body.challengeIssueId === 'string'
-      ? findWeeklyChallenge(body.challengeIssueId) : null;
+      ? await visibleChallenge(body.challengeIssueId) : null;
     if (isWeeklyChallenge && (!issue || issue.mode !== gameMode)) {
       return NextResponse.json({ error: 'Выбери действующий челлендж' }, { status: 400 });
     }
-    if (issue && new Date(issue.endsAt).getTime() <= Date.now()) {
+    if (issue && !issue.forceOpen && new Date(issue.endsAt).getTime() <= Date.now()) {
       const access = await getArchiveAccess(userId);
       if (!access.unlockedUntil) return NextResponse.json({ error: 'Архив закрыт. Пригласи одного игрока, чтобы открыть его на 24 часа.' }, { status: 403 });
     }
@@ -110,10 +114,10 @@ export async function POST(request: NextRequest) {
       const club = await db.club.findUnique({
         where: { id: clubFilter },
         select: {
-          id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true,
+          id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true, oneClubShown: true,
           seasons: {
             where: { players: { some: {} } },
-            select: { players: { select: { playerId: true, mainPosition: true } } },
+            select: { season: { select: { startYear: true } }, players: { select: { playerId: true, mainPosition: true } } },
           },
         },
       });
@@ -144,20 +148,29 @@ export async function POST(request: NextRequest) {
     };
     const rerollsTotal = rerollsMap[safeDifficulty] ?? 1;
 
-    const challengeNames = gameMode === 'challenge_vagner'
-      ? ['Vagner Love', 'Вагнер Лав']
-      : gameMode === 'challenge_dzyuba' ? ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба'] : null;
-    // The challenge card always comes from an imported edition, ordered by
-    // actual season rating. No invented rating or duplicate player record.
-    const featured = challengeNames ? await db.playerSeason.findFirst({
-      where: { player: { fullName: { in: challengeNames } } },
-      orderBy: [{ rating: 'desc' }, { id: 'asc' }],
+    const names = issue?.featuredNames || (gameMode === 'challenge_vagner' ? [['Vagner Love', 'Вагнер Лав']]
+      : gameMode === 'challenge_dzyuba' ? [['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба']] : []);
+    const cards = await Promise.all(names.map(async fullNames => {
+      const card = await db.playerSeason.findFirst({
+      where: { player: { fullName: { in: fullNames } } }, orderBy: [{ primeRating: 'desc' }, { rating: 'desc' }, { id: 'asc' }],
       include: { player: true, clubSeason: { include: { season: true } } },
-    }) : null;
-    if (challengeNames && !featured) return NextResponse.json({ error: 'Карточка игрока отсутствует в базе' }, { status: 503 });
-    const featuredIndex = featured ? formationData.slots.findIndex(slot =>
-      ['НП', 'ЦН'].includes(slot.position)) : -1;
-    if (featured && featuredIndex < 0) return NextResponse.json({ error: 'Для челленджа нужна схема с нападающим' }, { status: 400 });
+    });
+      if (card) return card;
+      if (issue?.hero === 'akron_keeper') return {
+        id: 'challenge-card:terekhovskiy:2026-10-13', rating: 90, primeRating: 90, mainPosition: 'ВР', otherPositions: '', nationality: 'Россия',
+        player: { fullName: 'Ignat Terekhovskiy', lastName: 'Terekhovskiy', alias: null, nationality: 'Россия' },
+        clubSeason: { season: { startYear: 2026 } },
+      };
+      return null;
+    }));
+    if (cards.some(card => !card)) return NextResponse.json({ error: 'Карточка игрока отсутствует в базе' }, { status: 503 });
+    const featuredBySlot = new Map<number, NonNullable<typeof cards[number]>>();
+    for (const card of cards) if (card) {
+      const positions = [card.mainPosition, ...(card.otherPositions || '').split(',').map(p => p.trim())];
+      const index = formationData.slots.findIndex((slot, i) => !featuredBySlot.has(i) && positions.includes(slot.position));
+      if (index < 0) return NextResponse.json({ error: 'Для карточек челленджа нужна другая схема' }, { status: 400 });
+      featuredBySlot.set(index, card);
+    }
 
     // Resolve the user exclusively from the signed Telegram session.
     let dbUserId: string | undefined;
@@ -199,11 +212,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Create 11 game slots from the formation
-    const slotsData = formationData.slots.map((slot, index) => ({
+    const slotsData = formationData.slots.map((slot, index) => {
+      const featured = featuredBySlot.get(index);
+      return ({
       runId: run.id,
       slotPosition: `${slot.position}_${index}`,
       isCompatible: true,
-      ...(featured && index === featuredIndex ? {
+      ...(featured ? {
         playerSeasonId: featured.id,
         playerSeasonYear: featured.clubSeason.season.startYear,
         playerName: featured.player.alias || featured.player.fullName,
@@ -214,7 +229,7 @@ export async function POST(request: NextRequest) {
         playerOtherPositions: featured.otherPositions,
         playerNationality: featured.nationality || featured.player.nationality,
       } : {}),
-    }));
+    }); });
 
     await db.gameSlot.createMany({ data: slotsData });
 

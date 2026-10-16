@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
         "single_club",
         "challenge_vagner",
         "challenge_dzyuba",
+        "challenge_cska_blitz", "challenge_akron_keeper",
       ].includes(mode)
     )
       return NextResponse.json(
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
         completed: false,
         userId,
         multiplayerSeat: null,
+        multiplayerRoomCode: null,
         gameMode: mode,
         ...(mode === "single_club"
           ? { slots: { some: { playerSeasonId: { not: null } } } }

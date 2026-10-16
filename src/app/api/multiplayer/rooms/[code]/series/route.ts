@@ -28,7 +28,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ code
   const root = final.seriesRootCode ?? final.code;
   const rooms = await db.multiplayerRoom.findMany({ where: { OR: [{ code: root }, { seriesRootCode: root }], status: 'completed' },
     orderBy: { seriesRound: 'asc' }, include: { seats: { include: { run: { include: { slots: true } } } } } });
-  const rounds = rooms.map(room => {
+  const snapshots = rooms.flatMap(room => [...JSON.parse(room.roundsJson || '[]') as typeof rooms, room]);
+  const rounds = snapshots.sort((a,b) => a.seriesRound-b.seriesRound).map(room => {
     type Result = { id: string; name: string; rating: number; wins: number; points: number; goalsFor: number; matches: { for: number; against: number }[] };
     const results = JSON.parse(room.resultJson ?? '[]') as Result[];
     return { round: room.seriesRound, code: room.code, winner: results[0]?.name ?? '',

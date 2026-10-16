@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getClubTheme } from '@/lib/clubThemes';
 import { localizePlayerName } from '@/lib/footballNames';
 import { localizedClubName } from '@/lib/clubDisplayName';
+import { challengeModeTitle } from '@/lib/weeklyChallenges';
 import { translateInterface } from '@/lib/enTranslations';
 
 interface Props {
@@ -30,7 +31,7 @@ export default function ResultShareCard({ data, trophies = [], teamName, manager
   const club = getClubTheme(mode === 'single_club' ? clubName ?? undefined : undefined);
   const primary = mode === 'challenge' ? challengeId === 'challenge_vagner' ? '#e53945' : '#30a4e8' : mode === 'multiplayer' ? '#a78bfa' : club.primary;
   const secondary = mode === 'challenge' ? challengeId === 'challenge_vagner' ? '#1844a4' : '#132d53' : mode === 'multiplayer' ? '#59309b' : club.secondary;
-  const modeLabel = mode === 'single_club' ? localizedClubName(clubName, english ? 'en' : 'ru') || (english ? 'One club' : 'Один клуб') : mode === 'challenge' ? challengeId === 'challenge_vagner' ? (english ? 'Vagner Love · Legend' : 'Вагнер Лав · Легенда') : (english ? 'Dzyuba · Goalscoring era' : 'Голевая эпоха · Дзюба') : mode === 'multiplayer' ? (english ? 'Multiplayer' : 'Мультиплеер') : (english ? 'Classic draft' : 'Обычный драфт');
+  const modeLabel = mode === 'single_club' ? localizedClubName(clubName, english ? 'en' : 'ru') || (english ? 'One club' : 'Один клуб') : mode === 'challenge' ? challengeModeTitle(challengeId, english ? 'en' : 'ru') : mode === 'multiplayer' ? (english ? 'Multiplayer' : 'Мультиплеер') : (english ? 'Classic draft' : 'Обычный драфт');
   return <div style={{ width: 540, height: 960, boxSizing: 'border-box', overflow: 'hidden', position: 'relative', padding: 30, background: `radial-gradient(circle at 50% 0%, ${secondary}, #070b10 55%)`, color: '#fff', fontFamily: 'Arial, sans-serif' }}>
     <div style={{ height: '100%', border: `1px solid ${primary}70`, borderRadius: 22, background: 'linear-gradient(150deg, #0b211bdd, #080a11f5 65%)', padding: '27px 25px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}><img src="/brand-30-0.svg" alt="30-0" width={48} height={48} /><span style={{ border: `1px solid ${primary}99`, borderRadius: 20, color: primary, padding: '5px 12px', fontSize: 11, fontWeight: 700 }}>{modeLabel}</span></div>

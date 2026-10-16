@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   ]);
   if (!recipient || !sender) return NextResponse.json({ error: 'Игрок не найден' }, { status: 404 });
   let room = typeof code === 'string' && /^[A-HJ-NP-Z2-9]{6}$/.test(code) ? await db.multiplayerRoom.findUnique({ where: { code } }) : null;
-  if (code && (!room || room.status !== 'lobby' || room.seatCount >= room.maxPlayers || !await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: room.code, userId } } })))
+  if (code && (!room || room.status !== 'lobby' || room.seriesRound > 1 || room.seatCount >= room.maxPlayers || !await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: room.code, userId } } })))
     return NextResponse.json({ error: 'Лобби недоступно' }, { status: 409 });
   if (!room) {
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -76,7 +76,7 @@ export async function PATCH(request: Request) {
       if (!claimed.count) throw new Error('Приглашение уже обработано');
       const seat = await tx.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: invitation.roomCode, userId } } });
       if (!seat) {
-        const reserved = await tx.multiplayerRoom.updateMany({ where: { code: invitation.roomCode, status: 'lobby', seatCount: { lt: 6 } }, data: { seatCount: { increment: 1 } } });
+        const reserved = await tx.multiplayerRoom.updateMany({ where: { code: invitation.roomCode, status: 'lobby', seriesRound: 1, seatCount: { lt: 6 } }, data: { seatCount: { increment: 1 } } });
         if (!reserved.count) throw new Error('Лобби уже закрыто');
         const room = await tx.multiplayerRoom.findUnique({ where: { code: invitation.roomCode }, select: { seatCount: true, maxPlayers: true } });
         if (!room || room.seatCount > room.maxPlayers) throw new Error('Все места заняты');

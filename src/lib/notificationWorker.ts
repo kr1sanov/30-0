@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { queueSeasonResult } from "./seasonResultNotification";
-import { syncCloudPreferences } from "./cloudPreferences";
+import { syncCloudPreferences, usesNotificationRelay } from "./cloudPreferences";
 import { runNotificationSchedule } from "./notificationScheduler";
 import { flushSocialNotifications } from "./socialNotifications";
 let busy = false;
@@ -8,7 +8,7 @@ export async function notificationWorker() {
   if (busy) return;
   busy = true;
   try {
-    await syncCloudPreferences();
+    if (!await usesNotificationRelay()) await syncCloudPreferences().catch(() => console.error("Preference synchronization deferred"));
     await runNotificationSchedule();
     const runs = await db.gameRun.findMany({
       where: {

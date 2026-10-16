@@ -3,6 +3,7 @@ export type FootballLanguage = 'ru' | 'en';
 // Common spellings override mechanical transliteration. Source Latin names remain
 // unchanged in English; display names never change roster identities or aliases.
 const spellings: Record<string, string> = {
+  Ignat:'Игнат', Terekhovskiy:'Тереховский', Borisko:'Бориско', Oblyakov:'Обляков',
   Eduard:'Эдуард', Eduardo:'Эдуардо', Erik:'Эрик', Eric:'Эрик', Emmanuel:'Эммануэль',
   Elvir:'Элвир', Edgar:'Эдгар', Edin:'Эдин', Eldar:'Эльдар', Adil:'Адиль',
   Mathieu:'Матьё', Valbuena:'Вальбуэна', Pierre:'Пьер', Odiah:'Одиа',

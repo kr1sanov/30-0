@@ -52,6 +52,7 @@ interface GameRunData {
   challengeSucceeded?: boolean | null;
   multiplayerSeat?: { roomCode: string } | null;
   opponents?: string[];
+  seriesRounds?: Array<{ id: string; round: number | null; points: number | null; position: number | null; slots: GameSlotData[] }>;
   clubName?: string | null;
   createdAt: string;
   slots: GameSlotData[];
@@ -390,7 +391,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-semibold text-[#9CA3AF]">{modes.find(([key]) => key === (run.gameMode ?? 'classic'))?.[1]}</span>
-                        {run.challengeId && <span className="text-[10px] font-bold text-sky-300">{run.challengeIssueId ? findWeeklyChallenge(run.challengeIssueId)?.titleRu ?? (run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба') : run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба'}</span>}
+                        {run.challengeId && <span className="text-[10px] font-bold text-sky-300">{run.challengeIssueId ? findWeeklyChallenge(run.challengeIssueId, new Date('2100-01-01'))?.titleRu ?? (run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба') : run.challengeId === 'challenge_vagner' ? 'Вагнер Лав' : 'Артём Дзюба'}</span>}
                         {run.challengeIssueId && <span className={`text-[10px] font-bold ${run.challengeSucceeded ? 'text-emerald-300' : 'text-[#9CA3AF]'}`}>{run.challengeSucceeded ? 'Задание выполнено' : 'Задание не выполнено'}</span>}
                         {/* Formation */}
                         <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#3b82f6]/15 text-[#3b82f6]">
@@ -476,6 +477,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                             </span>
                           </div>
                         )}
+
+                        {(run.seriesRounds?.length ?? 0) > 1 && <div className="space-y-2">{run.seriesRounds?.map((round, index) => <details key={round.id} className="rounded-xl border border-violet-400/20 p-3"><summary className="cursor-pointer text-sm text-violet-300">Раунд {round.round ?? run.seriesRounds!.length-index} · {round.points} очков · {round.position}-е место</summary><div className="mt-2 grid gap-1 text-xs text-slate-300 sm:grid-cols-2">{round.slots.map(slot => <span key={slot.id}>{slot.slotPosition.split('_')[0]} · {playerName(slot.playerName || slot.playerLastName || '—')}</span>)}</div></details>)}</div>}
 
                         {/* Stats row */}
                         <div className="grid grid-cols-3 gap-2">

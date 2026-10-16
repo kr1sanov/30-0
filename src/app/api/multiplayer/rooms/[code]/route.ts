@@ -29,6 +29,7 @@ export async function GET(request: Request, { params }: Context) {
   const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } } });
   if (!authorized) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
   await syncLobbyCountdown(code.toUpperCase());
+  await db.multiplayerSeat.update({ where: { id: authorized.id }, data: { lastSeenAt: new Date() } });
   const allReady = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false, room: { status: 'drafting' } } }) === 0;
   if (allReady) {
     const deadline = new Date(Date.now() + 10_000);
@@ -81,7 +82,7 @@ export async function PATCH(request: Request, { params }: Context) {
       const name = roomName(body.name);
       if (!validFormation(formation) || name.length < 2) return NextResponse.json({ error: 'Проверь имя и схему' }, { status: 400 });
       await db.multiplayerSeat.update({ where: { roomCode_userId: { roomCode: room.code, userId } },
-        data: { formation, name, ready: Boolean(body.ready) } });
+        data: { formation, name, ready: Boolean(body.ready), lastSeenAt: new Date() } });
     } else if (body.action === 'capacity') {
       const maxPlayers = Number(body.maxPlayers);
       if (!Number.isInteger(maxPlayers) || maxPlayers < room.seatCount || maxPlayers > 6 || maxPlayers < 2)

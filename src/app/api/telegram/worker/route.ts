@@ -5,6 +5,7 @@ import {
   cloudErrorReason,
 } from "@/lib/cloudPreferences";
 import { notificationWorker } from "@/lib/notificationWorker";
+import { relayAction } from '@/lib/notificationRelay';
 export async function POST(request: Request) {
   const secret = workerSecret(),
     supplied = request.headers.get("X-30-0-Worker") || "";
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
   )
     return Response.json({ error: "Access denied" }, { status: 401 });
   try {
+    const body = await request.json().catch(() => ({}));
+    if (body.action) return Response.json(await relayAction(body));
     await notificationWorker();
     return Response.json({ ok: true });
   } catch {

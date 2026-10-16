@@ -24,8 +24,9 @@ export async function POST(request: Request) {
       if (!room) return NextResponse.json({ error: 'Комната не найдена' }, { status: 404 });
       const existing = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code, userId } } });
       if (existing) return NextResponse.json({ code });
+      if (room.seriesRound > 1) return NextResponse.json({ error: 'Правила и участники серии уже зафиксированы' }, { status: 409 });
       if (room.status !== 'lobby') return NextResponse.json({ error: 'Драфт уже начался' }, { status: 409 });
-      const reserved = await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby', seatCount: { lt: room.maxPlayers } }, data: { seatCount: { increment: 1 } } });
+      const reserved = await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby', seriesRound: 1, seatCount: { lt: room.maxPlayers } }, data: { seatCount: { increment: 1 } } });
       if (!reserved.count) return NextResponse.json({ error: 'Все места заняты' }, { status: 409 });
       try { await db.multiplayerSeat.create({ data: { roomCode: code, userId, name } }); }
       catch (error) { await db.multiplayerRoom.update({ where: { code }, data: { seatCount: { decrement: 1 } } }); throw error; }

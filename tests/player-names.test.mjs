@@ -11,3 +11,10 @@ test('the surname is first for both Russian and English source ordering', () => 
   assert.deepEqual(playerDisplayName('Игнашевич Сергей', 'Игнашевич'), { surname: 'Игнашевич', given: 'Сергей' });
   assert.deepEqual(playerDisplayName('Sergei Ignashevich', 'Ignashevich'), { surname: 'Ignashevich', given: 'Sergei' });
 });
+
+test('historical imports with full names in lastName display only the surname', () => {
+  for (const [full, surname] of [['Vladimir Moskvychev','Moskvychev'],['Дмитрий Скопинцев','Скопинцев'],['Denis Adamov','Adamov'],['Zelimkhan Bakaev','Bakaev'],['Kirill Kaplenko','Kaplenko']]) {
+    assert.equal(playerDisplayName(full,full).surname,surname);
+    assert.notEqual(playerDisplayName(full,full).given,'');
+  }
+});

@@ -47,7 +47,7 @@ export async function GET(request: Request, { params }: Context) {
         clubFilter: true,
         losses: true,
         goalsAgainst: true,
-        multiplayerSeat: { select: { id: true } },
+        multiplayerSeat: { select: { id: true } }, multiplayerRoomCode: true,
       },
     }),
     viewer && viewer !== user.id
@@ -222,10 +222,10 @@ export async function GET(request: Request, { params }: Context) {
           mode,
           runs.filter((run) =>
             mode === "multiplayer"
-              ? Boolean(run.multiplayerSeat)
+              ? Boolean(run.multiplayerSeat || run.multiplayerRoomCode)
               : mode === "challenges"
                 ? run.gameMode.startsWith("challenge_")
-                : !run.multiplayerSeat && run.gameMode === mode,
+                : !run.multiplayerSeat && !run.multiplayerRoomCode && run.gameMode === mode,
           ).length,
         ]),
       ),

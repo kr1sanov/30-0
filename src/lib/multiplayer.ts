@@ -1,3 +1,4 @@
+import { simulateContributions, type SeasonPlayerStat } from './seasonAnalytics';
 import { queueSeasonResult } from './seasonResultNotification';
 import { randomBytes } from 'node:crypto';
 import { db } from '@/lib/db';
@@ -14,6 +15,7 @@ export type SeriesScore = Record<string, { name: string; wins: number; seasonWin
 export async function syncLobbyCountdown(code: string) {
   const room = await db.multiplayerRoom.findUnique({ where: { code }, select: { status: true, draftStartAt: true } });
   if (!room || room.status !== 'lobby') return;
+  await db.multiplayerSeat.updateMany({ where: { roomCode: code, isBot: false, ready: true, OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: new Date(Date.now() - 12_000) } }] }, data: { ready: false } });
   const seats = await db.multiplayerSeat.findMany({ where: { roomCode: code }, select: { ready: true } });
   if (seats.length < 2 || seats.some(seat => !seat.ready)) {
     if (room.draftStartAt) await db.multiplayerRoom.updateMany({ where: { code, status: 'lobby' }, data: { draftStartAt: null } });
@@ -65,10 +67,11 @@ export async function publicRoom(code: string, userId: string) {
   };
 }
 
-export async function createSeatRun(seat: { id: string; name: string; formation: string }, room: { ratingMode: string; draftMode: string; eraFilter: string; eraStartYear: number; eraEndYear: number }, userId?: string) {
+export async function createSeatRun(seat: { id: string; name: string; formation: string }, room: { code: string; seriesRound: number; ratingMode: string; draftMode: string; eraFilter: string; eraStartYear: number; eraEndYear: number }, userId?: string) {
   const formation = FORMATIONS.find(value => value.id === seat.formation);
   if (!formation) throw new Error('Неизвестная схема');
   const run = await db.gameRun.create({ data: {
+    gameMode: 'multiplayer', multiplayerRoomCode: room.code, multiplayerRound: room.seriesRound,
     formation: seat.formation, ratingMode: room.ratingMode, eraStartYear: room.eraStartYear,
     eraEndYear: room.eraEndYear, eraFilter: room.eraFilter, difficulty: 'normal', draftMode: room.draftMode,
     teamName: seat.name, ...(userId ? { userId } : {}),
@@ -78,7 +81,7 @@ export async function createSeatRun(seat: { id: string; name: string; formation:
   return run.id;
 }
 
-type Result = { id: string; name: string; points: number; wins: number; draws: number; losses: number;
+type Result = { playerStats?: SeasonPlayerStat[]; id: string; name: string; points: number; wins: number; draws: number; losses: number;
   goalsFor: number; goalsAgainst: number; rating: number; forfeited: boolean; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 
 // Resolve the room once, from the same squads. Each head-to-head fixture is
@@ -125,6 +128,10 @@ export async function resolveRoom(code: string) {
   }
   for (const result of results) result.points = result.wins * 3 + result.draws;
   results.sort((a,b) => Number(a.forfeited)-Number(b.forfeited) || b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor || a.id.localeCompare(b.id));
+  for (const result of results) {
+    const seat = room.seats.find(seat => seat.id === result.id)!;
+    result.playerStats = simulateContributions(result.name, seat.run!.slots.map(slot => ({ name: slot.playerName || '', position: slot.slotPosition.split('_')[0], rating: slot.playerRating || 0 })), result.goalsFor, `${seat.runId}:${result.id}`).stats;
+  }
   const scores: SeriesScore = room.seriesScoreJson ? JSON.parse(room.seriesScoreJson) : {};
   let seriesWinnerKey: string | null = null;
   if (room.seriesTargetWins > 0) {

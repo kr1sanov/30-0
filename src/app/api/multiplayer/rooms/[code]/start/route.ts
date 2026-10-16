@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { createSeatRun } from '@/lib/multiplayer';
+import { createSeatRun, syncLobbyCountdown } from '@/lib/multiplayer';
 import { draftBot } from '@/lib/multiplayerBots';
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
@@ -12,11 +12,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ cod
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый запрос' }, { status: 403 });
   const userId = sessionUser(request);
   const { code } = await params;
+  await syncLobbyCountdown(code.toUpperCase());
   const room = await db.multiplayerRoom.findUnique({ where: { code: code.toUpperCase() }, include: { seats: true } });
   if (!room || !userId || !room.seats.some(seat => seat.userId === userId)) return NextResponse.json({ error: 'Нет доступа к игре' }, { status: 403 });
   if (room.status !== 'lobby' || room.seats.length < 2 || room.seats.some(seat => !seat.ready) || !room.draftStartAt || room.draftStartAt.getTime() > Date.now())
     return NextResponse.json({ error: 'Дождись готовности игроков и конца отсчёта' }, { status: 409 });
-  const claimed = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', draftStartAt: { lte: new Date() } }, data: { status: 'starting' } });
+  // Require a visible heartbeat after the countdown, not merely a recent ready flag.
+  if (room.seats.some(seat => !seat.isBot && (!seat.lastSeenAt || seat.lastSeenAt < room.draftStartAt!)))
+    return NextResponse.json({ error: 'Ожидаем подтверждение присутствия игроков' }, { status: 409 });
+  const claimed = await db.multiplayerRoom.updateMany({ where: { code: room.code, status: 'lobby', draftStartAt: { lte: new Date() }, seats: { none: { OR: [{ ready: false }, { isBot: false, OR: [{ lastSeenAt: null }, { lastSeenAt: { lt: new Date(Math.max(Date.now() - 12_000, room.draftStartAt.getTime())) } }] }] } } }, data: { status: 'starting' } });
   if (!claimed.count) return NextResponse.json({ error: 'Игра уже началась' }, { status: 409 });
   const createdRunIds: string[] = [];
   try {

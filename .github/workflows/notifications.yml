@@ -19,19 +19,13 @@ jobs:
     environment: production
     timeout-minutes: 3
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Wake Jino and process eligible notifications
+      - name: Synchronize preferences and deliver notification queue
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-          BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
-        run: |
-          node --input-type=module <<'JS'
-          import { createHash } from 'node:crypto';
-          if(!process.env.TGCLOUD_TOKEN)throw new Error('Notification worker credentials are not configured');
-          const secret=process.env.BRIDGE_SECRET||createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
-          const res=await fetch('https://30-0.xn--p1ai/api/telegram/worker',{method:'POST',headers:{'X-30-0-Worker':secret},signal:AbortSignal.timeout(60000)});
-          if(!res.ok)throw new Error('Notification worker unavailable: HTTP '+res.status);
-          console.log('Notification queue processed');
-          JS
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: node scripts/notification-relay.mjs

@@ -4,6 +4,7 @@ export interface OneClubCandidate {
   nameEn?: string | null;
   city?: string | null;
   oneClubHidden?: boolean;
+  oneClubShown?: boolean;
   seasons: Array<{ season?: { startYear: number }; players: Array<{ playerId: string; mainPosition: string }> }>;
 }
 
@@ -22,7 +23,7 @@ export function formatSeasonPeriods(years: number[]): string {
 
 /** Rank clubs by unique season appearances across available roster editions. */
 export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[], includeHidden = false) {
-  const minSeasons = 8;
+  const minSeasons = 9;
   const minPlayers = 20;
   return clubs.map((club) => {
     const players = new Map<string, string>();
@@ -39,11 +40,12 @@ export function selectOneClubCandidates<T extends OneClubCandidate>(clubs: T[], 
     const years = club.seasons.map(s => s.season?.startYear ?? NaN).filter(Number.isFinite);
     return {
       id: club.id, nameRu: club.nameRu, nameEn: club.nameEn, city: club.city,
-      oneClubHidden: club.oneClubHidden ?? false,
-      seasonCount: club.seasons.length, playerCount: players.size,
+      playable: players.size >= minPlayers && hasGoalkeeper && hasDefenders && hasMidfielders && hasAttackers,
+      oneClubHidden: Boolean(club.oneClubHidden || players.size < minPlayers || !hasGoalkeeper || !hasDefenders || !hasMidfielders || !hasAttackers || (!club.oneClubShown && (new Set(years).size || club.seasons.length) < minSeasons)),
+      seasonCount: new Set(years).size || club.seasons.length, playerCount: players.size,
       periods: formatSeasonPeriods(years),
       hasGoalkeeper, hasDefenders, hasMidfielders, hasAttackers,
     };
-  }).filter((club) => (includeHidden || !club.oneClubHidden) && club.seasonCount >= minSeasons && club.playerCount >= minPlayers && club.hasGoalkeeper && club.hasDefenders && club.hasMidfielders && club.hasAttackers)
+  }).filter((club) => includeHidden || (!club.oneClubHidden && club.playerCount >= minPlayers && club.hasGoalkeeper && club.hasDefenders && club.hasMidfielders && club.hasAttackers))
     .sort((a, b) => b.seasonCount - a.seasonCount || b.playerCount - a.playerCount || a.nameRu.localeCompare(b.nameRu, 'ru'));
 }

@@ -42,34 +42,22 @@ export async function currentPreferences(
       });
     return prefs;
   }
-  const tgId = Number(user.providerId.replace("telegram_", ""));
-  const initial = (await cloud.callCloudPreferences("get", {
-    tgId,
-    seed: preferencesFromUser(user),
-  })) as CloudRecord;
-  const record = patch
-    ? ((await cloud.callCloudPreferences("set", {
-        tgId,
-        patch,
-      })) as CloudRecord)
-    : initial;
-  if (!record?.preferences || !Number.isInteger(record.revision))
-    throw new Error("Invalid preference service response");
-  await db.user.updateMany({
-    where: { id: userId, notificationsRevision: { lte: record.revision } },
-    data: {
-      ...preferenceData(record.preferences),
-      notificationsRevision: record.revision,
-      ...(record.started ? { telegramChatStarted: true } : {}),
-    },
-  });
-  if (patch)
-    await cloud.callCloudPreferences("ack", {
-      tgId,
-      revision: record.revision,
+  // Jino cannot reach the cloud endpoint. The authenticated external relay
+  // synchronizes this durable mirror in both directions.
+  if (patch) {
+    await db.$transaction(async tx => {
+      const latest = await tx.user.findUniqueOrThrow({ where: { id: userId } });
+      const pending = JSON.parse(latest.pendingNotificationPatch || '{}');
+      await tx.user.update({ where: { id: userId }, data: {
+        ...preferenceData({ ...preferencesFromUser(latest), ...patch }),
+        pendingNotificationPatch: JSON.stringify({ ...pending, ...patch }),
+      } });
     });
-  return record.preferences;
+  }
+  return preferencesFromUser(await db.user.findUniqueOrThrow({ where: { id: userId } }));
 }
+export async function usesNotificationRelay() { return (await client()).cloudConfigured(); }
+
 export async function syncCloudPreferences() {
   const cloud = await client();
   if (!cloud.cloudConfigured()) return;
@@ -164,9 +152,6 @@ export async function verifyCloudPreferences() {
 
 /** Bot language is independent from either browser interface language. */
 export async function currentBotLanguage(userId: string): Promise<'ru' | 'en'> {
-  const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { providerId: true } });
-  const cloud = await client();
-  if (!cloud.cloudConfigured()) return 'ru';
-  const record = await cloud.callCloudPreferences('get', { tgId: Number(user.providerId.replace('telegram_', '')) });
-  return record.language === 'en' ? 'en' : 'ru';
+  const user = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { botLanguage: true } });
+  return user.botLanguage === 'en' ? 'en' : 'ru';
 }

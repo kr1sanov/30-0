@@ -1,3 +1,4 @@
+import { challengeModeTitle } from '@/lib/weeklyChallenges';
 import { ImageResponse } from 'next/og';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -14,7 +15,7 @@ export async function storyImage(run: NonNullable<Awaited<ReturnType<typeof shar
   const theme = getClubTheme(club?.nameRu);
   const primary = run.gameMode === 'challenge_vagner' ? '#e53945' : run.gameMode === 'challenge_dzyuba' ? '#30a4e8' : run.gameMode === 'single_club' ? theme.primary : run.gameMode === 'multiplayer' ? '#a78bfa' : '#00C896';
   const secondary = run.gameMode === 'challenge_vagner' ? '#172554' : run.gameMode === 'challenge_dzyuba' ? '#163d5e' : run.gameMode === 'single_club' ? theme.secondary : '#092b25';
-  const mode = run.gameMode === 'challenge_vagner' ? 'Vagner Love' : run.gameMode === 'challenge_dzyuba' ? 'Artem Dzyuba' : run.gameMode === 'single_club' ? (lang === 'en' ? club?.nameEn || club?.nameRu : club?.nameRu) || (lang === 'en' ? 'One club' : 'Один клуб') : run.gameMode === 'multiplayer' ? (lang === 'en' ? 'Multiplayer' : 'Мультиплеер') : (lang === 'en' ? 'Classic draft' : 'Обычный драфт');
+  const mode = run.gameMode.startsWith('challenge_') ? challengeModeTitle(run.gameMode, lang) : run.gameMode === 'single_club' ? (lang === 'en' ? club?.nameEn || club?.nameRu : club?.nameRu) || (lang === 'en' ? 'One club' : 'Один клуб') : run.gameMode === 'multiplayer' ? (lang === 'en' ? 'Multiplayer' : 'Мультиплеер') : (lang === 'en' ? 'Classic draft' : 'Обычный драфт');
   const words = lang === 'en' ? { project: 'Russian Premier League Draft', points: 'pts', place: 'place', scored: 'Scored', conceded: 'Conceded', formation: 'Formation', squad: 'SEASON XI', champion: 'CHAMPION' } : { project: 'Драфт Российской Премьер-лиги', points: 'очков', place: 'место', scored: 'Забито', conceded: 'Пропущено', formation: 'Схема', squad: 'СОСТАВ СЕЗОНА', champion: 'ЧЕМПИОН' };
   return new ImageResponse(<div style={{ display: 'flex', width: 1080, height: 1920, background: `linear-gradient(155deg, ${secondary}, #070b10 65%)`, padding: 58, boxSizing: 'border-box', color: '#fff', fontFamily: 'sans-serif' }}>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', height: '100%', border: `3px solid ${primary}88`, borderRadius: 46, background: 'linear-gradient(155deg, #0b211b, #080a11 70%)', padding: '56px 48px', boxSizing: 'border-box' }}>

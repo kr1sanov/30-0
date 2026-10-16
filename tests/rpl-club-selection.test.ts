@@ -14,9 +14,9 @@ function club(id: string, seasons: number, playerCount = 30, includeKeeper = tru
   };
 }
 
-test('requires more than seven roster seasons and ranks eligible clubs', () => {
+test('requires more than eight roster seasons and ranks eligible clubs', () => {
   const result = selectOneClubCandidates([club('7 seasons', 7), club('9 seasons', 9), club('8 seasons', 8)]);
-  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons', '8 seasons']);
+  assert.deepEqual(result.map((item) => item.nameRu), ['9 seasons']);
   assert.equal(result[0].playerCount, 30);
 });
 
@@ -40,4 +40,17 @@ test('hidden clubs are excluded from the game but remain manageable in admin', (
 
 test('lists only recorded periods, keeping gaps in the archive visible', () => {
   assert.equal(formatSeasonPeriods([2010, 2007, 2006, 2010, 2012, 2013]), '2006–2007, 2010, 2012–2013');
+});
+
+test('admin sees short histories and can explicitly open a playable club', () => {
+  const short = club('short', 3);
+  assert.equal(selectOneClubCandidates([short]).length, 0);
+  assert.equal(selectOneClubCandidates([short], true)[0].oneClubHidden, true);
+  assert.equal(selectOneClubCandidates([{ ...short, oneClubShown: true }]).length, 1);
+});
+test('duplicate editions of a year do not count as different RPL seasons', () => {
+  const duplicate = club('duplicate', 9);
+  const withYears = { ...duplicate, seasons: duplicate.seasons.map(s => ({ ...s, season: { startYear: 2020 } })) };
+  assert.equal(selectOneClubCandidates([withYears]).length, 0);
+  assert.equal(selectOneClubCandidates([withYears], true)[0].seasonCount, 1);
 });

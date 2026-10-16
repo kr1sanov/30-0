@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { localizedClubName } from './clubDisplayName.ts';
 
 export interface ClubTheme {
   primary: string;
@@ -91,9 +92,11 @@ const HISTORICAL_CLUB_THEMES: Record<string, string> = {
   'SKA Khabarovsk': 'СКА-Хабаровск', 'FC Tosno': 'Тосно',
 };
 
+const CANONICAL_THEMES = new Map(Object.entries(CLUB_THEMES).map(([name, theme]) => [localizedClubName(name, 'en'), theme]));
+
 export function getClubTheme(clubName?: string): ClubTheme {
   if (!clubName) return DEFAULT_CLUB_THEME;
-  return CLUB_THEMES[HISTORICAL_CLUB_THEMES[clubName] ?? clubName] ?? DEFAULT_CLUB_THEME;
+  return CLUB_THEMES[HISTORICAL_CLUB_THEMES[clubName] ?? clubName] ?? CANONICAL_THEMES.get(localizedClubName(clubName, 'en')) ?? DEFAULT_CLUB_THEME;
 }
 
 export type ClubThemeStyle = CSSProperties & Record<`--${string}`, string>;

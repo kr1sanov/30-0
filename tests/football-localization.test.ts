@@ -61,8 +61,8 @@ test('club aliases switch consistently, including newcomers and historical names
   assert.equal(localizedClubName('Dinamo Makhachkala','ru'),'Динамо Махачкала');
   assert.equal(localizedClubName('Балтика','en'),'Baltika Kaliningrad');
   assert.equal(translateInterface('Акрон'),'Akron Togliatti');
-  assert.equal(localizedClubName('Terek Grozny','ru'),'Терек');
-  assert.equal(localizedClubName('Akhmat Grozny','ru'),'Ахмат');
+  assert.equal(localizedClubName('Terek Grozny','ru'),'Терек Грозный');
+  assert.equal(localizedClubName('Akhmat Grozny','ru'),'Ахмат Грозный');
   assert.equal(localizedClubName('Unlisted club','en'),'Unlisted club');
 });
 

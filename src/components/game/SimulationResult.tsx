@@ -1,4 +1,6 @@
 'use client';
+import { challengeModeTitle } from '@/lib/weeklyChallenges';
+import SeasonPlayerStats from './SeasonPlayerStats';
 import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
@@ -36,6 +38,7 @@ interface Trophy {
 }
 
 interface SeasonResultData {
+  playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[];
   runId?: string;
   wins: number;
   draws: number;
@@ -50,6 +53,9 @@ interface SeasonResultData {
   januaryTransferModifier?: number;
   table?: Array<{
     position: number;
+    participantId?: string;
+    isYou?: boolean;
+    isHuman?: boolean;
     name: string;
     played: number;
     won: number;
@@ -328,8 +334,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
     const lines = [
       `⚽ МОЙ СЕЗОН В 30–0`,
       config.gameMode === 'single_club' ? `🏟️ Клуб: ${clubName(config.clubName) || 'выбранный клуб'}`
-        : config.gameMode === 'challenge_vagner' ? '❤️ Челлендж: Вагнер Лав'
-        : config.gameMode === 'challenge_dzyuba' ? '🎯 Челлендж: Артём Дзюба'
+        : config.gameMode?.startsWith('challenge_') ? challengeModeTitle(config.gameMode)
         : `🏟️ Обычный драфт · ${config.formation}`,
       `🏆 Итог: ${pos} место · ${data.points} очков`,
       `✅ ${data.wins} побед · 🤝 ${data.draws} ничьих · ❌ ${data.losses} поражений`,
@@ -518,6 +523,8 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
               </div>)}
             </div>
 
+            {data.playerStats && <SeasonPlayerStats stats={data.playerStats} ownTeam={config.teamName || 'Моя команда'} />}
+
             {/* ── Secondary Achievements ── */}
             {achievements.length > 0 && (
               <div className="grid grid-cols-2 gap-2">
@@ -578,18 +585,19 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                           </thead>
                           <tbody>
                             {data.table.map((team) => {
-                              const isPlayer = team.name === (config.teamName || 'Моя команда');
+                              const isPlayer = team.isYou ?? team.name === (config.teamName || 'Моя команда');
+                              const participantColor = ['text-sky-300 bg-sky-500/10','text-violet-300 bg-violet-500/10','text-amber-300 bg-amber-500/10','text-rose-300 bg-rose-500/10','text-cyan-300 bg-cyan-500/10'][data.table!.filter(t => t.isHuman).findIndex(t => t.participantId === team.participantId) % 5] || 'text-sky-300 bg-sky-500/10';
                               return (
                                 <tr
                                   key={team.position}
                                   className={`${
                                     isPlayer
                                       ? 'bg-[#00C896]/10 font-bold text-[#00C896]'
-                                      : multiplayer?.friendNames?.includes(team.name) ? 'bg-sky-500/10 font-bold text-sky-300' : 'text-[#9CA3AF]'
+                                      : team.isHuman ? `${participantColor} font-bold` : 'text-[#9CA3AF]'
                                   }`}
                                 >
                                   <td className="py-1.5 pr-2">{team.position}</td>
-                                  <td className="py-1.5">{team.name}</td>
+                                  <td className="py-1.5">{isPlayer ? <>{team.name} · Моя команда</> : team.isHuman ? team.name : clubName(team.name)}</td>
                                   <td className="text-center py-1.5 px-1">{team.played}</td>
                                   <td className="text-center py-1.5 px-1">{team.won}</td>
                                   <td className="text-center py-1.5 px-1">{team.drawn}</td>
