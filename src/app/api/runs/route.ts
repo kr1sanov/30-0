@@ -37,19 +37,20 @@ export async function GET(request: NextRequest) {
         ? [{ points: 'desc' }, { createdAt: 'desc' }]
         : [{ createdAt: 'desc' }];
 
-    const runs = await db.gameRun.findMany({
-      where,
-      include: {
+    const include = {
         slots: {
           orderBy: { slotPosition: 'asc' },
         },
         multiplayerSeat: { select: { roomCode: true, room: { select: { seriesRootCode: true, seriesTargetWins: true, seats: {
           select: { userId: true, name: true, isBot: true, user: { select: { username: true } } },
         } } } } },
-      },
-      orderBy,
-      take: limit,
-    });
+      } as const;
+    const runs = await db.gameRun.findMany({ where, include, orderBy, take: limit });
+    const selected = searchParams.get('selected');
+    if (selected && /^[A-Za-z0-9_-]{1,100}$/.test(selected) && !runs.some(run => run.id === selected)) {
+      const requested = await db.gameRun.findFirst({ where: { id: selected, userId, completed: true }, include });
+      if (requested) runs.push(requested);
+    }
 
     const clubIds = [...new Set(runs.flatMap((run) => run.clubFilter ? [run.clubFilter] : []))];
     const clubs = clubIds.length

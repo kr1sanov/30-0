@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   const { isTelegram } = useTelegram();
   const profileStats = useGameStore((state) => state.profileStats);
   const { user, resetProfile } = useAuthStore();
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(() => typeof window !== 'undefined' && Boolean(localStorage.getItem('30-0-selected-run')));
   const [showTrophies, setShowTrophies] = useState(false);
   const [showReferrals, setShowReferrals] = useState(false);
   const [deleteAfterAt, setDeleteAfterAt] = useState<string | null>(null);

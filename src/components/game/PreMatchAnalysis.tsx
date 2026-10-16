@@ -189,7 +189,7 @@ export default function PreMatchAnalysis() {
   };
 
   return (
-    <div className="space-y-5 pb-4">
+    <div className="mx-auto max-w-3xl space-y-3 pb-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -201,7 +201,7 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="text-5xl mb-3"
+          className="text-2xl mb-1"
         >
           📋
         </motion.div>
@@ -215,7 +215,7 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-          className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
+          className="rounded-2xl bg-[#141414] p-3 text-center border border-[#141414]"
         >
           <div className="text-4xl font-black text-[#FFFFFF]">{animatedOverall}</div>
           <div className="text-sm text-[#9CA3AF] mt-1">Рейтинг</div>
@@ -226,7 +226,7 @@ export default function PreMatchAnalysis() {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
-          className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
+          className="rounded-2xl bg-[#141414] p-3 text-center border border-[#141414]"
         >
           <div className="relative w-14 h-14 mx-auto">
             <svg className="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
@@ -256,6 +256,35 @@ export default function PreMatchAnalysis() {
         </motion.div>
       </div>
 
+      {/* Simulate Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.15 }}
+      >
+        <Button
+          onClick={handleSimulate}
+          disabled={isSimulating}
+          className="w-full sm:w-auto sm:min-w-64 h-11 text-sm font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-2xl shadow-sm transition-all hover:shadow-[#00C896]/40 disabled:opacity-50"
+        >
+          {isSimulating ? (
+            <div className="flex items-center gap-2">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                ⚽
+              </motion.div>
+              <span>Симуляция...</span>
+            </div>
+          ) : (
+            'Сыграть сезон ▶'
+          )}
+        </Button>
+      </motion.div>
+      <details className="rounded-2xl border border-white/10 bg-[#101010] p-4">
+        <summary className="cursor-pointer text-sm font-bold">Подробный разбор состава</summary>
+        <div className="mt-4 space-y-3">
       {/* Category Rating Breakdown */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -330,7 +359,7 @@ export default function PreMatchAnalysis() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="rounded-2xl bg-[#141414] p-5 text-center border border-[#141414]"
+        className="rounded-2xl bg-[#141414] p-3 text-center border border-[#141414]"
       >
         <div className="text-xs text-[#9CA3AF] uppercase tracking-wider mb-2">Прогноз на сезон</div>
         <div className="text-3xl mb-2">{prediction.emoji}</div>
@@ -394,32 +423,10 @@ export default function PreMatchAnalysis() {
         </motion.div>
       )}
 
-      {/* Simulate Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.1 }}
-      >
-        <Button
-          onClick={handleSimulate}
-          disabled={isSimulating}
-          className="w-full h-16 text-lg font-black bg-gradient-to-r from-[#00C896] to-[#00A67A] hover:from-[#00A67A] hover:to-[#15803d] text-white rounded-2xl shadow-lg shadow-[#00C896]/25 transition-all hover:shadow-[#00C896]/40 disabled:opacity-50"
-        >
-          {isSimulating ? (
-            <div className="flex items-center gap-2">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                ⚽
-              </motion.div>
-              <span>Симуляция...</span>
-            </div>
-          ) : (
-            'Сыграть сезон ▶'
-          )}
-        </Button>
-      </motion.div>
+
+        </div>
+      </details>
+
     </div>
   );
 }

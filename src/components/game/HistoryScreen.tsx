@@ -1,4 +1,5 @@
 'use client';
+import { useAuthStore } from '@/store/authStore';
 import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -201,6 +202,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
   const [shareRun, setShareRun] = useState<GameRunData | null>(null);
   const [mode, setMode] = useState<'all' | 'classic' | 'single_club' | 'multiplayer' | 'challenge'>('all');
   const requestId = useRef(0);
+  const requestedScroll = useRef('');
+  const userId = useAuthStore(state => state.user?.id);
 
   const fetchRuns = useCallback(async () => {
     const currentRequest = ++requestId.current;
@@ -212,6 +215,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
         sort: 'date',
         limit: '100',
       });
+      const selectedRun = localStorage.getItem('30-0-selected-run');
+      if (selectedRun) params.set('selected', selectedRun);
       if (mode !== 'all') params.set('mode', mode);
       const res = await fetch(`/api/runs?${params.toString()}`);
       if (!res.ok) throw new Error('Ошибка загрузки');
@@ -219,8 +224,10 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
       if (currentRequest !== requestId.current) return;
       setRuns(data);
       const requestedRun = localStorage.getItem('30-0-selected-run');
-      if (requestedRun && Array.isArray(data) && data.some((run: GameRunData) => run.id === requestedRun)) {
-        setExpandedId(requestedRun);
+      const requestedEntry = requestedRun && Array.isArray(data) ? data.find((run: GameRunData) => run.id === requestedRun || run.seriesRounds?.some(round => round.id === requestedRun)) : null;
+      if (requestedEntry) {
+        requestedScroll.current = requestedEntry.id;
+        setExpandedId(requestedEntry.id);
         localStorage.removeItem('30-0-selected-run');
       }
     } catch (err) {
@@ -234,7 +241,13 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
 
   useEffect(() => {
     fetchRuns();
-  }, [fetchRuns]);
+  }, [fetchRuns, userId]);
+
+  useEffect(() => {
+    if (loading || !requestedScroll.current) return;
+    const element = document.getElementById(`history-run-${requestedScroll.current}`);
+    if (element) { requestedScroll.current = ''; element.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  }, [loading, runs]);
 
   const modes = [['all', 'Все'], ['classic', 'Обычный драфт'], ['single_club', 'Один клуб'], ['challenge', 'Челленджи'], ['multiplayer', 'Мультиплеер']] as const;
   const sections = [{ mode, items: runs }];
@@ -372,6 +385,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
             return (
               <motion.div
                 key={run.id}
+                id={`history-run-${run.id}`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.06, duration: 0.35 }}

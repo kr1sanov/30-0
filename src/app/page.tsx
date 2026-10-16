@@ -664,7 +664,7 @@ function DraftScreen() {
   }
 
   return (
-    <div className="space-y-3 animate-fade-in pb-24 sm:pb-4">
+    <div className="draft-stable space-y-3 animate-fade-in pb-24 sm:pb-4">
       {/* ── Draft Error Banner ── */}
       <AnimatePresence>
         {lastDraftError && (
@@ -754,40 +754,10 @@ function DraftScreen() {
         )}
       </AnimatePresence>
 
-      {/* ── Selected Player Instruction Banner ── */}
-      <AnimatePresence>
-        {selectedPlayer && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="rounded-xl bg-[#00C896]/10 border border-[#00C896]/30 px-3 py-2 flex items-center gap-2"
-          >
-            <span className="text-[#00C896] text-xs font-bold">👉</span>
-            <span className="text-xs text-[#00C896] font-medium">
-              Выбери позицию для <strong>{playerName(selectedPlayer.fullName)}</strong> в списке ниже
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Player Placed Success Banner ── */}
-      <AnimatePresence>
-        {lastPlacedInfo && !selectedPlayer && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-            className="rounded-xl bg-[#00C896]/15 border border-[#00C896]/40 px-3 py-2 flex items-center gap-2"
-          >
-            <span className="text-[#00C896] text-xs font-bold">✅</span>
-            <span className="text-xs text-[#00C896] font-medium">
-              <strong>{playerName(lastPlacedInfo.name)}</strong> → {lastPlacedInfo.position}
-            </span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="min-h-14 lg:min-h-0" aria-live="polite">
+        {selectedPlayer ? <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выбери позицию для <strong>{playerName(selectedPlayer.fullName)}</strong> в списке ниже</div>
+          : lastPlacedInfo ? <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">✅ <strong>{playerName(lastPlacedInfo.name)}</strong> → {lastPlacedInfo.position}</div> : null}
+      </div>
 
       {/* ── Pitch / Formation View ── */}
       <div data-pitch-section>
@@ -1223,11 +1193,11 @@ function getDirection(from: string, to: string): number {
 const pageVariants = {
   enter: (direction: number) => {
     if (direction === 0) {
-      return { opacity: 0, scale: 0.92 };
+      return { opacity: 0, scale: 0.99 };
     }
     return {
       opacity: 0,
-      x: direction > 0 ? 80 : -80,
+      x: direction > 0 ? 16 : -16,
     };
   },
   center: {
@@ -1237,11 +1207,11 @@ const pageVariants = {
   },
   exit: (direction: number) => {
     if (direction === 0) {
-      return { opacity: 0, scale: 1.08 };
+      return { opacity: 0, scale: 1.01 };
     }
     return {
       opacity: 0,
-      x: direction > 0 ? -80 : 80,
+      x: direction > 0 ? -16 : 16,
     };
   },
 };
@@ -1278,7 +1248,10 @@ export default function Home() {
       location.replace(`/multiplayer?room=${invite[1].toUpperCase()}`);
     if (startParam === 'my_profile') useGameStore.getState().setScreen('profile');
     const sharedResult=startParam.match(/^result_([A-Za-z0-9_-]{1,100})$/);
-    if(sharedResult && consumeMiniAppDestination('result',sharedResult[1],sessionStorage,Boolean(explicitStart)))location.replace(`/share/${encodeURIComponent(sharedResult[1])}`);
+    if (sharedResult && consumeMiniAppDestination('result', sharedResult[1], sessionStorage, Boolean(explicitStart))) {
+      localStorage.setItem('30-0-selected-run', sharedResult[1]);
+      useGameStore.getState().setScreen('profile');
+    }
     const sharedProfile = startParam.match(/^profile_([A-Za-z0-9_-]{1,100})$/);
     if (sharedProfile && consumeMiniAppDestination('profile',sharedProfile[1],sessionStorage,Boolean(explicitStart))) location.replace(`/players/${encodeURIComponent(sharedProfile[1])}`);
   }, []);

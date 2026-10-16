@@ -30,7 +30,7 @@ try {
     server.stdout.on('data', data => { if (data.toString().includes('Ready')) { clearTimeout(timeout); resolve(); } });
   });
   for (const model of ['telegramOutbox','gameSlot','multiplayerSeat','multiplayerRoom','gameRun','playerSeason','player','clubSeason','season','club','adminCredential','appSetting','user']) await db[model].deleteMany();
-  const runImport = suffix => execFileSync(process.execPath, ['scripts/import-rpl-2022-2025.mjs', '--apply', `--backup=/tmp/roster-regression-${process.pid}-${suffix}.json`], { env: process.env, stdio: 'pipe' });
+  const runImport = suffix => execFileSync(process.execPath, ['scripts/import-rpl-2022-2025.mjs', '--apply', `--backup=/tmp/roster-regression-${process.pid}-${Date.now()}-${suffix}.json`], { env: process.env, stdio: 'pipe' });
   runImport('initial');
   const sourceCard = await db.playerSeason.findFirstOrThrow();
   await db.player.create({data:{id:'qa-admin-added-player',fullName:'QA Admin Added',lastName:'Added'}});
@@ -120,6 +120,32 @@ try {
   console.log('PASS both CSKA starters and persisted scorer/assist totals for every team');
 
 
+  // A real timeout must preserve the unfinished XI and record technical defeats.
+  const fullRun = await db.gameRun.create({data:{id:'qa-full-xi',userId:'qa-host',gameMode:'multiplayer',multiplayerRoomCode:'QAFRTL',multiplayerRound:1,formation:'4-3-3',slots:{create:positions.slice(0,11).map((position,i)=>({slotPosition:`${position}_${i}`,playerSeasonId:`qa-ps-0-2025-${i}`,playerName:`QA Player 0-${i}`,playerRating:80,playerPrimeRating:88,isCompatible:true}))}}});
+  const incompleteRun = await db.gameRun.create({data:{id:'qa-incomplete-xi',userId:'qa-guest',gameMode:'multiplayer',multiplayerRoomCode:'QAFRTL',multiplayerRound:1,formation:'4-3-3',slots:{create:positions.slice(0,11).map((position,i)=>({slotPosition:`${position}_${i}`}))}}});
+  await db.multiplayerRoom.create({data:{code:'QAFRTL',hostUserId:'qa-host',seatCount:2,status:'drafting',eraStartYear:2025,eraEndYear:2025,seats:{create:[{id:'qa-full-seat',userId:'qa-host',runId:fullRun.id,name:'Complete XI',ready:true,pickDeadline:new Date(Date.now()+60000)},{id:'qa-empty-seat',userId:'qa-guest',runId:incompleteRun.id,name:'Incomplete XI',ready:false,pickDeadline:new Date(Date.now()+60000)}]}}});
+  assert.equal((await api('/api/multiplayer/rooms/QAFRTL')).status,'drafting');
+  await db.multiplayerSeat.updateMany({where:{roomCode:'QAFRTL'},data:{pickDeadline:new Date(Date.now()-1000)}});
+  const finishedRoom = await api('/api/multiplayer/rooms/QAFRTL');
+  assert.equal(finishedRoom.status,'completed');
+  const forfeited = finishedRoom.results.find(result=>result.id==='qa-empty-seat');
+  assert.equal(forfeited.forfeited,true);assert.equal(forfeited.position,16);assert.equal(forfeited.points,0);
+  assert.deepEqual([forfeited.wins,forfeited.draws,forfeited.losses,forfeited.goalsFor,forfeited.goalsAgainst],[0,0,30,0,90]);
+  assert.ok(forfeited.matches.every(match=>match.for===0&&match.against===3));
+  assert.equal(forfeited.table.length,16);assert.equal(new Set(forfeited.matches.map(match=>match.opponentId)).size,15);
+  assert.equal(await db.gameSlot.count({where:{runId:incompleteRun.id,playerSeasonId:{not:null}}}),0);
+  const completed = finishedRoom.results.find(result=>result.id==='qa-full-seat');
+  assert.equal(completed.matches.length,30);
+  assert.ok(completed.matches.filter(match=>match.opponentId==='qa-empty-seat').every(match=>match.for===3&&match.against===0));
+  const persisted = JSON.parse((await db.gameRun.findUnique({where:{id:fullRun.id}})).seasonResultJson);
+  assert.equal(persisted.table.length,16);assert.equal(persisted.matches.length,30);
+  assert.equal(persisted.playerStats.filter(player=>player.team==='Complete XI').reduce((total,player)=>total+player.goals,0),completed.goalsFor);
+  const selectedHistory = await api('/api/runs?limit=1&selected=qa-round-1');
+  assert.ok(selectedHistory.some(run => run.id === 'qa-round-1' || run.seriesRounds?.some(round => round.id === 'qa-round-1')));
+  const privateHistory = await api('/api/runs?limit=1&selected=qa-incomplete-xi');
+  assert.ok(!privateHistory.some(run => run.id === 'qa-incomplete-xi'));
+  console.log('PASS full multiplayer league, no early simulation, technical forfeits and persisted history');
+
   const prefs={enabled:true,news:false,invitations:true,results:true,friends:true,friend_updates:true};
   await worker({action:'sync',records:[{tgId:900001,preferences:prefs,revision:2,started:true,language:'en',user:{}}]});
   const notice=await db.telegramOutbox.create({data:{eventKey:'qa:notice',userId:'qa-host',text:'Your friend request was accepted.',startParam:'profile_qa-guest',category:'friend_updates'}});
@@ -131,6 +157,11 @@ try {
   assert.equal((await worker({action:'patches'})).patches.length,1);
   await worker({action:'sync',records:[{tgId:900001,preferences:prefs,revision:3,started:true,language:'ru',user:{}}]});
   assert.equal((await api('/api/users/notifications')).preferences.friends,false);
+  const resultMessage = claim.messages.find(message => message.image);
+  assert.ok(resultMessage);
+  const imageBytes = Buffer.from(resultMessage.image,'base64');
+  assert.equal(imageBytes.readUInt32BE(16),1200);assert.equal(imageBytes.readUInt32BE(20),760);
+  assert.ok(resultMessage.keyboard.inline_keyboard[0][0].url.includes('startapp=result_'));
   console.log('PASS relay leases, acknowledgement guard and durable opt-out');
   console.log('ALL INTEGRATION SCENARIOS PASSED');
 } finally { server.kill(); await db.$disconnect(); }

@@ -18,7 +18,7 @@ import { localizeShareText } from '@/lib/enTranslations';
 export type Slot = { slotPosition: string; playerSeasonId: string | null; playerLastName: string | null; playerName: string | null; playerRating: number | null; playerSeasonYear: number | null; playerPosition: string | null; playerOtherPositions: string[] };
 export type Run = { id: string; formation: string; completed: boolean; rerollsLeft: number; slots: Slot[] };
 export type Seat = { id: string; forfeited: boolean; name: string; formation: string; ready: boolean; drafted: number; seriesMemberKey: string; result: { wins: number; draws: number; losses: number; points: number; overallRating: number } | null; isYou: boolean; isHost: boolean; isBot: boolean; isFriend: boolean; pickDeadline: string | null; managerName: string | null; managerRating: number | null };
-export type RoomResult = { id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[]; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
+export type RoomResult = { table?: import('@/lib/multiplayerLeague').LeagueRow[]; position?: number; bestWinStreak?: number; id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[]; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 export type Room = { code: string; status: string; draftStartAt: string | null; maxPlayers: number; ratingMode: string; draftMode: string; showRatings: boolean; eraFilter: keyof typeof ERA_CONFIG; eraStartYear: number; eraEndYear: number; withManager: boolean; isHost: boolean; seats: Seat[]; invitations: { name: string; status: string }[]; ownRun: Run | null; pendingSpin: (Spin & { targetSlotPosition?: string }) | null; results: RoomResult[] | null; seriesTargetWins: number; seriesRound: number; seriesScores: Record<string, { name: string; wins: number; seasonWins: number; points: number; isBot: boolean }>; seriesWinnerKey: string | null; nextRoomCode: string | null; ownResultViewed: boolean };
 export type Player = PlayerOption;
 export type Spin = SpinResult;
@@ -134,27 +134,29 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
     try { await (reroll ? onReroll(run.slots[targetSlotIndex ?? -1]) : onSpin(run.slots[targetSlotIndex ?? -1])); }
     finally { setSpinning(false); }
   };
-  return <div className="space-y-3 animate-fade-in pb-24 sm:pb-4">
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E1E1E] bg-[#141414] px-4 py-2.5">
+  const timer = <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E1E1E] bg-[#141414] px-4 py-2.5">
       <div><span className="text-[10px] font-bold uppercase tracking-widest text-[#64748b]">Время на весь драфт · {filled}/11</span>
         <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-[#9CA3AF]">{room.seats.filter(value => !value.isYou).map(value => <span key={value.id}>{value.name} · {value.drafted}/11</span>)}</div>
       </div>
       <strong role="timer" className={`font-mono text-2xl tabular-nums ${remaining < 30 ? 'text-red-400' : 'text-[#00C896]'}`}>{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}</strong>
     </div>
-    <div className="h-1 overflow-hidden rounded-full bg-[#1E1E1E]"><motion.div animate={{ width: `${remaining / 180 * 100}%` }} className="h-full bg-[#00C896]"/></div>
+  ;
+  return <div className="draft-stable space-y-3 animate-fade-in pb-24 sm:pb-4">
+    <div className="hidden lg:block">{timer}</div>
     <div className="lg:grid lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:items-start lg:gap-6">
       <div className="space-y-3 lg:sticky lg:top-20">
         <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="rounded-lg bg-[#1E1E1E] px-2 py-1 text-xs font-black">{run.formation}</span><span className="text-[10px] text-[#64748b]">{11-filled} поз. осталось</span></div><span className="text-[10px] font-bold text-[#fbbf24]">🔄 {run.rerollsLeft}/1</span></div>
-        {selected && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выбери позицию для <strong>{playerName(selected.fullName)}</strong> на поле или в списке ниже</motion.div>}
+        <div className="min-h-14 lg:min-h-0" aria-live="polite">{selected && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выбери позицию для <strong>{playerName(selected.fullName)}</strong> на поле или в списке ниже</motion.div>}
         {lastPlaced && !selected && <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">✅ {lastPlaced.split(' → ').map((part, index) => index === 0 ? playerName(part) : t(part)).join(' → ')}</div>}
         {room.draftMode === 'position_first' && !spin && filled < 11 && <p className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">Сначала выбери свободную позицию на поле, затем крути колесо.</p>}
-        <FormationView multiplayer={{ config, slots, selectedPlayer: locked ? null : selected,
+        </div><FormationView multiplayer={{ config, slots, selectedPlayer: locked ? null : selected,
           targetSlotIndex, onChooseSlot: index => { if (!locked && !spin && room.draftMode === 'position_first') setTargetSlotIndex(index); },
           onAssign: assign, onMove: (from, to) => { if (!locked) onMove(run.slots[from], run.slots[to]); } }}/>
         <div className="rounded-xl border border-[#1E1E1E]/60 bg-[#141414] p-3"><div className="flex items-center gap-3"><div className="text-center"><div className="text-4xl font-black text-[#00C896]">{room.showRatings ? rating ?? '—' : '?'}</div><div className="mt-1 text-[10px] font-bold text-[#9CA3AF]">Рейтинг</div></div><div className="flex-1 space-y-1.5">{categories.map(category => { const values = slots.filter(slot => slot.category === category && slot.playerRating).map(slot => slot.playerRating!); const average = values.length ? Math.round(values.reduce((a,b) => a+b,0)/values.length) : 0; return <div key={category} className="flex items-center gap-2"><span className="w-14 text-[9px] text-[#9CA3AF]">{labels[category]}</span><div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a2a1a]"><motion.div animate={{ width: `${room.showRatings ? average/99*100 : 0}%` }} className="h-full rounded-full" style={{ backgroundColor: colors[category] }}/></div><span className="w-5 text-right text-[9px] font-bold">{room.showRatings ? average || '—' : '?'}</span></div>; })}</div></div></div>
       </div>
       <div className="mt-3 space-y-3 lg:mt-0">
-        {filled === 11 || locked && remaining <= 0 ? <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-6 text-center"><h2 className="text-xl font-black">{filled === 11 ? 'Состав готов' : 'Время драфта истекло'}</h2><p className="my-3 text-sm text-[#9CA3AF]">{filled === 11 ? 'Когда все закончат, начнётся отсчёт 10 секунд.' : 'Оставшиеся позиции заполнятся автоматически.'}</p>{filled === 11 && <button disabled={busy || room.seats.find(value => value.isYou)?.ready} onClick={onFinish} className={primary}>{room.seats.find(value => value.isYou)?.ready ? `Сезон начнётся через ${remaining} с` : 'Готово · ждать сезон'}</button>}</div> : <>
+        <div className="lg:hidden">{timer}</div>
+        {filled === 11 || locked && remaining <= 0 ? <div className="rounded-2xl border border-[#1E1E1E] bg-[#141414] p-6 text-center"><h2 className="text-xl font-black">{filled === 11 ? 'Состав готов' : 'Время драфта истекло'}</h2><p className="my-3 text-sm text-[#9CA3AF]">{filled === 11 ? 'Когда все закончат, начнётся отсчёт 10 секунд.' : 'Неполный состав: технические поражения 0:3 во всех матчах сезона.'}</p>{filled === 11 && <button disabled={busy || room.seats.find(value => value.isYou)?.ready} onClick={onFinish} className={primary}>{room.seats.find(value => value.isYou)?.ready ? `Сезон начнётся через ${remaining} с` : 'Готово · ждать сезон'}</button>}</div> : <>
           <div ref={spinRef}><SpinWheel multiplayer={{ currentSpin: spin, isSpinning: spinning, rerollsLeft: run.rerollsLeft,
             openCount: 11-filled, disabled: locked || room.draftMode === 'position_first' && targetSlotIndex === null, onSpin: () => play(false), onReroll: () => play(true) }}>
           {spin && !spinning && <PlayerList multiplayer={{ currentSpin: spin, slots, ratingMode: config.ratingMode,
@@ -182,21 +184,21 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
         <p className="mt-2 text-sm text-slate-400">{winner ? `Победитель серии — ${winner.name}` : room.seriesTargetWins ? `Раунд ${room.seriesRound} · до ${room.seriesTargetWins} побед` : 'Матч завершён'}</p>
       </div>
       <div className={`${panel} p-5 sm:p-6`}><h2 className="mb-4 font-bold">{room.seriesTargetWins ? 'Счёт серии' : 'Таблица участников'}</h2>
-        {(room.seriesTargetWins ? scores.map(([key, score], index) => ({ id: key, name: score.name, wins: score.wins, points: score.points, isYou: key === own?.seriesMemberKey, isFriend: room.seats.some(seat => seat.seriesMemberKey === key && seat.isFriend), position: index + 1 })) : results.map((result, index) => ({ id: result.id, name: result.name, wins: 0, points: result.points, isYou: result.id === mine.id, isFriend: room.seats.some(seat => seat.id === result.id && seat.isFriend), position: index + 1 }))).map(item => <div key={item.id} className={`flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-0 ${item.isYou ? 'text-[#00C896]' : item.isFriend ? 'text-sky-300' : 'text-slate-200'}`}><span className="font-semibold">{item.name}</span><strong>{room.seriesTargetWins ? `${item.wins} побед` : `${item.position}-е место · ${item.points} очков`}</strong></div>)}
+        {(room.seriesTargetWins ? scores.map(([key, score], index) => ({ id: key, name: score.name, wins: score.wins, points: score.points, isYou: key === own?.seriesMemberKey, isFriend: room.seats.some(seat => seat.seriesMemberKey === key && seat.isFriend), position: index + 1 })) : results.map((result, index) => ({ id: result.id, name: result.name, wins: 0, points: result.points, isYou: result.id === mine.id, isFriend: room.seats.some(seat => seat.id === result.id && seat.isFriend), position: index + 1 }))).map(item => <div key={item.id} className={`flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-0 ${item.isYou ? 'text-[#00C896]' : item.isFriend ? 'text-sky-300' : 'text-slate-200'}`}><span className="font-semibold">{item.name}</span><strong>{room.seriesTargetWins ? `${item.wins} побед` : `${results.find(result => result.id === item.id)?.position ?? item.position}-е место · ${item.points} очков`}</strong></div>)}
       </div>
       {winner && <SeriesFinalDetails code={room.code}/>}
       {room.seriesTargetWins > 0 && !winner ? <button className={`${primary} w-full`} onClick={onNext}>{room.nextRoomCode ? 'Перейти к следующему раунду →' : 'Создать следующий раунд →'}</button> : <button className={`${primary} w-full`} onClick={onReplay}>{room.nextRoomCode ? 'Вернуться в новое лобби →' : 'Сыграть снова →'}</button>}
       <button onClick={onMenu} className="w-full rounded-xl border border-white/20 py-3 font-semibold hover:bg-white/5">В меню</button>
     </div>;
   }
-  const position = results.findIndex(value => value.id === mine.id) + 1;
+  const position = mine.position ?? results.findIndex(value => value.id === mine.id) + 1;
   const matches = mine.matches.map((match, index) => ({
-    matchday: index + 1, opponent: match.opponent, isHome: match.home,
+    matchday: index + 1, opponent: match.opponent, opponentId: match.opponentId, isHome: match.home,
     homeGoals: match.home ? match.for : match.against,
     awayGoals: match.home ? match.against : match.for,
     result: (match.for > match.against ? 'W' : match.for < match.against ? 'L' : 'D') as 'W' | 'D' | 'L',
   }));
-  const table = results.map((result, index) => ({
+  const table = mine.table?.map(row => ({ ...row, isYou: row.participantId === mine.id })) ?? results.map((result, index) => ({
     position: index + 1, participantId: result.id, isYou: result.id === mine.id, isHuman: !room.seats.find(seat => seat.id === result.id)?.isBot, name: result.name, played: result.matches.length,
     won: result.wins, drawn: result.draws, lost: result.losses,
     goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst,
@@ -213,10 +215,10 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
   const config: GameConfig = { formation: run?.formation ?? '4-3-3', difficulty: 'normal',
     draftMode: 'squad_first', ratingMode: room.ratingMode as 'season' | 'prime', eraFilter: 'custom',
     eraStartYear: room.eraStartYear, eraEndYear: room.eraEndYear, gameMode: 'classic', teamName: mine.name };
-  return <div>{mine.forfeited && <div role="alert" className="mx-auto mb-5 max-w-4xl rounded-xl border border-red-500/40 bg-red-950/30 p-4 text-center"><strong className="block text-lg text-red-300">Время драфта истекло</strong><span className="text-sm text-[#9CA3AF]">Не удалось собрать 11 игроков за три минуты.</span></div>}
+  return <div>{mine.forfeited && <div role="alert" className="mx-auto mb-5 max-w-4xl rounded-xl border border-red-500/40 bg-red-950/30 p-4 text-center"><strong className="block text-lg text-red-300">Время драфта истекло</strong><span className="text-sm text-[#9CA3AF]">Неполный состав: технические поражения 0:3 во всех матчах сезона.</span></div>}
     <SimulationResult multiplayer={{ data: { runId: run?.id, points: mine.points, wins: mine.wins,
     draws: mine.draws, losses: mine.losses, goalsFor: mine.goalsFor, goalsAgainst: mine.goalsAgainst,
-    position, formation: config.formation, matches, table, playerStats: results.flatMap(result => result.playerStats || []) }, config, slots, friendNames: room.seats.filter(seat => seat.isFriend).map(seat => seat.name),
+    position, bestWinStreak: mine.bestWinStreak, formation: config.formation, matches, table, playerStats: mine.table ? mine.playerStats : results.flatMap(result => result.playerStats || []) }, config, slots, friendNames: room.seats.filter(seat => seat.isFriend).map(seat => seat.name),
     onHome: onFinish, onReplay: onFinish }}/></div>;
 }
 

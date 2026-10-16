@@ -6,7 +6,7 @@ import { seasonResultImage } from './seasonResultNotification';
 
 export async function relayAction(body: Record<string, unknown>) {
   if (body.action === 'recipients') {
-    const queued = await db.telegramOutbox.findMany({ where: { status: 'pending', sentAt: null, attempts: { lt: 5 }, availableAt: { lte: new Date() } }, select: { userId: true }, distinct: ['userId'], take: 20 });
+    const queued = await db.telegramOutbox.findMany({ where: { status: 'pending', sentAt: null, attempts: { lt: 5 }, availableAt: { lte: new Date() } }, orderBy: { availableAt: 'asc' }, select: { userId: true }, distinct: ['userId'], take: 20 });
     const users = await db.user.findMany({ where: { id: { in: queued.map(item => item.userId) } }, select: { providerId: true } });
     return { tgIds: users.map(user => Number(user.providerId.replace('telegram_', ''))).filter(id => Number.isSafeInteger(id) && id > 0) };
   }
@@ -19,7 +19,7 @@ export async function relayAction(body: Record<string, unknown>) {
     if (!Array.isArray(records) || records.length > 100) throw new Error('Invalid batch');
     for (const item of records) {
       if (!Number.isSafeInteger(item.tgId) || item.tgId <= 0 || !Number.isInteger(item.revision) || !validPreferencePatch(item.preferences)) throw new Error('Invalid preferences');
-      await db.$transaction(async tx => {
+      const syncedUser = await db.$transaction(async tx => {
         const providerId = `telegram_${item.tgId}`;
         const user = await tx.user.upsert({ where: { providerId }, create: { provider: 'telegram', providerId, displayName: [item.user?.first_name, item.user?.last_name].filter(Boolean).join(' ') || 'Telegram player' }, update: {} });
         // An acknowledgement clears only the exact application patch it delivered.
@@ -30,15 +30,18 @@ export async function relayAction(body: Record<string, unknown>) {
           ...(item.started ? { telegramChatStarted: true } : {}), botLanguage: item.language === 'en' ? 'en' : 'ru',
           ...(acknowledged ? { pendingNotificationPatch: null } : {}),
         } });
+        return { id: user.id, started: user.telegramChatStarted || Boolean(item.started) };
       });
+      if (!syncedUser.started) await db.telegramOutbox.updateMany({ where: { userId: syncedUser.id, status: 'pending', attempts: 0 }, data: { availableAt: new Date(Date.now() + 300_000) } });
     }
     return { ok: true };
   }
   if (body.action === 'claim') {
     const now = new Date();
     await db.telegramOutbox.updateMany({ where: { status: 'pending', attempts: { gte: 5 }, availableAt: { lte: now } }, data: { status: 'failed', lastError: 'Delivery attempts exhausted' } });
-    const eligible = await db.user.findMany({ where: { telegramChatStarted: true }, select: { id: true } });
-    const pending = await db.telegramOutbox.findMany({ where: { userId: { in: eligible.map(user => user.id) }, sentAt: null, status: 'pending', attempts: { lt: 5 }, availableAt: { lte: now } }, orderBy: { createdAt: 'asc' }, take: 20 });
+    const hydrated = Array.isArray(body.tgIds) ? body.tgIds.filter(id => Number.isSafeInteger(id) && Number(id) > 0).map(id => `telegram_${id}`) : null;
+    const eligible = await db.user.findMany({ where: { telegramChatStarted: true, ...(hydrated ? { providerId: { in: hydrated } } : {}) }, select: { id: true } });
+    const pending = await db.telegramOutbox.findMany({ where: { userId: { in: eligible.map(user => user.id) }, sentAt: null, status: 'pending', attempts: { lt: 5 }, availableAt: { lte: now } }, orderBy: { createdAt: 'asc' }, take: 5 });
     const messages: Array<{ id: string; attempt: number; chatId: number; text: string | null; keyboard: object; image: string | null }> = [];
     for (const item of pending) {
       const user = await db.user.findUnique({ where: { id: item.userId } });
@@ -78,7 +81,7 @@ export async function relayAction(body: Record<string, unknown>) {
     if (typeof body.id !== 'string' || !Number.isInteger(body.attempt) || typeof body.ok !== 'boolean') throw new Error('Invalid acknowledgement');
     await db.telegramOutbox.updateMany({ where: { id: body.id, attempts: body.attempt as number, status: 'pending', sentAt: null }, data: body.ok
       ? { sentAt: new Date(), status: 'sent', lastError: null }
-      : { status: (body.attempt as number) >= 5 ? 'failed' : 'pending', lastError: 'Telegram delivery failed', availableAt: new Date(Date.now()+60_000 * 2 ** (body.attempt as number)) } });
+      : { status: (body.attempt as number) >= 5 ? 'failed' : 'pending', lastError: typeof body.errorCode === 'number' ? `Telegram ${body.errorCode}` : 'Telegram delivery failed', availableAt: new Date(Date.now() + Math.max(60 * 2 ** (body.attempt as number), typeof body.retryAfter === 'number' ? Math.min(3600, Math.max(0, body.retryAfter)) : 0) * 1000) } });
     return { ok: true };
   }
   throw new Error('Unknown action');

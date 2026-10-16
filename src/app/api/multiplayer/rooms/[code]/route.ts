@@ -4,7 +4,6 @@ import { publicRoom, resolveRoom, roomName, validEra, validFormation, syncLobbyC
 import { sessionUser, sameOrigin } from '@/lib/telegramSession';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { setRunAccessCookie } from '@/lib/runAccess';
-import { draftBot } from '@/lib/multiplayerBots';
 import { ERA_CONFIG } from '@/lib/types';
 
 type Context = { params: Promise<{ code: string }> };
@@ -46,8 +45,7 @@ export async function GET(request: Request, { params }: Context) {
     if (!claimed.count) continue;
     try {
       const count = await db.gameSlot.count({ where: { runId: seat.runId, playerSeasonId: { not: null } } });
-      await draftBot(seat.runId, seat.room.eraStartYear, seat.room.eraEndYear, 11);
-      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true, forfeited: count < 11 } });
+      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true, forfeited: count < 11, pendingSpinJson: null } });
     } catch (error) {
       console.error('Multiplayer auto finish:', error);
       await db.multiplayerSeat.update({ where: { id: seat.id }, data: { pickDeadline: seat.pickDeadline } });
