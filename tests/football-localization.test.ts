@@ -88,3 +88,15 @@ test('visible static interface labels and button strings have English translatio
   scan('src/components'); scan('src/app');
   assert.deepEqual(missed,[]);
 });
+
+
+test('dynamic names and already translated positions have English accessible labels', () => {
+  assert.equal(translateInterface('Игорь Акинфеев, ВР, рейтинг 82'), 'Igor Akinfeev, GK, rating 82');
+  assert.equal(translateInterface('Igor Akinfeev, GK, рейтинг 82'), 'Igor Akinfeev, GK, rating 82');
+  assert.equal(translateInterface('Выбрать клуб FC Khimki'), 'Choose club Khimki');
+  assert.equal(translateInterface('Выбран клуб Балтика'), 'Selected club Baltika Kaliningrad');
+  assert.equal(translateInterface('Псевдоним Артём Дзюба'), 'Alias Artem Dzyuba');
+  assert.equal(translateInterface('Рейтинг Artem Dzyuba'), 'Rating Artem Dzyuba');
+  assert.equal(translateInterface('Позиция Artem Dzyuba'), 'Position Artem Dzyuba');
+  assert.equal(translateInterface('Прайм Artem Dzyuba'), 'Prime Artem Dzyuba');
+});

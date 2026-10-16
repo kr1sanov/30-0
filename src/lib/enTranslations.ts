@@ -1,8 +1,10 @@
 import { localizedClubName } from './clubDisplayName.ts';
+import { localizePlayerName } from './footballNames.ts';
 import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Позиция': 'Position',
   'Центральный защитник': 'Centre-back',
   'Правый защитник': 'Right-back',
   'Левый защитник': 'Left-back',
@@ -1222,8 +1224,10 @@ export function translateInterface(value: string): string {
   const normalized = core.replace(/\s+/g, ' ');
   const exact = TEXT[core] || TEXT[normalized] || MANAGERS.find(manager => manager.name === normalized)?.nameEn;
   if (exact) return leading + exact + trailing;
-  const playerSlot = normalized.match(/^(.+), (ВР|ЦЗ|ПЗ|ЛЗ|ПФЗ|ЛФЗ|ОП|ЦП|АП|ЛП|ПП|ЛВ|ПВ|НП|ЦН), рейтинг (\d+|\?)$/);
-  if (playerSlot) return `${leading}${playerSlot[1] === 'Игрок' ? 'Player' : playerSlot[1]}, ${TEXT[playerSlot[2]]}, rating ${playerSlot[3]}${trailing}`;
+  const playerSlot = normalized.match(/^(.+), ([^,]+), рейтинг (\d+|\?)$/);
+  if (playerSlot) return `${leading}${playerSlot[1] === 'Игрок' ? 'Player' : localizePlayerName(playerSlot[1], 'en')}, ${TEXT[playerSlot[2]] ?? playerSlot[2]}, rating ${playerSlot[3]}${trailing}`;
+  const entityLabel = normalized.match(/^(Выбран клуб|Выбрать клуб|Псевдоним|Рейтинг|Прайм|Позиция) (.+)$/);
+  if (entityLabel) return `${leading}${TEXT[entityLabel[1]] ?? entityLabel[1]} ${entityLabel[1].includes('клуб') ? localizedClubName(entityLabel[2], 'en') : localizePlayerName(entityLabel[2], 'en')}${trailing}`;
   const nationalityRequirement = normalized.match(/^(Собери )?(\d+) игроков из (\S+) (.+)$/);
   if (nationalityRequirement) return `${leading}${nationalityRequirement[1] ? 'Draft ' : ''}${nationalityRequirement[2]} players from ${nationalityRequirement[3]} ${TEXT[nationalityRequirement[4]] ?? nationalityRequirement[4]}${trailing}`;
   const eraChallenge = normalized.match(/^Собери состав только из эпохи (\d{4}–\d{4})(?:\. Плюс (\d+) игроков из (\S+) (.+))?$/);
