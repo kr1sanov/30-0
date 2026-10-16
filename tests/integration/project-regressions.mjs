@@ -60,6 +60,9 @@ try {
   await api('/api/multiplayer/rooms/QATEST/presence','POST',{});
   assert.equal((await db.multiplayerSeat.findUnique({where:{id:'qa-seat-host'}})).ready,false);
   assert.equal((await db.multiplayerRoom.findUnique({where:{code:'QATEST'}})).draftStartAt,null);
+  await db.multiplayerRoom.update({where:{code:'QATEST'},data:{draftStartAt:new Date(Date.now()-1000)}});
+  await db.multiplayerSeat.updateMany({where:{roomCode:'QATEST'},data:{ready:true,lastSeenAt:new Date(Date.now()-2000)}});
+  await api('/api/multiplayer/rooms/QATEST/start','POST',{},false,409);
   console.log('PASS stale presence, page leave and start guard');
 
   const roundResult=[{id:'qa-seat-host',name:'Host',rating:85,wins:20,draws:5,losses:5,points:65,goalsFor:60,goalsAgainst:25,matches:[{for:2,against:0}]},{id:'qa-seat-guest',name:'Guest',rating:80,wins:19,draws:5,losses:6,points:62,goalsFor:55,goalsAgainst:28,matches:[{for:0,against:2}]}];

@@ -4,7 +4,7 @@ Historical player imports used the complete canonical name in `lastName`. Displa
 
 One Club defaults to more than eight distinct roster seasons and a playable squad. Admin can view every club and explicitly open a shorter history or hide any club. Hidden clubs are checked again when a run is created.
 
-Lobby readiness is conditional on presence. Visible clients poll every 2.5 seconds; readiness expires after 12 seconds without a heartbeat. `pagehide`, hidden-tab changes and leaving the room clear readiness and countdown through an authenticated endpoint. Starting a draft includes a database predicate for every participant's readiness and presence. Draft timers retain their existing behavior after play starts.
+Lobby readiness is conditional on presence. Visible clients poll every 2.5 seconds; readiness expires after 12 seconds without a heartbeat. `pagehide`, hidden-tab changes and leaving the room clear readiness and countdown through an authenticated endpoint. Starting a draft requires a visible heartbeat from every human after the countdown deadline, and includes a database predicate for every participant's readiness and presence. Clients retry while awaiting these confirmations. Draft timers retain their existing behavior after play starts.
 
 A series continues in its original room. Advancing archives the round's result, squads and run references before resetting seats. Settings, participants, member keys and series scores remain fixed. Runs retain durable room/round markers after seats advance. History groups current and legacy room chains; round squads remain expandable.
 

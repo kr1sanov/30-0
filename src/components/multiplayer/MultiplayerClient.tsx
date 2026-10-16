@@ -142,7 +142,7 @@ export default function MultiplayerPage() {
     if (now < Date.parse(room.draftStartAt) || startedCountdown.current === key) return;
     startedCountdown.current = key;
     void json(`/api/multiplayer/rooms/${code}/start`, 'POST')
-      .catch(() => undefined)
+      .catch(() => { startedCountdown.current = ''; })
       .finally(() => void refresh());
   }, [code, room?.status, room?.draftStartAt, now, refresh]);
 
