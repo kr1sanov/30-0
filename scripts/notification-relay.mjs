@@ -1,29 +1,10 @@
+import { postNotificationWorker } from './notification-transport.mjs';
 import { createHash } from 'node:crypto';
 import { callCloudPreferences } from './telegram-cloud-client.mjs';
 const secret = process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET || process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token || !process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
-async function worker(body = {}) {
-  let lastError;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const response = await fetch('https://30-0.xn--p1ai/api/telegram/worker', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-30-0-Worker': secret }, body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
-      if (!response.ok) {
-        const error = new Error('Notification relay HTTP ' + response.status);
-        if (response.status >= 400 && response.status < 500 && ![408,429].includes(response.status)) throw Object.assign(error, { permanent: true });
-        throw error;
-      }
-      return await response.json();
-    } catch (error) {
-      if (error.permanent) throw error;
-      // Leases and attempt-checked acknowledgements make reconnects safe.
-      // Never include request headers or credentials in the error output.
-      lastError = new Error('Notification relay connection unavailable');
-      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-    }
-  }
-  throw lastError;
-}
+const worker = (body = {}) => postNotificationWorker('https://30-0.xn--p1ai/api/telegram/worker', secret, body);
 
 let deferred = 0, synchronized = 0;
 const { patches } = await worker({ action: 'patches' });
