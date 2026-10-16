@@ -61,11 +61,11 @@ test('translates challenge and story labels without changing results', () => {
   assert.equal(translateInterface('30-0 · Драфт Российской Премьер-лиги'), '30–0 · Russian Premier League Draft');
 });
 
-test('translates positions, formations and player labels while preserving names', () => {
+test('translates positions, formations and football names in player labels', () => {
   assert.equal(translateInterface('Глубокая оборона'), 'Deep defence');
   assert.equal(translateInterface('ЛФЗ'), 'LWB');
   assert.equal(translateInterface('Welliton, НП, рейтинг 85'), 'Welliton, ST, rating 85');
-  assert.equal(translateInterface('Павлюченко, ЛЗ, рейтинг 75'), 'Павлюченко, LB, rating 75');
+  assert.equal(translateInterface('Павлюченко, ЛЗ, рейтинг 75'), 'Pavlyuchenko, LB, rating 75');
   assert.equal(translateInterface('ЦСКА'), 'CSKA Moscow');
   assert.equal(translateInterface('Собери 3 игроков из 🇷🇺 Россия'), 'Draft 3 players from 🇷🇺 Russia');
   assert.equal(translateInterface('Импорт завершён: добавлено 4, обновлено 6.'), 'Import complete: 4 added, 6 updated.');
