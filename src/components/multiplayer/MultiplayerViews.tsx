@@ -18,7 +18,7 @@ import { localizeShareText } from '@/lib/enTranslations';
 export type Slot = { slotPosition: string; playerSeasonId: string | null; playerLastName: string | null; playerName: string | null; playerRating: number | null; playerSeasonYear: number | null; playerPosition: string | null; playerOtherPositions: string[] };
 export type Run = { id: string; formation: string; completed: boolean; rerollsLeft: number; slots: Slot[] };
 export type Seat = { id: string; forfeited: boolean; name: string; formation: string; ready: boolean; drafted: number; seriesMemberKey: string; result: { wins: number; draws: number; losses: number; points: number; overallRating: number } | null; isYou: boolean; isHost: boolean; isBot: boolean; isFriend: boolean; pickDeadline: string | null; managerName: string | null; managerRating: number | null };
-export type RoomResult = { id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
+export type RoomResult = { id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[]; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 export type Room = { code: string; status: string; draftStartAt: string | null; maxPlayers: number; ratingMode: string; draftMode: string; showRatings: boolean; eraFilter: keyof typeof ERA_CONFIG; eraStartYear: number; eraEndYear: number; withManager: boolean; isHost: boolean; seats: Seat[]; invitations: { name: string; status: string }[]; ownRun: Run | null; pendingSpin: (Spin & { targetSlotPosition?: string }) | null; results: RoomResult[] | null; seriesTargetWins: number; seriesRound: number; seriesScores: Record<string, { name: string; wins: number; seasonWins: number; points: number; isBot: boolean }>; seriesWinnerKey: string | null; nextRoomCode: string | null; ownResultViewed: boolean };
 export type Player = PlayerOption;
 export type Spin = SpinResult;
@@ -197,7 +197,7 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
     result: (match.for > match.against ? 'W' : match.for < match.against ? 'L' : 'D') as 'W' | 'D' | 'L',
   }));
   const table = results.map((result, index) => ({
-    position: index + 1, name: result.name, played: result.matches.length,
+    position: index + 1, participantId: result.id, isYou: result.id === mine.id, isHuman: !room.seats.find(seat => seat.id === result.id)?.isBot, name: result.name, played: result.matches.length,
     won: result.wins, drawn: result.draws, lost: result.losses,
     goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst,
     goalDifference: result.goalsFor - result.goalsAgainst, points: result.points,
@@ -216,7 +216,7 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
   return <div>{mine.forfeited && <div role="alert" className="mx-auto mb-5 max-w-4xl rounded-xl border border-red-500/40 bg-red-950/30 p-4 text-center"><strong className="block text-lg text-red-300">Время драфта истекло</strong><span className="text-sm text-[#9CA3AF]">Не удалось собрать 11 игроков за три минуты.</span></div>}
     <SimulationResult multiplayer={{ data: { runId: run?.id, points: mine.points, wins: mine.wins,
     draws: mine.draws, losses: mine.losses, goalsFor: mine.goalsFor, goalsAgainst: mine.goalsAgainst,
-    position, formation: config.formation, matches, table }, config, slots, friendNames: room.seats.filter(seat => seat.isFriend).map(seat => seat.name),
+    position, formation: config.formation, matches, table, playerStats: results.flatMap(result => result.playerStats || []) }, config, slots, friendNames: room.seats.filter(seat => seat.isFriend).map(seat => seat.name),
     onHome: onFinish, onReplay: onFinish }}/></div>;
 }
 

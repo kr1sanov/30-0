@@ -3,8 +3,8 @@ export const FIRST_CHALLENGE_RELEASE = Date.parse('2026-10-10T09:00:00.000Z');
 export const CHALLENGE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 export const ARCHIVE_UNLOCK_MS = 24 * 60 * 60 * 1000;
 
-type Hero = 'vagner' | 'dzyuba';
-export type ChallengeMode = 'challenge_vagner' | 'challenge_dzyuba';
+type Hero = 'vagner' | 'dzyuba' | 'cska_blitz' | 'akron_keeper';
+export type ChallengeMode = `challenge_${Hero}`;
 export interface WeeklyChallenge {
   id: string;
   mode: ChallengeMode;
@@ -15,6 +15,13 @@ export interface WeeklyChallenge {
   titleEn: string;
   descriptionRu: string;
   descriptionEn: string;
+  requireTitle?: boolean;
+  matchLimit?: number;
+  maximumConceded?: number;
+  minimumCleanSheets?: number;
+  featuredNames?: string[][];
+  sourceUrls?: string[];
+  forceOpen?: boolean;
   minimumGoals: number;
   minimumPoints: number;
   unbeaten: boolean;
@@ -49,6 +56,22 @@ export function issuesForWeek(index: number): WeeklyChallenge[] {
   const startsAt = new Date(start).toISOString();
   const endsAt = new Date(start + CHALLENGE_WEEK_MS).toISOString();
   const date = startsAt.slice(0, 10);
+  if (index === 1) return [
+    { id: `${date}-cska_blitz`, mode: 'challenge_cska_blitz', hero: 'cska_blitz', startsAt, endsAt,
+      titleRu: '⚡ ПФК ЦСКА · Блиц 11 минут', titleEn: '⚡ CSKA · Eleven-minute blitz',
+      descriptionRu: 'В Кубке ЦСКА победил Ростов 4:0, забив три безответных мяча к 11-й минуте — рекорд турнира. Прайм Обляков и Бориско уже в составе. За первые 5 матчей забей минимум 11 голов, пропусти не больше 2 и проведи 3 сухих матча.',
+      descriptionEn: 'CSKA beat Rostov 4–0 in the cup, setting a record with three unanswered goals by minute 11. Prime Oblyakov and Borisko start in your XI. In the first 5 matches, score at least 11 goals, concede at most 2 and keep 3 clean sheets.',
+      minimumGoals: 11, minimumPoints: 0, unbeaten: false, requireTitle: false, matchLimit: 5, maximumConceded: 2, minimumCleanSheets: 3,
+      featuredNames: [['Ivan Oblyakov', 'Иван Обляков'], ['Maksim Borisko', 'Maxim Borisko', 'Максим Бориско']],
+      sourceUrls: ['https://pfc-cska.com/ru/novosti/vse-novosti/32659-pfk-cska-rostov-40/', 'https://pfc-cska.com/ru/novosti/vse-novosti/32662-pfk-cska-ustanovil-rekord-kubka-rossii-zabiv-tri-bezotvetnih-myacha-za-11-minut/'] },
+    { id: `${date}-akron_keeper`, mode: 'challenge_akron_keeper', hero: 'akron_keeper', startsAt, endsAt,
+      titleRu: '🧤 Акрон · Стена Тереховского', titleEn: '🧤 Akron · Terekhovskiy’s wall',
+      descriptionRu: 'После ничьей 1:1 с Локомотивом Игнат Тереховский отразил три из четырёх пенальти, а Акрон выиграл серию 3:1. Начни с его специальной прайм-карточкой челленджа с рейтингом 90: за сезон из 30 матчей пропусти не больше 15 голов и сыграй минимум 15 раз на ноль.',
+      descriptionEn: 'After a 1–1 draw with Lokomotiv, Ignat Terekhovskiy saved three of four penalties as Akron won the shootout 3–1. Start with his special 90-rated prime challenge card: concede at most 15 goals and keep at least 15 clean sheets in a 30-match season.',
+      minimumGoals: 0, minimumPoints: 0, unbeaten: false, requireTitle: false, maximumConceded: 15, minimumCleanSheets: 15,
+      featuredNames: [['Ignat Terekhovskiy', 'Ignat Terekhovsky', 'Игнат Тереховский']],
+      sourceUrls: ['https://fcakron.ru/news/2517', 'https://www.fclm.ru/news/n/lokomotiv-akron-cup-2026-27-match-summary/'] },
+  ];
   return (['vagner', 'dzyuba'] as const).map(hero => ({
     ...(hero === 'vagner' ? vagner[index % vagner.length] : dzyuba[index % dzyuba.length]),
     id: `${date}-${hero}`, mode: `challenge_${hero}` as ChallengeMode,
@@ -64,7 +87,7 @@ export function listWeeklyChallenges(now: Date = new Date()) {
 }
 
 export function findWeeklyChallenge(id: string, now: Date = new Date()): WeeklyChallenge | null {
-  const match = /^(\d{4}-\d{2}-\d{2})-(vagner|dzyuba)$/.exec(id);
+  const match = /^(\d{4}-\d{2}-\d{2})-(vagner|dzyuba|cska_blitz|akron_keeper)$/.exec(id);
   if (!match) return null;
   const start = Date.parse(`${match[1]}T09:00:00.000Z`);
   const offset = (start - FIRST_CHALLENGE_RELEASE) / CHALLENGE_WEEK_MS;
@@ -74,10 +97,20 @@ export function findWeeklyChallenge(id: string, now: Date = new Date()): WeeklyC
 
 export function challengeSucceeded(issue: WeeklyChallenge, result: {
   position: number | null; goalsFor: number | null; losses: number | null; points: number | null;
+  goalsAgainst?: number | null; seasonResultJson?: string | null;
+  matches?: Array<{ isHome: boolean; homeGoals: number; awayGoals: number }>;
 }): boolean {
-  return result.position === 1 && (result.goalsFor ?? 0) >= issue.minimumGoals
-    && (result.points ?? 0) >= issue.minimumPoints
-    && (!issue.unbeaten || result.losses === 0);
+  let matches = result.matches;
+  if (!matches && result.seasonResultJson) { try { matches = JSON.parse(result.seasonResultJson).matches; } catch {} }
+  const subset = matches?.slice(0, issue.matchLimit);
+  const gf = subset ? subset.reduce((n,m) => n+(m.isHome ? m.homeGoals : m.awayGoals),0) : result.goalsFor ?? 0;
+  const ga = subset ? subset.reduce((n,m) => n+(m.isHome ? m.awayGoals : m.homeGoals),0) : result.goalsAgainst;
+  const clean = subset?.filter(m => (m.isHome ? m.awayGoals : m.homeGoals) === 0).length;
+  if ((issue.matchLimit || issue.minimumCleanSheets) && (!matches || matches.length < (issue.matchLimit || 30))) return false;
+  return (issue.requireTitle === false || result.position === 1) && gf >= issue.minimumGoals
+    && (issue.maximumConceded === undefined || (ga !== undefined && ga !== null && ga <= issue.maximumConceded))
+    && (issue.minimumCleanSheets === undefined || (clean ?? 0) >= issue.minimumCleanSheets)
+    && (result.points ?? 0) >= issue.minimumPoints && (!issue.unbeaten || result.losses === 0);
 }
 
 export function archiveUnlockedUntil(referrals: Array<{ referralJoinedAt: Date | null; createdAt: Date }>, now: Date = new Date()): string | null {

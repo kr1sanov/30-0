@@ -182,7 +182,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => Promise<void>;
-  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -192,7 +192,7 @@ interface GameState {
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
   startDailyChallenge: (challenge: DailyChallenge) => void;
-  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba', issueId: string) => Promise<void>;
+  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', issueId: string) => Promise<void>;
   clearError: () => void;
   setError: (error: string) => void;
 }
@@ -1320,8 +1320,8 @@ export const useGameStore = create<GameState>()(
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
         const restored = lastConfig?.clubFilter ? lastConfig : config.clubFilter ? config : lastConfig ?? config;
         const mode = restored.clubFilter ? 'single_club'
-          : restored.gameMode === 'challenge_vagner' || restored.gameMode === 'challenge_dzyuba'
-            ? restored.gameMode : 'classic';
+          : restored.gameMode?.startsWith('challenge_')
+            ? restored.gameMode as import('@/lib/weeklyChallenges').ChallengeMode : 'classic';
 
         // The stored run may belong to a previous login or have an expired
         // run cookie. Verify ownership and refresh access before opening it.
@@ -1513,7 +1513,7 @@ export const useGameStore = create<GameState>()(
       startStarChallenge: async (id, issueId) => {
         get().resetGame();
         set({ config: { ...defaultConfig, formation: '4-3-3', gameMode: id,
-          challengeIssueId: issueId, ratingMode: 'prime', teamName: id === 'challenge_vagner' ? 'Команда Вагнера' : 'Команда Дзюбы' },
+          challengeIssueId: issueId, ratingMode: 'prime', teamName: 'Моя команда' },
           dailyChallenge: null, lastDraftError: null });
         await get().startRun();
       },

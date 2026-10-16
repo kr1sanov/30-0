@@ -1,3 +1,6 @@
+import { simulateContributions } from '@/lib/seasonAnalytics';
+import { playerDisplayName } from '@/lib/playerNames';
+import { findWeeklyChallenge, challengeSucceeded } from '@/lib/weeklyChallenges';
 import { db } from '@/lib/db';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { enforceRateLimit } from '@/lib/rateLimit';
@@ -84,7 +87,7 @@ export async function POST(
     const season = await db.season.findFirst({
       where: { startYear: { gte: run.eraStartYear, lte: run.eraEndYear }, clubSeasons: { some: { players: { some: {} } } } },
       orderBy: { startYear: 'desc' },
-      include: { clubSeasons: { include: { club: true, players: { select: { rating: true } } } } },
+      include: { clubSeasons: { include: { club: true, players: { select: { rating: true, mainPosition: true, player: { select: { fullName: true, alias: true } } } } } } },
     });
     const participants = season?.clubSeasons.filter(c => c.players.length > 0) ?? [];
     if (participants.length < 16) {
@@ -106,6 +109,28 @@ export async function POST(
       previousBestPoints,
       opponents,
     );
+
+    const ownTeam = result.table.find(team => team.name === 'Моя команда')!;
+    const ownName = run.teamName || 'Моя команда';
+    ownTeam.name = ownName;
+    result.playerStats = result.table.flatMap(team => {
+      const roster = team === ownTeam ? squadSlots.map(p => ({ name: p.playerName, position: p.position, rating: p.playerRating }))
+        : (otherClubs.find(c => (c.club.nameEn || c.club.nameRu) === team.name)?.players || []).map(p => ({ name: p.player.alias || p.player.fullName, position: p.mainPosition, rating: p.rating }));
+      const contributions = simulateContributions(team.name, roster, team.goalsFor, `${run.id}:${team.name}`);
+      if (team === ownTeam) {
+        let offset = 0;
+        for (const match of result.matches) {
+          const goals = match.isHome ? match.homeGoals : match.awayGoals;
+          match.scorers = contributions.scorers.slice(offset, offset+goals).map((name, index) => `${playerDisplayName(name, '').surname} ${Math.floor((index+1)*90/(goals+1))}'`);
+          offset += goals;
+        }
+      }
+      return contributions.stats;
+    });
+    if (run.challengeIssueId) {
+      const issue = findWeeklyChallenge(run.challengeIssueId, new Date('2100-01-01'));
+      if (issue) result.trophies.push({ id: issue.id, name: issue.titleRu, description: issue.descriptionRu, icon: '🏆', earned: challengeSucceeded(issue, result) });
+    }
 
     if (run.gameMode === 'challenge_vagner' || run.gameMode === 'challenge_dzyuba') {
       const featuredNames = run.gameMode === 'challenge_vagner'
@@ -133,6 +158,7 @@ export async function POST(
     const saved = await db.gameRun.updateMany({
       where: { id: runId, completed: false },
       data: {
+        seasonResultJson: JSON.stringify(result),
         completed: true,
         completedAt: new Date(),
         wins: result.wins,

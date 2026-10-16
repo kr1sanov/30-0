@@ -1,6 +1,6 @@
 import { localizeBotMessage, localizeBotButton } from "./botLanguage";
 import { seasonResultImage } from "./seasonResultNotification";
-import { currentBotLanguage, currentPreferences } from "./cloudPreferences";
+import { currentBotLanguage, currentPreferences, usesNotificationRelay } from "./cloudPreferences";
 import {
   notificationAllowed,
   type NotificationCategory,
@@ -40,6 +40,7 @@ export async function queueSocialNotification(
 }
 
 export async function flushSocialNotifications() {
+  if (await usesNotificationRelay()) return;
   const now = new Date();
   await db.telegramOutbox.updateMany({
     where: {

@@ -58,7 +58,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Authentication and Telegram tests
-        run: node --experimental-strip-types --test tests/*.test.ts
+        run: node --experimental-strip-types --test tests/*.test.ts tests/player-names.test.mjs
 
       - name: Deployment script syntax
         run: |
@@ -141,11 +141,39 @@ jobs:
             package.json
           retention-days: 1
 
+  integration:
+    name: Multiplayer, challenges and notification integration
+    runs-on: ubuntu-latest
+    needs: lint
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Prepare isolated SQLite schema
+        run: |
+          cp prisma/schema.sqlite.prisma prisma/schema.prisma
+          DATABASE_URL=file:/tmp/30-0-regression.db npx prisma db push
+      - name: Build isolated application
+        env:
+          DATABASE_URL: file:/tmp/30-0-regression.db
+        run: npm run build
+      - name: Verify complete local flows without sending Telegram messages
+        env:
+          DATABASE_URL: file:/tmp/30-0-regression.db
+          TELEGRAM_SESSION_SECRET: local-regression-session-signing-key-123
+          ADMIN_SESSION_SECRET: local-regression-admin-signing-key-123
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: local-regression-worker
+        run: node tests/integration/project-regressions.mjs
+
   # ─── Stage 3: Deploy (only on push to main) ───
   deploy:
     name: Deploy to Jino
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, integration]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment: production
     steps:

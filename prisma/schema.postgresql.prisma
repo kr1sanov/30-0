@@ -15,6 +15,7 @@ model Club {
   city      String?
   logoUrl   String?
   oneClubHidden Boolean @default(false)
+  oneClubShown Boolean @default(false)
   seasons   ClubSeason[]
 
   @@unique([nameRu])
@@ -112,6 +113,8 @@ model User {
   notifyFriends Boolean @default(true)
   notifyFriendReplies Boolean @default(true)
   notificationsRevision Int @default(0)
+  botLanguage String @default("ru")
+  pendingNotificationPatch String?
   bannedAt DateTime?
   bannedUntil DateTime?
   banReason String?
@@ -208,6 +211,9 @@ model NotificationDispatch {
 }
 
 model GameRun {
+  seasonResultJson String?
+  multiplayerRoomCode String?
+  multiplayerRound Int?
   completedAt DateTime?
   id           String   @id @default(cuid())
   formation    String   @default("4-3-3")
@@ -278,6 +284,7 @@ model GameSlot {
 }
 
 model MultiplayerRoom {
+  roundsJson String?
   code         String   @id
   hostUserId   String
   status       String   @default("lobby")
@@ -304,6 +311,7 @@ model MultiplayerRoom {
 }
 
 model MultiplayerSeat {
+  lastSeenAt DateTime?
   id        String   @id @default(cuid())
   roomCode  String
   userId    String?

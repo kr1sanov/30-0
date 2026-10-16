@@ -2,20 +2,21 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sessionUser } from '@/lib/telegramSession';
 import { getArchiveAccess } from '@/lib/challengeAccess';
-import { challengeSucceeded, listWeeklyChallenges } from '@/lib/weeklyChallenges';
+import { visibleChallenges } from '@/lib/challengeCatalog';
+import { challengeSucceeded } from '@/lib/weeklyChallenges';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
     const now = new Date();
-    const { active, archive } = listWeeklyChallenges(now);
+    const { active, archive, nextReleaseAt } = await visibleChallenges(now);
     const userId = sessionUser(request);
     const [access, runs, totals] = await Promise.all([
       getArchiveAccess(userId, now),
       userId ? db.gameRun.findMany({
         where: { userId, challengeIssueId: { not: null } },
-        select: { id: true, challengeIssueId: true, completed: true, position: true, goalsFor: true, losses: true, points: true, createdAt: true },
+        select: { id: true, challengeIssueId: true, completed: true, position: true, goalsFor: true, goalsAgainst: true, seasonResultJson: true, losses: true, points: true, createdAt: true },
         orderBy: { createdAt: 'desc' }, take: 200,
       }) : Promise.resolve([]),
       db.gameRun.groupBy({ by: ['challengeIssueId'],
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
       position: run.position, points: run.points, goalsFor: run.goalsFor,
       createdAt: run.createdAt.toISOString(),
     }));
-    return NextResponse.json({ active, archive, nextReleaseAt: active[0]?.endsAt ?? null,
+    return NextResponse.json({ active, archive, nextReleaseAt,
       archiveUnlockedUntil: access.unlockedUntil, referralCount: access.referralCount,
       personal, totalCompleted: Object.fromEntries(totals.map(item => [item.challengeIssueId, item._count._all])),
     }, { headers: { 'Cache-Control': 'no-store' } });

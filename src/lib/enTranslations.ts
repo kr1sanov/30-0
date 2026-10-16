@@ -4,6 +4,19 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'очков ·': 'points ·',
+  '-е место': ' place',
+  'Статистика игроков в симуляции': 'Simulation player statistics',
+  'Статистика команды': 'Team statistics',
+  'Все команды': 'All teams',
+  'Лучшие бомбардиры': 'Top scorers',
+  'Лучшие ассистенты': 'Top assisters',
+  '· Моя команда': '· My team',
+  'Публикация челленджей': 'Challenge publication',
+  'По расписанию: суббота, 12:00 МСК. Открыть и Скрыть действуют сразу, в том числе для старых заданий.': 'Automatic release: Saturday 12:00 Moscow. Open and Hidden override the schedule, including archived issues.',
+  'Открыть': 'Open',
+  'По умолчанию открыты клубы с более чем 8 сезонами. Остальные можно открыть вручную. Скрытый клуб исчезает из выбора для новых игр. Уже начатые игры продолжаются.': 'Clubs with more than 8 seasons are open by default. Other clubs can be opened manually. Hidden clubs disappear from new games; existing games continue.',
+
   'Позиция': 'Position',
   'Центральный защитник': 'Centre-back',
   'Правый защитник': 'Right-back',

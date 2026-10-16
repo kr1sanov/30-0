@@ -8,6 +8,7 @@ import AdminPasswordLogin from "./AdminPasswordLogin";
 import AdminRosterManager from "./AdminRosterManager";
 import AdminInsights from "./AdminInsights";
 import AdminOneClub from "./AdminOneClub";
+import AdminChallenges from "./AdminChallenges";
 import AdminCampaigns from "./AdminCampaigns";
 import AdminModeration from "./AdminModeration";
 import AdminLeaderboard from "./AdminLeaderboard";
@@ -138,6 +139,7 @@ export default function AdminPage() {
     ...(canManage
       ? [
           ["one-club", "Один клуб"],
+          ["challenges", "Челленджи"],
           ["rosters", "Составы"],
           ["access", "Команда"],
           ["campaigns", "Рассылки"],
@@ -262,6 +264,7 @@ export default function AdminPage() {
           <AdminRosterManager onChanged={() => void load()} />
         )}
         {tab === "one-club" && canManage && <AdminOneClub />}
+        {tab === "challenges" && canManage && <AdminChallenges />}
         {tab === "access" && canManage && (
           <div className="grid gap-4 lg:grid-cols-[1fr_1.5fr]">
             <section className={`${panel} h-fit`}>

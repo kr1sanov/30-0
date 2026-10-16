@@ -80,7 +80,7 @@ export default function ChallengesClient() {
       document.getElementById('challenge-login')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (new Date(issue.endsAt).getTime() <= clock && !archiveOpen) return;
+    if (!issue.forceOpen && new Date(issue.endsAt).getTime() <= clock && !archiveOpen) return;
     setBusy(true);
     try {
       const unfinished = resultFor(issue).runs.find(run => !run.completed);

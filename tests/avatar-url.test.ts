@@ -36,7 +36,7 @@ test("public profile achievement sections have Russian sources and complete Engl
   );
   for (const [, label] of trophySections)
     assert.doesNotMatch(translateInterface(label), /[А-Яа-яЁё]/);
-  assert.equal(russianClubName("CSKA Moscow"), "ЦСКА");
+  assert.equal(russianClubName("CSKA Moscow"), "ПФК ЦСКА");
   assert.equal(
     translateInterface(russianClubName("FC Krasnodar")),
     "Krasnodar",

@@ -51,6 +51,7 @@ export interface Trophy {
 }
 
 export interface SeasonResult {
+  playerStats?: import('./seasonAnalytics').SeasonPlayerStat[];
   wins: number;
   draws: number;
   losses: number;

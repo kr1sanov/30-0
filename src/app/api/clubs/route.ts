@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const clubs = await db.club.findMany({
       select: {
-        id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true,
+        id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true, oneClubShown: true,
         seasons: {
           where: { players: { some: {} } },
           select: { season: { select: { startYear: true } }, players: { select: { playerId: true, mainPosition: true } } },

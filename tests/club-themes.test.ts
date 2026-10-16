@@ -49,3 +49,10 @@ test('additional historical clubs do not share the default palette', () => {
   for (const palette of palettes) assert.notDeepEqual(palette, DEFAULT_CLUB_THEME);
   assert.equal(new Set(palettes.map(theme => `${theme.primary}:${theme.secondary}`)).size, names.length);
 });
+
+test('official club display names retain their existing palettes', () => {
+  assert.deepEqual(getClubTheme('ПФК ЦСКА'),getClubTheme('CSKA Moscow'));
+  assert.deepEqual(getClubTheme('Зенит Санкт-Петербург'),getClubTheme('Zenit'));
+  assert.deepEqual(getClubTheme('Балтика Калининград'),getClubTheme('Балтика'));
+  assert.deepEqual(getClubTheme('Акрон Тольятти'),getClubTheme('Акрон'));
+});

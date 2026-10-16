@@ -52,6 +52,7 @@ interface GameRunData {
   challengeSucceeded?: boolean | null;
   multiplayerSeat?: { roomCode: string } | null;
   opponents?: string[];
+  seriesRounds?: Array<{ id: string; round: number | null; points: number | null; position: number | null; slots: GameSlotData[] }>;
   clubName?: string | null;
   createdAt: string;
   slots: GameSlotData[];
@@ -476,6 +477,8 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                             </span>
                           </div>
                         )}
+
+                        {(run.seriesRounds?.length ?? 0) > 1 && <div className="space-y-2">{run.seriesRounds?.map((round, index) => <details key={round.id} className="rounded-xl border border-violet-400/20 p-3"><summary className="cursor-pointer text-sm text-violet-300">Раунд {round.round ?? run.seriesRounds!.length-index} · {round.points} очков · {round.position}-е место</summary><div className="mt-2 grid gap-1 text-xs text-slate-300 sm:grid-cols-2">{round.slots.map(slot => <span key={slot.id}>{slot.slotPosition.split('_')[0]} · {playerName(slot.playerName || slot.playerLastName || '—')}</span>)}</div></details>)}</div>}
 
                         {/* Stats row */}
                         <div className="grid grid-cols-3 gap-2">

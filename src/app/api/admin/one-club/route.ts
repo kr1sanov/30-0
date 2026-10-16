@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   if (!await requireAdmin(request)) return NextResponse.json({ error: 'Нет доступа' }, { status: 401 });
   try {
     const clubs = await db.club.findMany({ select: {
-      id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true,
+      id: true, nameRu: true, nameEn: true, city: true, oneClubHidden: true, oneClubShown: true,
       seasons: { where: { players: { some: {} } }, select: {
         season: { select: { startYear: true } },
         players: { select: { playerId: true, mainPosition: true } },
@@ -28,7 +28,7 @@ export async function PATCH(request: Request) {
   try {
     const { id, hidden } = await request.json();
     if (typeof id !== 'string' || !id || typeof hidden !== 'boolean') return NextResponse.json({ error: 'Проверь клуб и статус' }, { status: 400 });
-    const club = await db.club.update({ where: { id }, data: { oneClubHidden: hidden }, select: { id: true, oneClubHidden: true } });
+    const club = await db.club.update({ where: { id }, data: { oneClubHidden: hidden, oneClubShown: !hidden }, select: { id: true, oneClubHidden: true, oneClubShown: true } });
     return NextResponse.json({ club });
   } catch (error) {
     console.error('Admin one-club visibility:', error);

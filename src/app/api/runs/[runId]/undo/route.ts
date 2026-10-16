@@ -1,3 +1,4 @@
+import { findWeeklyChallenge } from '@/lib/weeklyChallenges';
 import { db } from '@/lib/db';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
@@ -55,14 +56,11 @@ export async function POST(
       targetSlot = filledSlots[filledSlots.length - 1];
     }
 
-    if (run.gameMode === 'challenge_vagner' || run.gameMode === 'challenge_dzyuba') {
-      const featuredNames = run.gameMode === 'challenge_vagner'
-        ? ['Vagner Love', 'Вагнер Лав'] : ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба'];
-      const featured = await db.playerSeason.findFirst({
-        where: { player: { fullName: { in: featuredNames } } },
-        orderBy: [{ rating: 'desc' }, { id: 'asc' }], select: { id: true },
-      });
-      if (targetSlot.playerSeasonId === featured?.id) return NextResponse.json({ error: 'Стартовая карточка челленджа закреплена' }, { status: 400 });
+    if (run.gameMode.startsWith('challenge_')) {
+      const issue = run.challengeIssueId ? findWeeklyChallenge(run.challengeIssueId, new Date('2100-01-01')) : null;
+      const names = issue?.featuredNames?.flat() || (run.gameMode === 'challenge_vagner' ? ['Vagner Love', 'Вагнер Лав'] : ['Artem Dzyuba', 'Артём Дзюба', 'Артем Дзюба']);
+      const starter = targetSlot.playerSeasonId ? await db.playerSeason.findUnique({ where: { id: targetSlot.playerSeasonId }, include: { player: true } }) : null;
+      if (targetSlot.playerSeasonId?.startsWith('challenge-card:') || (starter && names.includes(starter.player.fullName))) return NextResponse.json({ error: 'Стартовая карточка челленджа закреплена' }, { status: 400 });
     }
 
     // Remove the player from that slot — clear ALL player fields

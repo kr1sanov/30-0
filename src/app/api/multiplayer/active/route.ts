@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   const [invites, history] = await Promise.all([
     hostedCodes.length ? db.multiplayerInvite.findMany({ where: { roomCode: { in: hostedCodes }, status: { in: ['pending', 'declined'] } } }) : [],
     db.multiplayerSeat.findMany({ where: { userId, resultViewedAt: { not: null }, room: { status: 'completed' } }, orderBy: { joinedAt: 'desc' }, take: 20,
-      include: { room: { select: { code: true, updatedAt: true, seats: { select: { name: true } } } } } }),
+      include: { room: { select: { code: true, seriesRootCode: true, updatedAt: true, seats: { select: { name: true } } } } } }),
   ]);
   const invitees = invites.length ? await db.user.findMany({ where: { id: { in: invites.map(invite => invite.toId) } }, select: { id: true, displayName: true, username: true } }) : [];
   const names = new Map(invitees.map(person => [person.id, person.username ? `@${person.username}` : person.displayName]));
@@ -32,6 +32,6 @@ export async function GET(request: Request) {
   })));
   return NextResponse.json({
     activeRooms,
-    historyRooms: history.map(seat => ({ code: seat.roomCode, date: seat.room.updatedAt, participants: seat.room.seats.map(member => member.name) })),
+    historyRooms: history.filter((seat, index) => history.findIndex(other => (other.room.seriesRootCode ?? other.roomCode) === (seat.room.seriesRootCode ?? seat.roomCode)) === index).map(seat => ({ code: seat.roomCode, date: seat.room.updatedAt, participants: seat.room.seats.map(member => member.name) })),
   }, { headers: { 'Cache-Control': 'no-store' } });
 }
