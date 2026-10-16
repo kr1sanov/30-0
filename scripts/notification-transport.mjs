@@ -19,7 +19,7 @@ function request(url, secret, body) {
     child.stdin.on('error', () => {});
     child.once('error', () => reject(new Error('Notification HTTP transport unavailable')));
     child.once('close', code => {
-      if (code !== 0 || oversized) return reject(new Error('Notification HTTP connection unavailable'));
+      if (code !== 0 || oversized) return reject(Object.assign(new Error('Notification HTTP connection unavailable'), { transportCode: 'CURL_' + code }));
       const split = output.lastIndexOf('\n');
       resolve({ status: Number(output.slice(split + 1)), body: output.slice(0, split) });
     });
@@ -28,6 +28,7 @@ function request(url, secret, body) {
 }
 
 export async function postNotificationWorker(url, secret, body = {}) {
+  let transportCode = '';
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const response = await request(url, secret, body);
@@ -37,8 +38,9 @@ export async function postNotificationWorker(url, secret, body = {}) {
       if (response.status < 200 || response.status >= 300) throw new Error('Temporary notification HTTP failure');
       return JSON.parse(response.body);
     } catch (error) {
+      transportCode = error.transportCode || '';
       if (error.permanent) throw error;
-      if (attempt === 2) throw new Error('Notification relay connection unavailable');
+      if (attempt === 2) throw new Error('Notification relay connection unavailable ' + transportCode);
       await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
     }
   }

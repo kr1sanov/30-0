@@ -36,6 +36,11 @@ jobs:
           restore-keys: |
             node-modules-${{ env.NODE_VERSION }}-
 
+      - name: Diagnose public notification endpoint connectivity
+        run: |
+          node -e "require('dns').lookup('30-0.xn--p1ai',{all:true},(error,addresses)=>console.log(error?.code||addresses))"
+          curl --http1.1 --silent --show-error --output /dev/null --connect-timeout 5 --max-time 10 --write-out 'status=%{http_code} address=%{remote_ip} error=%{errormsg}\n' https://30-0.xn--p1ai/api/health || true
+
       - name: Install dependencies
         run: npm ci
 

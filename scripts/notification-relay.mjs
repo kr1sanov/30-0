@@ -6,11 +6,18 @@ const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token || !process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
 async function worker(body = {}) {
   try { return await callCloudPreferences('worker', { body }); }
-  catch { return postNotificationWorker('https://30-0.xn--p1ai/api/telegram/worker', secret, body); }
+  catch (error) {
+    console.error('Cloud bridge:', /^[a-z0-9_]+$/.test(error.code || '') ? error.code : 'unavailable');
+    return postNotificationWorker('https://30-0.xn--p1ai/api/telegram/worker', secret, body);
+  }
 }
 
 let deferred = 0, synchronized = 0;
-const { patches } = await worker({ action: 'patches' });
+const { patches } = await worker({ action: 'patches' }).catch(async error => {
+  const { resolve4, resolve6 } = await import('node:dns/promises');
+  console.error('Worker DNS:', JSON.stringify(await Promise.allSettled([resolve4('30-0.xn--p1ai'), resolve6('30-0.xn--p1ai')]).then(results => results.map(result => result.status === 'fulfilled' ? result.value : result.reason.code))));
+  throw error;
+});
 for (const patch of patches) {
   try {
     const record = await callCloudPreferences('set', { tgId: patch.tgId, patch: patch.patch });
