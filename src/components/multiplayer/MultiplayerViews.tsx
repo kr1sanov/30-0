@@ -1,4 +1,6 @@
 'use client';
+import { useUiTranslation } from '@/hooks/use-ui-translation';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -82,6 +84,8 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
   onPick: (player: Player, slot: Slot) => Promise<boolean>; onMove: (from: Slot, to: Slot) => void;
   onSkip: () => void; onFinish: () => void;
 }) {
+  const { player: playerName } = useFootballNames();
+  const t = useUiTranslation();
   const [selected, setSelected] = useState<PlayerOption | null>(null);
   const [targetSlotIndex, setTargetSlotIndex] = useState<number | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -141,8 +145,8 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
     <div className="lg:grid lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:items-start lg:gap-6">
       <div className="space-y-3 lg:sticky lg:top-20">
         <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="rounded-lg bg-[#1E1E1E] px-2 py-1 text-xs font-black">{run.formation}</span><span className="text-[10px] text-[#64748b]">{11-filled} поз. осталось</span></div><span className="text-[10px] font-bold text-[#fbbf24]">🔄 {run.rerollsLeft}/1</span></div>
-        {selected && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выбери позицию для <strong>{selected.fullName}</strong> на поле или в списке ниже</motion.div>}
-        {lastPlaced && !selected && <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">✅ {lastPlaced}</div>}
+        {selected && <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">👉 Выбери позицию для <strong>{playerName(selected.fullName)}</strong> на поле или в списке ниже</motion.div>}
+        {lastPlaced && !selected && <div className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">✅ {lastPlaced.split(' → ').map((part, index) => index === 0 ? playerName(part) : t(part)).join(' → ')}</div>}
         {room.draftMode === 'position_first' && !spin && filled < 11 && <p className="rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 px-3 py-2 text-xs text-[#00C896]">Сначала выбери свободную позицию на поле, затем крути колесо.</p>}
         <FormationView multiplayer={{ config, slots, selectedPlayer: locked ? null : selected,
           targetSlotIndex, onChooseSlot: index => { if (!locked && !spin && room.draftMode === 'position_first') setTargetSlotIndex(index); },

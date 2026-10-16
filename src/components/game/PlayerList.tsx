@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 import { useUiTranslation } from '@/hooks/use-ui-translation';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -9,7 +10,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import type { PlayerOption, SpinResult, DraftSlot } from '@/lib/types';
 import { useTelegram } from '@/hooks/use-telegram';
-import { playerDisplayName } from '@/lib/playerNames';
 
 /* ─── Colors ─── */
 const ACCENT = 'var(--club-primary)';
@@ -56,6 +56,7 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
   targetSlotIndex?: number | null; showRatings?: boolean;
 } }) {
   const t = useUiTranslation();
+  const { displayName, language } = useFootballNames();
   const store = useGameStore();
   const currentSpin = multiplayer ? multiplayer.currentSpin : store.currentSpin;
   const slots = multiplayer ? multiplayer.slots : store.slots;
@@ -119,11 +120,11 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
       const ratingB = isPrimeMode && b.primeRating ? b.primeRating : b.rating;
       if (sortMode === 'rating') {
         if (ratingB !== ratingA) return ratingB - ratingA;
-        return a.fullName.localeCompare(b.fullName, 'ru');
+        return displayName(a.fullName, a.lastName).surname.localeCompare(displayName(b.fullName, b.lastName).surname, language);
       }
-      return a.fullName.localeCompare(b.fullName, 'ru');
+      return displayName(a.fullName, a.lastName).surname.localeCompare(displayName(b.fullName, b.lastName).surname, language);
     });
-  }, [currentSpin, slots, sortMode, isPrimeMode, targetSlotIndex]);
+  }, [currentSpin, slots, sortMode, isPrimeMode, targetSlotIndex, displayName, language]);
 
   // Show soft warning toast when draft API fails (non-blocking — game continues)
   useEffect(() => {
@@ -256,8 +257,8 @@ export default function PlayerList({ multiplayer }: { multiplayer?: {
                 {/* Name and positions */}
                 <div className="flex-1 min-w-0">
                   <div className="text-sm leading-tight truncate">
-                    <span className="font-bold text-[#FFFFFF]">{playerDisplayName(player.fullName, player.lastName).surname}</span>{' '}
-                    <span className="font-normal text-[#9CA3AF]">{playerDisplayName(player.fullName, player.lastName).given}</span>
+                    <span data-no-translate className="font-bold text-[#FFFFFF]">{displayName(player.fullName, player.lastName).surname}</span>{' '}
+                    <span data-no-translate className="font-normal text-[#9CA3AF]">{displayName(player.fullName, player.lastName).given}</span>
                   </div>
                   {/* Position badges */}
                   <div className="flex items-center gap-1 mt-1 flex-wrap">

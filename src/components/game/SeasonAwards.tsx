@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useEffect, useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -72,6 +73,7 @@ const POSITION_LABELS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 export default function SeasonAwards() {
+  const { player: playerName } = useFootballNames();
   const { slots, currentManager, seasonResult, resetGame, setScreen, config } = useGameStore();
   const { haptic, notify } = useTelegram();
 
@@ -304,7 +306,7 @@ export default function SeasonAwards() {
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-[#FFFFFF]">{award.title}</div>
                 <div className="text-lg font-black text-[#FFFFFF] mt-0.5 truncate">
-                  {award.playerName}
+                  {playerName(award.playerName)}
                 </div>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <span

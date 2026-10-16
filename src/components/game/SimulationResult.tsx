@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -123,6 +124,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
   data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
   onHome: () => void; onReplay: () => void; friendNames?: string[];
 } }) {
+  const { club: clubName } = useFootballNames();
   const store = useGameStore();
   const seasonResult = multiplayer ? multiplayer.data : store.seasonResult;
   const resetGame = multiplayer?.onReplay ?? store.resetGame;
@@ -325,7 +327,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
     const pos = getPositionOrdinal(data.position);
     const lines = [
       `⚽ МОЙ СЕЗОН В 30–0`,
-      config.gameMode === 'single_club' ? `🏟️ Клуб: ${config.clubName ?? 'выбранный клуб'}`
+      config.gameMode === 'single_club' ? `🏟️ Клуб: ${clubName(config.clubName) || 'выбранный клуб'}`
         : config.gameMode === 'challenge_vagner' ? '❤️ Челлендж: Вагнер Лав'
         : config.gameMode === 'challenge_dzyuba' ? '🎯 Челлендж: Артём Дзюба'
         : `🏟️ Обычный драфт · ${config.formation}`,
@@ -348,7 +350,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
     lines.push('🎮 Играть: https://30-0.рф');
     lines.push('#30п0 #ФутбольныйДрафт');
     return lines.join('\n');
-  }, [data, earnedTrophies, config.gameMode, config.clubName, config.formation]);
+  }, [data, earnedTrophies, config.gameMode, config.clubName, config.formation, clubName]);
 
   if (!data) return null;
 
@@ -479,7 +481,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
             <div className="text-center">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-[#00C896]">Сезон завершён</div>
               <h1 className="mt-2 text-2xl font-black text-white sm:text-4xl">Твой результат</h1>
-              {config.gameMode === 'single_club' && config.clubName && <p className="mt-1 text-sm text-[#9CA3AF]">{config.clubName}</p>}
+              {config.gameMode === 'single_club' && config.clubName && <p className="mt-1 text-sm text-[#9CA3AF]">{clubName(config.clubName)}</p>}
             </div>
             {/* ── Hero Stat: Points & Position ── */}
             <motion.div

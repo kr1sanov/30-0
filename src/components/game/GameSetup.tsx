@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -258,6 +259,7 @@ function ClubCard({
   isSelected: boolean;
   onClick: () => void;
 }) {
+  const { club: clubName } = useFootballNames();
   const theme = getClubTheme(club.nameRu);
 
   return (
@@ -265,7 +267,7 @@ function ClubCard({
       type="button"
       onClick={onClick}
       aria-pressed={isSelected}
-      aria-label={`${isSelected ? 'Выбран клуб' : 'Выбрать клуб'} ${club.nameRu}`}
+      aria-label={`${isSelected ? 'Выбран клуб' : 'Выбрать клуб'} ${clubName(club.nameRu)}`}
       whileTap={{ scale: 0.96 }}
       whileHover={{ scale: 1.02 }}
       className="relative rounded-xl p-3 text-center transition-all duration-200 border-2 overflow-hidden"
@@ -301,7 +303,7 @@ function ClubCard({
         </svg>
       </div>
       <div className="relative rounded-md bg-[#08131e]/90 px-1.5 py-1.5 text-white shadow-sm">
-        <div className="text-xs font-bold leading-tight">{club.nameRu}</div>
+        <div className="text-xs font-bold leading-tight">{clubName(club.nameRu)}</div>
         {club.city && (
           <div className="text-[9px] text-white/85 mt-0.5 leading-tight">{club.city}</div>
         )}
@@ -313,6 +315,7 @@ function ClubCard({
 }
 
 export default function GameSetup() {
+  const { club: clubName } = useFootballNames();
   const { config, setConfig, startRun, dailyChallenge, lastDraftError, resumeGame } = useGameStore();
   const { haptic, selectionChanged } = useTelegram();
   const { user } = useAuthStore();
@@ -570,7 +573,7 @@ export default function GameSetup() {
                   </svg>
                   <div>
                     <div className="text-sm font-bold" style={{ color: ACCENT }}>
-                      {selectedClub.nameRu}
+                      {clubName(selectedClub.nameRu)}
                     </div>
                     <div className="text-xs text-[#9CA3AF]">
                       {selectedClub.seasonCount} сезонов · {selectedClub.playerCount} игроков · {selectedClub.periods}
@@ -583,7 +586,7 @@ export default function GameSetup() {
               {/* Club grid */}
               {activeClubRun && (
                 <button type="button" disabled={isStarting} onClick={() => void resumeClubRun()} className="mb-3 w-full rounded-xl border border-[#00C896]/40 bg-[#00C896]/10 px-4 py-3 text-sm font-bold text-[#00C896] hover:bg-[#00C896]/20">
-                  ▶ Продолжить драфт · {activeClubRun.clubName ?? clubs.find(club => club.id === activeClubRun.clubFilter)?.nameRu}
+                  ▶ Продолжить драфт · {clubName(activeClubRun.clubName ?? clubs.find(club => club.id === activeClubRun.clubFilter)?.nameRu)}
                 </button>
               )}
               {selectedClub ? null : clubsLoading ? (
@@ -1083,7 +1086,7 @@ export default function GameSetup() {
           : dailyChallenge
           ? 'Начать челлендж →'
           : currentGameMode === 'single_club'
-          ? `Начать драфт · ${selectedClub?.nameRu ?? 'Один клуб'} →`
+          ? `Начать драфт · ${selectedClub ? clubName(selectedClub.nameRu) : 'Один клуб'} →`
           : 'Начать драфт →'}
         </Button>
       </>)}

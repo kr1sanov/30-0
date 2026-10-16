@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
@@ -590,6 +591,7 @@ function HomePage() {
 
 /* ─── Draft Screen ─── */
 function DraftScreen() {
+  const { player: playerName } = useFootballNames();
   const { config, rerollsLeft, currentSpin, selectedPlayer, resetGame, startRun, lastConfig, slots, movingPlayerSlotIndex, finishMoving, lastAssignedSlotIndex, undoLastPick, lastDraftState, justAssignedSlotIndex, dailyChallenge, lastDraftError } = useGameStore();
   const [showRestartModal, setShowRestartModal] = useState(false);
   const [lastPlacedInfo, setLastPlacedInfo] = useState<{ name: string; position: string } | null>(null);
@@ -781,7 +783,7 @@ function DraftScreen() {
           >
             <span className="text-[#00C896] text-xs font-bold">✅</span>
             <span className="text-xs text-[#00C896] font-medium">
-              <strong>{lastPlacedInfo.name}</strong> → {lastPlacedInfo.position}
+              <strong>{playerName(lastPlacedInfo.name)}</strong> → {lastPlacedInfo.position}
             </span>
           </motion.div>
         )}

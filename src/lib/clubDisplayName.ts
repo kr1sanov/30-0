@@ -1,56 +1,34 @@
-const aliases: Record<string, string> = {
-  "cska moscow": "ЦСКА",
-  "dynamo moscow": "Динамо",
-  "dinamo moscow": "Динамо",
-  "spartak moscow": "Спартак",
-  "lokomotiv moscow": "Локомотив",
-  "zenit saint petersburg": "Зенит",
-  "zenit st. petersburg": "Зенит",
-  "zenit st petersburg": "Зенит",
-  "krylya sovetov samara": "Крылья Советов",
-  "krylia sovetov samara": "Крылья Советов",
-  "rubin kazan": "Рубин",
-  "akhmat grozny": "Ахмат",
-  "terek grozny": "Терек",
-  "anzhi makhachkala": "Анжи",
-  "amkar perm": "Амкар",
-  "tom tomsk": "Томь",
-  "kuban krasnodar": "Кубань",
-  "ural ekaterinburg": "Урал",
-  "arsenal tula": "Арсенал Тула",
-  "ska khabarovsk": "СКА-Хабаровск",
-  "spartak nalchik": "Спартак-Нальчик",
-  "mordovia saransk": "Мордовия",
-  "saturn ramenskoye": "Сатурн",
-  "alania vladikavkaz": "Алания",
-  "sibir novosibirsk": "Сибирь",
-  "yenisey krasnoyarsk": "Енисей",
-  "shinnik yaroslavl": "Шинник",
-  "luch-energiya vladivostok": "Луч-Энергия",
-  "nizhny novgorod": "Пари НН",
-  "pari nn": "Пари НН",
-  volga: "Волга",
-  "torpedo moskva": "Торпедо",
-  "torpedo moscow": "Торпедо",
-  moskva: "Москва",
-  moscow: "Москва",
-  krasnodar: "Краснодар",
-  rostov: "Ростов",
-  ufa: "Уфа",
-  khimki: "Химки",
-  orenburg: "Оренбург",
-  tosno: "Тосно",
-  tambov: "Тамбов",
-  sochi: "Сочи",
-};
-/** Database/import aliases share one Russian source label; names outside RPL remain intact. */
-export function russianClubName(name: string): string {
-  return (
-    aliases[
-      name
-        .trim()
-        .toLowerCase()
-        .replace(/^fc\s+/, "")
-    ] ?? name
-  );
+// Explicit aliases cover every imported RPL club, including historical names.
+const clubs: Array<[string, string, ...string[]]> = [
+  ['ЦСКА','CSKA Moscow','CSKA Moskva','CSKA Moskou','ЦСКА Москва'],
+  ['Динамо','Dynamo Moscow','Dinamo Moscow','Dinamo Moskva','Dinamo Moskou','Динамо Москва'],
+  ['Спартак','Spartak Moscow','Spartak Moskva','Spartak Moskou','Спартак Москва'],
+  ['Локомотив','Lokomotiv Moscow','Lokomotiv Moskva','Lokomotiv','Локомотив Москва'],
+  ['Зенит','Zenit Saint Petersburg','Zenit','Zenit St. Petersburg','Zenit St Petersburg'],
+  ['Крылья Советов','Krylya Sovetov Samara','Krylia Sovetov Samara','Krylya Sovetov'],
+  ['Рубин','Rubin Kazan','Рубин Казань'], ['Ахмат','Akhmat Grozny','Ахмат Грозный'],
+  ['Терек','Terek Grozny','Терек Грозный'], ['Анжи','Anzhi Makhachkala','Anji Makhachkala','A. Makhachkala','Анжи Махачкала'],
+  ['Амкар','Amkar Perm','Амкар Пермь'], ['Томь','Tom Tomsk','Томь Томск'],
+  ['Кубань','Kuban Krasnodar','Кубань Краснодар'], ['Урал','Ural Yekaterinburg','Ural Ekaterinburg','FC Ural'],
+  ['Арсенал Тула','Arsenal Tula','Арсенал'], ['СКА-Хабаровск','SKA Khabarovsk'],
+  ['Спартак-Нальчик','Spartak Nalchik'], ['Мордовия','Mordovia Saransk','Мордовия Саранск'],
+  ['Сатурн','Saturn Ramenskoye','Сатурн Раменское'], ['Алания','Alania Vladikavkaz','Алания Владикавказ'],
+  ['Сибирь','Sibir Novosibirsk','Сибирь Новосибирск'], ['Енисей','Yenisey Krasnoyarsk','Енисей Красноярск'],
+  ['Шинник','Shinnik Yaroslavl','Шинник Ярославль'], ['Луч-Энергия','Luch-Energiya Vladivostok','Луч-Энергия Владивосток'],
+  ['Пари НН','Pari Nizhny Novgorod','Nizhny Novgorod','Pari NN','Нижний Новгород'],
+  ['Волга','Volga','Volga Nizhny Novgorod','FC Volga Nizhniy Novgorod','Волга Нижний Новгород'],
+  ['Торпедо','Torpedo Moscow','Torpedo Moskva','Торпедо Москва'], ['Москва','FC Moscow','Moskva','Moscow','FC Moskva'],
+  ['Краснодар','Krasnodar','FC Krasnodar'], ['Ростов','Rostov','FC Rostov'], ['Уфа','Ufa','FC Ufa'],
+  ['Химки','Khimki','FC Khimki'], ['Оренбург','Orenburg','FC Orenburg'], ['Тосно','Tosno','FC Tosno'],
+  ['Тамбов','Tambov'], ['Сочи','Sochi'], ['Балтика','Baltika Kaliningrad','Балтика Калининград'],
+  ['Факел','Fakel Voronezh','Fakel','Факел Воронеж'], ['Акрон','Akron Togliatti','Akron','Акрон Тольятти'],
+  ['Динамо Махачкала','Dynamo Makhachkala','Dinamo Makhachkala'], ['Родина','Rodina Moscow','Rodina Moskva','Rodina'],
+];
+const aliases = new Map(clubs.flatMap(([ru,en,...rest]) => [ru,en,...rest].map(name=>[name.trim().toLowerCase(),{ru,en}] as const)));
+export function localizedClubName(name: string | null | undefined, language: 'ru' | 'en'): string {
+  if (!name) return '';
+  const normalized = name.trim().toLowerCase();
+  const club = aliases.get(normalized) ?? aliases.get(normalized.replace(/^fc\s+/,''));
+  return club?.[language] ?? name;
 }
+export function russianClubName(name: string): string { return localizedClubName(name,'ru'); }

@@ -1,3 +1,4 @@
+import { localizedClubName } from './clubDisplayName.ts';
 import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
@@ -1215,6 +1216,8 @@ export function translateInterface(value: string): string {
   const leading = value.match(/^\s*/)?.[0] ?? '';
   const trailing = value.match(/\s*$/)?.[0] ?? '';
   const core = value.trim();
+  const club = localizedClubName(core, 'en');
+  if (club !== core) return leading + club + trailing;
   if (!/[А-Яа-яЁё]/.test(core)) return value;
   const normalized = core.replace(/\s+/g, ' ');
   const exact = TEXT[core] || TEXT[normalized] || MANAGERS.find(manager => manager.name === normalized)?.nameEn;

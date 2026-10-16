@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -190,6 +191,7 @@ function getAvgRating(slots: GameSlotData[]): number {
 // ---------------------------------------------------------------------------
 
 export default function HistoryScreen({ embedded = false }: { embedded?: boolean }) {
+  const { player: playerName } = useFootballNames();
   const { resetGame, setScreen } = useGameStore();
   const [runs, setRuns] = useState<GameRunData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -531,7 +533,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
                                   </span>
                                   {/* Name */}
                                   <span className="text-xs text-[#E5E5E5] flex-1 truncate">
-                                    {slot.playerName}
+                                    {playerName(slot.playerName)}
                                   </span>
                                   {/* Rating */}
                                   {slot.playerRating != null && (

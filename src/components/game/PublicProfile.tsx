@@ -1,5 +1,5 @@
 "use client";
-import { russianClubName } from "@/lib/clubDisplayName";
+import { useFootballNames } from "@/hooks/use-football-names";
 import { useUiTranslation, useUiLanguage } from "@/hooks/use-ui-translation";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -55,6 +55,7 @@ type Player = {
 
 export default function PublicProfile({ id }: { id: string }) {
   const t = useUiTranslation();
+  const { club: clubName } = useFootballNames();
   const locale = useUiLanguage() === "en" ? "en-GB" : "ru-RU";
   const router = useRouter();
   const { showBackButton, hideBackButton } = useTelegram();
@@ -292,7 +293,7 @@ export default function PublicProfile({ id }: { id: string }) {
                     {player.favoriteClub.logoUrl?.startsWith("https://") ? (
                       <img
                         src={player.favoriteClub.logoUrl}
-                        alt={player.favoriteClub.nameRu}
+                        alt={clubName(player.favoriteClub.nameRu)}
                         className="h-full w-full object-contain"
                       />
                     ) : (
@@ -303,7 +304,7 @@ export default function PublicProfile({ id }: { id: string }) {
                     <h2 className="font-bold">
                       {t("Любимый клуб ·")}{" "}
                       <span data-no-translate>
-                        {t(russianClubName(player.favoriteClub.nameRu))}
+                        {clubName(player.favoriteClub.nameRu)}
                       </span>
                     </h2>
                     <p className="text-sm text-slate-300">
