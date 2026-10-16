@@ -140,6 +140,10 @@ try {
   const persisted = JSON.parse((await db.gameRun.findUnique({where:{id:fullRun.id}})).seasonResultJson);
   assert.equal(persisted.table.length,16);assert.equal(persisted.matches.length,30);
   assert.equal(persisted.playerStats.filter(player=>player.team==='Complete XI').reduce((total,player)=>total+player.goals,0),completed.goalsFor);
+  const selectedHistory = await api('/api/runs?limit=1&selected=qa-round-1');
+  assert.ok(selectedHistory.some(run => run.id === 'qa-round-1' || run.seriesRounds?.some(round => round.id === 'qa-round-1')));
+  const privateHistory = await api('/api/runs?limit=1&selected=qa-incomplete-xi');
+  assert.ok(!privateHistory.some(run => run.id === 'qa-incomplete-xi'));
   console.log('PASS full multiplayer league, no early simulation, technical forfeits and persisted history');
 
   const prefs={enabled:true,news:false,invitations:true,results:true,friends:true,friend_updates:true};
