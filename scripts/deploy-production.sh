@@ -157,6 +157,7 @@ cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-
 cp "$DEPLOY_STAGE/scripts/import-fifa10-rpl.mjs" scripts/import-fifa10-rpl.mjs
 cp "$DEPLOY_STAGE/scripts/import-rpl-2010-2018.mjs" scripts/import-rpl-2010-2018.mjs
 cp "$DEPLOY_STAGE/scripts/import-rpl-2019-2021.mjs" scripts/import-rpl-2019-2021.mjs
+cp "$DEPLOY_STAGE/scripts/import-rpl-2022-2025.mjs" scripts/import-rpl-2022-2025.mjs
 cp "$DEPLOY_STAGE/scripts/import-rpl-2006-2009.mjs" scripts/import-rpl-2006-2009.mjs
 cp "$DEPLOY_STAGE/scripts/reset-legacy-progress.mjs" scripts/reset-legacy-progress.mjs
 mkdir -p docs/research
@@ -164,7 +165,9 @@ cp "$DEPLOY_STAGE/docs/research/verified-fifa10-rpl.json" docs/research/verified
 mkdir -p docs/research/rpl-2010-2018
 cp -r "$DEPLOY_STAGE/docs/research/rpl-2010-2018/." docs/research/rpl-2010-2018/
 mkdir -p docs/research/rpl-2019-2021
+mkdir -p docs/research/rpl-2022-2025
 cp -r "$DEPLOY_STAGE/docs/research/rpl-2019-2021/." docs/research/rpl-2019-2021/
+cp -r "$DEPLOY_STAGE/docs/research/rpl-2022-2025/." docs/research/rpl-2022-2025/
 mkdir -p docs/research/rpl-2006-2009
 cp -r "$DEPLOY_STAGE/docs/research/rpl-2006-2009/." docs/research/rpl-2006-2009/
 cp "$DEPLOY_STAGE/scripts/set-telegram-webhook.mjs" scripts/set-telegram-webhook.mjs
@@ -429,6 +432,15 @@ if ! node --env-file=.env .next/standalone/scripts/import-rpl-2019-2021.mjs --ap
   exit 1
 fi
 echo "✅ 2019–21 rosters imported"
+
+NEWEST_ROSTER_BACKUP="$PRIVATE_BACKUP_DIR/roster-before-rpl-2022-2025-$(date +%Y%m%d%H%M%S).json"
+if ! node --env-file=.env .next/standalone/scripts/import-rpl-2022-2025.mjs --apply "--backup=$NEWEST_ROSTER_BACKUP"; then
+  echo "❌ 2022–25 roster import failed"
+  rollback_standalone || true
+  exit 1
+fi
+echo "✅ 2022–25 rosters imported"
+
 
 echo "📋 Verifying and importing supplied 2006–09 rosters"
 if ! node .next/standalone/scripts/import-rpl-2006-2009.mjs; then

@@ -81,7 +81,7 @@ export async function POST(
 
     // Determine era range from run config
     const startYear = run.eraStartYear ?? 2006;
-    const endYear = run.eraEndYear ?? 2021;
+    const endYear = run.eraEndYear ?? 2026;
 
     // Build the where clause for ClubSeasons
     // If clubFilter is set (single_club mode), only return club-seasons for that club

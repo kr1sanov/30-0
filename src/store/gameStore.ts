@@ -204,7 +204,7 @@ const defaultConfig: GameConfig = {
   ratingMode: 'season',
   eraFilter: 'all',
   eraStartYear: 2006,
-  eraEndYear: 2021,
+  eraEndYear: 2026,
   gameMode: 'classic',
   clubFilter: undefined,
   nationalityFilter: undefined,
@@ -1527,7 +1527,7 @@ export const useGameStore = create<GameState>()(
     {
       name: '30-0-rpl-storage',
       storage: createJSONStorage(() => localStorage),
-      version: 6,
+      version: 7,
       // Persist profileStats, lastConfig, and game state for resuming drafts.
       // NOTE: selectedPlayer, currentSpin, isSpinning, and movingPlayerSlotIndex are
       // transient UI states that must NOT be persisted — they are cleared on resume.
@@ -1586,7 +1586,13 @@ export const useGameStore = create<GameState>()(
           // Expand only the old "all" preset. Keep custom ranges and any
           // unfinished run's lastConfig exactly as the player selected them.
           return { ...state, config: config?.eraFilter === 'all' && config.eraStartYear === 2010 && config.eraEndYear === 2021
-            ? { ...config, eraStartYear: 2006 } : config };
+            ? { ...config, eraStartYear: 2006, eraEndYear: 2026 } : config };
+        }
+        if (version < 7) {
+          const state = persistedState as Record<string, unknown>;
+          const config = state.config as Partial<GameConfig> | undefined;
+          return { ...state, config: config?.eraFilter === 'all'
+            ? { ...config, eraStartYear: 2006, eraEndYear: 2026 } : config };
         }
         return persistedState;
       },

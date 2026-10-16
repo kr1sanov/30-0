@@ -1,0 +1,7330 @@
+{
+  "year": 2025,
+  "edition": "2025",
+  "sourceFile": "Russian Premier League 2025.md",
+  "sourceSha256": "e50d8729d0dbb952de712fcce4a8026bed607da5c9abc4dc35543dec3875539a",
+  "clubCounts": {
+    "Akhmat Grozny": 27,
+    "Akron Togliatti": 29,
+    "CSKA Moscow": 27,
+    "Dinamo Makhachkala": 25,
+    "Dynamo Moscow": 24,
+    "Fakel Voronezh": 24,
+    "Khimki": 31,
+    "Krasnodar": 23,
+    "Krylya Sovetov Samara": 29,
+    "Lokomotiv Moscow": 24,
+    "Orenburg": 27,
+    "Pari Nizhny Novgorod": 34,
+    "Rostov": 28,
+    "Rubin Kazan": 28,
+    "Spartak Moscow": 26,
+    "Zenit Saint Petersburg": 26
+  },
+  "positionAdjustments": [],
+  "duplicateNames": [],
+  "players": [
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-7a4126600bd8a1a8",
+      "name": "Giorgiy Shelia",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 88
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "240263",
+      "name": "Arsen Adamov",
+      "positions": [
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 95
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-ee7f14e8c3be54a0",
+      "name": "Nader Ghandri",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 68,
+      "potential": 70,
+      "number": 75
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-2968dd57c0dc9103",
+      "name": "Aleksandr Zhirov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 67,
+      "number": 2
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-84b59e15fd0513db",
+      "name": "Darko Todorovic",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 73,
+      "number": 55
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-ec295d1d85720e35",
+      "name": "Vladislav Kamilov",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 18
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "90009",
+      "name": "Daniil Utkin",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 47
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-3a199842018f5cf9",
+      "name": "Ismael Silva",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 67,
+      "potential": 70,
+      "number": 11
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-4eb1bfdfcc8df015",
+      "name": "Maksim Samorodov",
+      "positions": [
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "LW"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 20
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-4b2fce8bcbcec127",
+      "name": "Felippe Cardoso",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 60,
+      "number": 30
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-4588e5f1435c9471",
+      "name": "Lechi Sadulaev",
+      "positions": [
+        "ЛП",
+        "АП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "LM",
+        "CAM",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 10
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "232145",
+      "name": "Bernard Berisha",
+      "positions": [
+        "ЛВ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "LM"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 7
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "206133",
+      "name": "Anton Shvets",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 72,
+      "number": 23
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-46481bb6f14bbe97",
+      "name": "Camilo",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 15
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-0a3ccc475200367b",
+      "name": "Miroslav Bogosavac",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 8
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "239294",
+      "name": "Mikhail Oparin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 68,
+      "number": 1
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-9caa42892316adf4",
+      "name": "Milos Satara",
+      "positions": [
+        "ЦЗ",
+        "ОП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM",
+        "RB"
+      ],
+      "rating": 67,
+      "potential": 73,
+      "number": 5
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "195011",
+      "name": "Rizvan Utsiev",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 66,
+      "potential": 66,
+      "number": 40
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-028b03fb3b9e5d34",
+      "name": "Mauro Luna",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 19
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-34aaf0d657337a17",
+      "name": "Amine Talal",
+      "positions": [
+        "ЦП",
+        "ОП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM",
+        "CAM"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 14
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "88213",
+      "name": "Evgeniy Kharin",
+      "positions": [
+        "ЛП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LM",
+        "LB"
+      ],
+      "rating": 69,
+      "potential": 74,
+      "number": 59
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-3f6a968a9b462ef3",
+      "name": "Lucas Lovat",
+      "positions": [
+        "ЛЗ",
+        "ПП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "RM",
+        "RW"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 36
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-18c07bf4a6b1dc58",
+      "name": "Svetoslav Kovachev",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 68,
+      "potential": 71,
+      "number": 98
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-e0182a16f8006795",
+      "name": "Turpal-Ali Ibishev",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB"
+      ],
+      "rating": 62,
+      "potential": 73,
+      "number": 4
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-a5e99810cffcf6d4",
+      "name": "Zaim Divanovic",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 62,
+      "potential": 70,
+      "number": 24
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-120523bc5445ba00",
+      "name": "Magomed Yakuev",
+      "positions": [
+        "ЛП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "LM",
+        "CAM"
+      ],
+      "rating": 60,
+      "potential": 66,
+      "number": 71
+    },
+    {
+      "clubId": "110109",
+      "clubName": "Akhmat Grozny",
+      "sourcePlayerId": "name-e4366721ac0d7096",
+      "name": "Minkail Matsuev",
+      "positions": [
+        "ЦП",
+        "АП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM",
+        "CDM"
+      ],
+      "rating": 54,
+      "potential": 62,
+      "number": 13
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "147024",
+      "name": "Sergey Volkov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 1
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "239938",
+      "name": "Konstantin Savichev",
+      "positions": [
+        "ПЗ",
+        "ПП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM",
+        "RW"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 77
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-0249263867952f65",
+      "name": "Paulo Vitor",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 4
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-6c445f375a6dcf27",
+      "name": "Marat Bokoev",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "CDM"
+      ],
+      "rating": 65,
+      "potential": 72,
+      "number": 19
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-4af6a265aed81d17",
+      "name": "Bojan Dimoski",
+      "positions": [
+        "ЛЗ",
+        "ЦП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CM",
+        "RM"
+      ],
+      "rating": 68,
+      "potential": 75,
+      "number": 23
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-d42da446fee9be82",
+      "name": "Stefan Loncar",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 70,
+      "number": 15
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-dbaf5bf829db61f8",
+      "name": "Maksim Kuzmin",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 69,
+      "potential": 71,
+      "number": 6
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "219255",
+      "name": "Maksim Palienko",
+      "positions": [
+        "АП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RW",
+        "LW"
+      ],
+      "rating": 69,
+      "potential": 71,
+      "number": 10
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-a6185d90e193f745",
+      "name": "Kirill Danilin",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 66,
+      "potential": 69,
+      "number": 7
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "187607",
+      "name": "Artem Dzyuba",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 73,
+      "potential": 73,
+      "number": 24
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-c888985e3e574913",
+      "name": "Soltmurad Bakaev",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "АП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 17
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-934c6d98d0e72a49",
+      "name": "Artur Galoyan",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 20
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-0878722d5e0f8300",
+      "name": "Roberto Fernández",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 21
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-469148dbf5d91bf4",
+      "name": "Ivan Timoshenko",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 99
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-7e6707b2928aaaff",
+      "name": "Aleksandr Vasyutin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 70,
+      "number": 78
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-8fc49ec65b83a0d8",
+      "name": "Vyacheslav Bardybakhin",
+      "positions": [
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LB"
+      ],
+      "rating": 67,
+      "potential": 75,
+      "number": 80
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-0b890c870161c7ad",
+      "name": "Vladimir Khubulov",
+      "positions": [
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "LW"
+      ],
+      "rating": 66,
+      "potential": 74,
+      "number": 14
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-9ab774314f7b79ab",
+      "name": "Dmitriy Nagaev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 60,
+      "potential": 69,
+      "number": 50
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-9f31b8084bcd2cee",
+      "name": "Aleksa Djurasovic",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 73,
+      "number": 5
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-cdd8091c1c4ab842",
+      "name": "Benchimol Benchimol",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 72,
+      "number": 11
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-1c6dcb550381184d",
+      "name": "Mavis Tchibota",
+      "positions": [
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW"
+      ],
+      "rating": 67,
+      "potential": 70,
+      "number": 13
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-2d183a706ffd9117",
+      "name": "Nikita Baranok",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 76,
+      "number": 22
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-42fd1fc700a512da",
+      "name": "Rodrigo Escoval",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 65,
+      "potential": 69,
+      "number": 26
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "243250",
+      "name": "Vladimir Moskvichev",
+      "positions": [
+        "ОП",
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB",
+        "RB"
+      ],
+      "rating": 64,
+      "potential": 76,
+      "number": 65
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-3688dda2a72dce99",
+      "name": "Arseniy Dmitriev",
+      "positions": [
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "RW"
+      ],
+      "rating": 63,
+      "potential": 72,
+      "number": 69
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-c11192dd5c166661",
+      "name": "Dmitriy Pestryakov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "LM"
+      ],
+      "rating": 63,
+      "potential": 70,
+      "number": 71
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-a0b46d315208b0e6",
+      "name": "Sherzod Esanov",
+      "positions": [
+        "ЦП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CM",
+        "RW"
+      ],
+      "rating": 63,
+      "potential": 73,
+      "number": 25
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-35199b3a877e8325",
+      "name": "Sergey Gribov",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 61,
+      "potential": 70,
+      "number": 97
+    },
+    {
+      "clubId": "akron",
+      "clubName": "Akron Togliatti",
+      "sourcePlayerId": "name-52691a76469cd0ae",
+      "name": "Maksim Boldyrev",
+      "positions": [
+        "АП"
+      ],
+      "sourcePositions": [
+        "CAM"
+      ],
+      "rating": 60,
+      "potential": 70,
+      "number": 91
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "148119",
+      "name": "Igor Akinfeev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 77,
+      "potential": 73,
+      "number": 35
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-c376466c93a80db0",
+      "name": "Moisés",
+      "positions": [
+        "ЛЗ",
+        "ЛП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM",
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 27
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-22301f964cd223ca",
+      "name": "Willyan Rocha",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 4
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "245703",
+      "name": "Igor Diveev",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 78
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-d92c1a8a9eb19f89",
+      "name": "Khellven",
+      "positions": [
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RB"
+      ],
+      "rating": 73,
+      "potential": 78,
+      "number": 13
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-67cb5535d2ea56e2",
+      "name": "Matvey Kislyak",
+      "positions": [
+        "ЦП",
+        "ОП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM",
+        "CAM"
+      ],
+      "rating": 69,
+      "potential": 80,
+      "number": 31
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-c99dd8f7db2050a0",
+      "name": "Sasa Zdjelar",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 73,
+      "potential": 75,
+      "number": 5
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-42db5d3bc9c7e891",
+      "name": "Danil Krugovoy",
+      "positions": [
+        "ЛЗ",
+        "ЛП",
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM",
+        "CB",
+        "RB"
+      ],
+      "rating": 72,
+      "potential": 80,
+      "number": 3
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "234857",
+      "name": "Ivan Oblyakov",
+      "positions": [
+        "ЦП",
+        "ОП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM",
+        "LB"
+      ],
+      "rating": 75,
+      "potential": 79,
+      "number": 10
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-f26b488b7816d8b0",
+      "name": "Abbosbek Fayzullaev",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 21
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-cc86655366506d27",
+      "name": "Tamerlan Musaev",
+      "positions": [
+        "НП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 11
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-58e6db4a51758306",
+      "name": "Milan Gajić",
+      "positions": [
+        "ПЗ",
+        "ЛЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB",
+        "RM"
+      ],
+      "rating": 74,
+      "potential": 76,
+      "number": 22
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "233290",
+      "name": "Rifat Zhemaletdinov",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 73,
+      "potential": 75,
+      "number": 19
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "242079",
+      "name": "Kristijan Bistrovic",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 71,
+      "potential": 75,
+      "number": 25
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-913aa13b867b085a",
+      "name": "Maksim Mukhin",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 71,
+      "potential": 79,
+      "number": 6
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-c88ff58bcb720fdb",
+      "name": "Vladislav Torop",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 71,
+      "potential": 79,
+      "number": 49
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-6b508df770c21d5d",
+      "name": "Saúl Guarirapa",
+      "positions": [
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM"
+      ],
+      "rating": 69,
+      "potential": 76,
+      "number": 9
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-c936d4939ef23087",
+      "name": "Kirill Glebov",
+      "positions": [
+        "ПВ",
+        "АП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "CAM",
+        "LW"
+      ],
+      "rating": 66,
+      "potential": 80,
+      "number": 17
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "222510",
+      "name": "Ilya Pomazun",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 23
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-860f4d8090a64367",
+      "name": "Miralem Pjanic",
+      "positions": [
+        "ЦП",
+        "АП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM",
+        "CDM"
+      ],
+      "rating": 73,
+      "potential": 72,
+      "number": 15
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-04b065976a27572f",
+      "name": "Sékou Koïta",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 73,
+      "potential": 75,
+      "number": 20
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-190dbde6bebbffdb",
+      "name": "Ilya Agapov",
+      "positions": [
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "RB"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 77
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-435dc43b39ed6a05",
+      "name": "Artem Shumanskiy",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 68,
+      "potential": 78,
+      "number": 8
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-5cff15ebc25dd804",
+      "name": "Matvey Lukin",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "LM"
+      ],
+      "rating": 67,
+      "potential": 78,
+      "number": 90
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-97e7277f5c7ddf36",
+      "name": "Vladislav Yakovlev",
+      "positions": [
+        "НП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW",
+        "LW"
+      ],
+      "rating": 65,
+      "potential": 75,
+      "number": 46
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-f94d46201a312e68",
+      "name": "Egor Ushakov",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "rating": 64,
+      "potential": 77,
+      "number": 14
+    },
+    {
+      "clubId": "315",
+      "clubName": "CSKA Moscow",
+      "sourcePlayerId": "name-6eef783d4687dea0",
+      "name": "Danila Bokov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 62,
+      "potential": 74,
+      "number": 45
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-fc38e2e317542a8e",
+      "name": "David Volk",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 27
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-1f304e9e2b95b0db",
+      "name": "Mutalip Alibekov",
+      "positions": [
+        "ЦЗ",
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "RB",
+        "LB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 99
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-a6c1a2e0cc1dcda9",
+      "name": "Valentin Paltsev",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "RB"
+      ],
+      "rating": 70,
+      "potential": 75,
+      "number": 70
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-d6ebb491e047bc0c",
+      "name": "Vladimir Kovacevic",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 55
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-cd3e0be82df3052f",
+      "name": "Soslan Kagermazov",
+      "positions": [
+        "ПЗ",
+        "ЛЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB",
+        "RM"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 13
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-54455b5f2687c909",
+      "name": "Zalimkhan Yusupov",
+      "positions": [
+        "ЦП",
+        "АП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM",
+        "RM"
+      ],
+      "rating": 68,
+      "potential": 75,
+      "number": 22
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "237007",
+      "name": "Nikita Glushkov",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 71,
+      "number": 47
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-53b4c175d24f0c86",
+      "name": "Aleksandr Sandrachuk",
+      "positions": [
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB"
+      ],
+      "rating": 64,
+      "potential": 70,
+      "number": 72
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-912ed1095caaa830",
+      "name": "Abakar Gadzhiev",
+      "positions": [
+        "АП",
+        "ЛП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LM",
+        "LW"
+      ],
+      "rating": 70,
+      "potential": 79,
+      "number": 7
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-589218f62a283817",
+      "name": "Egas Cacintura",
+      "positions": [
+        "АП",
+        "ПП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RM",
+        "LM"
+      ],
+      "rating": 69,
+      "potential": 75,
+      "number": 11
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "90008",
+      "name": "Gamid Agalarov",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 71,
+      "potential": 79,
+      "number": 25
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-e14b57af6f4fc097",
+      "name": "Victorien Angban",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 8
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-bd0809571cd6abde",
+      "name": "Mohammadjavad Hosseinnejad",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 69,
+      "potential": 74,
+      "number": 20
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-33d26281d9b58493",
+      "name": "Razhab Magomedov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ЦН"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "CF"
+      ],
+      "rating": 69,
+      "potential": 78,
+      "number": 9
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-aa6b692c3c3d5b3e",
+      "name": "Idar Shumakhov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 68,
+      "potential": 75,
+      "number": 4
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "243247",
+      "name": "Nikita Goylo",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 72,
+      "number": 1
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-c79dd6c2705d993a",
+      "name": "Nikita Kotin",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB"
+      ],
+      "rating": 63,
+      "potential": 76,
+      "number": 82
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-8f2a84afb8c57860",
+      "name": "Temirkan Sundukov",
+      "positions": [
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB"
+      ],
+      "rating": 62,
+      "potential": 75,
+      "number": 77
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "237804",
+      "name": "Jemal Tabidze",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 71,
+      "number": 5
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-8a7ad795b782b456",
+      "name": "Houssem Mrezigue",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 66,
+      "potential": 69,
+      "number": 16
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-94a19d5fdec9d358",
+      "name": "Anton Krachkovskiy",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 65,
+      "potential": 70,
+      "number": 17
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "201920",
+      "name": "Serder Serderov",
+      "positions": [
+        "НП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW",
+        "LW"
+      ],
+      "rating": 65,
+      "potential": 68,
+      "number": 28
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-e625f38e4e045f96",
+      "name": "Jan Dapo",
+      "positions": [
+        "ЛЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CB"
+      ],
+      "rating": 64,
+      "potential": 75,
+      "number": 71
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-4429f6048ad94d15",
+      "name": "Kirill Zinovich",
+      "positions": [
+        "АП"
+      ],
+      "sourcePositions": [
+        "CAM"
+      ],
+      "rating": 64,
+      "potential": 71,
+      "number": 19
+    },
+    {
+      "clubId": "dinamo-makhachkala",
+      "clubName": "Dinamo Makhachkala",
+      "sourcePlayerId": "name-72501324147d61f9",
+      "name": "Timur Magomedov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 61,
+      "potential": 69,
+      "number": 39
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "229909",
+      "name": "Andrey Lunev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 73,
+      "potential": 74,
+      "number": 1
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-3b13a3786d46a17c",
+      "name": "Eli Dasa",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 71,
+      "potential": 71,
+      "number": 2
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-e344b9fed990097a",
+      "name": "Fabián Balbuena",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 72,
+      "number": 3
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-af6486c8597c78a5",
+      "name": "Nicolás Marichal",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 71,
+      "potential": 77,
+      "number": 18
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "229489",
+      "name": "Dmitriy Skopintsev",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 73,
+      "potential": 77,
+      "number": 7
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-2a138baae8cc9fef",
+      "name": "Daniil Fomin",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 74
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-1b91f86d46160dc3",
+      "name": "Bitello",
+      "positions": [
+        "АП",
+        "ПВ",
+        "ЦП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RW",
+        "CM",
+        "LW"
+      ],
+      "rating": 76,
+      "potential": 80,
+      "number": 10
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-ba51ac78c6b1761d",
+      "name": "Jorge Carrascal",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "ST"
+      ],
+      "rating": 74,
+      "potential": 79,
+      "number": 8
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-260296db7bc2ac20",
+      "name": "Nicolas Ngamaleu",
+      "positions": [
+        "ЛП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "LM",
+        "RM"
+      ],
+      "rating": 74,
+      "potential": 74,
+      "number": 13
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-da5cb14ab9568332",
+      "name": "Konstantin Tyukavin",
+      "positions": [
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM"
+      ],
+      "rating": 77,
+      "potential": 82,
+      "number": 70
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-0076df43946112fd",
+      "name": "Arthur Gomes",
+      "positions": [
+        "ЛВ",
+        "АП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "CAM",
+        "RW"
+      ],
+      "rating": 73,
+      "potential": 78,
+      "number": 11
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-f765874d6800930f",
+      "name": "Luis Chávez",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 24
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-fbc1d49db130860d",
+      "name": "Denis Makarov",
+      "positions": [
+        "ПП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "RM",
+        "CAM"
+      ],
+      "rating": 72,
+      "potential": 75,
+      "number": 77
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-c220b3370c66091b",
+      "name": "Diego Laxalt",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 72,
+      "potential": 73,
+      "number": 93
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "242837",
+      "name": "Vyacheslav Grulev",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "rating": 71,
+      "potential": 75,
+      "number": 20
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-7c2b776722a6f3c6",
+      "name": "Milan Majstorovic",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 78,
+      "number": 5
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-16c75da8995c8f03",
+      "name": "Igor Leshchuk",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 70,
+      "number": 31
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-785f38dffb908dc8",
+      "name": "Stanislav Bessmertniy",
+      "positions": [
+        "ПЗ",
+        "ЦЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CB",
+        "RM"
+      ],
+      "rating": 67,
+      "potential": 78,
+      "number": 80
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-9376dd2f304bf2e7",
+      "name": "El Mehdi Maouhoub",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 14
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-638cab8a1a0dcdc5",
+      "name": "Aleksandr Kutitskiy",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 68,
+      "potential": 78,
+      "number": 50
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-ea2c8629c28839ce",
+      "name": "Luka Gagnidze",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 77,
+      "number": 34
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-742b5636fe78a58b",
+      "name": "Yaroslav Gladyshev",
+      "positions": [
+        "ПВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "ST"
+      ],
+      "rating": 68,
+      "potential": 76,
+      "number": 91
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-07b1cf5ccfddb445",
+      "name": "Ivan Lepskiy",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB"
+      ],
+      "rating": 64,
+      "potential": 73,
+      "number": 59
+    },
+    {
+      "clubId": "312",
+      "clubName": "Dynamo Moscow",
+      "sourcePlayerId": "name-753b0c1e2b28c0cb",
+      "name": "Viktor Okishor",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "LW"
+      ],
+      "rating": 64,
+      "potential": 77,
+      "number": 88
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-77f433a2dfba4d0f",
+      "name": "Aleksandr Belenov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 69,
+      "potential": 68,
+      "number": 31
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "213935",
+      "name": "Sergey Bozhin",
+      "positions": [
+        "ЦЗ",
+        "ОП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM",
+        "LB"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 47
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-7ebac25ffcbfe8a3",
+      "name": "Igor Yurganov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 68,
+      "potential": 69,
+      "number": 22
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-3004f2139fa8817e",
+      "name": "Rayan Senhadji",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 65,
+      "potential": 73,
+      "number": 72
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-ea2e273f24b61350",
+      "name": "Vyacheslav Yakimov",
+      "positions": [
+        "ОП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "LB"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 23
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-10735faf32a085f9",
+      "name": "Irakliy Kvekveskiri",
+      "positions": [
+        "ОП",
+        "ЦЗ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB",
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 68,
+      "number": 33
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-3d6ccf9a84be26f7",
+      "name": "Ilnur Alshin",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 68,
+      "potential": 70,
+      "number": 10
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "243120",
+      "name": "Igor Kalinin",
+      "positions": [
+        "ЛЗ",
+        "ЦЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CB",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 69,
+      "number": 13
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-d8db8c4e89cbe209",
+      "name": "Nikolay Giorgobiani",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 77,
+      "number": 17
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "239296",
+      "name": "Evgeniy Markov",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 71,
+      "number": 20
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-51b7aac9b4b52805",
+      "name": "Vladimir Iljin",
+      "positions": [
+        "НП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW",
+        "RW"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 15
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-86b27580020cb90f",
+      "name": "Aleksey Kashtanov",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 9
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-a7f9acbe8bfa0a67",
+      "name": "Nichita Motpan",
+      "positions": [
+        "АП"
+      ],
+      "sourcePositions": [
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 11
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "210630",
+      "name": "Vitaliy Gudiev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 66,
+      "potential": 70,
+      "number": 1
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-9e016aef7e23c9e3",
+      "name": "Vladislav Masternoy",
+      "positions": [
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB"
+      ],
+      "rating": 66,
+      "potential": 66,
+      "number": 88
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-cf291fad1fbda4dd",
+      "name": "Mikhail Shchetinin",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 65,
+      "potential": 77,
+      "number": 21
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "201165",
+      "name": "Sergey Bryzgalov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 65,
+      "potential": 66,
+      "number": 92
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-c5d272f45610f59d",
+      "name": "Luka Bagatelia",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 62,
+      "potential": 72,
+      "number": 77
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-e662a7afd87527ef",
+      "name": "Dylan Mertens",
+      "positions": [
+        "АП",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "ST"
+      ],
+      "rating": 66,
+      "potential": 67,
+      "number": 6
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-4a0d5d32bbe09bac",
+      "name": "Maks Dziov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 64,
+      "potential": 74,
+      "number": 4
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-c1222128dfb966c3",
+      "name": "Thabo Cele",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 64,
+      "potential": 68,
+      "number": 5
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-55a656f14f5ee6c4",
+      "name": "Abdulla Bagamaev",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 62,
+      "potential": 77,
+      "number": 8
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-aea6f4f73c78decf",
+      "name": "Andrey Ivlev",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 62,
+      "potential": 74,
+      "number": 64
+    },
+    {
+      "clubId": "fakel",
+      "clubName": "Fakel Voronezh",
+      "sourcePlayerId": "name-3023d944adf2d03e",
+      "name": "Vyacheslav Dorovskikh",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 55,
+      "potential": 68,
+      "number": 35
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-24c7a6a51128955c",
+      "name": "Nikita Kokarev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 87
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-525bf8acfdae9cde",
+      "name": "Dani Fernández",
+      "positions": [
+        "ПЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 67,
+      "number": 72
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "229773",
+      "name": "Georgiy Dzhikiya",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 72,
+      "number": 14
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-134086ba65066b1b",
+      "name": "Aleksandr Filin",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 70,
+      "number": 25
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "192757",
+      "name": "Sergey Terekhov",
+      "positions": [
+        "ЛЗ",
+        "ЛП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM",
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 13
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "241211",
+      "name": "Kirill Kaplenko",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 73,
+      "number": 55
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "240577",
+      "name": "Khetag Khosonov",
+      "positions": [
+        "ОП",
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 80
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-3a2a7c640c2d2e20",
+      "name": "Lucas Vera",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 72,
+      "potential": 75,
+      "number": 32
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "231113",
+      "name": "Zelimkhan Bakaev",
+      "positions": [
+        "ПВ",
+        "АП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "CAM",
+        "LW"
+      ],
+      "rating": 72,
+      "potential": 75,
+      "number": 18
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-866f400b31cb73d9",
+      "name": "Anton Zabolotnyi",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 91
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "223458",
+      "name": "Reziuan Mirzov",
+      "positions": [
+        "ЛВ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 68,
+      "number": 11
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-19128fce102df747",
+      "name": "Butta Magomedov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "CDM"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 97
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "90014",
+      "name": "Danil Stepanov",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 5
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-cd2df8c240dafd83",
+      "name": "Nemanja Andjelkovic",
+      "positions": [
+        "ЦЗ",
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM",
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 26
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "233453",
+      "name": "Igor Obukhov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 69,
+      "number": 96
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-1a0b5499771e18d2",
+      "name": "Saminu Abdullahi",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 73,
+      "number": 10
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-ccd0841dbabb5020",
+      "name": "Ilya Berkovskiy",
+      "positions": [
+        "АП",
+        "ПП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RM",
+        "CDM"
+      ],
+      "rating": 64,
+      "potential": 70,
+      "number": 17
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-d066902e36c2fdeb",
+      "name": "Stefan Melentijevic",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 63,
+      "potential": 72,
+      "number": 6
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-d9eede0f71301601",
+      "name": "Àlex Corredera",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 77
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-aae0978bc6610fe8",
+      "name": "Edgardo Fariña",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 68,
+      "potential": 71,
+      "number": 24
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-0959120961d9c4eb",
+      "name": "Aleksandr Rudenko",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "ST"
+      ],
+      "rating": 67,
+      "potential": 71,
+      "number": 9
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-53ca2f105d9b536f",
+      "name": "Diego Luna",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 73,
+      "number": 15
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-3465dbf0a4211a4e",
+      "name": "Robert Mejía",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 67,
+      "potential": 71,
+      "number": 22
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-855923b73ef09d05",
+      "name": "Alisher Odilov",
+      "positions": [
+        "ПВ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 71,
+      "number": 21
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-b9b62291bf27f55c",
+      "name": "Orinho Orinho",
+      "positions": [
+        "ЛЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "RB"
+      ],
+      "rating": 66,
+      "potential": 61,
+      "number": 99
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-ca23b5182e5b22bf",
+      "name": "Petar Golubovic",
+      "positions": [
+        "ПЗ",
+        "ЛЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB",
+        "CB"
+      ],
+      "rating": 66,
+      "potential": 68,
+      "number": 2
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "209346",
+      "name": "Kirill Panchenko",
+      "positions": [
+        "НП",
+        "АП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM",
+        "RW"
+      ],
+      "rating": 64,
+      "potential": 66,
+      "number": 8
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-887ac0bf5f8acaf5",
+      "name": "Cédric Gogoua",
+      "positions": [
+        "ЦЗ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CM"
+      ],
+      "rating": 63,
+      "potential": 77,
+      "number": 27
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-39f6619b112539b8",
+      "name": "Ilya Sadygov",
+      "positions": [
+        "НП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW",
+        "LW"
+      ],
+      "rating": 60,
+      "potential": 66,
+      "number": 7
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-18380c04226d7386",
+      "name": "Irakliy Chezhia",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 60,
+      "potential": 67,
+      "number": 3
+    },
+    {
+      "clubId": "110239",
+      "clubName": "Khimki",
+      "sourcePlayerId": "name-b23ce363709baf7c",
+      "name": "Yaroslav Burychenkov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 60,
+      "potential": 68,
+      "number": 44
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-721c445c548ce936",
+      "name": "Stanislav Agkatsev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 74,
+      "potential": 82,
+      "number": 1
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "198991",
+      "name": "Sergey Petrov",
+      "positions": [
+        "ПЗ",
+        "ОП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CDM",
+        "LB"
+      ],
+      "rating": 71,
+      "potential": 71,
+      "number": 98
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-c19df41fa51313d3",
+      "name": "Tormena",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 73,
+      "potential": 76,
+      "number": 3
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-77864d8bc30e5a8a",
+      "name": "Diego Costa",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 4
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-d49151ee21357f5b",
+      "name": "Lucas Olaza",
+      "positions": [
+        "ЛЗ",
+        "ЛФЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LWB",
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 76,
+      "number": 15
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-5497eb682d08d022",
+      "name": "Aleksandr Chernikov",
+      "positions": [
+        "ОП",
+        "ЦП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM",
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 53
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-ea94f6e86b37b57d",
+      "name": "Kevin Lenini",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 6
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-35801ec8f4be2de8",
+      "name": "Eduard Spertsyan",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "RW"
+      ],
+      "rating": 78,
+      "potential": 84,
+      "number": 10
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-2c2646384bd6534f",
+      "name": "João Batxi",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "RM"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 11
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-ba26ec4252a7f1ad",
+      "name": "Jhon Córdoba",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 79,
+      "potential": 79,
+      "number": 9
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-fd7bf2b6a92e073a",
+      "name": "Victor Sá",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "АП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "CAM"
+      ],
+      "rating": 74,
+      "potential": 74,
+      "number": 7
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-6edf7eb89b45ca37",
+      "name": "Kevin Castaño",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 5
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-0765f6237c60f0a6",
+      "name": "Nikita Krivtsov",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 74,
+      "potential": 83,
+      "number": 88
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "187491",
+      "name": "Fedor Smolov",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 73,
+      "potential": 73,
+      "number": 19
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-f4ac0800a69fde17",
+      "name": "Giovanni González",
+      "positions": [
+        "ПЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CB"
+      ],
+      "rating": 73,
+      "potential": 74,
+      "number": 20
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-a492eab54e1514ee",
+      "name": "Olakunle Olusegun",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "НП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "ST",
+        "RB"
+      ],
+      "rating": 72,
+      "potential": 79,
+      "number": 40
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-530cf82b0e7ece2c",
+      "name": "Danila Kozlov",
+      "positions": [
+        "АП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 80,
+      "number": 8
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-5d2d54d878435d81",
+      "name": "Yuriy Dyupin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 13
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-1794d7534e804e03",
+      "name": "Kaio",
+      "positions": [
+        "ЦЗ",
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM",
+        "CM"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 31
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-e181ef590e1cacf6",
+      "name": "Moses David Cobnan",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 76,
+      "number": 90
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "216335",
+      "name": "Yuriy Gazinskiy",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 69,
+      "potential": 68,
+      "number": 18
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-05056294ed5a1a64",
+      "name": "Georgiy Harutyunyan",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 68,
+      "potential": 77,
+      "number": 33
+    },
+    {
+      "clubId": "112218",
+      "clubName": "Krasnodar",
+      "sourcePlayerId": "name-d0d2290689e480a3",
+      "name": "Aleksandr Koksharov",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 80,
+      "number": 96
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-cfe6db20aa995fde",
+      "name": "Ivan Lomaev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 71,
+      "potential": 78,
+      "number": 1
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-7c9accb6fe63f32f",
+      "name": "Glenn Bijl",
+      "positions": [
+        "ПЗ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CM"
+      ],
+      "rating": 72,
+      "potential": 74,
+      "number": 23
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-464f5877c18b304b",
+      "name": "Aleksandr Soldatenkov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 4
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-e86aa4b1171f3e51",
+      "name": "Roman Evgenjev",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 71,
+      "potential": 76,
+      "number": 24
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-3c8302dbbd1e42e6",
+      "name": "Thomas Galdames",
+      "positions": [
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 3
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-1836bdaadc4af498",
+      "name": "Fernando Costanza",
+      "positions": [
+        "ОП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "RB"
+      ],
+      "rating": 71,
+      "potential": 75,
+      "number": 22
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-7b665b2cc70496fe",
+      "name": "Maksim Vityugov",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 8
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-1639ad1b83c09a6d",
+      "name": "Benjamín Garré",
+      "positions": [
+        "ПП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RM",
+        "RW",
+        "LW"
+      ],
+      "rating": 75,
+      "potential": 78,
+      "number": 10
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-15cf426fa748cfff",
+      "name": "Amar Rahmanovic",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "LM"
+      ],
+      "rating": 72,
+      "potential": 74,
+      "number": 20
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-61c0e756a2a45bd4",
+      "name": "Roman Ezhov",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 71,
+      "potential": 74,
+      "number": 11
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-ddf02019bb1c492a",
+      "name": "Ivan Sergeev",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 72,
+      "potential": 73,
+      "number": 13
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-e3efe897e311f423",
+      "name": "Franco Orozco",
+      "positions": [
+        "ПП",
+        "ЦП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "RM",
+        "CM",
+        "LM"
+      ],
+      "rating": 72,
+      "potential": 74,
+      "number": 32
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-7f1068f3067b881d",
+      "name": "Víctor Méndez",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 71,
+      "potential": 76,
+      "number": 34
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-18f0791226dcad1c",
+      "name": "Ivan Oleynikov",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "АП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "CAM"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 19
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "245572",
+      "name": "Nikolay Rasskazov",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 15
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-d3d62b83241d6548",
+      "name": "Sergey Pesjakov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 30
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "248213",
+      "name": "Ilya Gaponov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 95
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-0b92858067da190f",
+      "name": "Sergey Babkin",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 78,
+      "number": 6
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-b84aee7e57f8ac0a",
+      "name": "Dmytro Ivanisenya",
+      "positions": [
+        "ОП",
+        "ЦЗ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB",
+        "ST"
+      ],
+      "rating": 70,
+      "potential": 72,
+      "number": 21
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-f72c11079b45c1de",
+      "name": "Bogdan Ovsyannikov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 81
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-5804c0f010940791",
+      "name": "Dmitriy Tsypchenko",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 68,
+      "potential": 76,
+      "number": 7
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-2137762f00a056e5",
+      "name": "Kirill Pechenin",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 25
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-af50a6d2db9d3988",
+      "name": "Igor Dmitriev",
+      "positions": [
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 80,
+      "number": 28
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-f59db5dc0074d8cf",
+      "name": "Vladislav Shitov",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 77,
+      "number": 73
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "222763",
+      "name": "Denis Yakuba",
+      "positions": [
+        "ОП",
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "RB",
+        "LB"
+      ],
+      "rating": 66,
+      "potential": 69,
+      "number": 18
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-63376baf7a7a0bd0",
+      "name": "Dominik Oroz",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 66,
+      "potential": 72,
+      "number": 5
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-11ff3b068d1ef63a",
+      "name": "Ilya Gribakin",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "CDM"
+      ],
+      "rating": 64,
+      "potential": 76,
+      "number": 65
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "210445",
+      "name": "Evgeniy Frolov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 63,
+      "potential": 63,
+      "number": 39
+    },
+    {
+      "clubId": "100764",
+      "clubName": "Krylya Sovetov Samara",
+      "sourcePlayerId": "name-39e56091a51ca375",
+      "name": "Pavel Popov",
+      "positions": [
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW"
+      ],
+      "rating": 63,
+      "potential": 74,
+      "number": 92
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "223815",
+      "name": "Ilya Lantratov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 22
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-96ab312bb709cb25",
+      "name": "Aleksandr Silyanov",
+      "positions": [
+        "ПЗ",
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB",
+        "LM"
+      ],
+      "rating": 73,
+      "potential": 80,
+      "number": 45
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-b0e8cc7efca92109",
+      "name": "Lucas Fasson",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "CDM"
+      ],
+      "rating": 72,
+      "potential": 80,
+      "number": 3
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-c3117ddfb955374d",
+      "name": "Gerzino Nyamsi",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 73,
+      "potential": 76,
+      "number": 5
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "244881",
+      "name": "Nair Tiknizyan",
+      "positions": [
+        "ЛЗ",
+        "ЛП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM",
+        "LW"
+      ],
+      "rating": 75,
+      "potential": 80,
+      "number": 71
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "228675",
+      "name": "Dmitriy Barinov",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 75,
+      "potential": 80,
+      "number": 6
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-be396dee242251f3",
+      "name": "Artem Karpukas",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 72,
+      "potential": 80,
+      "number": 93
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-8822fabb93dff8b6",
+      "name": "Ilya Samoshnikov",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 77
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-b796873d3b014b2d",
+      "name": "Aleksey Batrakov",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 75,
+      "potential": 85,
+      "number": 83
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-5d506a2241ae461e",
+      "name": "Sergey Pinyaev",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "RW"
+      ],
+      "rating": 73,
+      "potential": 84,
+      "number": 9
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "236210",
+      "name": "Dmitriy Vorobyev",
+      "positions": [
+        "НП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW",
+        "LW"
+      ],
+      "rating": 72,
+      "potential": 74,
+      "number": 10
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-47b502315e877adb",
+      "name": "Evgeniy Morozov",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 71,
+      "potential": 77,
+      "number": 85
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-5e5cb860f4aeb11c",
+      "name": "Nikita Saltykov",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "АП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "CAM"
+      ],
+      "rating": 71,
+      "potential": 83,
+      "number": 14
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "216371",
+      "name": "Artem Timofeev",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 70,
+      "potential": 75,
+      "number": 94
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-ec7d6db7c38ac113",
+      "name": "Edgar Sevikyan",
+      "positions": [
+        "ПВ",
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "ST",
+        "CAM"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 7
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-520d401dd054e8a2",
+      "name": "Timur Suleymanov",
+      "positions": [
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 77,
+      "number": 99
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-2a9b896100ef75a2",
+      "name": "Maksim Nenakhov",
+      "positions": [
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RB"
+      ],
+      "rating": 69,
+      "potential": 75,
+      "number": 24
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "213954",
+      "name": "Anton Mitryushkin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 1
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-17185c233d39755e",
+      "name": "César Montes",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 23
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-2826b55c1d4c2c21",
+      "name": "Vadim Rakov",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 69,
+      "potential": 78,
+      "number": 27
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-1aa7826066540618",
+      "name": "Vladislav Sarveli",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 74,
+      "number": 8
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-a5c81b5afb7d4de8",
+      "name": "Egor Pogostnov",
+      "positions": [
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "RB"
+      ],
+      "rating": 68,
+      "potential": 77,
+      "number": 59
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-b9fee64666cfca2d",
+      "name": "Daniil Veselov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 64,
+      "potential": 78,
+      "number": 16
+    },
+    {
+      "clubId": "100765",
+      "clubName": "Lokomotiv Moscow",
+      "sourcePlayerId": "name-d999e094f650c0b1",
+      "name": "Dmitriy Radikovskiy",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 61,
+      "potential": 72,
+      "number": 37
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-c1156a0f7bae8402",
+      "name": "Bogdan Moskvichev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 1
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "234564",
+      "name": "Andrey Malykh",
+      "positions": [
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RB"
+      ],
+      "rating": 64,
+      "potential": 64,
+      "number": 12
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-e52320aa6132840a",
+      "name": "Danila Khotulev",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB"
+      ],
+      "rating": 68,
+      "potential": 76,
+      "number": 4
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-6afb12643bef5858",
+      "name": "Matías Pérez",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 22
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-d73e64c884fd6a29",
+      "name": "Maksim Sidorov",
+      "positions": [
+        "ЛЗ",
+        "ЛП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM",
+        "RB"
+      ],
+      "rating": 67,
+      "potential": 68,
+      "number": 81
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-31f6b147b9c316db",
+      "name": "Aleksandr Kovalenko",
+      "positions": [
+        "ЦП",
+        "АП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM",
+        "RW"
+      ],
+      "rating": 69,
+      "potential": 80,
+      "number": 18
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-1a73ea4d37d45662",
+      "name": "Mohammad Ghorbani",
+      "positions": [
+        "ОП",
+        "ЦЗ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB",
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 6
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-be3fa93b9567bdd0",
+      "name": "Dmitriy Rybchinskiy",
+      "positions": [
+        "ПП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RM",
+        "RB"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 20
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-7857a61172580933",
+      "name": "Gabriel Florentín",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 21
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-c37f0e4d937da6f9",
+      "name": "Brian Mansilla",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 74,
+      "number": 9
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-bb7a54d74802b54a",
+      "name": "Saeid Saharkhizan",
+      "positions": [
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "LW"
+      ],
+      "rating": 69,
+      "potential": 71,
+      "number": 10
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-d4c02fb803354c78",
+      "name": "Danila Prokhin",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 80,
+      "number": 87
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-d242c5d26b65be52",
+      "name": "Jimmy Marín",
+      "positions": [
+        "ЛП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "LM",
+        "RM"
+      ],
+      "rating": 69,
+      "potential": 75,
+      "number": 80
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-df8e597423139e0e",
+      "name": "Nikolay Sysuev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 68,
+      "potential": 71,
+      "number": 99
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-7017b651dee2eae3",
+      "name": "Stepan Oganesyan",
+      "positions": [
+        "ПВ",
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "ST",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 80,
+      "number": 11
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-c5794e1ae201bc15",
+      "name": "Emircan Gürlük",
+      "positions": [
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW"
+      ],
+      "rating": 67,
+      "potential": 77,
+      "number": 7
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-4c5952a493619bf0",
+      "name": "Tomás Muro",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 75,
+      "number": 24
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "229296",
+      "name": "Georgiy Zotov",
+      "positions": [
+        "ПЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CDM"
+      ],
+      "rating": 65,
+      "potential": 67,
+      "number": 31
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-9634fcde2c3a1846",
+      "name": "Kazımcan Karataş",
+      "positions": [
+        "ЛЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 35
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-e57f4353d73577af",
+      "name": "Ivan Basic",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 8
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-9392353c38581b33",
+      "name": "Jordhy Thompson",
+      "positions": [
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "LW"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 16
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-ad3310b036952ce5",
+      "name": "Yaroslav Mikhailov",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 67,
+      "potential": 78,
+      "number": 14
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-6428ab7fd91bf051",
+      "name": "Aleksey Kenyaykin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 66,
+      "potential": 70,
+      "number": 13
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-b46d9336c574807d",
+      "name": "Justin Cuero",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 66,
+      "potential": 74,
+      "number": 19
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-9dd16eefcdf427b5",
+      "name": "Aleksey Baranovskiy",
+      "positions": [
+        "АП"
+      ],
+      "sourcePositions": [
+        "CAM"
+      ],
+      "rating": 63,
+      "potential": 69,
+      "number": 96
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-e1bd3e209a0ba9b3",
+      "name": "Artem Kasimov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 63,
+      "potential": 71,
+      "number": 38
+    },
+    {
+      "clubId": "112261",
+      "clubName": "Orenburg",
+      "sourcePlayerId": "name-b31f039eb8a57d51",
+      "name": "Timofey Martynov",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 63,
+      "potential": 66,
+      "number": 47
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "233157",
+      "name": "Nikita Medvedev",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 30
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "243083",
+      "name": "Nikita Kakkoev",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 71,
+      "potential": 76,
+      "number": 22
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-ead6b63ea32d9133",
+      "name": "Kirill Gotsuk",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 71,
+      "potential": 71,
+      "number": 24
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-66aad795212716fa",
+      "name": "Viktor Aleksandrov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 78,
+      "number": 2
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-ae0de52edaf411ce",
+      "name": "Vladislav Karapuzov",
+      "positions": [
+        "ПВ",
+        "ПП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "RM",
+        "LW"
+      ],
+      "rating": 68,
+      "potential": 75,
+      "number": 7
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "239939",
+      "name": "Nikolay Kalinskiy",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 72,
+      "potential": 74,
+      "number": 78
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "224741",
+      "name": "Aleksandr Troshechkin",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 69,
+      "potential": 75,
+      "number": 10
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-a1ae4dfbeef120b5",
+      "name": "Aleksandr Ektov",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 69,
+      "potential": 71,
+      "number": 15
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-b728159645c10f00",
+      "name": "Juan Boselli",
+      "positions": [
+        "ПВ",
+        "НП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "ST",
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 71,
+      "number": 20
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-6c61df2541ab0d7a",
+      "name": "Valeriy Tsarukyan",
+      "positions": [
+        "АП",
+        "ПП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RM",
+        "LM"
+      ],
+      "rating": 66,
+      "potential": 74,
+      "number": 80
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-78dc10e9ee73ed77",
+      "name": "Zé Turbo",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 9
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-fc232ab6bfc5eaf0",
+      "name": "Konstantin Maradishvili",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 70,
+      "potential": 77,
+      "number": 5
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "228802",
+      "name": "Dmitriy Zhivoglyadov",
+      "positions": [
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 27
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-f155792550b601fe",
+      "name": "Mamadou Maiga",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 8
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "213029",
+      "name": "Dmitriy Tikhiy",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "RB"
+      ],
+      "rating": 68,
+      "potential": 69,
+      "number": 6
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-53af569dd0a9178a",
+      "name": "Mateo Stamatov",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 70,
+      "number": 11
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "237826",
+      "name": "Ilya Zhigulev",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 67,
+      "potential": 69,
+      "number": 4
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-753a467f2d589737",
+      "name": "Vadim Lukyanov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 62,
+      "potential": 72,
+      "number": 1
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-6bb2f6d80ccd7bda",
+      "name": "Stanislav Magkeev",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 77,
+      "number": 99
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-139f138b2864086a",
+      "name": "Nikita Ermakov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "ST"
+      ],
+      "rating": 68,
+      "potential": 80,
+      "number": 19
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-83048b29b5161f97",
+      "name": "Dan Glazer",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 67,
+      "potential": 76,
+      "number": 18
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-6dd36c70f9f6496a",
+      "name": "Kirill Bozhenov",
+      "positions": [
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "RB"
+      ],
+      "rating": 67,
+      "potential": 69,
+      "number": 87
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-72ea223c7c4cd2d1",
+      "name": "Luka Ticic",
+      "positions": [
+        "ЦП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CM",
+        "RW",
+        "LW"
+      ],
+      "rating": 67,
+      "potential": 69,
+      "number": 29
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-3dbfde0cecfa6837",
+      "name": "Danila Vedernikov",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 66,
+      "potential": 74,
+      "number": 3
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-e152b75b58566297",
+      "name": "Kirill Glushchenkov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 66,
+      "potential": 74,
+      "number": 88
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-b7cb0ff8248ccdb0",
+      "name": "Ognjen Ozegovic",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 66,
+      "potential": 72,
+      "number": 90
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-9828a2b0d6b9d4d6",
+      "name": "Maksim Shnaptsev",
+      "positions": [
+        "ЛЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "RB"
+      ],
+      "rating": 65,
+      "potential": 73,
+      "number": 70
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-4197b1b16b63ec8c",
+      "name": "Nikoloz Kutateladze",
+      "positions": [
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM"
+      ],
+      "rating": 65,
+      "potential": 69,
+      "number": 23
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-d2ee4db86be3a009",
+      "name": "Sven Karic",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 65,
+      "potential": 72,
+      "number": 25
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-7164c64fad02b16a",
+      "name": "Ivan Kukushkin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 63,
+      "potential": 72,
+      "number": 81
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-ab6523f90deaea97",
+      "name": "Anton Mukhin",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 61,
+      "potential": 72,
+      "number": 34
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-23d7356fff5046e6",
+      "name": "Evgeniy Lukinykh",
+      "positions": [
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "RB"
+      ],
+      "rating": 61,
+      "potential": 68,
+      "number": 61
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-86f622c342dc7cf3",
+      "name": "Stanislav Lapinskiy",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 61,
+      "potential": 69,
+      "number": 17
+    },
+    {
+      "clubId": "nizhny-novgorod",
+      "clubName": "Pari Nizhny Novgorod",
+      "sourcePlayerId": "name-d6638ec7b12ae7ea",
+      "name": "Dmitriy Kalayda",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 60,
+      "potential": 70,
+      "number": 21
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-229966c903cb7f88",
+      "name": "Rustam Yatimov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 1
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-0f6c74f29813f6d8",
+      "name": "Ilya Vakhania",
+      "positions": [
+        "ПЗ",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 40
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-e218f08a487697c3",
+      "name": "Maksim Osipenko",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 73,
+      "potential": 74,
+      "number": 55
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-c7ba905411d1a1b2",
+      "name": "Oumar Sako",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 73,
+      "number": 3
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "203516",
+      "name": "Evgeniy Chernov",
+      "positions": [
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "LM"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 28
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-800a1bdd9ed999de",
+      "name": "Aleksey Mironov",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 69,
+      "potential": 76,
+      "number": 8
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-edd44bcadde2cab4",
+      "name": "Danil Glebov",
+      "positions": [
+        "ОП",
+        "ЦП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM",
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 15
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "205270",
+      "name": "Khoren Bayramyan",
+      "positions": [
+        "АП",
+        "ЛП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LM",
+        "RM"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 19
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-c519e76f6719da3d",
+      "name": "Ronaldo",
+      "positions": [
+        "ПВ",
+        "АП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "CAM",
+        "LM"
+      ],
+      "rating": 73,
+      "potential": 78,
+      "number": 7
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "221022",
+      "name": "Nikolay Komlichenko",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 73,
+      "potential": 77,
+      "number": 27
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-dc1366cee5f2fd34",
+      "name": "Mohammad Mohebi",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "ST"
+      ],
+      "rating": 72,
+      "potential": 77,
+      "number": 9
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "237973",
+      "name": "Konstantin Kuchaev",
+      "positions": [
+        "АП",
+        "ПВ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RW",
+        "CM"
+      ],
+      "rating": 72,
+      "potential": 77,
+      "number": 18
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-4fb02557aba716a5",
+      "name": "Andrey Langovich",
+      "positions": [
+        "ПЗ",
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CB",
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 87
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "235478",
+      "name": "Egor Golenkov",
+      "positions": [
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW"
+      ],
+      "rating": 70,
+      "potential": 77,
+      "number": 69
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-1bcc4621aebd6bce",
+      "name": "Kirill Shchetinin",
+      "positions": [
+        "АП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "RW",
+        "LW"
+      ],
+      "rating": 70,
+      "potential": 80,
+      "number": 10
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-13822dd8d7b71a59",
+      "name": "Viktor Melekhin",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 80,
+      "number": 4
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-304df5aa63b15501",
+      "name": "Daniil Odoevskiy",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 69,
+      "potential": 77,
+      "number": 71
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "246253",
+      "name": "Roman Tugarev",
+      "positions": [
+        "ЛВ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 23
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-0a9bb5049e771a91",
+      "name": "Aleksey Sutormin",
+      "positions": [
+        "ПВ",
+        "ПЗ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "RB",
+        "LW"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 11
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-887f50dd2e1f2d31",
+      "name": "Rodrigo Saravia",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 75,
+      "number": 89
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-6ad8e7bb67e789c2",
+      "name": "Eyad El Askalany",
+      "positions": [
+        "ЛЗ",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 77,
+      "number": 34
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-c75ba2e171f3097d",
+      "name": "Hidajet Hankic",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 67,
+      "potential": 69,
+      "number": 13
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-5997226d489af7af",
+      "name": "Ivan Komarov",
+      "positions": [
+        "ПП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "RM",
+        "LM"
+      ],
+      "rating": 66,
+      "potential": 76,
+      "number": 62
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-e24a540e89485aa9",
+      "name": "Aleksandr Mukhin",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "LM"
+      ],
+      "rating": 64,
+      "potential": 77,
+      "number": 64
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-e97a9a6872e6547a",
+      "name": "Imran Aznaurov",
+      "positions": [
+        "ЛВ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "CM"
+      ],
+      "rating": 64,
+      "potential": 75,
+      "number": 73
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-aad621416d9cf350",
+      "name": "Stepan Melnikov",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "rating": 64,
+      "potential": 76,
+      "number": 77
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-01fb9c7eff49fa33",
+      "name": "German Ignatov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 63,
+      "potential": 71,
+      "number": 67
+    },
+    {
+      "clubId": "110231",
+      "clubName": "Rostov",
+      "sourcePlayerId": "name-eb8757aa27c4267d",
+      "name": "Mikhail Tsulaya",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 60,
+      "potential": 73,
+      "number": 78
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-a494e07d5c0e18f6",
+      "name": "Evgeniy Staver",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 71,
+      "potential": 72,
+      "number": 38
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-8b71a1f6e47fac8b",
+      "name": "Egor Teslenko",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 73,
+      "number": 2
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-8296787d4a006389",
+      "name": "Igor Vujacic",
+      "positions": [
+        "ЦЗ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "RB"
+      ],
+      "rating": 73,
+      "potential": 74,
+      "number": 15
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-ef4fb79798737b2e",
+      "name": "Aleksey Gritsaenko",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 71,
+      "potential": 72,
+      "number": 27
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-3395e245acb96a63",
+      "name": "Valentín Vada",
+      "positions": [
+        "АП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LM"
+      ],
+      "rating": 70,
+      "potential": 72,
+      "number": 30
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-23338389413ee10d",
+      "name": "Aleksandr Zotov",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 68,
+      "potential": 68,
+      "number": 99
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-a14579951a02f82d",
+      "name": "Ugochukwu Iwu",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 76,
+      "number": 6
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-22203f68e3213b51",
+      "name": "Ilya Rozhkov",
+      "positions": [
+        "ПЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 76,
+      "number": 51
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-c1b1ef04a4d4f919",
+      "name": "Lenar Fattakhov",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 62,
+      "potential": 73,
+      "number": 56
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-71ec7c8c5ac2836f",
+      "name": "Mirlind Daku",
+      "positions": [
+        "НП",
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW",
+        "LW"
+      ],
+      "rating": 76,
+      "potential": 78,
+      "number": 10
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-17f19d212291fbd3",
+      "name": "Nikola Cumic",
+      "positions": [
+        "ПП",
+        "ЛП",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RM",
+        "LM",
+        "ST"
+      ],
+      "rating": 70,
+      "potential": 75,
+      "number": 24
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-63b752aafc528c35",
+      "name": "Dardan Shabanhaxhaj",
+      "positions": [
+        "НП",
+        "АП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM",
+        "RM"
+      ],
+      "rating": 71,
+      "potential": 77,
+      "number": 99
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-215e5b47941e8982",
+      "name": "Joel Fameyeh",
+      "positions": [
+        "НП",
+        "ЦН"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CF"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 20
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "242066",
+      "name": "Dmitriy Kabutov",
+      "positions": [
+        "ПЗ",
+        "ПВ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RW",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 70,
+      "number": 70
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "194654",
+      "name": "Artur Nigmatullin",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 69,
+      "potential": 70,
+      "number": 25
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-3ad97c300992855d",
+      "name": "Aleksandr Lomovitskiy",
+      "positions": [
+        "ПП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "RM",
+        "LM"
+      ],
+      "rating": 68,
+      "potential": 72,
+      "number": 9
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-610bb61cd1a9f2f7",
+      "name": "Ruslan Bezrukov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "RM"
+      ],
+      "rating": 68,
+      "potential": 77,
+      "number": 23
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "162780",
+      "name": "Oleg Ivanov",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 67,
+      "potential": 66,
+      "number": 19
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-b90fff510a3877bb",
+      "name": "Veldin Hodza",
+      "positions": [
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CDM"
+      ],
+      "rating": 70,
+      "potential": 71,
+      "number": 22
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-cd59ab3d75660e4e",
+      "name": "Marvin Cuni",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 69,
+      "potential": 75,
+      "number": 90
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-5f614e73646e1aa5",
+      "name": "Rustam Ashurmatov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 5
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-68765f6358378e38",
+      "name": "Aleksandar Jukic",
+      "positions": [
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CM"
+      ],
+      "rating": 68,
+      "potential": 74,
+      "number": 7
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-e253d2b51315c157",
+      "name": "Bogdan Jocic",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 68,
+      "potential": 76,
+      "number": 8
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-af69509bbb683f3f",
+      "name": "Umarali Rakhmonaliev",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 75,
+      "number": 33
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-375dfaf8556e632a",
+      "name": "Konstantin Nizhegorodov",
+      "positions": [
+        "ЦЗ",
+        "ЛЗ",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "LB",
+        "LM"
+      ],
+      "rating": 66,
+      "potential": 71,
+      "number": 71
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-06b5ec79782f467e",
+      "name": "Marat Apshatsev",
+      "positions": [
+        "ЦП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "RM"
+      ],
+      "rating": 66,
+      "potential": 70,
+      "number": 18
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-d590c6535566e364",
+      "name": "Daniil Kuznetsov",
+      "positions": [
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW"
+      ],
+      "rating": 64,
+      "potential": 72,
+      "number": 77
+    },
+    {
+      "clubId": "110227",
+      "clubName": "Rubin Kazan",
+      "sourcePlayerId": "name-069475fa03d93eac",
+      "name": "Kasra Taheri",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 61,
+      "potential": 72,
+      "number": 11
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-2c856729e2fe8497",
+      "name": "Aleksandr Maksimenko",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 98
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-01bd7ad1bac53146",
+      "name": "Daniil Denisov",
+      "positions": [
+        "ПЗ",
+        "ОП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "CDM",
+        "RM"
+      ],
+      "rating": 70,
+      "potential": 78,
+      "number": 97
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-d7f5939b106d91bd",
+      "name": "Ruslan Litvinov",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 80,
+      "number": 68
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-e5e20fb96f432055",
+      "name": "Srdjan Babic",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 76,
+      "number": 6
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-d7de24207b8a0a34",
+      "name": "Oleg Reabciuk",
+      "positions": [
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LB"
+      ],
+      "rating": 73,
+      "potential": 75,
+      "number": 2
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-dd2e2139f63598e8",
+      "name": "Nail Umyarov",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 71,
+      "potential": 80,
+      "number": 18
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-1472fcdea152bffa",
+      "name": "Danil Prutsev",
+      "positions": [
+        "ЦП",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM"
+      ],
+      "rating": 71,
+      "potential": 76,
+      "number": 25
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-bb29f6082dc50cd4",
+      "name": "Esequiel Barco",
+      "positions": [
+        "АП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW"
+      ],
+      "rating": 77,
+      "potential": 80,
+      "number": 5
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-319ba604339cce88",
+      "name": "Jesús Medina",
+      "positions": [
+        "ПВ",
+        "АП",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "CAM",
+        "LW"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 19
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-df24fd6c133458e0",
+      "name": "Manfred Ugalde",
+      "positions": [
+        "НП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "ST",
+        "CAM"
+      ],
+      "rating": 75,
+      "potential": 79,
+      "number": 9
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-99388ba4a60d5269",
+      "name": "Théo Bongonda",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "RW"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 77
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-5eae1e8bdecd2006",
+      "name": "Shamar Nicholson",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 73,
+      "potential": 76,
+      "number": 11
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-516d52676827b2eb",
+      "name": "Alexis Duarte",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 72,
+      "potential": 77,
+      "number": 4
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-fa890a482f3d0345",
+      "name": "Anton Zinkovskiy",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "RW"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 17
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-ab84f102b276386d",
+      "name": "Daniil Khlusevich",
+      "positions": [
+        "ПЗ",
+        "ЛЗ",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "RB",
+        "LB",
+        "RM"
+      ],
+      "rating": 72,
+      "potential": 79,
+      "number": 82
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "213732",
+      "name": "Aleksandr Selikhov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 57
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "213160",
+      "name": "Roman Zobnin",
+      "positions": [
+        "ЦП",
+        "ОП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CDM",
+        "RM"
+      ],
+      "rating": 71,
+      "potential": 73,
+      "number": 47
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-688a5256ae71c4c9",
+      "name": "Myenty Abena",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 70,
+      "potential": 73,
+      "number": 14
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-1118851a5261b735",
+      "name": "Willian José",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 73,
+      "potential": 73,
+      "number": 12
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-2e656bf7906f65f0",
+      "name": "Marquinhos",
+      "positions": [
+        "ЛВ",
+        "АП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "CAM"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 8
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-613f6f37592ebb14",
+      "name": "Ricardo Mangas",
+      "positions": [
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LB"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 29
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "246190",
+      "name": "Mikhail Ignatov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "ST"
+      ],
+      "rating": 71,
+      "potential": 78,
+      "number": 22
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-390289d5a3345310",
+      "name": "Christopher Martins",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 70,
+      "potential": 75,
+      "number": 35
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "224715",
+      "name": "Nikita Chernov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 72,
+      "number": 23
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-818b032dabe854d8",
+      "name": "Aleksandr Dovbnya",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 66,
+      "potential": 67,
+      "number": 16
+    },
+    {
+      "clubId": "100767",
+      "clubName": "Spartak Moscow",
+      "sourcePlayerId": "name-3face4ee4424f44e",
+      "name": "Daniil Zorin",
+      "positions": [
+        "АП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM"
+      ],
+      "rating": 66,
+      "potential": 77,
+      "number": 28
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-77321de7cf6b1599",
+      "name": "Evgeniy Latyshonok",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 1
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "219409",
+      "name": "Vyacheslav Karavaev",
+      "positions": [
+        "ПЗ",
+        "ПП",
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM",
+        "LB"
+      ],
+      "rating": 74,
+      "potential": 75,
+      "number": 15
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-3ff88c58daac5517",
+      "name": "Nino",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 77,
+      "potential": 80,
+      "number": 27
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-3984c1b5ab6e0d12",
+      "name": "Strahinja Erakovic",
+      "positions": [
+        "ЦЗ",
+        "ОП",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM",
+        "RB"
+      ],
+      "rating": 74,
+      "potential": 80,
+      "number": 25
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-ffa3622235f266b9",
+      "name": "Douglas Santos",
+      "positions": [
+        "ЛЗ"
+      ],
+      "sourcePositions": [
+        "LB"
+      ],
+      "rating": 79,
+      "potential": 79,
+      "number": 3
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "214394",
+      "name": "Wilmar Barrios",
+      "positions": [
+        "ОП",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CM"
+      ],
+      "rating": 78,
+      "potential": 78,
+      "number": 5
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-f5990eeefca62042",
+      "name": "Wendel",
+      "positions": [
+        "ЦП",
+        "АП"
+      ],
+      "sourcePositions": [
+        "CM",
+        "CAM"
+      ],
+      "rating": 80,
+      "potential": 80,
+      "number": 8
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-98053c4396f0fb93",
+      "name": "Claudinho",
+      "positions": [
+        "АП",
+        "ЛВ",
+        "ЦП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "LW",
+        "CM"
+      ],
+      "rating": 79,
+      "potential": 81,
+      "number": 11
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "247869",
+      "name": "Maksim Glushenkov",
+      "positions": [
+        "ПВ",
+        "ЛВ",
+        "НП"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "rating": 78,
+      "potential": 81,
+      "number": 67
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-433c984476c386ed",
+      "name": "Mateo Cassierra",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 77,
+      "potential": 79,
+      "number": 30
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-b8c0d398557d0254",
+      "name": "Luciano Gondou",
+      "positions": [
+        "НП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "ST",
+        "RW"
+      ],
+      "rating": 77,
+      "potential": 80,
+      "number": 32
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-51670e405487d43f",
+      "name": "Artur",
+      "positions": [
+        "ПВ",
+        "ЛВ"
+      ],
+      "sourcePositions": [
+        "RW",
+        "LW"
+      ],
+      "rating": 77,
+      "potential": 80,
+      "number": 9
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-0cf4ee1681844f2e",
+      "name": "Aleksandr Sobolev",
+      "positions": [
+        "НП"
+      ],
+      "sourcePositions": [
+        "ST"
+      ],
+      "rating": 74,
+      "potential": 78,
+      "number": 7
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-8ef6d581b0e51da3",
+      "name": "Andrey Mostovoy",
+      "positions": [
+        "ЛВ",
+        "ПВ",
+        "ЛП",
+        "ПП"
+      ],
+      "sourcePositions": [
+        "LW",
+        "RW",
+        "LM",
+        "RM"
+      ],
+      "rating": 73,
+      "potential": 79,
+      "number": 17
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-7c99bf68a683c899",
+      "name": "Gustavo Mantuan",
+      "positions": [
+        "ЛВ",
+        "НП",
+        "ПВ",
+        "ПЗ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "ST",
+        "RW",
+        "RB"
+      ],
+      "rating": 73,
+      "potential": 80,
+      "number": 31
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-a2cea5c2420f0a5c",
+      "name": "Aleksandr Erokhin",
+      "positions": [
+        "АП",
+        "ЦП",
+        "НП"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "ST"
+      ],
+      "rating": 71,
+      "potential": 71,
+      "number": 21
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "147024",
+      "name": "Sergey Volkov",
+      "positions": [
+        "ПЗ",
+        "ПП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "RB",
+        "RM",
+        "RW"
+      ],
+      "rating": 71,
+      "potential": 80,
+      "number": 82
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "166744",
+      "name": "Mikhail Kerzhakov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 70,
+      "potential": 69,
+      "number": 41
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-a432d817e884eb8b",
+      "name": "Pedro",
+      "positions": [
+        "ЛВ",
+        "АП",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "LW",
+        "CAM",
+        "RW"
+      ],
+      "rating": 74,
+      "potential": 81,
+      "number": 24
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-5430c2356e34ac5d",
+      "name": "Rodrigão",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 74,
+      "potential": 77,
+      "number": 55
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-a8db8078768c3fa7",
+      "name": "Yuriy Gorshkov",
+      "positions": [
+        "ЛЗ",
+        "ОП",
+        "ЛП"
+      ],
+      "sourcePositions": [
+        "LB",
+        "CDM",
+        "LM"
+      ],
+      "rating": 72,
+      "potential": 76,
+      "number": 4
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "225614",
+      "name": "Ilzat Akhmetov",
+      "positions": [
+        "АП",
+        "ЦП",
+        "ЛВ",
+        "ПВ"
+      ],
+      "sourcePositions": [
+        "CAM",
+        "CM",
+        "LW",
+        "RW"
+      ],
+      "rating": 71,
+      "potential": 74,
+      "number": 77
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-6b297b76f9bea3a4",
+      "name": "Nuraly Alip",
+      "positions": [
+        "ЦЗ",
+        "ОП"
+      ],
+      "sourcePositions": [
+        "CB",
+        "CDM"
+      ],
+      "rating": 71,
+      "potential": 74,
+      "number": 28
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-2be3e336158479a7",
+      "name": "Dmitriy Chistyakov",
+      "positions": [
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CB"
+      ],
+      "rating": 69,
+      "potential": 74,
+      "number": 2
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "240214",
+      "name": "Denis Adamov",
+      "positions": [
+        "ВР"
+      ],
+      "sourcePositions": [
+        "GK"
+      ],
+      "rating": 68,
+      "potential": 73,
+      "number": 16
+    },
+    {
+      "clubId": "100769",
+      "clubName": "Zenit Saint Petersburg",
+      "sourcePlayerId": "name-3f773c40d099cc66",
+      "name": "Dmitriy Vasiljev",
+      "positions": [
+        "ОП",
+        "ЦЗ"
+      ],
+      "sourcePositions": [
+        "CDM",
+        "CB"
+      ],
+      "rating": 67,
+      "potential": 80,
+      "number": 79
+    }
+  ]
+}

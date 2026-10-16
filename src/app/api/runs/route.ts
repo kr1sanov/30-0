@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
         ratingMode: isWeeklyChallenge ? 'prime' : ratingMode || 'season',
         eraFilter: gameMode === 'single_club' ? 'all' : eraFilter || 'all',
         eraStartYear: gameMode === 'single_club' ? 2000 : eraStartYear ?? 2006,
-        eraEndYear: gameMode === 'single_club' ? 2100 : eraEndYear ?? 2021,
+        eraEndYear: gameMode === 'single_club' ? 2100 : eraEndYear ?? 2026,
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,
