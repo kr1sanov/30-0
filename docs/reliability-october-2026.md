@@ -23,7 +23,7 @@ Every new single-player result stores its full simulation JSON and player contri
 Release: **17 October 2026, 12:00 Moscow / 09:00 UTC**. Until release, public listing and creation are blocked. Admin can override all issues with Scheduled/Open/Hidden, including old issues.
 
 - CSKA blitz: prime Oblyakov and Borisko; first five matches at least 11 goals, at most 2 conceded, at least 3 clean sheets. A league title is not required.
-- Akron goalkeeper: special challenge-only Terekhovskiy prime card, game rating 90; 30 matches, at most 15 conceded and at least 15 clean sheets. The special rating is an editorial game value, not an EA/FC rating or an imported historical card. It does not modify roster editions.
+- Akron goalkeeper: best available Terekhovskiy prime card, including surname-first admin names; 30 matches, at most 15 conceded and at least 15 clean sheets. When no Terekhovskiy card exists, a separate challenge-only card uses editorial game rating 90, not an EA/FC rating. An existing admin card is preferred and its rating is preserved; neither path modifies roster editions.
 
 Sources: [CSKA result](https://pfc-cska.com/ru/novosti/vse-novosti/32659-pfk-cska-rostov-40/), [CSKA record](https://pfc-cska.com/ru/novosti/vse-novosti/32662-pfk-cska-ustanovil-rekord-kubka-rossii-zabiv-tri-bezotvetnih-myacha-za-11-minut/), [Akron report](https://fcakron.ru/news/2517), [Terekhovskiy profile](https://fcakron.ru/player/670).
 

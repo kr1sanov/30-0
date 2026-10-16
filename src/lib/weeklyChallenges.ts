@@ -66,10 +66,10 @@ export function issuesForWeek(index: number): WeeklyChallenge[] {
       sourceUrls: ['https://pfc-cska.com/ru/novosti/vse-novosti/32659-pfk-cska-rostov-40/', 'https://pfc-cska.com/ru/novosti/vse-novosti/32662-pfk-cska-ustanovil-rekord-kubka-rossii-zabiv-tri-bezotvetnih-myacha-za-11-minut/'] },
     { id: `${date}-akron_keeper`, mode: 'challenge_akron_keeper', hero: 'akron_keeper', startsAt, endsAt,
       titleRu: '🧤 Акрон · Стена Тереховского', titleEn: '🧤 Akron · Terekhovskiy’s wall',
-      descriptionRu: 'После ничьей 1:1 с Локомотивом Игнат Тереховский отразил три из четырёх пенальти, а Акрон выиграл серию 3:1. Начни с его специальной прайм-карточкой челленджа с рейтингом 90: за сезон из 30 матчей пропусти не больше 15 голов и сыграй минимум 15 раз на ноль.',
-      descriptionEn: 'After a 1–1 draw with Lokomotiv, Ignat Terekhovskiy saved three of four penalties as Akron won the shootout 3–1. Start with his special 90-rated prime challenge card: concede at most 15 goals and keep at least 15 clean sheets in a 30-match season.',
+      descriptionRu: 'После ничьей 1:1 с Локомотивом Игнат Тереховский отразил три из четырёх пенальти, а Акрон выиграл серию 3:1. Начни с его лучшей доступной прайм-карточкой: за сезон из 30 матчей пропусти не больше 15 голов и сыграй минимум 15 раз на ноль.',
+      descriptionEn: 'After a 1–1 draw with Lokomotiv, Ignat Terekhovskiy saved three of four penalties as Akron won the shootout 3–1. Start with his best available prime card: concede at most 15 goals and keep at least 15 clean sheets in a 30-match season.',
       minimumGoals: 0, minimumPoints: 0, unbeaten: false, requireTitle: false, maximumConceded: 15, minimumCleanSheets: 15,
-      featuredNames: [['Ignat Terekhovskiy', 'Ignat Terekhovsky', 'Игнат Тереховский']],
+      featuredNames: [['Ignat Terekhovskiy', 'Ignat Terekhovsky', 'Игнат Тереховский', 'Тереховский Игнат']],
       sourceUrls: ['https://fcakron.ru/news/2517', 'https://www.fclm.ru/news/n/lokomotiv-akron-cup-2026-27-match-summary/'] },
   ];
   return (['vagner', 'dzyuba'] as const).map(hero => ({

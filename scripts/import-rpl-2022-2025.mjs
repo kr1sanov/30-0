@@ -59,7 +59,9 @@ try {
       clubSeasonId: true, playerId: true, rating: true, primeRating: true, mainPosition: true, otherPositions: true, shirtNumber: true,
     } });
     const byCard = new Map(stored.map(p => [`${p.clubSeasonId}:${p.playerId}`, p]));
-    const exact = stored.length === playerCards.length && playerCards.every(p => {
+    // Admin-created cards coexist with the immutable source snapshot.
+    // Every imported card must still match; extra cards are never overwritten.
+    const exact = stored.length >= playerCards.length && playerCards.every(p => {
       const card = byCard.get(`rpl-${p.year}-club-${p.clubId}:fifaindex-player-${p.sourcePlayerId}`);
       const originalOtherPositions = p.positions.slice(1).join(',');
       const wingback = p.positions[0] === 'ПЗ' ? 'ПФЗ' : p.positions[0] === 'ЛЗ' ? 'ЛФЗ' : null;
@@ -71,7 +73,7 @@ try {
         card.mainPosition === p.positions[0] && [originalOtherPositions, backfilledOtherPositions].includes(card.otherPositions || '') &&
         card.shirtNumber === p.number;
     });
-    if (exact) { console.log('All four editions already installed; no changes.'); process.exit(0); }
+    if (exact) { console.log(`All four editions already installed; no changes. ${stored.length - playerCards.length} additional cards preserved.`); process.exit(0); }
     throw new Error('Existing 2022–25 data differs from fixture; refusing overwrite');
   }
   const backup = {

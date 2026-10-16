@@ -1,6 +1,6 @@
 /** Run only against an isolated SQLite database and a local production server. */
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 if (!process.env.DATABASE_URL?.includes('30-0-regression')) throw new Error('An isolated regression database is required');
@@ -30,6 +30,16 @@ try {
     server.stdout.on('data', data => { if (data.toString().includes('Ready')) { clearTimeout(timeout); resolve(); } });
   });
   for (const model of ['telegramOutbox','gameSlot','multiplayerSeat','multiplayerRoom','gameRun','playerSeason','player','clubSeason','season','club','adminCredential','appSetting','user']) await db[model].deleteMany();
+  const runImport = suffix => execFileSync(process.execPath, ['scripts/import-rpl-2022-2025.mjs', '--apply', `--backup=/tmp/roster-regression-${process.pid}-${suffix}.json`], { env: process.env, stdio: 'pipe' });
+  runImport('initial');
+  const sourceCard = await db.playerSeason.findFirstOrThrow();
+  await db.player.create({data:{id:'qa-admin-added-player',fullName:'QA Admin Added',lastName:'Added'}});
+  await db.playerSeason.create({data:{id:'qa-admin-added-card',playerId:'qa-admin-added-player',clubSeasonId:sourceCard.clubSeasonId,rating:77,primeRating:80,mainPosition:'ВР'}});
+  runImport('repeat');
+  assert.equal(await db.playerSeason.count(),1681);
+  assert.equal((await db.playerSeason.findUnique({where:{id:'qa-admin-added-card'}})).rating,77);
+  console.log('PASS repeated roster import preserves additional admin cards');
+  for (const model of ['playerSeason','player','clubSeason','season','club']) await db[model].deleteMany();
   await db.user.createMany({data:[{id:'qa-host',provider:'telegram',providerId:'telegram_900001',displayName:'QA host',telegramChatStarted:true},{id:'qa-guest',provider:'telegram',providerId:'telegram_900002',displayName:'QA guest'}]});
   await db.adminCredential.create({data:{username:'qa-admin',role:'admin',passwordHash:'unused-local-fixture',mustChangePassword:false}});
   for(let year=2017;year<=2025;year++) await db.season.create({data:{id:`qa-season-${year}`,startYear:year,endYear:year,label:String(year)}});
@@ -38,8 +48,8 @@ try {
     const years=club===0?Array.from({length:9},(_,i)=>2017+i):club===1?Array.from({length:8},(_,i)=>2018+i):[2025];
     for(const year of years) await db.clubSeason.create({data:{id:`qa-cs-${club}-${year}`,clubId:`qa-club-${club}`,seasonId:`qa-season-${year}`}});
     for(let i=0;i<24;i++) {
-      const name=club===0&&i===0?'Maksim Borisko':club===0&&i===6?'Ivan Oblyakov':`QA Player ${club}-${i}`;
-      await db.player.create({data:{id:`qa-p-${club}-${i}`,fullName:name,lastName:name}});
+      const name=club===0&&i===0?'Maksim Borisko':club===0&&i===6?'Ivan Oblyakov':club===1&&i===0?'Тереховский Игнат':`QA Player ${club}-${i}`;
+      await db.player.create({data:{id:`qa-p-${club}-${i}`,fullName:name,lastName:name==='Тереховский Игнат'?'Тереховский':name}});
       for(const year of years) await db.playerSeason.create({data:{id:`qa-ps-${club}-${year}-${i}`,playerId:`qa-p-${club}-${i}`,clubSeasonId:`qa-cs-${club}-${year}`,rating:75+i%10,primeRating:85+i%5,mainPosition:positions[i%12]}});
     }
   }
@@ -88,7 +98,7 @@ try {
   await api('/api/admin/challenges','PATCH',{id:issue,visibility:'open'},true);
   assert.ok((await api('/api/challenges')).active.some(i=>i.id===issue));
   const challenge=await api('/api/runs','POST',challengeBody,false,201);
-  assert.ok(challenge.slots.some(s=>s.playerName==='Ignat Terekhovskiy'&&s.playerPrimeRating===90));
+  assert.ok(challenge.slots.some(s=>s.playerName==='Тереховский Игнат'&&s.playerPrimeRating===85));
   await api('/api/admin/challenges','PATCH',{id:issue,visibility:'hidden'},true);
   assert.ok(!(await api('/api/challenges')).active.some(i=>i.id===issue));
   await api('/api/runs','POST',challengeBody,false,400);
