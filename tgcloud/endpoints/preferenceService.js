@@ -1,4 +1,4 @@
-import { db, fetch } from "sdk";
+import { db } from "sdk";
 import { botPreferences } from "../schema.js";
 import {
   normalize,
@@ -10,19 +10,6 @@ import { eq, and, gt, asc } from "sdk/db";
 export default async function preferenceService(input) {
   if (!bridgeSecret || input.secret !== bridgeSecret)
     throw new Error("Unauthorized");
-  // Authenticated, fixed-destination bridge for the existing notification queue.
-  // No caller-controlled URL or header is accepted.
-  if (input.action === 'worker') {
-    const body = input.body && typeof input.body === 'object' && !Array.isArray(input.body) ? input.body : {};
-    if (body.action && !['patches','sync','recipients','claim','ack'].includes(body.action)) throw new Error('Invalid worker action');
-    const response = await fetch('https://30-0.xn--p1ai/api/telegram/worker', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-30-0-Worker': bridgeSecret },
-      body: JSON.stringify(body),
-    });
-    if (!response.ok) throw new Error('Worker bridge HTTP ' + response.status);
-    return response.json();
-  }
   const record = (row) =>
     row
       ? {
