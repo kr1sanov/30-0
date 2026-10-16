@@ -117,3 +117,9 @@ export function archiveUnlockedUntil(referrals: Array<{ referralJoinedAt: Date |
   const latest = referrals.reduce((max, referral) => Math.max(max, (referral.referralJoinedAt ?? referral.createdAt).getTime()), 0);
   return latest + ARCHIVE_UNLOCK_MS > now.getTime() ? new Date(latest + ARCHIVE_UNLOCK_MS).toISOString() : null;
 }
+
+/** Stable labels also cover manually opened issues before their scheduled release. */
+export function challengeModeTitle(mode: string | null | undefined, language: 'ru' | 'en' = 'ru') {
+  const issue = [...issuesForWeek(0), ...issuesForWeek(1)].find(issue => issue.mode === mode);
+  return issue ? (language === 'en' ? issue.titleEn : issue.titleRu) : '';
+}

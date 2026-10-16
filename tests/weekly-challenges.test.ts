@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  archiveUnlockedUntil, challengeSucceeded, findWeeklyChallenge,
+  archiveUnlockedUntil, challengeSucceeded, findWeeklyChallenge, challengeModeTitle,
   issuesForWeek, listWeeklyChallenges, currentChallengeWindow,
 } from '../src/lib/weeklyChallenges.ts';
 
@@ -44,4 +44,10 @@ test('keeper challenge needs a complete season and exact clean-sheet/conceded li
   assert.equal(challengeSucceeded(issue, result), true);
   matches[15].awayGoals = 2;
   assert.equal(challengeSucceeded(issue, result), false);
+});
+
+test('new challenge labels survive sharing and early admin publication in both languages', () => {
+  assert.match(challengeModeTitle('challenge_cska_blitz','en'), /CSKA/);
+  assert.match(challengeModeTitle('challenge_akron_keeper','ru'), /Тереховского/);
+  assert.doesNotMatch(challengeModeTitle('challenge_akron_keeper','en'), /Dzyuba/);
 });
