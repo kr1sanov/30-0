@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 import { useUiTranslation } from '@/hooks/use-ui-translation';
 
 import { useState, useCallback, useMemo } from 'react';
@@ -200,11 +201,6 @@ function getInitials(name?: string): string {
   return parts[0].substring(0, 2).toUpperCase();
 }
 
-// Get player surname for label below circle
-function getPlayerSurname(lastName?: string): string {
-  if (!lastName) return '';
-  return lastName.trim();
-}
 
 // ---------------------------------------------------------------------------
 // Main Component
@@ -215,6 +211,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
   onChooseSlot?: (index: number) => void; targetSlotIndex?: number | null;
 } }) {
   const t = useUiTranslation();
+  const { player: playerName, displayName } = useFootballNames();
   const store = useGameStore();
   const config = multiplayer?.config ?? store.config;
   const slots = multiplayer?.slots ?? store.slots;
@@ -282,7 +279,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
             movePlayer(movingPlayerSlotIndex, index);
           } else {
             triggerShake(index);
-            toast.error(`${sourceSlot.playerName} не может играть на ${t(slot.positionLabel)}`);
+            toast.error(`${playerName(sourceSlot.playerName)} не может играть на ${t(slot.positionLabel)}`);
           }
         }
       }
@@ -300,7 +297,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
       if (canFill) {
         haptic('light');
         notify('success');
-        toast.success(`${selectedPlayer.fullName} → ${t(slot.positionLabel)}`);
+        toast.success(`${playerName(selectedPlayer.fullName)} → ${t(slot.positionLabel)}`);
         assignToSlot(index);
       } else {
         haptic('heavy');
@@ -384,7 +381,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
           >
             <span className="text-[10px] text-[#94a3b8]">{t("Выбери позицию для обмена с")}</span>
             <span className="text-[10px] font-bold text-[#facc15]">
-              {slots[movingPlayerSlotIndex]?.playerName}
+              {playerName(slots[movingPlayerSlotIndex]?.playerName)}
             </span>
           </motion.div>
         )}
@@ -496,7 +493,7 @@ export default function FormationView({ compact = false, multiplayer }: { compac
               whileTap={isFilled || isCompatible || isMoveTarget ? { scale: 0.9 } : undefined}
               aria-label={
                 isFilled
-                  ? `${slot.playerName ?? 'Игрок'}, ${t(slot.positionLabel)}, рейтинг ${slot.playerRating ?? '?'}`
+                  ? `${playerName(slot.playerName) || t('Игрок')}, ${t(slot.positionLabel)}, рейтинг ${slot.playerRating ?? '?'}`
                   : t(`Пустая позиция ${t(slot.positionLabel)}`)
               }
             >
@@ -544,17 +541,18 @@ export default function FormationView({ compact = false, multiplayer }: { compac
                       <span className="text-[10px] font-black text-white leading-none">
                         {config.gameMode === 'single_club'
                           ? (isPrimeMode && slot.playerPrimeRating ? slot.playerPrimeRating : slot.playerRating)
-                          : getInitials(slot.playerName)}
+                          : getInitials(playerName(slot.playerName))}
                       </span>
                     )}
                   </div>
                   {/* Only the surname is shown on the completed lineup */}
                   <div className="flex items-center gap-0.5 mt-0.5" style={{ maxWidth: '56px' }}>
                     <span
+                      data-no-translate
                       className={`${compact ? 'text-[8px]' : 'text-[6px] sm:text-[7px]'} font-bold text-white/80 leading-none truncate`}
                       style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
                     >
-                      {getPlayerSurname(slot.playerLastName)}
+                      {displayName(slot.playerName ?? '', slot.playerLastName ?? '').surname}
                     </span>
                   </div>
 

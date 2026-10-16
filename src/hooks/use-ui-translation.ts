@@ -3,16 +3,18 @@ import { useCallback, useSyncExternalStore } from "react";
 import { translateInterface } from "@/lib/enTranslations";
 function subscribe(update: () => void) {
   window.addEventListener("30-0-language-change", update);
+  window.addEventListener("30-0-admin-language-change", update);
   window.addEventListener("storage", update);
   return () => {
     window.removeEventListener("30-0-language-change", update);
+    window.removeEventListener("30-0-admin-language-change", update);
     window.removeEventListener("storage", update);
   };
 }
-export function useUiLanguage() {
-  return useSyncExternalStore(
+export function useUiLanguage(): 'ru' | 'en' {
+  return useSyncExternalStore<'ru' | 'en'>(
     subscribe,
-    () => (localStorage.getItem("30-0-language") === "en" ? "en" : "ru"),
+    () => (localStorage.getItem(window.location.pathname.startsWith("/admin") ? "30-0-admin-language" : "30-0-language") === "en" ? "en" : "ru"),
     () => "ru",
   );
 }

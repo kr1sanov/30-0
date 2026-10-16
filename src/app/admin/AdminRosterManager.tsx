@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ALL_POSITIONS } from '@/lib/positions';
@@ -19,6 +20,7 @@ async function api<T>(path: string, method = 'GET', body?: unknown): Promise<T> 
 }
 
 export default function AdminRosterManager({ onChanged }: { onChanged: () => void }) {
+  const { club: clubName } = useFootballNames();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
   const [seasonId, setSeasonId] = useState('');
@@ -103,7 +105,7 @@ export default function AdminRosterManager({ onChanged }: { onChanged: () => voi
           setNotice(`${player.fullName} добавлен в ${player.clubName} (${selectedSeason?.label}).`);
           await reload(seasonId); onChanged();
         }); }} className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">Клуб<select value={clubChoice} onChange={e => setClubChoice(e.target.value)} className={`${input} mt-1`}><option value="__new">Новый клуб</option>{clubs.map(club => <option key={club.id} value={club.id}>{club.nameRu}</option>)}</select></label>
+          <label className="text-sm">Клуб<select value={clubChoice} onChange={e => setClubChoice(e.target.value)} className={`${input} mt-1`}><option value="__new">Новый клуб</option>{clubs.map(club => <option key={club.id} value={club.id}>{clubName(club.nameRu)}</option>)}</select></label>
           {clubChoice === '__new' ? <><label className="text-sm">Название клуба<input required value={newClub} onChange={e => setNewClub(e.target.value)} className={`${input} mt-1`} /></label><label className="text-sm">Название клуба на английском<input value={newClubEn} onChange={e => setNewClubEn(e.target.value)} className={`${input} mt-1`} /></label></> : <div />}
           <label className="text-sm">Полное имя<input required value={fullName} onChange={e => setFullName(e.target.value)} className={`${input} mt-1`} placeholder="Имя Фамилия" /></label>
           <label className="text-sm">Фамилия или имя на форме<input required value={lastName} onChange={e => setLastName(e.target.value)} className={`${input} mt-1`} placeholder="Фамилия" /></label>
@@ -134,10 +136,11 @@ function RosterEditor({ row, busy, onSave }: { row: RosterPlayer; busy: boolean;
   const [primeRating, setPrimeRating] = useState(row.primeRating);
   const [position, setPosition] = useState(row.mainPosition);
   const [other, setOther] = useState<string[]>(row.otherPositions?.split(/[,|]/).map(v => v.trim()).filter(Boolean) ?? []);
+  const { player: playerName } = useFootballNames();
   const [alias, setAlias] = useState(row.player.alias ?? '');
   useEffect(() => { setRating(row.rating); setPrimeRating(row.primeRating); setPosition(row.mainPosition); setOther(row.otherPositions?.split(/[,|]/).map(v => v.trim()).filter(Boolean) ?? []); setAlias(row.player.alias ?? ''); }, [row.rating, row.primeRating, row.mainPosition, row.otherPositions, row.player.alias]);
   return <div className="grid items-center gap-2 rounded-lg bg-white/5 p-3 text-sm md:grid-cols-[minmax(140px,1fr)_minmax(120px,1fr)_70px_70px_130px_auto]">
-    <span title={row.player.fullName} className="truncate">{row.player.fullName}</span>
+    <span data-no-translate title={playerName(row.player.fullName)} className="truncate">{playerName(row.player.fullName)}</span>
     <input aria-label={`Псевдоним ${row.player.fullName}`} title="Отображается в драфте; исходное имя сохраняется" placeholder="Псевдоним" maxLength={50} className={input} value={alias} onChange={e => setAlias(e.target.value)} />
     <input aria-label={`Рейтинг ${row.player.fullName}`} title="Уровень в этом сезоне" className={input} type="number" min={1} max={100} value={rating} onChange={e => setRating(Number(e.target.value))} />
     <input aria-label={`Прайм ${row.player.fullName}`} title="Лучший уровень игрока" className={input} type="number" min={1} max={100} value={primeRating} onChange={e => setPrimeRating(Number(e.target.value))} />

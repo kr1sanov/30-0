@@ -1,4 +1,5 @@
 'use client';
+import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useGameStore } from '@/store/gameStore';
 import { POSITION_CATEGORY } from '@/lib/positions';
@@ -39,6 +40,7 @@ function getChemistryLabel(score: number): { text: string; color: string } {
 }
 
 export default function SquadStats() {
+  const { player: playerName } = useFootballNames();
   const { slots, currentSpin, config } = useGameStore();
 
   const isPrimeMode = config.ratingMode === 'prime';
@@ -217,9 +219,7 @@ export default function SquadStats() {
                   {slot.positionLabel}
                 </span>
                 <span className="text-xs font-medium text-[#FFFFFF]">
-                  {isForeignPlayer(slot.playerNationality)
-                    ? slot.playerName
-                    : (slot.playerLastName || slot.playerName)}
+                  {playerName(isForeignPlayer(slot.playerNationality) ? slot.playerName : (slot.playerLastName || slot.playerName))}
                 </span>
               </div>
               <span className="text-xs font-bold text-[#9CA3AF]">

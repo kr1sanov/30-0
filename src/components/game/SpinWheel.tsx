@@ -5,7 +5,7 @@ import { RotateCcw, Loader2 } from "lucide-react";
 import { useUiTranslation } from "@/hooks/use-ui-translation";
 import { useGameStore } from "@/store/gameStore";
 import { useTelegram } from "@/hooks/use-telegram";
-import { russianClubName } from "@/lib/clubDisplayName";
+import { useFootballNames } from "@/hooks/use-football-names";
 import { Metrics } from "@/lib/metrics";
 import type { SpinResult } from "@/lib/types";
 
@@ -101,6 +101,7 @@ export function SlotReel({
   duration = 0.65,
 }: SlotReelProps) {
   const t = useUiTranslation();
+  const { club: clubName } = useFootballNames();
   const reduced = useReducedMotion();
   const result = hasResult && !isSpinning && targetItem !== null;
   useEffect(() => {
@@ -122,7 +123,7 @@ export function SlotReel({
             className="flex h-14 items-center justify-center px-2 text-center text-sm font-bold"
             style={{ color: resultColor }}
           >
-            {result ? t(russianClubName(targetItem)) : "—"}
+            {result ? clubName(targetItem) : "—"}
           </div>
         ) : (
           <motion.div
@@ -145,7 +146,7 @@ export function SlotReel({
                   color: index === 8 && result ? resultColor : "#94a3b8",
                 }}
               >
-                {t(russianClubName(item))}
+                {clubName(item)}
               </div>
             ))}
           </motion.div>

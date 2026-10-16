@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { localizedClubName } from "@/lib/clubDisplayName";
 import { translateInterface } from "@/lib/enTranslations";
 
 type Language = "ru" | "en";
@@ -50,7 +51,7 @@ function translatePage(language: Language, root: Node = document.body) {
     const previous = originals.get(node);
     const source =
       previous && previous.rendered === rendered ? previous.source : rendered;
-    const translated = language === "en" ? translateInterface(source) : source;
+    const translated = language === "en" ? translateInterface(localizedClubName(source, "en")) : localizedClubName(source, "ru");
     originals.set(node, { source, rendered: translated });
     if (rendered !== translated) node.nodeValue = translated;
   }
@@ -79,7 +80,7 @@ function translatePage(language: Language, root: Node = document.body) {
       const source =
         previous && previous.rendered === rendered ? previous.source : rendered;
       const translated =
-        language === "en" ? translateInterface(source) : source;
+        language === "en" ? translateInterface(localizedClubName(source, "en")) : localizedClubName(source, "ru");
       records.set(name, { source, rendered: translated });
       if (rendered !== translated) element.setAttribute(name, translated);
     }

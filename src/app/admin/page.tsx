@@ -1,4 +1,5 @@
 "use client";
+import { useFootballNames } from "@/hooks/use-football-names";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { translateClient } from "@/lib/enTranslations";
 
@@ -539,14 +540,15 @@ function PlayerEditor({
   busy: boolean;
   onSave: (alias: string | null) => void;
 }) {
+  const { player: playerName } = useFootballNames();
   const [alias, setAlias] = useState(player.alias ?? "");
   useEffect(() => setAlias(player.alias ?? ""), [player.alias]);
   return (
     <div className="grid gap-2 rounded-lg bg-white/5 p-3 text-sm md:grid-cols-[minmax(180px,1fr)_minmax(160px,1fr)_auto]">
       <div>
-        <strong>{player.fullName}</strong>
+        <strong data-no-translate>{playerName(player.fullName)}</strong>
         <p className="text-xs text-white/45">
-          Фамилия: {player.lastName} · сезонов в базе: {player._count.seasons}
+          Фамилия: {playerName(player.lastName)} · сезонов в базе: {player._count.seasons}
         </p>
       </div>
       <input
@@ -554,7 +556,7 @@ function PlayerEditor({
         value={alias}
         maxLength={50}
         onChange={(e) => setAlias(e.target.value)}
-        aria-label={`Псевдоним ${player.fullName}`}
+        aria-label={`Псевдоним ${playerName(player.fullName)}`}
         className={input}
         placeholder="Псевдоним"
       />
