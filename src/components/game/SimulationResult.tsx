@@ -334,7 +334,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
     const lines = [
       `⚽ МОЙ СЕЗОН В 30–0`,
       config.gameMode === 'single_club' ? `🏟️ Клуб: ${clubName(config.clubName) || 'выбранный клуб'}`
-        : config.gameMode.startsWith('challenge_') ? challengeModeTitle(config.gameMode)
+        : config.gameMode?.startsWith('challenge_') ? challengeModeTitle(config.gameMode)
         : `🏟️ Обычный драфт · ${config.formation}`,
       `🏆 Итог: ${pos} место · ${data.points} очков`,
       `✅ ${data.wins} побед · 🤝 ${data.draws} ничьих · ❌ ${data.losses} поражений`,
