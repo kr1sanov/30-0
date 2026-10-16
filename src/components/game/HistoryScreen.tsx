@@ -219,8 +219,9 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
       if (currentRequest !== requestId.current) return;
       setRuns(data);
       const requestedRun = localStorage.getItem('30-0-selected-run');
-      if (requestedRun && Array.isArray(data) && data.some((run: GameRunData) => run.id === requestedRun)) {
-        setExpandedId(requestedRun);
+      const requestedEntry = requestedRun && Array.isArray(data) ? data.find((run: GameRunData) => run.id === requestedRun || run.seriesRounds?.some(round => round.id === requestedRun)) : null;
+      if (requestedEntry) {
+        setExpandedId(requestedEntry.id);
         localStorage.removeItem('30-0-selected-run');
       }
     } catch (err) {

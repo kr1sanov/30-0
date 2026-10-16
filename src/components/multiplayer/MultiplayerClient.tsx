@@ -109,11 +109,13 @@ export default function MultiplayerPage() {
     })();
   }, [user]);
 
+  const refreshVersion = useRef(0);
   const refresh = useCallback(async () => {
     if (!code || document.hidden) return;
+    const version = ++refreshVersion.current;
     try {
       const value = await json<Room>(`/api/multiplayer/rooms/${code}`);
-      if (currentRoomCode.current !== code) return;
+      if (currentRoomCode.current !== code || version !== refreshVersion.current) return;
       setRoom(value);
       if (value.status === 'completed') setSpin(null);
       else if (value.status === 'drafting') setSpin(value.pendingSpin);
@@ -253,7 +255,6 @@ export default function MultiplayerPage() {
 
         {invitationList}
         {continueRooms}
-        {matchHistory}
 
         {!_hasHydrated ? <p className="text-center text-[#9CA3AF]">Проверяем вход…</p> : !user ? <div className={card}>
           <TelegramLogin compact startParam={joinCode ? `room_${joinCode}` : undefined}/>
@@ -267,10 +268,10 @@ export default function MultiplayerPage() {
           </div>
         </div>}
 
+        {matchHistory}
       </div>}
 
       {joiningLink && <p role="status" className="mx-auto max-w-lg rounded-xl border border-[#00C896]/30 bg-[#00C896]/10 p-4 text-center text-[#00C896]">Открываем комнату {joinCode}…</p>}
-      {code && room?.isHost && room.status === 'drafting' && <button disabled={busy} onClick={closeRoom} className="mb-5 ml-5 text-sm font-semibold text-red-300 hover:text-red-200 disabled:opacity-40">Закрыть комнату</button>}
       {code && !room && <p className="text-center text-[#9CA3AF]">Загружаем лобби…</p>}
       {code && room?.status === 'closed' && <div role="status" className={`${card} mx-auto max-w-xl text-center`}><h1 className="text-2xl font-bold">Комната закрыта</h1><p className="mt-2 text-[#9CA3AF]">Организатор завершил игру.</p><button onClick={backToMenu} className={`${button} mt-5`}>К выбору игры</button></div>}
       {code && room?.status === 'lobby' && <Lobby room={room} busy={busy} now={now}

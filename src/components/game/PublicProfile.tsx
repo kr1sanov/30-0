@@ -297,7 +297,7 @@ export default function PublicProfile({ id }: { id: string }) {
                         className="h-full w-full object-contain"
                       />
                     ) : (
-                      player.favoriteClub.nameRu.slice(0, 2).toLocaleUpperCase()
+                      null
                     )}
                   </span>
                   <div>

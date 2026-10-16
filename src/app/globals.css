@@ -1394,3 +1394,9 @@ html[data-language="en"] .hero-logo-en { display: block; }
 .club-name-en { display: none; }
 html[lang='en'] .club-name-ru { display: none; }
 html[lang='en'] .club-name-en { display: inline; }
+
+/* Draft controls keep a stable mobile viewport when a roster is replaced. */
+.draft-stable, .draft-player-panel { overflow-anchor: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

@@ -4,6 +4,14 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Подробный разбор состава': 'Detailed squad analysis',
+  'Статистика игроков': 'Player statistics',
+  'Показать тройку лучших': 'Show top 3',
+  'Показать всех игроков': 'Show all players',
+  'Свернуть таблицу': 'Collapse table',
+  'Показать всю таблицу': 'Show full table',
+  'Неполный состав: технические поражения 0:3 во всех матчах сезона.': 'Incomplete squad: automatic 0–3 defeats in every season match.',
+
   'очков ·': 'points ·',
   '-е место': ' place',
   'Статистика игроков в симуляции': 'Simulation player statistics',

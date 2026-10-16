@@ -18,7 +18,7 @@ export async function notificationWorker() {
       orderBy: { completedAt: "desc" },
       take: 100,
     });
-    for (const run of runs) await queueSeasonResult(run.id);
+    for (const run of runs) await queueSeasonResult(run.id).catch(() => console.error("Result image deferred for retry"));
     await flushSocialNotifications();
   } finally {
     busy = false;

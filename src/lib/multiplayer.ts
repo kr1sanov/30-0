@@ -1,9 +1,10 @@
 import { simulateContributions, type SeasonPlayerStat } from './seasonAnalytics';
 import { queueSeasonResult } from './seasonResultNotification';
+import { simulateMultiplayerLeague, type LeagueRow } from './multiplayerLeague';
 import { randomBytes } from 'node:crypto';
 import { db } from '@/lib/db';
 import { FORMATIONS } from '@/lib/positions';
-import { calculateSquadStrength, simulateMatch, simulateSeason, type SquadSlot } from '@/lib/simulation';
+import { calculateSquadStrength, simulateMatch, type SquadSlot } from '@/lib/simulation';
 import { ERA_MIN_YEAR, ERA_MAX_YEAR } from '@/lib/types';
 
 export const roomCode = () => Array.from(randomBytes(6), byte => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[byte % 32]).join('');
@@ -81,56 +82,39 @@ export async function createSeatRun(seat: { id: string; name: string; formation:
   return run.id;
 }
 
-type Result = { playerStats?: SeasonPlayerStat[]; id: string; name: string; points: number; wins: number; draws: number; losses: number;
-  goalsFor: number; goalsAgainst: number; rating: number; forfeited: boolean; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
+type Result = { table?: LeagueRow[]; position?: number; bestWinStreak?: number; playerStats?: SeasonPlayerStat[]; id: string; name: string; points: number; wins: number; draws: number; losses: number;
+  goalsFor: number; goalsAgainst: number; rating: number; forfeited: boolean; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number; technical?: boolean }[] };
 
 // Resolve the room once, from the same squads. Each head-to-head fixture is
 // generated once and mirrored into both participants' match lists.
 export async function resolveRoom(code: string) {
   const room = await db.multiplayerRoom.findUnique({ where: { code }, include: { seats: { include: { run: { include: { slots: true } } } } } });
-  if (!room || room.status !== 'drafting' || room.seats.some(seat => !seat.run || seat.run.slots.filter(slot => slot.playerSeasonId).length !== 11)) return false;
+  if (!room || room.status !== 'drafting' || room.seats.some(seat => !seat.run || !seat.ready || (!seat.forfeited && seat.run.slots.filter(slot => slot.playerSeasonId).length !== 11) || (!seat.isBot && seat.pickDeadline && seat.pickDeadline > new Date()))) return false;
   const season = await db.season.findFirst({ where: { startYear: { gte: room.eraStartYear, lte: room.eraEndYear }, clubSeasons: { some: { players: { some: {} } } } },
-    orderBy: { startYear: 'desc' }, include: { clubSeasons: { include: { club: true, players: { select: { rating: true } } } } } });
-  const clubs = season?.clubSeasons.filter(club => club.players.length).slice(0, 15) ?? [];
-  if (clubs.length < 15) throw new Error('Для сезона нужно 16 клубов в базе');
-  const opponents = clubs.map(club => ({ name: club.club.nameEn || club.club.nameRu,
-    strength: club.players.map(player => player.rating).sort((a,b) => b-a).slice(0,11).reduce((a,b) => a+b,0) / Math.min(11,club.players.length) }));
-  const results: Result[] = room.seats.map(seat => {
-    const slots: SquadSlot[] = seat.run!.slots.map(slot => ({ position: slot.slotPosition.split('_')[0],
-      playerName: slot.playerName || '', playerRating: (room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating) || 0,
-      isCompatible: slot.isCompatible }));
-    const rating = calculateSquadStrength(slots, undefined).overall;
-    const seasonResult = simulateSeason(slots, undefined, false, 0, opponents);
-    // Replace the first 2*(n-1) regular fixtures with shared head-to-head
-    // fixtures, keeping the season at 30 matches per participant.
-    const replaced = 2 * (room.seats.length - 1);
-    const retained = seasonResult.matches.slice(replaced);
-    return { id: seat.id, name: seat.name, rating, forfeited: seat.forfeited, points: 0, wins: 0, draws: 0, losses: 0,
-      goalsFor: 0, goalsAgainst: 0, matches: retained.map(match => ({ opponent: match.opponent, home: match.isHome,
-        for: match.isHome ? match.homeGoals : match.awayGoals,
-        against: match.isHome ? match.awayGoals : match.homeGoals })) };
+    orderBy: { startYear: 'desc' }, include: { clubSeasons: { orderBy: { clubId: 'asc' }, include: { club: true, players: { include: { player: true } } } } } });
+  const clubs = season?.clubSeasons.filter(club => club.players.length).slice(0, 16 - room.seats.length) ?? [];
+  if (clubs.length !== 16 - room.seats.length) throw new Error('Для сезона нужно 16 клубов в базе');
+  const participants = room.seats.map(seat => {
+    const slots: SquadSlot[] = seat.run!.slots.filter(slot => slot.playerSeasonId).map(slot => ({ position: slot.slotPosition.split('_')[0],
+      playerName: slot.playerName || '', playerRating: (room.ratingMode === 'prime' ? slot.playerPrimeRating : slot.playerRating) || 0, isCompatible: slot.isCompatible }));
+    return { id: seat.id, name: seat.name, participant: true, isHuman: !seat.isBot, forfeited: seat.forfeited, strength: calculateSquadStrength(slots, undefined).overall };
   });
-  for (let i = 0; i < results.length; i++) for (let j = i+1; j < results.length; j++) {
-    for (const homeIndex of [i, j]) {
-      const awayIndex = homeIndex === i ? j : i;
-      const match = simulateMatch(results[homeIndex].rating, results[awayIndex].rating, true);
-      // Spread direct fixtures through the season instead of appending them at the end.
-      const round = Math.min(29, Math.floor((results[homeIndex].matches.length + 1) * (homeIndex === i ? 1 : 2) / 3));
-      results[homeIndex].matches.splice(round, 0, { opponent: results[awayIndex].name, opponentId: results[awayIndex].id, home: true, for: match.homeGoals, against: match.awayGoals });
-      results[awayIndex].matches.splice(round, 0, { opponent: results[homeIndex].name, opponentId: results[homeIndex].id, home: false, for: match.awayGoals, against: match.homeGoals });
-    }
-  }
-  for (const result of results) for (const match of result.matches) {
-    result.goalsFor += match.for; result.goalsAgainst += match.against;
-    if (match.for > match.against) result.wins++;
-    else if (match.for < match.against) result.losses++;
-    else result.draws++;
-  }
-  for (const result of results) result.points = result.wins * 3 + result.draws;
-  results.sort((a,b) => Number(a.forfeited)-Number(b.forfeited) || b.points-a.points || (b.goalsFor-b.goalsAgainst)-(a.goalsFor-a.goalsAgainst) || b.goalsFor-a.goalsFor || a.id.localeCompare(b.id));
+  const league = simulateMultiplayerLeague([...participants, ...clubs.map(club => ({ id: `club:${club.clubId}`, name: club.club.nameEn || club.club.nameRu,
+    strength: club.players.map(player => player.rating).sort((a,b) => b-a).slice(0,11).reduce((a,b) => a+b,0) / Math.min(11,club.players.length) }))], (home, away) => simulateMatch(home, away, true));
+  const playerStats = league.table.flatMap(row => {
+    const seat = room.seats.find(seat => seat.id === row.participantId);
+    const club = clubs.find(club => (club.club.nameEn || club.club.nameRu) === row.name);
+    const roster = seat ? seat.run!.slots.filter(slot => slot.playerSeasonId).map(slot => ({ name: slot.playerName || '', position: slot.slotPosition.split('_')[0], rating: slot.playerRating || 0 }))
+      : (club?.players ?? []).map(card => ({ name: card.player.fullName, position: card.mainPosition, rating: card.rating }));
+    return simulateContributions(row.name, roster, row.goalsFor, `${code}:${room.seriesRound}:${row.participantId || row.name}`).stats;
+  });
+  const results: Result[] = league.table.filter(row => row.participantId).map(row => ({ id: row.participantId!, name: row.name, position: row.position,
+    rating: participants.find(team => team.id === row.participantId)!.strength, forfeited: Boolean(row.forfeited), points: row.points, wins: row.won, draws: row.drawn, losses: row.lost,
+    goalsFor: row.goalsFor, goalsAgainst: row.goalsAgainst, matches: league.matches[row.participantId!], table: league.table, playerStats }));
   for (const result of results) {
-    const seat = room.seats.find(seat => seat.id === result.id)!;
-    result.playerStats = simulateContributions(result.name, seat.run!.slots.map(slot => ({ name: slot.playerName || '', position: slot.slotPosition.split('_')[0], rating: slot.playerRating || 0 })), result.goalsFor, `${seat.runId}:${result.id}`).stats;
+    let streak = 0;
+    result.bestWinStreak = 0;
+    for (const match of result.matches) { streak = match.for > match.against ? streak + 1 : 0; result.bestWinStreak = Math.max(result.bestWinStreak, streak); }
   }
   const scores: SeriesScore = room.seriesScoreJson ? JSON.parse(room.seriesScoreJson) : {};
   let seriesWinnerKey: string | null = null;
@@ -139,18 +123,30 @@ export async function resolveRoom(code: string) {
       const seat = room.seats.find(value => value.id === result.id)!;
       const key = seat.seriesMemberKey ?? seat.userId ?? `bot:${seat.id}`;
       const previous = scores[key];
-      scores[key] = { name: result.name, isBot: seat.isBot, wins: (previous?.wins ?? 0) + Number(result.id === results[0].id),
+      scores[key] = { name: result.name, isBot: seat.isBot, wins: (previous?.wins ?? 0) + Number(!result.forfeited && result.id === results[0].id),
         seasonWins: (previous?.seasonWins ?? 0) + result.wins, points: (previous?.points ?? 0) + result.points };
       if (scores[key].wins >= room.seriesTargetWins) seriesWinnerKey = key;
     }
   }
-  const changed = await db.multiplayerRoom.updateMany({ where: { code, status: 'drafting' }, data: { status: 'completed', resultJson: JSON.stringify(results),
-    ...(room.seriesTargetWins > 0 ? { seriesScoreJson: JSON.stringify(scores), seriesWinnerKey } : {}) } });
-  if (!changed.count) return false;
-  await db.$transaction(results.map((result, index) => db.gameRun.update({ where: { id: room.seats.find(seat => seat.id === result.id)!.runId! }, data: {
-    completed: true, completedAt:new Date(), wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,
-    goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst, position: index + 1, overallRating: Math.round(result.rating),
-  } })));
+  const committed = await db.$transaction(async tx => {
+    const changed = await tx.multiplayerRoom.updateMany({ where: { code, status: 'drafting' }, data: { status: 'completed', resultJson: JSON.stringify(results),
+      ...(room.seriesTargetWins > 0 ? { seriesScoreJson: JSON.stringify(scores), seriesWinnerKey } : {}) } });
+    if (!changed.count) return false;
+    for (const result of results) {
+      const seat = room.seats.find(seat => seat.id === result.id)!;
+      const matches = result.matches.map((match, index) => ({ matchday: index + 1, opponent: match.opponent, opponentId: match.opponentId,
+        isHome: match.home, homeGoals: match.home ? match.for : match.against, awayGoals: match.home ? match.against : match.for,
+        result: match.for > match.against ? 'W' : match.for < match.against ? 'L' : 'D', technical: match.technical }));
+      const table = league.table.map(row => ({ ...row, isYou: row.participantId === result.id }));
+      await tx.gameRun.update({ where: { id: seat.runId! }, data: {
+        completed: true, completedAt: new Date(), wins: result.wins, draws: result.draws, losses: result.losses, points: result.points,
+        goalsFor: result.goalsFor, goalsAgainst: result.goalsAgainst, position: result.position, overallRating: Math.round(result.rating),
+        seasonResultJson: JSON.stringify({ ...result, runId: seat.runId, formation: seat.formation, matches, table }),
+      } });
+    }
+    return true;
+  });
+  if (!committed) return false;
   await Promise.all(room.seats.filter(seat=>seat.runId&&!seat.isBot).map(seat=>queueSeasonResult(seat.runId!).catch(()=>console.error('Result notification queued for retry'))));
   return true;
 }

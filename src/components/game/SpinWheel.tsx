@@ -342,7 +342,7 @@ export default function SpinWheel({
           )}
         </div>
       </section>
-      {ready && children}
+      <div className="draft-player-panel mt-3 h-[380px] overflow-y-auto overscroll-contain rounded-xl lg:mt-0 lg:h-auto lg:overflow-visible" aria-live="polite">{ready && children}</div>
     </div>
   );
 }

@@ -132,7 +132,7 @@ export async function POST(
     await db.$transaction(async (tx) => {
       if (multiplayerSeat) {
         const claimed = await tx.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id,
-          pendingSpinJson: multiplayerSeat.pendingSpinJson, ready: false }, data: { pendingSpinJson: null } });
+          pendingSpinJson: multiplayerSeat.pendingSpinJson, ready: false, pickDeadline: { gt: new Date() }, room: { status: 'drafting' } }, data: { pendingSpinJson: null } });
         if (!claimed.count) throw new Error('Результат прокрута уже использован');
       }
       const placed = await tx.gameSlot.updateMany({

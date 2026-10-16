@@ -22,6 +22,7 @@ import type { DraftSlot, GameConfig } from '@/lib/types';
 interface MatchDetail {
   matchday: number;
   opponent: string;
+  opponentId?: string;
   isHome: boolean;
   homeGoals: number;
   awayGoals: number;
@@ -140,6 +141,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
   const config = multiplayer ? multiplayer.config : store.config;
   const { haptic, notify, showConfirm } = useTelegram();
   const [currentMatchweek, setCurrentMatchweek] = useState(() => startComplete ? ((seasonResult as SeasonResultData | null)?.matches?.length ?? 0) : 0);
+  const [fullTable, setFullTable] = useState(false);
   const [showTable, setShowTable] = useState(true);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -147,7 +149,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
   const telegramSendRef = useRef<string | null>(null);
 
   const data = seasonResult as SeasonResultData | null;
-  const matches = (data?.matches ?? []) as MatchDetail[];
+  const matches = useMemo(() => ((data?.matches ?? []) as MatchDetail[]).map(match => ({ ...match, opponent: match.opponentId && data?.table?.some(team => team.participantId === match.opponentId) ? match.opponent : clubName(match.opponent) })), [data, clubName]);
   const totalMatches = matches.length;
   const trophies = (data?.trophies ?? []) as Trophy[];
   const earnedTrophies = trophies.filter(t => t.earned);
@@ -584,7 +586,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                             </tr>
                           </thead>
                           <tbody>
-                            {data.table.map((team) => {
+                            {(fullTable ? data.table : data.table.slice(0, 5)).map((team) => {
                               const isPlayer = team.isYou ?? team.name === (config.teamName || 'Моя команда');
                               const participantColor = ['text-sky-300 bg-sky-500/10','text-violet-300 bg-violet-500/10','text-amber-300 bg-amber-500/10','text-rose-300 bg-rose-500/10','text-cyan-300 bg-cyan-500/10'][data.table!.filter(t => t.isHuman).findIndex(t => t.participantId === team.participantId) % 5] || 'text-sky-300 bg-sky-500/10';
                               return (
@@ -611,6 +613,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                             })}
                           </tbody>
                         </table>
+                        {data.table.length > 5 && <button aria-expanded={fullTable} onClick={() => setFullTable(value => !value)} className="mt-3 min-h-11 w-full rounded-lg border border-white/15 px-3 text-xs font-bold text-[#00C896]">{fullTable ? 'Свернуть таблицу' : 'Показать всю таблицу'}</button>}
                       </div>
                     </motion.div>
                   )}
