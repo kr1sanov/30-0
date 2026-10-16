@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const activeYears = { startYear: { gte: 2006, lte: 2021 } };
+    const activeYears = { startYear: { gte: 2006, lte: 2026 } };
     const activePlayers = { clubSeason: { season: activeYears } };
     const [clubs, seasons, players, playerSeasons, gameRuns, simulatedSeasons, years] = await Promise.all([
       db.club.count({ where: { seasons: { some: { season: activeYears, players: { some: {} } } } } }),
@@ -12,7 +12,7 @@ export async function GET() {
       db.playerSeason.count({ where: activePlayers }),
       db.gameRun.count(),
       db.gameRun.count({ where: { completed: true } }),
-      db.season.aggregate({ where: activeYears, _min: { startYear: true }, _max: { endYear: true } }),
+      db.season.aggregate({ where: { ...activeYears, clubSeasons: { some: { players: { some: {} } } } }, _min: { startYear: true }, _max: { startYear: true } }),
     ]);
 
     return NextResponse.json({
@@ -23,7 +23,7 @@ export async function GET() {
       gameRuns,
       simulatedSeasons,
       firstYear: years._min.startYear,
-      lastYear: years._max.endYear,
+      lastYear: years._max.startYear,
     });
   } catch (error) {
     console.error('Failed to fetch stats:', error);
