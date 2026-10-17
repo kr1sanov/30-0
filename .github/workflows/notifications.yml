@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      force_fallback:
+        description: Verify delivery using the reserve runner
+        type: boolean
+        default: false
   workflow_run:
     workflows: ['CI/CD Pipeline', 'Deploy Telegram Serverless bot']
     types: [completed]
@@ -26,6 +31,7 @@ jobs:
         with:
           node-version: '22'
       - name: Deliver through Telegram Serverless
+        if: github.event_name != 'workflow_dispatch' || inputs.force_fallback != true
         id: relay
         continue-on-error: true
         env:
@@ -35,7 +41,7 @@ jobs:
   fallback:
     needs: primary
     if: always() && needs.primary.result != 'skipped' && needs.primary.outputs.success != 'true'
-    runs-on: ubuntu-24.04-arm
+    runs-on: macos-latest
     environment: production
     timeout-minutes: 4
     outputs:
