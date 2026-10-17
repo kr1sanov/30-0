@@ -40,7 +40,11 @@ function getChemistryLabel(score: number): { text: string; color: string } {
 }
 
 export default function SquadStats() {
-  const { player: playerName } = useFootballNames();
+  const { displayName } = useFootballNames();
+  const fullPlayerName = (name: string, surname: string) => {
+    const parts = displayName(name, surname);
+    return <><strong>{parts.surname}</strong>{parts.given ? ` ${parts.given}` : null}</>;
+  };
   const { slots, currentSpin, config } = useGameStore();
 
   const isPrimeMode = config.ratingMode === 'prime';
@@ -219,7 +223,7 @@ export default function SquadStats() {
                   {slot.positionLabel}
                 </span>
                 <span className="text-xs font-medium text-[#FFFFFF]">
-                  {playerName(slot.playerName)}
+                  {fullPlayerName(slot.playerName || '', slot.playerLastName || '')}
                 </span>
               </div>
               <span className="text-xs font-bold text-[#9CA3AF]">
