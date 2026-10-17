@@ -38,7 +38,7 @@ export const campaignTriggers = [
   "daily",
   "weekly",
   "monthly",
-  "return",
+  "return", "return_3", "return_7", "return_10", "return_30",
   "new_user",
   "season_complete",
   "perfect_season",
@@ -49,6 +49,7 @@ export function campaignPeriod(
   scheduledAt: Date | null,
 ) {
   if (
+    /^return_(3|7|10|30)$/.test(cadence) ||
     cadence === "manual" ||
     cadence === "new_user" ||
     cadence === "season_complete" ||

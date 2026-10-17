@@ -213,6 +213,7 @@ model NotificationDispatch {
 }
 
 model GameRun {
+  opponentSeasonYear Int?
   seasonResultJson String? @db.LongText
   multiplayerRoomCode String?
   multiplayerRound Int?

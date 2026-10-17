@@ -322,6 +322,8 @@ export default function GameSetup() {
 
   // Club list for single_club mode
   const [clubs, setClubs] = useState<ClubData[]>([]);
+  const [opponentSeasons, setOpponentSeasons] = useState<Array<{ startYear: number; label: string }>>([]);
+  useEffect(() => { if (config.gameMode !== 'single_club') return; const controller = new AbortController(); fetch('/api/seasons', { signal: controller.signal }).then(r => r.ok ? r.json() : []).then(setOpponentSeasons).catch(() => undefined); return () => controller.abort(); }, [config.gameMode]);
   const [clubsLoading, setClubsLoading] = useState(false);
   const [clubsLoaded, setClubsLoaded] = useState(false);
   const [clubsError, setClubsError] = useState<string | null>(null);
@@ -388,7 +390,7 @@ export default function GameSetup() {
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
         if (!controller.signal.aborted)
-          setActiveClubRun(localRun ?? data?.activeRun ?? null);
+          setActiveClubRun(data?.activeRun ?? localRun);
       })
       .catch(() => undefined);
     return () => controller.abort();
@@ -615,7 +617,7 @@ export default function GameSetup() {
                         isSelected={config.clubFilter === club.id}
                         onClick={() => {
                           selectionChanged();
-                          setConfig({ clubFilter: club.id, clubName: club.nameRu, ratingMode: 'season', eraFilter: 'all' });
+                          setConfig({ clubFilter: club.id, clubName: club.nameRu, eraFilter: 'all' });
                         }}
                       />
                     ))}
@@ -890,7 +892,7 @@ export default function GameSetup() {
       </div>
 
       {/* ─── PLAYER RATINGS ─── */}
-      {currentGameMode !== 'single_club' && <div
+      <div
         className="rounded-2xl p-4"
         style={{ backgroundColor: BG_CARD, border: '1px solid #1f1f1f' }}
       >
@@ -925,8 +927,16 @@ export default function GameSetup() {
             </button>
           ))}
         </div>
-      </div>}
+      </div>
 
+      {currentGameMode === 'single_club' && <label className="block rounded-2xl border border-white/10 bg-[#141414] p-4 text-sm font-bold">
+        Сезон соперников
+        <select className="mt-2 min-h-11 w-full rounded-xl border border-white/20 bg-[#141414] p-3" value={config.opponentSeasonYear ?? ''} onChange={e => setConfig({ opponentSeasonYear: e.target.value ? Number(e.target.value) : undefined })}>
+          <option value="">Случайный сезон</option>
+          {opponentSeasons.map(s => <option key={s.startYear} value={s.startYear}>{s.label}</option>)}
+        </select>
+        <p className="mt-2 font-normal text-xs text-[#9CA3AF]">Клубы, составы и рейтинги соперников — из выбранного сезона. Прайм влияет только на твои карточки.</p>
+      </label>}
       {/* ─── ERA ─── */}
       {currentGameMode !== 'single_club' && <div
         className="rounded-2xl p-4"

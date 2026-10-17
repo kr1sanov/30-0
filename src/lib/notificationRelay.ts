@@ -1,3 +1,4 @@
+import { campaignStillRelevant } from './campaignDelivery';
 import { db } from './db';
 import { preferenceData, preferencesFromUser, notificationAllowed, validPreferencePatch, type NotificationCategory } from './notificationPreferences';
 import { activeRestriction } from './moderation';
@@ -50,7 +51,7 @@ export async function relayAction(body: Record<string, unknown>) {
       if (!user.telegramChatStarted) continue; // Bot /start can still authorize delivery later.
       const claim = await db.telegramOutbox.updateMany({ where: { id: item.id, attempts: item.attempts, status: 'pending', sentAt: null, availableAt: { lte: now } }, data: { attempts: { increment: 1 }, availableAt: new Date(Date.now()+120_000) } });
       if (!claim.count) continue;
-      let expired = false;
+      let expired = !await campaignStillRelevant(item, now);
       if (item.eventKey.startsWith('invite:')) {
         const invite = await db.multiplayerInvite.findUnique({ where: { id: item.eventKey.split(':')[1] } });
         const room = invite ? await db.multiplayerRoom.findUnique({ where: { code: invite.roomCode }, select: { status: true } }) : null;

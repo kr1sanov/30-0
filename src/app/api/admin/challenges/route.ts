@@ -10,7 +10,7 @@ export async function PATCH(request: Request) {
   const admin = await requireAdmin(request);
   if (!admin || !canAdminWrite(admin.role, 'rosters') || !sameOrigin(request)) return Response.json({ error: 'Access denied' }, { status: 403 });
   const { id, visibility } = await request.json();
-  if (!['auto','open','hidden'].includes(visibility) || !(await challengeCatalog()).some(issue => issue.id === id)) return Response.json({ error: 'Invalid issue' }, { status: 400 });
+  if (!['auto','open','hidden','archived'].includes(visibility) || !(await challengeCatalog()).some(issue => issue.id === id)) return Response.json({ error: 'Invalid issue' }, { status: 400 });
   const key = `challenge-visibility:${id}`;
   await db.appSetting.upsert({ where: { key }, create: { key, value: visibility }, update: { value: visibility } });
   return Response.json({ ok: true });

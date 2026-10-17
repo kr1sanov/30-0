@@ -1,3 +1,4 @@
+import { runTeamName } from '@/lib/runTeamName';
 import { db } from "@/lib/db";
 import { FORMATIONS } from "@/lib/positions";
 import { NextResponse } from "next/server";
@@ -21,10 +22,11 @@ export async function GET(request: NextRequest) {
       );
     const mode = request.nextUrl.searchParams.get("mode") ?? "classic";
     const clubId = request.nextUrl.searchParams.get("clubId");
+    const runId = request.nextUrl.searchParams.get("runId");
     const issueId = request.nextUrl.searchParams.get("issueId");
     if (
       ![
-        "classic",
+        "latest", "classic",
         "single_club",
         "challenge_vagner",
         "challenge_dzyuba",
@@ -40,13 +42,12 @@ export async function GET(request: NextRequest) {
     const run = await db.gameRun.findFirst({
       where: {
         completed: false,
+        ...(runId ? { id: runId } : {}),
         userId,
         multiplayerSeat: null,
         multiplayerRoomCode: null,
-        gameMode: mode,
-        ...(mode === "single_club"
-          ? { slots: { some: { playerSeasonId: { not: null } } } }
-          : {}),
+        gameMode: mode === 'latest' ? { in: ['classic','single_club','challenge_vagner','challenge_dzyuba','challenge_cska_blitz','challenge_akron_keeper'] } : mode,
+
         ...(mode.startsWith("challenge_") && issueId
           ? { challengeIssueId: issueId }
           : {}),
@@ -54,12 +55,12 @@ export async function GET(request: NextRequest) {
           ? clubId
             ? { clubFilter: clubId }
             : {}
-          : { clubFilter: null }),
+          : mode === 'latest' ? {} : { clubFilter: null }),
       },
       include: {
         slots: { orderBy: { slotPosition: "asc" } },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
 
     if (!run) {
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
         })
       : null;
 
+    const owner = await db.user.findUnique({ where: { id: userId } });
     const slots = run.slots.map((slot) => {
       const slotPos = slot.slotPosition.split("_")[0];
       const formationIndex = Number(
@@ -109,6 +111,7 @@ export async function GET(request: NextRequest) {
         gameMode: run.gameMode,
         challengeIssueId: run.challengeIssueId,
         formation: run.formation,
+        opponentSeasonYear: run.opponentSeasonYear,
         difficulty: run.difficulty,
         draftMode: run.draftMode,
         ratingMode: run.gameMode.startsWith("challenge_")
@@ -121,7 +124,7 @@ export async function GET(request: NextRequest) {
         clubName: club?.nameRu ?? null,
         rerollsTotal: run.rerollsTotal,
         rerollsUsed: run.rerollsUsed,
-        teamName: run.teamName,
+        teamName: runTeamName(run.gameMode, club?.nameRu, owner?.username, owner?.displayName),
         nationalityFilter: run.nationalityFilter,
         slots,
         createdAt: run.createdAt,

@@ -22,6 +22,7 @@ export interface GameConfig {
   teamName?: string; // default: "Моя команда"
   gameMode?: GameModeType; // 'classic' (default) or 'single_club'
   challengeIssueId?: string; // published Saturday issue; validated on the server
+  opponentSeasonYear?: number; // omitted = deterministic random historical league
   clubFilter?: string; // clubId for single_club mode
   clubName?: string; // persisted presentation metadata for the selected club
   nationalityFilter?: string; // nationality name for nations_cup mode

@@ -39,6 +39,7 @@ interface Trophy {
 }
 
 interface SeasonResultData {
+  seasonLabel?: string;
   playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[];
   runId?: string;
   wins: number;
@@ -553,7 +554,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                   onClick={() => setShowTable(!showTable)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-[#141414]/30 transition-colors"
                 >
-                  <span className="text-sm font-bold text-[#FFFFFF]">📊 Итоговая таблица</span>
+                  <span className="text-sm font-bold text-[#FFFFFF]">📊 Итоговая таблица{data.seasonLabel ? ` · ${data.seasonLabel}` : ''}</span>
                   <motion.span
                     animate={{ rotate: showTable ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -599,7 +600,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                                   }`}
                                 >
                                   <td className="py-1.5 pr-2">{team.position}</td>
-                                  <td className="py-1.5">{isPlayer ? <>{team.name} · Моя команда</> : team.isHuman ? team.name : clubName(team.name)}</td>
+                                  <td className="py-1.5">{isPlayer ? (config.gameMode === 'single_club' ? clubName(config.clubName || team.name) : team.name) : team.isHuman ? team.name : clubName(team.name)}</td>
                                   <td className="text-center py-1.5 px-1">{team.played}</td>
                                   <td className="text-center py-1.5 px-1">{team.won}</td>
                                   <td className="text-center py-1.5 px-1">{team.drawn}</td>
