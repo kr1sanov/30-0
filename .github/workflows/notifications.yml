@@ -5,8 +5,12 @@ permissions:
   contents: read
 jobs:
   process:
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 5
     environment: production
     steps:
       - uses: actions/checkout@v4
@@ -17,3 +21,8 @@ jobs:
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
         run: node scripts/notification-route-diagnostics.mjs
+      - name: Deliver pending notifications through native Telegram SDK
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: node scripts/notification-relay.mjs
