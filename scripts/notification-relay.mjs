@@ -1,28 +1,9 @@
+import { createWorkerClient } from './notification-worker-client.mjs';
 import { createHash } from 'node:crypto';
 import { callCloudPreferences } from './telegram-cloud-client.mjs';
 const secret = process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET || process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
 if (!process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
-async function worker(body = {}) {
-  let lastError;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const response = await fetch('https://30-0.xn--p1ai/api/telegram/worker', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-30-0-Worker': secret }, body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
-      if (!response.ok) {
-        const error = new Error('Notification relay HTTP ' + response.status);
-        if (response.status >= 400 && response.status < 500 && ![408,429].includes(response.status)) throw Object.assign(error, { permanent: true });
-        throw error;
-      }
-      return await response.json();
-    } catch (error) {
-      if (error.permanent) throw error;
-      // Leases and attempt-checked acknowledgements make reconnects safe.
-      // Never include request headers or credentials in the error output.
-      lastError = new Error('Notification relay connection unavailable');
-      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
-    }
-  }
-  throw lastError;
-}
+const worker=createWorkerClient({secret});
 
 let deferred = 0, synchronized = 0;
 const { patches } = await worker({ action: 'patches' });
@@ -44,7 +25,7 @@ try {
   }
 } catch { deferred++; }
 await worker();
-let delivered = 0, failed = 0;
+let delivered = 0, skipped = 0, failed = 0;
 const deliveryStarted = Date.now();
 for (let batch = 0; batch < 5 && Date.now() - deliveryStarted < 110_000; batch++) {
   // Read each recipient's current language and opt-outs even when their cloud
@@ -67,8 +48,8 @@ for (let batch = 0; batch < 5 && Date.now() - deliveryStarted < 110_000; batch++
     catch { /* Keep the durable lease; the next relay retries without logging credentials. */ }
     await worker({ action:'ack', id:message.id, attempt:message.attempt, ...result });
     const ok = result.ok === true;
-    if (ok) delivered++; else failed++;
+    if (ok) { if(result.skipped) skipped++; else delivered++; } else failed++;
   }
 }
-console.log(JSON.stringify({ preferencesSynchronized: synchronized, delivered, failed, deferred }));
-if (failed) process.exitCode = 1;
+console.log(JSON.stringify({ preferencesSynchronized: synchronized, delivered, skipped, failed, deferred }));
+if (failed || deferred) process.exitCode = 1;

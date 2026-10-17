@@ -13,18 +13,57 @@ concurrency:
   group: notification-queue
   cancel-in-progress: false
 jobs:
-  process:
+  primary:
     if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 3
+    timeout-minutes: 4
+    outputs:
+      success: ${{ steps.relay.outcome == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Synchronize preferences and deliver notification queue
+      - name: Deliver through Telegram Serverless
+        id: relay
+        continue-on-error: true
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
           TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
         run: node scripts/notification-relay.mjs
+  fallback:
+    needs: primary
+    if: always() && needs.primary.result != 'skipped' && needs.primary.outputs.success != 'true'
+    runs-on: ubuntu-24.04-arm
+    environment: production
+    timeout-minutes: 4
+    outputs:
+      success: ${{ steps.relay.outcome == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Retry durable queue from an independent runner network
+        id: relay
+        continue-on-error: true
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: node scripts/notification-relay.mjs
+  verify:
+    needs: [primary, fallback]
+    if: always() && needs.primary.result != 'skipped'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a successful queue pass
+        env:
+          PRIMARY_OK: ${{ needs.primary.outputs.success }}
+          FALLBACK_OK: ${{ needs.fallback.outputs.success }}
+        run: |
+          if [ "$PRIMARY_OK" != true ] && [ "$FALLBACK_OK" != true ]; then
+            echo 'Both notification routes failed; pending messages remain in the durable outbox.'
+            exit 1
+          fi
+          echo 'Notification queue processing completed.'
