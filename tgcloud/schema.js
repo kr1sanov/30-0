@@ -11,3 +11,11 @@ export const botPreferences = table("bot_preferences", {
   syncedRevision: integer("synced_revision").notNull().default(0),
   started: integer("started").notNull().default(0),
 });
+
+// Outbox identities survive relay retries and concurrent workflow invocations.
+export const botDeliveries = table("bot_deliveries", {
+  id: text("id").primaryKey(),
+  tgId: integer("tg_id").notNull(),
+  state: text("state").notNull().default("pending"),
+  leaseUntil: integer("lease_until").notNull().default(0),
+});

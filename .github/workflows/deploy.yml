@@ -58,7 +58,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Authentication and Telegram tests
-        run: node --experimental-strip-types --test tests/*.test.ts tests/player-names.test.mjs
+        run: node --experimental-strip-types --test tests/*.test.ts tests/*.test.mjs
 
       - name: Deployment script syntax
         run: |

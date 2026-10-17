@@ -1,5 +1,5 @@
 "use client";
-import { useFootballNames } from "@/hooks/use-football-names";
+import AdminPlayers from "./AdminPlayers";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { translateClient } from "@/lib/enTranslations";
 
@@ -14,13 +14,6 @@ import AdminModeration from "./AdminModeration";
 import AdminLeaderboard from "./AdminLeaderboard";
 
 type Role = "owner" | "admin" | "moderator" | "viewer";
-type Player = {
-  id: string;
-  fullName: string;
-  lastName: string;
-  alias: string | null;
-  _count: { seasons: number };
-};
 type Account = {
   username: string;
   role: Role;
@@ -62,8 +55,6 @@ export default function AdminPage() {
   const [tab, setTab] = useState("overview");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [search, setSearch] = useState("");
-  const [players, setPlayers] = useState<Player[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [newUsername, setNewUsername] = useState("");
   const [newRole, setNewRole] = useState<Role>("viewer");
@@ -85,17 +76,6 @@ export default function AdminPage() {
   useEffect(() => {
     void load();
   }, [load]);
-  useEffect(() => {
-    if (!dashboard || tab !== "players") return;
-    const timer = setTimeout(() => {
-      void api<{ players: Player[] }>(
-        `/api/admin/players?q=${encodeURIComponent(search)}`,
-      )
-        .then((data) => setPlayers(data.players))
-        .catch((cause) => setError(String(cause)));
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [dashboard, tab, search]);
   useEffect(() => {
     if (
       !dashboard ||
@@ -213,53 +193,7 @@ export default function AdminPage() {
             section={tab as "overview" | "users" | "games"}
           />
         )}
-        {tab === "players" && (
-          <section className={panel}>
-            <h2 className="text-lg font-semibold">Псевдонимы игроков</h2>
-            <p className="mt-1 text-sm text-white/55">
-              Исходные имя и фамилия сохраняются в базе. Псевдоним используется
-              в новых спинах и на поле.
-            </p>
-            <input
-              aria-label="Поиск игрока"
-              className={`${input} mt-5 w-full max-w-md`}
-              placeholder="Имя, фамилия или псевдоним"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <div className="mt-4 space-y-2">
-              {players.map((player) => (
-                <PlayerEditor
-                  key={player.id}
-                  player={player}
-                  editable={canAlias}
-                  busy={busy}
-                  onSave={(alias) =>
-                    execute(async () => {
-                      const result = await api<{ player: Player }>(
-                        `/api/admin/players/${player.id}/alias`,
-                        "PATCH",
-                        { alias },
-                      );
-                      setPlayers((rows) =>
-                        rows.map((row) =>
-                          row.id === player.id
-                            ? { ...row, alias: result.player.alias }
-                            : row,
-                        ),
-                      );
-                      setNotice("Псевдоним сохранён");
-                    })
-                  }
-                />
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-white/40">
-              Показаны первые 50 результатов. Уточни поиск для остальных
-              игроков.
-            </p>
-          </section>
-        )}
+        {tab === "players" && <AdminPlayers editable={canAlias} />}
         {tab === "rosters" && canManage && (
           <AdminRosterManager onChanged={() => void load()} />
         )}
@@ -529,62 +463,5 @@ export default function AdminPage() {
         )}
       </div>
     </main>
-  );
-}
-
-function PlayerEditor({
-  player,
-  editable,
-  busy,
-  onSave,
-}: {
-  player: Player;
-  editable: boolean;
-  busy: boolean;
-  onSave: (alias: string | null) => void;
-}) {
-  const { player: playerName } = useFootballNames();
-  const [alias, setAlias] = useState(player.alias ?? "");
-  useEffect(() => setAlias(player.alias ?? ""), [player.alias]);
-  return (
-    <div className="grid gap-2 rounded-lg bg-white/5 p-3 text-sm md:grid-cols-[minmax(180px,1fr)_minmax(160px,1fr)_auto]">
-      <div>
-        <strong data-no-translate>{playerName(player.fullName)}</strong>
-        <p className="text-xs text-white/45">
-          Фамилия: {playerName(player.lastName)} · сезонов в базе: {player._count.seasons}
-        </p>
-      </div>
-      <input
-        disabled={!editable}
-        value={alias}
-        maxLength={50}
-        onChange={(e) => setAlias(e.target.value)}
-        aria-label={`Псевдоним ${playerName(player.fullName)}`}
-        className={input}
-        placeholder="Псевдоним"
-      />
-      <div className="flex gap-2">
-        {editable && (
-          <>
-            <button
-              disabled={busy || alias.trim() === (player.alias ?? "")}
-              className={action}
-              onClick={() => onSave(alias)}
-            >
-              Сохранить
-            </button>
-            {player.alias && (
-              <button
-                disabled={busy}
-                className="rounded border border-white/20 px-3 text-xs"
-                onClick={() => onSave(null)}
-              >
-                Очистить
-              </button>
-            )}
-          </>
-        )}
-      </div>
-    </div>
   );
 }

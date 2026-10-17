@@ -14,8 +14,10 @@ try {
     select: { id: true, mainPosition: true, otherPositions: true },
   });
 
+  const manual = new Set((await prisma.appSetting.findMany({where:{key:{startsWith:'player-card-manual:'}},select:{key:true}})).map(s=>s.key.slice('player-card-manual:'.length)));
   const updates = [];
   for (const playerSeason of fullbacks) {
+    if (manual.has(playerSeason.id)) continue;
     const wingbackPosition = playerSeason.mainPosition === 'ПЗ' ? 'ПФЗ' : 'ЛФЗ';
     const positions = (playerSeason.otherPositions ?? '')
       .split(',')

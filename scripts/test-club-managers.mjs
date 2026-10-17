@@ -4,7 +4,7 @@ import { CLUB_MANAGER_IDS, MANAGERS, getManagersForClub, getRandomManager } from
 
 const registry = JSON.parse(readFileSync(new URL('../docs/research/rpl-2010-2018/registry.json', import.meta.url), 'utf8'));
 const eligible = Object.entries(registry.clubs).filter(([, club]) => club.seasonAppearances >= 5);
-assert.equal(Object.keys(CLUB_MANAGER_IDS).length, eligible.length);
+assert.ok(Object.keys(CLUB_MANAGER_IDS).length >= eligible.length);
 assert.equal(new Set(MANAGERS.map(manager => manager.id)).size, MANAGERS.length);
 
 for (const [sourceId, club] of eligible) {

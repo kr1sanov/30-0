@@ -1,3 +1,4 @@
+import { deliver, deliveryHealth } from "../lib/delivery.js";
 import { db } from "sdk";
 import { botPreferences } from "../schema.js";
 import {
@@ -10,6 +11,8 @@ import { eq, and, gt, asc } from "sdk/db";
 export default async function preferenceService(input) {
   if (!bridgeSecret || input.secret !== bridgeSecret)
     throw new Error("Unauthorized");
+  if (input.action === "deliver") return deliver(input.message);
+  if (input.action === "deliveryHealth") return deliveryHealth();
   const record = (row) =>
     row
       ? {

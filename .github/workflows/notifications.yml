@@ -26,6 +26,5 @@ jobs:
       - name: Synchronize preferences and deliver notification queue
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
         run: node scripts/notification-relay.mjs

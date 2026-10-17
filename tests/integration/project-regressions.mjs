@@ -200,5 +200,34 @@ try {
   assert.ok(!(await worker({action:'claim',tgIds:[900001]})).messages.some(m=>m.id===retention.id));
   assert.equal((await db.telegramOutbox.findUnique({where:{id:retention.id}})).status,'skipped');
   console.log('PASS editable retention templates and send-time cancellation after player returns');
+  // Full editable identities/cards, ownership validation and immutable finished snapshots.
+  const identity={firstName:'Иван',lastName:'Проверкин',alias:null,nationality:'Россия',birthYear:1994};
+  const chosen=(await api('/api/admin/players/qa-p-0-6','GET',undefined,true)).player;
+  const existingCard=chosen.seasons[0];
+  const editedSeason=Object.fromEntries(['id','rating','primeRating','primeSeason','mainPosition','otherPositions','nationality','age','shirtNumber','matches','goals','assists','sourceName','sourcePosition','sourceUrl'].map(k=>[k,existingCard[k]]));
+  editedSeason.rating=81;editedSeason.primeRating=90;editedSeason.otherPositions=null;
+  await api('/api/admin/players/qa-p-0-6','PATCH',{player:identity,season:editedSeason},true);
+  assert.equal((await db.player.findUnique({where:{id:'qa-p-0-6'}})).fullName,'Иван Проверкин');
+  assert.equal((await db.playerSeason.findUnique({where:{id:editedSeason.id}})).rating,81);
+  assert.ok(await db.appSetting.findUnique({where:{key:`player-card-manual:${editedSeason.id}`}}));
+  await api('/api/admin/players/qa-p-0-7','PATCH',{season:editedSeason},true,400);
+  console.log('PASS full player/card editor and card ownership guard');
+
+  const grantTime=new Date();
+  for(let n=0;n<5;n++) await db.gameRun.create({data:{id:`qa-archive-access-${n}`,userId:'qa-host',completed:true,completedAt:grantTime,wins:10,gameMode:n===4?'single_club':'classic',clubFilter:n===4?'qa-club-0':null,slots:{create:Array.from({length:11},(_,i)=>({slotPosition:`${positions[i]}_${i}`,playerSeasonId:`qa-ps-0-2025-${i}`}))}}});
+  const access=(await api('/api/challenges')).archiveProgress;
+  assert.equal(access.completedSeasons,5);assert.equal(access.distinctModes,2);
+  assert.equal(Date.parse(access.unlockedUntil)-(+grantTime),3*86400000);
+  await api('/api/admin/challenges','PATCH',{id:issue,visibility:'archived',patch:{minimumGoals:7,minimumPoints:0,requireTitle:false}},true);
+  const archiveCatalog=await api('/api/admin/challenges','GET',undefined,true);
+  assert.equal(new Set(archiveCatalog.issues.map(i=>i.id)).size,archiveCatalog.issues.length);
+  assert.equal(archiveCatalog.issues.find(i=>i.id===issue).minimumGoals,7);
+  await api('/api/runs','POST',challengeBody,false,201);
+  await api('/api/admin/challenges','PATCH',{id:issue,visibility:'open',patch:{startsAt:new Date(Date.now()-2*86400000).toISOString(),endsAt:new Date(Date.now()-86400000).toISOString()}},true);
+  // Opening an expired challenge creates a fresh explicit window, not an expiry bypass.
+  assert.ok(Date.parse((await api('/api/admin/challenges','GET',undefined,true)).issues.find(i=>i.id===issue).endsAt)>Date.now());
+  await api('/api/admin/challenges','PATCH',{id:issue,patch:{endsAt:new Date(Date.now()-1).toISOString(),startsAt:new Date(Date.now()-100000).toISOString()}},true);
+  assert.ok((await api('/api/challenges')).archive.some(i=>i.id===issue));
+  console.log('PASS five-season archive grant, 72h duration, editable objectives and expiry');
   console.log('ALL INTEGRATION SCENARIOS PASSED');
 } finally { server.kill(); await db.$disconnect(); }

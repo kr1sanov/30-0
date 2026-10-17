@@ -52,11 +52,12 @@ if (existsSync(backupPath)) throw new Error('Backup path already exists');
 const seasonIds = snapshots.map(s => `rpl-${s.year}`);
 const db = new PrismaClient();
 try {
+  const manualCards = new Set((await db.appSetting.findMany({where:{key:{startsWith:'player-card-manual:'}},select:{key:true}})).map(s=>s.key.slice('player-card-manual:'.length)));
   const existingSeasons = await db.season.findMany({ where: { OR: [{ id: { in: seasonIds } }, { startYear: { in: snapshots.map(s => s.year) } }] } });
   if (existingSeasons.length) {
     if (existingSeasons.length !== 4 || existingSeasons.some(s => !seasonIds.includes(s.id))) throw new Error('Existing 2022–25 season is not this import; manual review required');
     const stored = await db.playerSeason.findMany({ where: { clubSeason: { seasonId: { in: seasonIds } } }, select: {
-      clubSeasonId: true, playerId: true, rating: true, primeRating: true, mainPosition: true, otherPositions: true, shirtNumber: true,
+      id: true, clubSeasonId: true, playerId: true, rating: true, primeRating: true, mainPosition: true, otherPositions: true, shirtNumber: true,
     } });
     const byCard = new Map(stored.map(p => [`${p.clubSeasonId}:${p.playerId}`, p]));
     // Admin-created cards coexist with the immutable source snapshot.
@@ -69,9 +70,9 @@ try {
       // fullbacks before each import preflight. Both states are source-equivalent.
       const backfilledOtherPositions = wingback && !p.positions.slice(1).includes(wingback)
         ? [...p.positions.slice(1), wingback].join(',') : originalOtherPositions;
-      return card && card.rating === p.rating && card.primeRating === p.potential &&
+      return card && (manualCards.has(card.id) || (card.rating === p.rating && card.primeRating === p.potential &&
         card.mainPosition === p.positions[0] && [originalOtherPositions, backfilledOtherPositions].includes(card.otherPositions || '') &&
-        card.shirtNumber === p.number;
+        card.shirtNumber === p.number));
     });
     if (exact) { console.log(`All four editions already installed; no changes. ${stored.length - playerCards.length} additional cards preserved.`); process.exit(0); }
     throw new Error('Existing 2022–25 data differs from fixture; refusing overwrite');

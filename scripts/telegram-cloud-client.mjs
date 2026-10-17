@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const files = {
+  "lib/delivery": "tgcloud/lib/delivery.js",
+  "lib/deliveryCore": "tgcloud/lib/deliveryCore.js",
   schema: "tgcloud/schema.js",
   "lib/preferences": "tgcloud/lib/preferences.js",
   "endpoints/preferenceService": "tgcloud/endpoints/preferenceService.js",
