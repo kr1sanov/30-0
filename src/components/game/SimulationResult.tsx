@@ -132,7 +132,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
   data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
   onHome: () => void; onReplay: () => void; friendNames?: string[];
 } }) {
-  const { club: clubName } = useFootballNames();
+  const { player: playerName, club: clubName } = useFootballNames();
   const store = useGameStore();
   const seasonResult = multiplayer ? multiplayer.data : store.seasonResult;
   const resetGame = multiplayer?.onReplay ?? store.resetGame;
@@ -431,7 +431,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                   </div>
                   {match.scorers && match.scorers.length > 0 && (
                     <div className="text-[10px] text-[#9CA3AF] mt-1">
-                      {match.scorers.join(' · ')}
+                      {match.scorers.map(scorer => playerName(scorer)).join(' · ')}
                     </div>
                   )}
                 </motion.div>

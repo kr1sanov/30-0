@@ -219,7 +219,7 @@ export default function SquadStats() {
                   {slot.positionLabel}
                 </span>
                 <span className="text-xs font-medium text-[#FFFFFF]">
-                  {playerName(isForeignPlayer(slot.playerNationality) ? slot.playerName : (slot.playerLastName || slot.playerName))}
+                  {playerName(slot.playerName)}
                 </span>
               </div>
               <span className="text-xs font-bold text-[#9CA3AF]">

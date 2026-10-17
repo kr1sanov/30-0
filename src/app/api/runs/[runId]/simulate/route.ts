@@ -1,8 +1,9 @@
+import { challengeCatalog } from '@/lib/challengeCatalog';
 import { selectHistoricalSeason } from '@/lib/historicalSeason';
 import { runTeamName } from '@/lib/runTeamName';
 import { simulateContributions } from '@/lib/seasonAnalytics';
 import { playerDisplayName } from '@/lib/playerNames';
-import { findWeeklyChallenge, challengeSucceeded } from '@/lib/weeklyChallenges';
+import { challengeSucceeded } from '@/lib/weeklyChallenges';
 import { db } from '@/lib/db';
 import { simulateSeason, calculateSquadStrength, type SquadSlot } from '@/lib/simulation';
 import { enforceRateLimit } from '@/lib/rateLimit';
@@ -139,7 +140,7 @@ export async function POST(
       return contributions.stats;
     });
     if (run.challengeIssueId) {
-      const issue = findWeeklyChallenge(run.challengeIssueId, new Date('2100-01-01'));
+      const issue = (await challengeCatalog()).find(i=>i.id===run.challengeIssueId);
       if (issue && ['cska_blitz','akron_keeper'].includes(issue.hero)) result.trophies.push({ id: issue.hero === 'cska_blitz' ? 'cska_blitz' : 'akron_wall', name: issue.hero === 'cska_blitz' ? 'Блиц 11 минут' : 'Стена Тереховского', description: issue.descriptionRu, icon: issue.hero === 'cska_blitz' ? '⚡' : '🧤', earned: challengeSucceeded(issue, result) });
       if (issue) result.trophies.push({ id: issue.id, name: issue.titleRu, description: issue.descriptionRu, icon: '🏆', earned: challengeSucceeded(issue, result) });
     }

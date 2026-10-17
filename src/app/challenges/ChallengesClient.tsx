@@ -10,7 +10,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useGameStore } from '@/store/gameStore';
 import type { WeeklyChallenge } from '@/lib/weeklyChallenges';
 import { toast } from 'sonner';
-import { telegramWebApp } from '@/hooks/use-telegram';
 
 interface ChallengeRun {
   id: string; issueId: string; completed: boolean; succeeded: boolean;
@@ -19,7 +18,7 @@ interface ChallengeRun {
 interface ChallengeResponse {
   active: WeeklyChallenge[]; archive: WeeklyChallenge[];
   nextReleaseAt: string | null; archiveUnlockedUntil: string | null;
-  referralCount: number; personal: ChallengeRun[];
+  archiveProgress: { completedSeasons: number; requiredSeasons: number; distinctModes: number; requiredModes: number }; personal: ChallengeRun[];
   totalCompleted: Record<string, number>;
 }
 
@@ -80,7 +79,7 @@ export default function ChallengesClient() {
       document.getElementById('challenge-login')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-    if (!issue.forceOpen && new Date(issue.endsAt).getTime() <= clock && !archiveOpen) return;
+    if ((issue.visibility === 'archived' || new Date(issue.endsAt).getTime() <= clock) && !archiveOpen) return;
     setBusy(true);
     try {
       const unfinished = resultFor(issue).runs.find(run => !run.completed);
@@ -94,18 +93,6 @@ export default function ChallengesClient() {
       router.push(`/?challenge=${encodeURIComponent(issue.id)}`);
     } catch (cause) { toast.error(cause instanceof Error ? cause.message : t('Ошибка запуска', 'Could not start')); }
     finally { setBusy(false); }
-  }
-
-  async function invite() {
-    try {
-      const response = await fetch('/api/referrals', { cache: 'no-store' });
-      if (!response.ok) throw new Error();
-      const { inviteUrl, telegramInviteUrl } = await response.json();
-      const link = telegramWebApp() ? telegramInviteUrl : inviteUrl;
-      if (!link) throw new Error();
-      await navigator.clipboard.writeText(link);
-      toast.success(t('Ссылка приглашения скопирована', 'Invite link copied'));
-    } catch { toast.error(t('Не удалось скопировать ссылку', 'Could not copy invite link')); }
   }
 
   function resultFor(issue: WeeklyChallenge) {
@@ -147,7 +134,7 @@ export default function ChallengesClient() {
         <section aria-labelledby="archive-title">
           <h2 id="archive-title" className="mb-4 text-2xl font-black">{t('Архив челленджей', 'Challenge archive')}</h2>
           {grouped.length > 0 && (archiveOpen ? <p className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">{t('Архив открыт до', 'Archive unlocked until')} {formatDate(data.archiveUnlockedUntil!, locale, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} {t('МСК', 'MSK')}</p>
-            : <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5"><div><strong className="text-base">{t('Открой архив на 24 часа', 'Unlock the archive for 24 hours')}</strong><p className="mt-1 max-w-xl text-sm leading-6 text-[#b6b4c3]">{t('Пригласи одного человека по своей ссылке. Когда он авторизуется в игре, архив откроется на сутки. Новое приглашение продлит доступ.', 'Invite one person with your link. Once they sign in, past challenges unlock for a day. Another referral renews access.')}</p></div><button type="button" disabled={!isAuthenticated} onClick={() => void invite()} className="rounded-xl bg-violet-500 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">{t('Скопировать приглашение', 'Copy invite link')}</button></div>)}
+            : <div className="mb-6 rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5"><strong>{t('Открой архив на 3 дня', 'Unlock the archive for 3 days')}</strong><p className="mt-2 text-sm text-[#b6b4c3]">{t('Заверши 5 сезонов минимум в двух разных режимах. После открытия новые пять сезонов позволят получить доступ снова.', 'Complete 5 seasons across at least two modes. After unlocking, complete another five seasons to earn access again.')}</p><p className="mt-3 text-sm font-bold">{t('Сезоны', 'Seasons')}: {data.archiveProgress.completedSeasons}/5 · {t('Режимы', 'Modes')}: {Math.min(2,data.archiveProgress.distinctModes)}/2</p><progress aria-label={t('Прогресс доступа к архиву', 'Archive access progress')} value={data.archiveProgress.completedSeasons} max={5} className="mt-3 w-full accent-violet-400" /></div>)}
           {grouped.length === 0 && <p className="text-sm text-[#9CA3AF]">{t('Архив появится после следующей субботы.', 'The archive opens after next Saturday.')}</p>}
           {grouped.map(group => <div key={group.label} className="mb-8">
             <h3 className="mb-3 border-b border-white/10 pb-2 text-sm font-bold uppercase tracking-[.15em] text-[#9CA3AF]">{formatDate(group.issues[0].startsAt, locale, { month: 'long', year: 'numeric' })}</h3>
@@ -156,7 +143,7 @@ export default function ChallengesClient() {
               return <button type="button" key={issue.id} disabled={!archiveOpen || busy || !isAuthenticated} onClick={() => void start(issue)} className="rounded-2xl border border-white/10 bg-[#141414] p-4 text-left transition hover:border-[#00C896]/50 disabled:cursor-not-allowed disabled:opacity-65">
                 <span className="text-xs text-[#9CA3AF]">{formatDate(issue.startsAt, locale, { day: 'numeric', month: 'long' })}</span>
                 <strong className="mt-3 block text-base">{language === 'en' ? issue.titleEn : issue.titleRu}</strong>
-                <span className="mt-2 block text-xs text-[#9CA3AF]">{progress.wins ? t('Выполнено ✓', 'Completed ✓') : archiveOpen ? t('Играть снова →', 'Play again →') : t('Открывается по приглашению', 'Unlock with a referral')}</span>
+                <span className="mt-2 block text-xs text-[#9CA3AF]">{progress.wins ? t('Выполнено ✓', 'Completed ✓') : archiveOpen ? t('Играть снова →', 'Play again →') : t('Нужно 5 сезонов в разных режимах', 'Complete 5 seasons in different modes')}</span>
               </button>;
             })}</div>
           </div>)}

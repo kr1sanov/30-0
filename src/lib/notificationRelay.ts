@@ -43,7 +43,7 @@ export async function relayAction(body: Record<string, unknown>) {
     const hydrated = Array.isArray(body.tgIds) ? body.tgIds.filter(id => Number.isSafeInteger(id) && Number(id) > 0).map(id => `telegram_${id}`) : null;
     const eligible = await db.user.findMany({ where: { telegramChatStarted: true, ...(hydrated ? { providerId: { in: hydrated } } : {}) }, select: { id: true } });
     const pending = await db.telegramOutbox.findMany({ where: { userId: { in: eligible.map(user => user.id) }, sentAt: null, status: 'pending', attempts: { lt: 5 }, availableAt: { lte: now } }, orderBy: { createdAt: 'asc' }, take: 5 });
-    const messages: Array<{ id: string; attempt: number; chatId: number; text: string | null; keyboard: object; image: string | null }> = [];
+    const messages: Array<{ id: string; attempt: number; chatId: number; category: string; text: string | null; keyboard: object; image: string | null }> = [];
     for (const item of pending) {
       const user = await db.user.findUnique({ where: { id: item.userId } });
       if (!user) continue;
@@ -71,7 +71,7 @@ export async function relayAction(body: Record<string, unknown>) {
         const run = await db.gameRun.findUnique({ where: { id: item.eventKey.slice(7) }, include: { user: true } });
         if (run?.user) image = await seasonResultImage({ ...run, user: run.user }, language);
       }
-      messages.push({ id: item.id, attempt: item.attempts+1, chatId: Number(user.providerId.replace('telegram_', '')),
+      messages.push({ category, id: item.id, attempt: item.attempts+1, chatId: Number(user.providerId.replace('telegram_', '')),
         text: category === 'news' ? (language === 'en' ? item.textEn : item.text) : localizeBotMessage(item.text, language),
         keyboard: { inline_keyboard: [[{ text: category === 'news' ? (language === 'en' ? item.buttonTextEn || item.buttonText : item.buttonText) : localizeBotButton(item.buttonText || 'Open 30-0', language), url: item.buttonUrl || `https://t.me/RPL30_bot?startapp=${encodeURIComponent(item.startParam)}` }]] },
         image: image ? Buffer.from(image).toString('base64') : null });
@@ -81,7 +81,7 @@ export async function relayAction(body: Record<string, unknown>) {
   if (body.action === 'ack') {
     if (typeof body.id !== 'string' || !Number.isInteger(body.attempt) || typeof body.ok !== 'boolean') throw new Error('Invalid acknowledgement');
     await db.telegramOutbox.updateMany({ where: { id: body.id, attempts: body.attempt as number, status: 'pending', sentAt: null }, data: body.ok
-      ? { sentAt: new Date(), status: 'sent', lastError: null }
+      ? { sentAt: new Date(), status: body.skipped === true ? 'skipped' : 'sent', lastError: null }
       : { status: (body.attempt as number) >= 5 ? 'failed' : 'pending', lastError: typeof body.errorCode === 'number' ? `Telegram ${body.errorCode}` : 'Telegram delivery failed', availableAt: new Date(Date.now() + Math.max(60 * 2 ** (body.attempt as number), typeof body.retryAfter === 'number' ? Math.min(3600, Math.max(0, body.retryAfter)) : 0) * 1000) } });
     return { ok: true };
   }

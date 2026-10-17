@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  archiveUnlockedUntil, challengeSucceeded, findWeeklyChallenge, challengeModeTitle,
+  challengeSucceeded, findWeeklyChallenge, challengeModeTitle,
   issuesForWeek, listWeeklyChallenges, currentChallengeWindow,
 } from '../src/lib/weeklyChallenges.ts';
 
@@ -27,14 +27,6 @@ test('each weekly issue has objective conditions and a stable identity', () => {
   assert.equal(challengeSucceeded(blitz, { position: 1, goalsFor: 100, losses: 0, points: 90 }), false);
   matches[0].awayGoals = 1;
   assert.equal(challengeSucceeded(blitz, { position: 1, goalsFor: 100, losses: 0, points: 90, matches }), false);
-});
-
-test('referral unlock expires precisely 24 hours after the latest authenticated attribution', () => {
-  const joined = new Date('2026-10-17T10:00:00Z');
-  const records = [{ createdAt: new Date('2026-09-01T00:00:00Z'), referralJoinedAt: joined }];
-  assert.equal(archiveUnlockedUntil(records, new Date('2026-10-18T09:59:59Z')), '2026-10-18T10:00:00.000Z');
-  assert.equal(archiveUnlockedUntil(records, new Date('2026-10-18T10:00:00Z')), null);
-  assert.equal(archiveUnlockedUntil([], joined), null);
 });
 
 test('keeper challenge needs a complete season and exact clean-sheet/conceded limits', () => {

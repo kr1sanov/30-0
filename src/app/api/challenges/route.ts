@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       createdAt: run.createdAt.toISOString(),
     }));
     return NextResponse.json({ active, archive, nextReleaseAt,
-      archiveUnlockedUntil: access.unlockedUntil, referralCount: access.referralCount,
+      archiveUnlockedUntil: access.unlockedUntil, archiveProgress: access,
       personal, totalCompleted: Object.fromEntries(totals.map(item => [item.challengeIssueId, item._count._all])),
     }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {

@@ -84,6 +84,7 @@ const backupPath = resolve(backupArgument.slice(9));
 if (existsSync(backupPath)) throw new Error('Backup path already exists');
 const db = new PrismaClient();
 try {
+  const manualCards = new Set((await db.appSetting.findMany({where:{key:{startsWith:'player-card-manual:'}},select:{key:true}})).map(s=>s.key.slice('player-card-manual:'.length)));
   const found = await db.season.findMany({ where: { startYear: { in: years } }, select: { id: true, startYear: true } });
   const byYear = new Map(found.map(season => [season.startYear, season]));
   const alreadyInstalled = await Promise.all(snapshots.map(async snapshot => {
@@ -96,10 +97,10 @@ try {
     const expectedCards = new Map(snapshot.clubs.flatMap(club => club.players.map(p => [p.id, { ...p, clubId: club.id }])));
     return cards.length === snapshot.cards.length && cards.every(card => {
       const source = expectedCards.get(card.id);
-      return source && card.clubSeason.clubId === source.clubId && card.sourceName === source.name &&
+      return source && card.clubSeason.clubId === source.clubId && (manualCards.has(card.id) || (card.sourceName === source.name &&
         card.sourcePosition === source.sourcePosition && card.rating === source.rating &&
         card.primeRating === source.potential && card.mainPosition === source.mapped[0] &&
-        (card.otherPositions ?? '') === source.mapped.slice(1).join(',');
+        (card.otherPositions ?? '') === source.mapped.slice(1).join(',')));
     });
   }));
   if (alreadyInstalled.every(Boolean)) { console.log('All four supplied editions already installed.'); process.exit(0); }

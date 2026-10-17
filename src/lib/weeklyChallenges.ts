@@ -1,7 +1,6 @@
 /** Weekly issues switch at 12:00 Saturday in Moscow (09:00 UTC). */
 export const FIRST_CHALLENGE_RELEASE = Date.parse('2026-10-10T09:00:00.000Z');
 export const CHALLENGE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-export const ARCHIVE_UNLOCK_MS = 24 * 60 * 60 * 1000;
 
 type Hero = 'vagner' | 'dzyuba' | 'cska_blitz' | 'akron_keeper';
 export type ChallengeMode = `challenge_${Hero}`;
@@ -22,6 +21,7 @@ export interface WeeklyChallenge {
   featuredNames?: string[][];
   sourceUrls?: string[];
   forceOpen?: boolean;
+  visibility?: 'auto' | 'open' | 'hidden' | 'archived';
   minimumGoals: number;
   minimumPoints: number;
   unbeaten: boolean;
@@ -111,11 +111,6 @@ export function challengeSucceeded(issue: WeeklyChallenge, result: {
     && (issue.maximumConceded === undefined || (ga !== undefined && ga !== null && ga <= issue.maximumConceded))
     && (issue.minimumCleanSheets === undefined || (clean ?? 0) >= issue.minimumCleanSheets)
     && (result.points ?? 0) >= issue.minimumPoints && (!issue.unbeaten || result.losses === 0);
-}
-
-export function archiveUnlockedUntil(referrals: Array<{ referralJoinedAt: Date | null; createdAt: Date }>, now: Date = new Date()): string | null {
-  const latest = referrals.reduce((max, referral) => Math.max(max, (referral.referralJoinedAt ?? referral.createdAt).getTime()), 0);
-  return latest + ARCHIVE_UNLOCK_MS > now.getTime() ? new Date(latest + ARCHIVE_UNLOCK_MS).toISOString() : null;
 }
 
 /** Stable labels also cover manually opened issues before their scheduled release. */

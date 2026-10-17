@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
 import { callCloudPreferences } from './telegram-cloud-client.mjs';
 const secret = process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET || process.env.BRIDGE_SECRET || createHash('sha256').update('30-0 bridge:'+process.env.TGCLOUD_TOKEN).digest('hex');
-const token = process.env.TELEGRAM_BOT_TOKEN;
-if (!token || !process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
+if (!process.env.TGCLOUD_TOKEN) throw new Error('Notification relay credentials unavailable');
 async function worker(body = {}) {
   let lastError;
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -63,20 +62,11 @@ for (let batch = 0; batch < 5 && Date.now() - deliveryStarted < 110_000; batch++
   const { messages } = await worker({ action: 'claim', tgIds: recipients.map(record => record.tgId) });
   if (!messages.length) break;
   for (const message of messages) {
-    let ok = false, errorCode, retryAfter;
-    try {
-      let body, method;
-      if (message.image) {
-        method = 'sendPhoto'; body = new FormData(); body.set('chat_id', String(message.chatId));
-        body.set('caption', message.text); body.set('parse_mode', 'HTML'); body.set('reply_markup', JSON.stringify(message.keyboard));
-        body.set('photo', new Blob([Buffer.from(message.image, 'base64')], { type: 'image/png' }), 'result.png');
-      } else { method = 'sendMessage'; body = JSON.stringify({ chat_id: message.chatId, text: message.text, parse_mode: 'HTML', reply_markup: message.keyboard }); }
-      const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, { method: 'POST', headers: typeof body === 'string' ? { 'Content-Type': 'application/json' } : undefined, body, signal: AbortSignal.timeout(10000) });
-      const payload = await response.json();
-      ok = response.ok && payload.ok === true;
-      if (!ok) { errorCode = payload.error_code; retryAfter = payload.parameters?.retry_after; }
-    } catch { /* A leased item is retried after backoff; credentials never enter logs. */ }
-    await worker({ action: 'ack', id: message.id, attempt: message.attempt, ok, errorCode, retryAfter });
+    let result = {ok:false};
+    try { result = await callCloudPreferences('deliver', {message}); }
+    catch { /* Keep the durable lease; the next relay retries without logging credentials. */ }
+    await worker({ action:'ack', id:message.id, attempt:message.attempt, ...result });
+    const ok = result.ok === true;
     if (ok) delivered++; else failed++;
   }
 }

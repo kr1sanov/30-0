@@ -1,24 +1,24 @@
- 'use client';
-import { useCallback, useEffect, useState } from 'react';
+'use client';
+import { useCallback,useEffect,useState } from 'react';
 import { useUiLanguage } from '@/hooks/use-ui-translation';
 import type { WeeklyChallenge } from '@/lib/weeklyChallenges';
-type Issue = WeeklyChallenge & { visibility: string };
-export default function AdminChallenges() {
-  const language = useUiLanguage();
-  const en = language === 'en';
-  const [issues, setIssues] = useState<Issue[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const refresh = useCallback(async () => { const r = await fetch('/api/admin/challenges', { cache: 'no-store' }); if (!r.ok) throw new Error('Could not load challenges'); setIssues((await r.json()).issues); }, []);
-  useEffect(() => { void refresh().catch(e => setError(e.message)); }, [refresh]);
-  async function change(id: string, visibility: string) {
-    setBusy(true); setError('');
-    try { const r = await fetch('/api/admin/challenges', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, visibility }) }); if (!r.ok) throw new Error('Could not save challenge'); await refresh(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Error'); } finally { setBusy(false); }
-  }
-  return <section className="space-y-3"><h2 className="text-xl font-bold">{en ? 'Challenge publication' : 'Публикация челленджей'}</h2>
-    <p className="text-sm text-slate-400">{en ? 'Automatic release: Saturday 12:00 Moscow. Open and Hidden override the schedule, including archived issues.' : 'По расписанию: суббота, 12:00 МСК. Открыть и Скрыть действуют сразу, в том числе для старых заданий.'}</p>
-    {error && <p role="alert" className="text-rose-300">{error}</p>}
-    {[...issues].reverse().map(issue => <article key={issue.id} className="rounded-xl border border-white/10 bg-white/5 p-4"><h3 className="font-bold">{en ? issue.titleEn : issue.titleRu}</h3><p className="mt-2 text-sm text-slate-300">{en ? issue.descriptionEn : issue.descriptionRu}</p><p className="my-3 text-xs text-slate-400">{new Date(issue.startsAt).toLocaleString(en ? 'en-GB' : 'ru-RU', { timeZone: 'Europe/Moscow' })} MSK · {issue.visibility}</p><div className="flex flex-wrap gap-2">{(['auto','open','hidden','archived'] as const).map(visibility => <button key={visibility} disabled={busy || visibility === issue.visibility} onClick={() => void change(issue.id, visibility)} className="rounded-lg border border-white/20 px-3 py-2 text-sm disabled:opacity-40">{visibility === 'auto' ? (en ? 'Scheduled' : 'По расписанию') : visibility === 'open' ? (en ? 'Open' : 'Открыть') : visibility === 'archived' ? (en ? 'Archive' : 'В архив') : (en ? 'Hidden' : 'Скрыть')}</button>)}</div></article>)}
-  </section>;
+type Issue=WeeklyChallenge&{visibility:string;status:string};
+export default function AdminChallenges(){
+ const en=useUiLanguage()==='en';
+ const [issues,setIssues]=useState<Issue[]>([]),[tab,setTab]=useState('active'),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const refresh=useCallback(async()=>{const r=await fetch('/api/admin/challenges',{cache:'no-store'});if(!r.ok)throw new Error('Could not load challenges');setIssues((await r.json()).issues);},[]);
+ useEffect(()=>{void refresh().catch(e=>setError(e.message));},[refresh]);
+ async function save(id:string,body:object){setBusy(true);setError('');try{const r=await fetch('/api/admin/challenges',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,...body})});if(!r.ok)throw new Error((await r.json()).error);await refresh();}catch(e){setError(e instanceof Error?e.message:'Error');}finally{setBusy(false);}}
+ const label=(ru:string,english:string)=>en?english:ru;
+ return <section className="space-y-4"><h2 className="text-xl font-bold">{label('Публикация челленджей','Challenge publication')}</h2><p className="text-sm text-slate-400">{label('Суббота, 12:00 МСК. По окончании срока задание автоматически переходит в архив.','Saturday, 12:00 Moscow. Expired issues automatically move to the archive.')}</p>
+ <div className="flex flex-wrap gap-2">{[['active','Действующие','Active'],['scheduled','Запланированные','Scheduled'],['archived','Архив','Archive'],['hidden','Скрытые','Hidden']].map(([id,ru,english])=><button key={id} onClick={()=>setTab(id)} aria-pressed={tab===id} className={`rounded-lg border px-3 py-2 ${tab===id?'border-emerald-400 text-emerald-300':'border-white/20'}`}>{label(ru,english)} ({issues.filter(i=>i.status===id).length})</button>)}</div>
+ {error&&<p role="alert" className="text-rose-300">{error}</p>}
+ {issues.filter(i=>i.status===tab).toReversed().map(issue=><article key={issue.id} className="rounded-xl border border-white/10 bg-white/5 p-4"><h3 className="font-bold">{en?issue.titleEn:issue.titleRu}</h3><p className="my-2 text-sm text-slate-300">{en?issue.descriptionEn:issue.descriptionRu}</p><p className="text-xs text-slate-400">{issue.id} · {new Date(issue.startsAt).toLocaleDateString(en?'en-GB':'ru-RU')} — {new Date(issue.endsAt).toLocaleDateString(en?'en-GB':'ru-RU')}</p>
+ <div className="my-3 flex flex-wrap gap-2">{[['auto','По расписанию','Schedule'],['open','Открыть','Open'],['hidden','Скрыть','Hide'],['archived','В архив','Archive']].map(([visibility,ru,english])=><button key={visibility} disabled={busy} onClick={()=>void save(issue.id,{visibility})} className="rounded-lg border border-white/20 px-3 py-2 text-sm disabled:opacity-40">{label(ru,english)}</button>)}</div>
+ <details><summary className="cursor-pointer text-sm text-emerald-300">{label('Изменить условия и сроки','Edit objectives and dates')}</summary><form key={JSON.stringify(issue)} className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();const f=new FormData(e.currentTarget);const patch:Record<string,unknown>={};for(const k of ['titleRu','titleEn','descriptionRu','descriptionEn'])patch[k]=String(f.get(k));for(const k of ['minimumGoals','minimumPoints','maximumConceded','minimumCleanSheets','matchLimit'])patch[k]=f.get(k)===''?null:Number(f.get(k));for(const k of ['startsAt','endsAt'])patch[k]=new Date(String(f.get(k))).toISOString();patch.requireTitle=f.has('requireTitle');patch.unbeaten=f.has('unbeaten');void save(issue.id,{patch});}}>
+ {(['titleRu','titleEn','descriptionRu','descriptionEn'] as const).map(k=><label key={k} className="text-sm">{k}<input data-no-translate name={k} required defaultValue={issue[k]} className="mt-1 w-full rounded-lg border border-white/20 bg-black/30 p-2" /></label>)}
+ {(['minimumGoals','minimumPoints','maximumConceded','minimumCleanSheets','matchLimit'] as const).map(k=><label key={k} className="text-sm">{({minimumGoals:label('Минимум голов','Minimum goals'),minimumPoints:label('Минимум очков','Minimum points'),maximumConceded:label('Максимум пропущенных','Maximum conceded'),minimumCleanSheets:label('Сухие матчи','Clean sheets'),matchLimit:label('Первые N матчей (пусто — сезон)','First N matches (blank = season)')})[k]}<input name={k} type="number" min={k==='matchLimit'?1:0} required={k==='minimumGoals'||k==='minimumPoints'} defaultValue={issue[k]??''} className="mt-1 w-full rounded-lg border border-white/20 bg-black/30 p-2" /></label>)}
+ {(['startsAt','endsAt'] as const).map(k=><label key={k} className="text-sm">{k==='startsAt'?label('Начало (местное время)','Start (local time)'):label('Окончание (местное время)','End (local time)')}<input type="datetime-local" name={k} required defaultValue={new Date(Date.parse(issue[k])-new Date(issue[k]).getTimezoneOffset()*60000).toISOString().slice(0,16)} className="mt-1 w-full rounded-lg border border-white/20 bg-black/30 p-2" /></label>)}
+ <label><input type="checkbox" name="requireTitle" defaultChecked={issue.requireTitle!==false}/> {label('Нужно чемпионство','Title required')}</label><label><input type="checkbox" name="unbeaten" defaultChecked={issue.unbeaten}/> {label('Без поражений','Unbeaten')}</label><button disabled={busy} className="rounded-lg bg-emerald-500 p-2 font-bold text-black">{label('Сохранить','Save')}</button></form></details></article>)}
+ </section>;
 }

@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     }
     if (issue && (issue.visibility === 'archived' || (!issue.forceOpen && new Date(issue.endsAt).getTime() <= Date.now()))) {
       const access = await getArchiveAccess(userId);
-      if (!access.unlockedUntil) return NextResponse.json({ error: 'Архив закрыт. Пригласи одного игрока, чтобы открыть его на 24 часа.' }, { status: 403 });
+      if (!access.unlockedUntil) return NextResponse.json({ error: 'Архив закрыт. Заверши 5 сезонов минимум в двух режимах, чтобы открыть его на 3 дня.' }, { status: 403 });
     }
     if (gameMode === 'single_club' && !clubFilter) {
       return NextResponse.json({ error: 'Выбери клуб' }, { status: 400 });
