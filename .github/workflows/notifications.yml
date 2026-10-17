@@ -1,31 +1,19 @@
 name: Process notification queue
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
-  workflow_run:
-    workflows: ['CI/CD Pipeline', 'Deploy Telegram Serverless bot']
-    types: [completed]
-    branches: [main]
 permissions:
   contents: read
-concurrency:
-  group: notification-queue
-  cancel-in-progress: false
 jobs:
   process:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event != 'pull_request')
     runs-on: ubuntu-latest
     environment: production
-    timeout-minutes: 3
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Synchronize preferences and deliver notification queue
+      - name: Diagnose authenticated cloud HTTP availability without user data
         env:
           TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
-        run: node scripts/notification-relay.mjs
+        run: node scripts/notification-diagnostics.mjs
