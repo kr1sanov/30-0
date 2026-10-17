@@ -597,7 +597,7 @@ function ManagerCard({ manager }: { manager: Manager }) {
 /* ------------------------------------------------------------------ */
 
 export default function ManagerChoice() {
-  const { config, spinManager, currentManager, isSpinningManager, setScreen } =
+  const { config, spinManager, currentManager, isSpinningManager } =
     useGameStore();
   const pool = useMemo(() => config.gameMode === 'single_club'
     ? getManagersForClub(config.clubFilter)
@@ -627,11 +627,11 @@ export default function ManagerChoice() {
 
   const handleWithManager = () => {
     haptic('light');
-    setScreen('pre-match');
+    void useGameStore.getState().simulate(currentManager);
   };
 
   const handleWithoutManager = () => {
-    setScreen('pre-match');
+    void useGameStore.getState().simulate(currentManager);
   };
 
   // Which target should the reels use? Prefer the explicit reelTarget
@@ -694,7 +694,7 @@ export default function ManagerChoice() {
             className="w-full h-14 text-base font-black bg-[#00C896] hover:bg-[#00A67A] text-white rounded-xl shadow-lg shadow-[#00C896]/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Zap className="w-4 h-4 mr-1.5 fill-white" />
-            Разведка перед сезоном
+            Сыграть сезон
           </Button>
         )}
 
@@ -715,7 +715,7 @@ export default function ManagerChoice() {
             onClick={handleWithoutManager}
             className="w-full text-xs text-[#64748b] hover:text-[#9CA3AF] transition-colors py-2"
           >
-            Без тренера → Разведка
+            Сыграть без тренера
           </button>
         )}
 
@@ -725,7 +725,7 @@ export default function ManagerChoice() {
             onClick={handleWithoutManager}
             className="w-full text-xs text-[#64748b] hover:text-[#9CA3AF] transition-colors py-1.5"
           >
-            Без тренера → Разведка
+            Сыграть без тренера
           </button>
         )}
       </div>

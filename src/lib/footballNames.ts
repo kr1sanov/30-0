@@ -3,6 +3,9 @@ export type FootballLanguage = 'ru' | 'en';
 // Common spellings override mechanical transliteration. Source Latin names remain
 // unchanged in English; display names never change roster identities or aliases.
 const spellings: Record<string, string> = {
+  Ugalde:'Угальде', Manfred:'Манфред', Cordoba:'Кордоба', Córdoba:'Кордоба', Spertsyan:'Сперцян',
+  Mohebi:'Мохеби', Mohammad:'Мохаммад', Bongonda:'Бонгонда', Theo:'Тео', Djikiya:'Джикия',
+  Shelia:'Шелия', Lovat:'Ловат', Olaza:'Оласа', Agkatsev:'Агкацев', Tormena:'Тормена',
   Ignat:'Игнат', Terekhovskiy:'Тереховский', Borisko:'Бориско', Oblyakov:'Обляков',
   Eduard:'Эдуард', Eduardo:'Эдуардо', Erik:'Эрик', Eric:'Эрик', Emmanuel:'Эммануэль',
   Elvir:'Элвир', Edgar:'Эдгар', Edin:'Эдин', Eldar:'Эльдар', Adil:'Адиль',
@@ -73,6 +76,7 @@ const spellings: Record<string, string> = {
 };
 
 const nicknames: Record<string, string> = {
+  'Giorgiy Shelia':'Гиорги Шелия', 'Georgiy Shelia':'Гиорги Шелия',
   'Vagner Love':'Вагнер Лав', 'Zé Luís':'Зе Луиш', 'Ze Luis':'Зе Луиш',
   'Luiz Adriano':'Луис Адриано', 'Carlos Eduardo':'Карлос Эдуардо',
   'Douglas Santos':'Дуглас Сантос', 'Rafael Carioca':'Рафаэл Кариока',
@@ -80,7 +84,7 @@ const nicknames: Record<string, string> = {
   'Joao Carlos':'Жоао Карлос', 'Roberto Carlos':'Роберто Карлос',
 };
 const compositeNames = new Set(Object.entries(nicknames).flatMap(([en, ru]) => [en.toLowerCase(), ru.toLowerCase()]));
-export function isFootballMononym(name: string) { return compositeNames.has(name.trim().toLowerCase()); }
+export function isFootballMononym(name: string) { return !/^(giorgiy shelia|georgiy shelia|гиорги шелия)$/i.test(name.trim()) && compositeNames.has(name.trim().toLowerCase()); }
 
 const cyrillic: Record<string, string> = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'yo',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
 const latin: Record<string, string> = {a:'а',b:'б',c:'к',d:'д',e:'е',f:'ф',g:'г',h:'х',i:'и',j:'й',k:'к',l:'л',m:'м',n:'н',o:'о',p:'п',q:'к',r:'р',s:'с',t:'т',u:'у',v:'в',w:'в',x:'кс',y:'й',z:'з',æ:'э',ø:'ё',ł:'л',ß:'с',đ:'дж',ð:'д',þ:'т',ı:'и'};

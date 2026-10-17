@@ -4,6 +4,15 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Сезон соперников': 'Opposition season', 'Случайный сезон': 'Random season',
+  'Клубы, составы и рейтинги соперников — из выбранного сезона. Прайм влияет только на твои карточки.': 'Opposing clubs, squads and ratings come from the selected season. Prime mode affects only your cards.',
+  'Возврат · 3 дня без игры': 'Return after 3 inactive days', 'Возврат · 7 дней без игры': 'Return after 7 inactive days',
+  'Возврат · 10 дней без игры': 'Return after 10 inactive days', 'Возврат · 30 дней без игры': 'Return after 30 inactive days',
+  'Сыграть без тренера': 'Play without a manager', 'Сыграть сезон': 'Play season',
+  'Блиц 11 минут': 'Eleven-minute blitz', 'Стена Тереховского': 'Terekhovskiy’s wall',
+  'Выполнить челлендж ЦСКА: 11 голов, максимум 2 пропущенных и 3 сухих матча за первые 5 игр': 'Complete the CSKA challenge: 11 goals, at most 2 conceded and 3 clean sheets in the first 5 games',
+  'Выполнить челлендж Акрона: максимум 15 пропущенных и минимум 15 сухих матчей': 'Complete the Akron challenge: concede at most 15 goals and keep at least 15 clean sheets',
+
   'Подробный разбор состава': 'Detailed squad analysis',
   'Статистика игроков': 'Player statistics',
   'Показать тройку лучших': 'Show top 3',

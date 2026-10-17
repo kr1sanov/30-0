@@ -1,3 +1,4 @@
+import { runTeamName } from '@/lib/runTeamName';
 import { db } from '@/lib/db';
 import { selectOneClubCandidates } from '@/lib/rplClubSelection';
 import { FORMATIONS } from '@/lib/positions';
@@ -91,20 +92,23 @@ export async function POST(request: NextRequest) {
     ensureRunAccessConfigured();
 
     const body = await request.json();
-    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, teamName, clubFilter, nationalityFilter } = body;
+    const { formation, difficulty, draftMode, ratingMode, eraFilter, eraStartYear, eraEndYear, clubFilter: requestedClubFilter, nationalityFilter } = body;
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const gameMode = body.gameMode || 'classic';
+    const clubFilter = gameMode === 'single_club' ? requestedClubFilter : undefined;
     if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
+    const opponentSeasonYear = body.opponentSeasonYear;
+    if (opponentSeasonYear !== undefined && opponentSeasonYear !== null && (!Number.isInteger(opponentSeasonYear) || opponentSeasonYear < 2006 || opponentSeasonYear > 2026)) return NextResponse.json({ error: 'Выбери сезон из списка' }, { status: 400 });
     const isWeeklyChallenge = gameMode.startsWith('challenge_');
     const issue = isWeeklyChallenge && typeof body.challengeIssueId === 'string'
       ? await visibleChallenge(body.challengeIssueId) : null;
     if (isWeeklyChallenge && (!issue || issue.mode !== gameMode)) {
       return NextResponse.json({ error: 'Выбери действующий челлендж' }, { status: 400 });
     }
-    if (issue && !issue.forceOpen && new Date(issue.endsAt).getTime() <= Date.now()) {
+    if (issue && (issue.visibility === 'archived' || (!issue.forceOpen && new Date(issue.endsAt).getTime() <= Date.now()))) {
       const access = await getArchiveAccess(userId);
       if (!access.unlockedUntil) return NextResponse.json({ error: 'Архив закрыт. Пригласи одного игрока, чтобы открыть его на 24 часа.' }, { status: 403 });
     }
@@ -189,9 +193,11 @@ export async function POST(request: NextRequest) {
 
     await db.user.update({ where: { id: userId }, data: { lastActiveAt: new Date() } }).catch(() => undefined);
 
+    const [owner, selectedClub] = await Promise.all([db.user.findUnique({ where: { id: userId } }), clubFilter ? db.club.findUnique({ where: { id: clubFilter } }) : null]);
     // Create the game run
     const run = await db.gameRun.create({
       data: {
+        opponentSeasonYear: gameMode === 'single_club' ? opponentSeasonYear ?? null : null,
         formation: formation || '4-3-3',
         difficulty: safeDifficulty,
         draftMode: draftMode || 'squad_first',
@@ -205,7 +211,7 @@ export async function POST(request: NextRequest) {
         rerollsTotal,
         rerollsUsed: 0,
         completed: false,
-        ...(teamName ? { teamName } : {}),
+        teamName: runTeamName(gameMode, selectedClub?.nameRu, owner?.username, owner?.displayName),
         ...(clubFilter ? { clubFilter } : {}),
         ...(nationalityFilter ? { nationalityFilter } : {}),
         ...(dbUserId ? { userId: dbUserId } : {}),

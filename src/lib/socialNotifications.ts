@@ -1,3 +1,4 @@
+import { campaignStillRelevant } from './campaignDelivery';
 import { localizeBotMessage, localizeBotButton } from "./botLanguage";
 import { seasonResultImage } from "./seasonResultNotification";
 import { currentBotLanguage, currentPreferences, usesNotificationRelay } from "./cloudPreferences";
@@ -77,6 +78,7 @@ export async function flushSocialNotifications() {
         },
       });
       if (!claim.count) return;
+      if (!await campaignStillRelevant(item, now)) { await db.telegramOutbox.update({ where: { id: item.id }, data: { status: 'skipped', sentAt: now, lastError: 'Campaign no longer relevant' } }); return; }
       const user = await db.user.findUnique({
         where: { id: item.userId },
         select: {

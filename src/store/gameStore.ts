@@ -182,7 +182,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => Promise<void>;
-  loadActiveRunFromCloud: (mode?: 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'latest' | 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -379,6 +379,7 @@ export const useGameStore = create<GameState>()(
 
           set({
             runId: data.id,
+            config: { ...runConfig, teamName: data.teamName },
             slots,
             rerollsLeft: rerollsTotal,
             rerollsUsed: 0,
@@ -1057,9 +1058,9 @@ export const useGameStore = create<GameState>()(
       // -------------------------------------------------------------------
       simulate: async (manager?: Manager | null) => {
         const { runId, config } = get();
-        if (!runId) return;
+        if (!runId || get().screen === 'simulation') return;
 
-        set({ screen: 'simulation' });
+        set({ screen: 'simulation', lastDraftError: null });
 
         try {
           // First, sync with DB to ensure all slots are persisted
@@ -1067,7 +1068,7 @@ export const useGameStore = create<GameState>()(
 
           if (!isReady) {
             console.error('[simulate] Not all slots are filled in DB after sync');
-            set({ screen: 'pre-match' });
+            set({ screen: 'squad-complete' });
             return;
           }
 
@@ -1091,7 +1092,7 @@ export const useGameStore = create<GameState>()(
               return;
             }
 
-            set({ screen: 'pre-match' });
+            set({ screen: 'squad-complete', lastDraftError: typeof errData.error === 'string' ? errData.error : 'Не удалось запустить сезон. Попробуй ещё раз.' });
             return;
           }
 
@@ -1103,7 +1104,7 @@ export const useGameStore = create<GameState>()(
           // Local profile — progress is stored in localStorage via Zustand persist
         } catch (error) {
           console.error('Failed to simulate:', error);
-          set({ screen: 'pre-match' });
+          set({ screen: 'squad-complete' });
         }
       },
 
@@ -1318,7 +1319,7 @@ export const useGameStore = create<GameState>()(
         const { runId, slots, seasonResult, resumeScreen, screen, config, lastConfig } = get();
         if (!runId) return;
         const allFilled = slots.length > 0 && slots.every((s) => s.playerId);
-        const restored = lastConfig?.clubFilter ? lastConfig : config.clubFilter ? config : lastConfig ?? config;
+        const restored = lastConfig ?? config;
         const mode = restored.clubFilter ? 'single_club'
           : restored.gameMode?.startsWith('challenge_')
             ? restored.gameMode as import('@/lib/weeklyChallenges').ChallengeMode : 'classic';
@@ -1326,15 +1327,14 @@ export const useGameStore = create<GameState>()(
         // The stored run may belong to a previous login or have an expired
         // run cookie. Verify ownership and refresh access before opening it.
         try {
-          const params = new URLSearchParams({ mode });
+          const params = new URLSearchParams({ mode, runId });
           if (mode === 'single_club' && restored.clubFilter) params.set('clubId', restored.clubFilter);
           if (restored.challengeIssueId) params.set('issueId', restored.challengeIssueId);
           const response = await fetch(`/api/runs/active?${params}`, { cache: 'no-store' });
           if (!response.ok) throw new Error('Could not restore draft');
           const { activeRun } = await response.json();
           if (!activeRun || activeRun.id !== runId) {
-            if (activeRun) await get().loadActiveRunFromCloud(mode, restored.clubFilter, restored.challengeIssueId, true);
-            else get().resetGame();
+            set({ lastDraftError: 'Этот драфт больше недоступен. Выбери актуальное сохранение или начни новый.' });
             return;
           }
         } catch {
@@ -1358,19 +1358,15 @@ export const useGameStore = create<GameState>()(
         set({ screen: getResumeScreen(!!seasonResult, allFilled, resumeScreen, screen), ...clearTransient });
       },
 
-      loadActiveRunFromCloud: async (mode = 'classic', clubId, issueId, openDraft = false) => {
+      loadActiveRunFromCloud: async (mode = 'latest', clubId, issueId, openDraft = false) => {
+        const beforeRunId = get().runId, beforeConfig = get().config;
         try {
           const response = await fetch(`/api/runs/active?mode=${mode}${clubId ? `&clubId=${encodeURIComponent(clubId)}` : ''}${issueId ? `&issueId=${encodeURIComponent(issueId)}` : ''}`, { cache: 'no-store' });
           if (!response.ok) return;
           const { activeRun } = await response.json();
+          if (get().runId !== beforeRunId || get().config !== beforeConfig) return;
           if (!activeRun) {
             if (get().runId && get().config.gameMode === mode && (!issueId || get().config.challengeIssueId === issueId) && (mode !== 'single_club' || get().config.clubFilter === clubId)) get().resetGame();
-            return;
-          }
-          if (activeRun.id === get().runId && get().slots.length) {
-            if (mode.startsWith('challenge_') && get().config.ratingMode !== 'prime')
-              set(state => ({ config: { ...state.config, ratingMode: 'prime' } }));
-            if (openDraft) set(state => ({ screen: state.slots.every(slot => !!slot.playerId) ? 'pre-match' : 'draft' }));
             return;
           }
           const formation = FORMATIONS.find((item) => item.id === activeRun.formation);
@@ -1378,6 +1374,7 @@ export const useGameStore = create<GameState>()(
           const config: GameConfig = {
             ...defaultConfig,
             formation: activeRun.formation,
+            opponentSeasonYear: activeRun.opponentSeasonYear ?? undefined,
             difficulty: activeRun.difficulty,
             draftMode: activeRun.draftMode,
             ratingMode: activeRun.ratingMode,
@@ -1419,8 +1416,8 @@ export const useGameStore = create<GameState>()(
           set({ runId: activeRun.id, config, lastConfig: config, slots,
             rerollsLeft: Math.max(0, activeRun.rerollsTotal - activeRun.rerollsUsed),
             rerollsUsed: activeRun.rerollsUsed,
-            screen: openDraft ? (slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft') : get().screen,
-            resumeScreen: slots.every((slot) => !!slot.playerId) ? 'pre-match' : 'draft' });
+            screen: openDraft ? (slots.every((slot) => !!slot.playerId) ? 'squad-complete' : 'draft') : get().screen,
+            resumeScreen: slots.every((slot) => !!slot.playerId) ? 'squad-complete' : 'draft' });
         } catch (error) {
           console.error('Failed to restore active run:', error);
         }
@@ -1533,7 +1530,7 @@ export const useGameStore = create<GameState>()(
       // transient UI states that must NOT be persisted — they are cleared on resume.
       // Keep the last stable game stage even when the user navigates home or to the profile.
       partialize: (state) => {
-        const resumeScreen = state.screen === 'simulation' ? 'pre-match'
+        const resumeScreen = state.screen === 'simulation' ? 'squad-complete'
           : ['draft', 'squad-complete', 'manager-choice', 'pre-match', 'result', 'awards'].includes(state.screen)
             ? state.screen : state.resumeScreen;
 

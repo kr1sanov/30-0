@@ -13,7 +13,6 @@ import PlayerList from '@/components/game/PlayerList';
 import SquadStats from '@/components/game/SquadStats';
 import SimulationResult from '@/components/game/SimulationResult';
 import SeasonAwards from '@/components/game/SeasonAwards';
-import PreMatchAnalysis from '@/components/game/PreMatchAnalysis';
 import DailyChallengeScreen from '@/components/game/DailyChallengeScreen';
 import NationsCupScreen from '@/components/game/NationsCupScreen';
 import { Button } from '@/components/ui/button';
@@ -420,7 +419,7 @@ function HomePage() {
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
                 if (mode.gameMode === 'multiplayer' || mode.gameMode === 'challenges') { location.href = `/${mode.gameMode}`; return; }
-                setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined });
+                setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined, teamName: undefined, challengeIssueId: undefined, opponentSeasonYear: undefined });
                 setScreen('setup');
               }}
               className="relative w-full rounded-2xl p-5 sm:p-6 text-left transition-all overflow-hidden group bg-[#141414] border border-[#1E1E1E] hover:border-[#00C896]/30 hover:bg-[#1E1E1E] active:scale-[0.98]"
@@ -874,7 +873,7 @@ function DraftScreen() {
 
 /* ─── Squad Complete Screen ─── */
 function SquadCompleteScreen() {
-  const { slots, config, currentManager, setScreen } = useGameStore();
+  const { slots, config, currentManager, lastDraftError } = useGameStore();
   const managerStarted = useRef(false);
   useEffect(() => {
     if (config.enableManagers && !currentManager && !managerStarted.current && slots.length === 11 && slots.every(slot => slot.playerId)) {
@@ -882,37 +881,6 @@ function SquadCompleteScreen() {
       void useGameStore.getState().spinManager();
     }
   }, [config.enableManagers, currentManager, slots]);
-
-  // Calculate squad stats for pre-season odds
-  const POSITION_CATEGORY_LOCAL: Record<string, 'gk' | 'def' | 'mid' | 'att'> = {
-    'ВР': 'gk', 'ЦЗ': 'def', 'ПЗ': 'def', 'ЛЗ': 'def', 'ПФЗ': 'def', 'ЛФЗ': 'def',
-    'ОП': 'mid', 'ЦП': 'mid', 'АП': 'mid', 'ЛП': 'mid', 'ПП': 'mid',
-    'ЛВ': 'att', 'ПВ': 'att', 'НП': 'att', 'ЦН': 'att',
-  };
-
-  const filledSlots = slots.filter((s) => s.playerId && s.playerRating);
-  const overallRating = filledSlots.length > 0
-    ? Math.round(filledSlots.reduce((a, s) => a + (s.playerRating ?? 0), 0) / filledSlots.length)
-    : 0;
-
-  // Manager bonus
-  const managerBonus = currentManager?.rating ? 2 : 0;
-  const effectiveRating = overallRating + managerBonus;
-
-  // Pre-season odds calculation (realistic for 30-match RPL season)
-  const projectedPosition = effectiveRating >= 80 ? 1 : effectiveRating >= 76 ? 2 : effectiveRating >= 72 ? 3 : effectiveRating >= 68 ? 5 : effectiveRating >= 64 ? 8 : 12;
-  // Realistic RPL points: max ~85 (30W), avg team ~40pts, top team ~60-70
-  // Formula: base points from rating with diminishing returns, capped at 85
-  const expectedPoints = Math.min(85, Math.round(
-    effectiveRating >= 78 ? (effectiveRating - 50) * 2.2 + Math.random() * 8 :
-    effectiveRating >= 70 ? (effectiveRating - 55) * 2.0 + Math.random() * 10 :
-    (effectiveRating - 50) * 1.5 + Math.random() * 12
-  ));
-  const winLeaguePct = Math.min(99, Math.max(1, Math.round((effectiveRating - 55) * 3)));
-  const top4Pct = Math.min(99, Math.max(winLeaguePct + 20, 30));
-  const top6Pct = Math.min(99, Math.max(top4Pct + 15, 50));
-  const top10Pct = Math.min(99, Math.max(top6Pct + 10, 70));
-  const relegationPct = Math.max(0, Math.round(100 - top10Pct - 20));
 
   return (
     <div className="space-y-4 animate-fade-in-up lg:grid lg:grid-cols-[minmax(300px,380px)_minmax(0,760px)] lg:items-start lg:justify-center lg:gap-6 lg:space-y-0">
@@ -944,61 +912,16 @@ function SquadCompleteScreen() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
-            onClick={() => setScreen('pre-match')}
+            onClick={() => void useGameStore.getState().simulate(currentManager)}
             className="h-11 shrink-0 rounded-xl px-6 font-bold text-[#06130f]"
             style={{ backgroundColor: '#00C896' }}
           >
-            Перейти к сезону →
+            Сыграть сезон
           </Button>
         </div>
       </div>
 
-      {/* Pre-season odds — 38-0 style */}
-      <div className="rounded-2xl bg-[#141414] border border-[#1E1E1E]/60 p-4 space-y-4">
-        <h3 className="text-sm font-bold text-[#FFFFFF]">📊 Предсезонные шансы</h3>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
-            <div className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold mb-1">Прогноз места</div>
-            <div className="text-2xl font-black text-[#fbbf24]">{projectedPosition}</div>
-          </div>
-          <div className="rounded-xl bg-[#1a2a1a] p-3 text-center">
-            <div className="text-[10px] uppercase tracking-wider text-[#64748b] font-bold mb-1">Ожидаемые очки</div>
-            <div className="text-2xl font-black text-[#00C896]">{expectedPoints}</div>
-          </div>
-        </div>
-
-        <div className="space-y-2.5">
-          {[
-            { label: 'Выиграть чемпионат', pct: winLeaguePct, color: '#fbbf24' },
-            { label: 'Топ-4', pct: top4Pct, color: '#00C896' },
-            { label: 'Топ-6', pct: top6Pct, color: '#3b82f6' },
-            { label: 'Топ-10', pct: top10Pct, color: '#9CA3AF' },
-            { label: 'Вылет', pct: relegationPct, color: '#ef4444' },
-          ].map(({ label, pct, color }) => (
-            <div key={label}>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-[#9CA3AF]">{label}</span>
-                <span className="text-xs font-bold" style={{ color }}>{pct}%</span>
-              </div>
-              <div className="h-1.5 rounded-full bg-[#1a2a1a] overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-                  className="h-full rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <p className="text-[10px] text-[#64748b] text-center">
-          На основе общего рейтинга {overallRating} {managerBonus > 0 ? `+ ${managerBonus} бонус тренера` : ''}
-        </p>
-      </div>
-
+      {lastDraftError && <p role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-300">{lastDraftError}</p>}
       <SquadStats />
     </div>
   );
@@ -1279,7 +1202,7 @@ export default function Home() {
         return;
       }
       const current = useGameStore.getState();
-      if (current.screen === 'home' && (!current.runId || current.config.gameMode === 'classic')) await current.loadActiveRunFromCloud();
+      if (current.screen === 'home' && !current.runId) await current.loadActiveRunFromCloud();
     })();
   }, [isAuthenticated, epochChecked]);
 
@@ -1313,7 +1236,7 @@ export default function Home() {
       case 'squad-complete':
         return <SquadCompleteScreen />;
       case 'pre-match':
-        return <PreMatchAnalysis />;
+        return <SquadCompleteScreen />;
       case 'simulation':
         return <SimulationScreen />;
       case 'result':

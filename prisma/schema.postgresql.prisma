@@ -211,6 +211,7 @@ model NotificationDispatch {
 }
 
 model GameRun {
+  opponentSeasonYear Int?
   seasonResultJson String?
   multiplayerRoomCode String?
   multiplayerRound Int?

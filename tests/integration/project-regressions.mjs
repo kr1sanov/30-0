@@ -104,20 +104,45 @@ try {
   await api('/api/runs','POST',challengeBody,false,400);
   await api('/api/admin/challenges','PATCH',{id:'2026-10-10-vagner',visibility:'hidden'},true);
   assert.ok(!(await api('/api/challenges')).active.some(i=>i.id==='2026-10-10-vagner'));
-  console.log('PASS hidden future challenges, manual opening and hidden start guard');
+  await api('/api/admin/challenges','PATCH',{id:issue,visibility:'archived'},true);
+  const archived = await api('/api/challenges');
+  assert.ok(archived.archive.some(i=>i.id===issue)); assert.ok(!archived.active.some(i=>i.id===issue));
+  await api('/api/runs','POST',challengeBody,false,403);
+  await api('/api/admin/challenges','PATCH',{id:issue,visibility:'open'},true);
+  assert.ok((await api('/api/challenges')).active.some(i=>i.id===issue));
+  console.log('PASS challenge archive, restore and access guards');
   await api('/api/admin/challenges','PATCH',{id:'2026-10-17-cska_blitz',visibility:'open'},true);
   const blitz=await api('/api/runs','POST',{gameMode:'challenge_cska_blitz',challengeIssueId:'2026-10-17-cska_blitz',formation:'4-3-3'},false,201);
   assert.equal(blitz.slots.filter(slot=>slot.playerSeasonId).length,2);
   assert.ok(blitz.slots.some(slot=>slot.playerName==='Ivan Oblyakov'));
   assert.ok(blitz.slots.some(slot=>slot.playerName==='Maksim Borisko'&&slot.playerPosition==='ВР'));
+  const oneBody = {gameMode:'single_club',clubFilter:'qa-club-0',formation:'4-3-3',ratingMode:'prime',opponentSeasonYear:2025};
+  const oldSave = await api('/api/runs','POST',oneBody,false,201);
+  const newSave = await api('/api/runs','POST',{...oneBody,clubFilter:'qa-club-1'},false,201);
+  assert.equal(newSave.ratingMode,'prime'); assert.equal(newSave.opponentSeasonYear,2025);
+  assert.equal((await api('/api/runs/active?mode=single_club')).activeRun.id,newSave.id);
+  assert.equal((await api('/api/runs/active?mode=latest')).activeRun.id,newSave.id);
+  assert.equal((await api(`/api/runs/active?mode=single_club&runId=${oldSave.id}`)).activeRun.id,oldSave.id);
+  assert.equal((await api(`/api/runs/active?mode=single_club&runId=${oldSave.id}&clubId=qa-club-1`)).activeRun,null);
+  const classicClean = await api('/api/runs','POST',{gameMode:'classic',formation:'4-3-3',teamName:'Команда Вагнера'},false,201);
+  assert.ok(classicClean.teamName !== 'Команда Вагнера');
+  console.log('PASS latest empty one-club draft, exact save identity, prime mode and mode name isolation');
   const simulation=await db.gameRun.create({data:{id:'qa-simulation',userId:'qa-host',teamName:'QA XI',eraStartYear:2025,eraEndYear:2025,
     slots:{create:positions.slice(0,11).map((position,i)=>({slotPosition:`${position}_${i}`,playerSeasonId:`qa-ps-0-2025-${i}`,playerName:i===0?'Maksim Borisko':i===6?'Ivan Oblyakov':`QA Player 0-${i}`,playerRating:85,playerPrimeRating:90,playerPosition:position}))}}});
   const season=await api(`/api/runs/${simulation.id}/simulate`,'POST',{});
+  assert.equal(season.opponentSeasonYear,2025);
   assert.equal(season.matches.length,30);assert.equal(season.table.length,16);
   for(const team of season.table) assert.equal(season.playerStats.filter(p=>p.team===team.name).reduce((sum,p)=>sum+p.goals,0),team.goalsFor);
   assert.ok(!season.playerStats.some(p=>p.name==='Maksim Borisko'));
   assert.ok((await db.gameRun.findUnique({where:{id:simulation.id}})).seasonResultJson);
-  console.log('PASS both CSKA starters and persisted scorer/assist totals for every team');
+  assert.ok(season.table.some(t=>t.isYou && t.name !== 'Моя команда'));
+  const historical = await db.gameRun.create({data:{id:'qa-historical',userId:'qa-host',gameMode:'single_club',clubFilter:'qa-club-0',ratingMode:'prime',opponentSeasonYear:2025,
+    slots:{create:positions.slice(0,11).map((position,i)=>({slotPosition:`${position}_${i}`,playerSeasonId:`qa-ps-0-2025-${i}`,playerName:`QA Player 0-${i}`,playerRating:60,playerPrimeRating:90,playerPosition:position}))}}});
+  const past = await api(`/api/runs/${historical.id}/simulate`,'POST',{});
+  assert.equal(past.opponentSeasonYear,2025);assert.equal(past.table.find(t=>t.isYou).name,'Клуб 0');
+  assert.ok(past.players.every(p=>p.rating===90));
+  assert.ok(past.playerStats.filter(p=>p.team==='Club 1').every(p=>p.name.includes('QA') || p.name==='Тереховский Игнат'));
+  console.log('PASS real historical opponents, selected club identity, prime ratings and scorer/assist totals');
 
 
   // A real timeout must preserve the unfinished XI and record technical defeats.
@@ -163,5 +188,17 @@ try {
   assert.equal(imageBytes.readUInt32BE(16),1200);assert.equal(imageBytes.readUInt32BE(20),760);
   assert.ok(resultMessage.keyboard.inline_keyboard[0][0].url.includes('startapp=result_'));
   console.log('PASS relay leases, acknowledgement guard and durable opt-out');
+  const campaigns = (await api('/api/admin/campaigns','GET',undefined,true)).campaigns;
+  assert.equal(campaigns.filter(c=>/^return_(3|7|10|30)$/.test(c.cadence)).length,4);
+  await db.telegramOutbox.deleteMany();
+  const inactiveAt = new Date(Date.now()-4*86400000);
+  await db.user.update({where:{id:'qa-host'},data:{notifyNews:true,lastActiveAt:inactiveAt}});
+  const retention = await db.telegramOutbox.create({data:{eventKey:`campaign:return-default-3:inactive:qa-host:${+inactiveAt}:qa-host`,userId:'qa-host',campaignId:'return-default-3',category:'news',text:'Вернись',textEn:'Come back',startParam:''}});
+  assert.ok((await worker({action:'claim',tgIds:[900001]})).messages.some(m=>m.id===retention.id));
+  await db.telegramOutbox.update({where:{id:retention.id},data:{attempts:0,availableAt:new Date()}});
+  await db.user.update({where:{id:'qa-host'},data:{lastActiveAt:new Date()}});
+  assert.ok(!(await worker({action:'claim',tgIds:[900001]})).messages.some(m=>m.id===retention.id));
+  assert.equal((await db.telegramOutbox.findUnique({where:{id:retention.id}})).status,'skipped');
+  console.log('PASS editable retention templates and send-time cancellation after player returns');
   console.log('ALL INTEGRATION SCENARIOS PASSED');
 } finally { server.kill(); await db.$disconnect(); }

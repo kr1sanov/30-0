@@ -22,6 +22,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    await db.user.updateMany({ where: { id: userId, OR: [{ lastActiveAt: null }, { lastActiveAt: { lt: new Date(Date.now() - 300_000) } }] }, data: { lastActiveAt: new Date() } });
     const completedRuns = user.runs;
     const totalGames = completedRuns.length;
     const totalWins = completedRuns.reduce((sum, r) => sum + (r.wins || 0), 0);

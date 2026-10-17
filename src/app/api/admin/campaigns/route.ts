@@ -1,3 +1,4 @@
+import { ensureRetentionCampaigns } from '@/lib/retentionCampaigns';
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { canAdminWrite, requireAdmin } from "@/lib/adminAuth";
@@ -7,6 +8,7 @@ import { queueCampaign } from "@/lib/notificationScheduler";
 export async function GET(request: Request) {
   if (!(await requireAdmin(request)))
     return NextResponse.json({ error: "Access denied" }, { status: 401 });
+  await ensureRetentionCampaigns();
   const campaigns = await db.notificationCampaign.findMany({
     where: { archivedAt: null },
     orderBy: { updatedAt: "desc" },

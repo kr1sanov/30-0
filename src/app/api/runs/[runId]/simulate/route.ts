@@ -1,3 +1,5 @@
+import { selectHistoricalSeason } from '@/lib/historicalSeason';
+import { runTeamName } from '@/lib/runTeamName';
 import { simulateContributions } from '@/lib/seasonAnalytics';
 import { playerDisplayName } from '@/lib/playerNames';
 import { findWeeklyChallenge, challengeSucceeded } from '@/lib/weeklyChallenges';
@@ -84,11 +86,16 @@ export async function POST(
     }
 
     // Keep all opponents and the league table within one imported season.
-    const season = await db.season.findFirst({
-      where: { startYear: { gte: run.eraStartYear, lte: run.eraEndYear }, clubSeasons: { some: { players: { some: {} } } } },
-      orderBy: { startYear: 'desc' },
-      include: { clubSeasons: { include: { club: true, players: { select: { rating: true, mainPosition: true, player: { select: { fullName: true, alias: true } } } } } } },
+    const candidates = await db.season.findMany({
+      where: { startYear: { gte: run.gameMode === 'single_club' ? 2006 : run.eraStartYear, lte: run.gameMode === 'single_club' ? 2026 : run.eraEndYear } },
+      select: { id: true, startYear: true, _count: { select: { clubSeasons: { where: { players: { some: {} } } } } } },
     });
+    const eligible = candidates.filter(s => s._count.clubSeasons >= 16);
+    const selected = run.gameMode === 'single_club' ? selectHistoricalSeason(eligible, run.id, run.opponentSeasonYear) : eligible.sort((a,b) => b.startYear-a.startYear)[0];
+    const season = selected ? await db.season.findUnique({
+      where: { id: selected.id },
+      include: { clubSeasons: { include: { club: true, players: { select: { rating: true, mainPosition: true, player: { select: { fullName: true, alias: true } } } } } } },
+    }) : null;
     const participants = season?.clubSeasons.filter(c => c.players.length > 0) ?? [];
     if (participants.length < 16) {
       return NextResponse.json({ error: 'Для симуляции нужен сезон с 16 клубами в базе' }, { status: 503 });
@@ -110,8 +117,12 @@ export async function POST(
       opponents,
     );
 
+    result.opponentSeasonYear = season!.startYear;
+    result.seasonLabel = season!.label;
     const ownTeam = result.table.find(team => team.name === 'Моя команда')!;
-    const ownName = run.teamName || 'Моя команда';
+    const [owner, club] = await Promise.all([run.userId ? db.user.findUnique({ where: { id: run.userId } }) : null, run.clubFilter ? db.club.findUnique({ where: { id: run.clubFilter } }) : null]);
+    const ownName = runTeamName(run.gameMode, club?.nameRu, owner?.username, owner?.displayName);
+    Object.assign(ownTeam, { isYou: true, isHuman: true });
     ownTeam.name = ownName;
     result.playerStats = result.table.flatMap(team => {
       const roster = team === ownTeam ? squadSlots.map(p => ({ name: p.playerName, position: p.position, rating: p.playerRating }))
@@ -129,6 +140,7 @@ export async function POST(
     });
     if (run.challengeIssueId) {
       const issue = findWeeklyChallenge(run.challengeIssueId, new Date('2100-01-01'));
+      if (issue && ['cska_blitz','akron_keeper'].includes(issue.hero)) result.trophies.push({ id: issue.hero === 'cska_blitz' ? 'cska_blitz' : 'akron_wall', name: issue.hero === 'cska_blitz' ? 'Блиц 11 минут' : 'Стена Тереховского', description: issue.descriptionRu, icon: issue.hero === 'cska_blitz' ? '⚡' : '🧤', earned: challengeSucceeded(issue, result) });
       if (issue) result.trophies.push({ id: issue.id, name: issue.titleRu, description: issue.descriptionRu, icon: '🏆', earned: challengeSucceeded(issue, result) });
     }
 
@@ -159,6 +171,7 @@ export async function POST(
       where: { id: runId, completed: false },
       data: {
         seasonResultJson: JSON.stringify(result),
+        teamName: ownName,
         completed: true,
         completedAt: new Date(),
         wins: result.wins,
