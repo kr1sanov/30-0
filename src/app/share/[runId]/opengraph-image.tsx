@@ -13,6 +13,6 @@ export default async function Image({ params }: { params: Promise<{ runId: strin
     <div style={{ display: 'flex', fontSize: 34, marginTop: 30 }}>{`${run.teamName || run.clubFilter || 'Обычный драфт'} · ${run.formation}`}</div>
     <div style={{ display: 'flex', fontSize: 110, fontWeight: 900, marginTop: 25 }}>{run.points ?? 0} <span style={{ display: 'flex', fontSize: 36, alignSelf: 'center', marginLeft: 12 }}>{`очков · ${run.position ?? '—'} место`}</span></div>
     <div style={{ display: 'flex', gap: 30, fontSize: 34, marginTop: 35 }}><span style={{ color: '#00C896' }}>{`${run.wins ?? 0} побед`}</span><span>{`${run.draws ?? 0} ничьих`}</span><span style={{ color: '#f87171' }}>{`${run.losses ?? 0} поражений`}</span></div>
-    <div style={{ display: 'flex', fontSize: 27, color: '#aeb9c7', marginTop: 35 }}>{`Голы ${run.goalsFor ?? 0}:${run.goalsAgainst ?? 0} · Собери свою команду на 30-0.рф`}</div>
+    <div style={{ display: 'flex', fontSize: 27, color: '#aeb9c7', marginTop: 35 }}>{`Голы ${run.goalsFor ?? 0}:${run.goalsAgainst ?? 0} · Собери свою команду · t.me/RPL30_bot?startapp`}</div>
   </div>, size);
 }

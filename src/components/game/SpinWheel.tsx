@@ -167,8 +167,10 @@ export function SlotReel({
 export default function SpinWheel({
   multiplayer,
   children,
+  onRestart,
 }: {
   children?: ReactNode;
+  onRestart?: () => void;
   multiplayer?: {
     currentSpin: SpinResult | null;
     isSpinning: boolean;
@@ -341,6 +343,11 @@ export default function SpinWheel({
             </>
           )}
         </div>
+        {onRestart && <div className="mt-2 text-center">
+          <button type="button" onClick={onRestart} className="min-h-11 rounded-lg px-4 text-xs text-slate-400 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-emerald-400">
+            {t("Начать заново")}
+          </button>
+        </div>}
       </section>
       <div className="draft-player-panel mt-3 h-[380px] overflow-y-auto overscroll-contain rounded-xl lg:mt-0 lg:h-auto lg:overflow-visible" aria-live="polite">{ready && children}</div>
     </div>

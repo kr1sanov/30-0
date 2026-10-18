@@ -808,16 +808,7 @@ function DraftScreen() {
 
       {/* ── Spin Section ── */}
       <div ref={spinWheelRef} className="space-y-2">
-        <SpinWheel>{currentSpin && <PlayerList />}</SpinWheel>
-        {/* Restart run link */}
-        <div className="text-center">
-          <button
-            onClick={() => setShowRestartModal(true)}
-            className="text-[10px] text-[#64748b] hover:text-[#9CA3AF] transition-colors"
-          >
-            Начать заново
-          </button>
-        </div>
+        <SpinWheel onRestart={() => setShowRestartModal(true)}>{currentSpin && <PlayerList />}</SpinWheel>
       </div>
 
       {/* ── Player List ── */}

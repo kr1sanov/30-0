@@ -355,7 +355,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
     if (data.formation) {
       lines.push(`📐 ${data.formation}`);
     }
-    lines.push('🎮 Играть: https://30-0.рф');
+    lines.push('🎮 Играть: https://t.me/RPL30_bot?startapp');
     lines.push('#30п0 #ФутбольныйДрафт');
     return lines.join('\n');
   }, [data, earnedTrophies, config.gameMode, config.clubName, config.formation, clubName]);
