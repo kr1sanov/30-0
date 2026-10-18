@@ -603,7 +603,7 @@ export default function HistoryScreen({ embedded = false }: { embedded?: boolean
             `✅ ${shareRun.wins ?? 0} побед · 🤝 ${shareRun.draws ?? 0} ничьих · ❌ ${shareRun.losses ?? 0} поражений`,
             `⚽ Голы: ${shareRun.goalsFor ?? 0}–${shareRun.goalsAgainst ?? 0}`,
             `⭐ Средний рейтинг: ${shareRun.overallRating ?? getAvgRating(shareRun.slots)}`,
-            '', 'Собери свой состав и попробуй превзойти мой результат!', '🎮 Играть: https://30-0.рф',
+            '', 'Собери свой состав и попробуй превзойти мой результат!', '🎮 Играть: https://t.me/RPL30_bot?startapp',
           ].join('\n')}
           cardContent={(
             <ResultShareCard

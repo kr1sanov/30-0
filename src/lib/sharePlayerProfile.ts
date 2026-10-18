@@ -1,12 +1,12 @@
 import { toast } from 'sonner';
 import { telegramWebApp } from '@/hooks/use-telegram';
-import { playerPath } from './profileLinks';
+import { miniAppLink } from './miniAppLinks';
 import { translateInterface } from './enTranslations';
 
 export async function sharePlayerProfile(player: { id: string; username?: string | null }) {
   const app = telegramWebApp();
   const text = document.documentElement.lang === 'en' ? translateInterface('Посмотри мой профиль в 30-0') : 'Посмотри мой профиль в 30-0';
-  const url = app ? `https://t.me/RPL30_bot?startapp=profile_${encodeURIComponent(player.id)}` : `${location.origin}${playerPath(player)}`;
+  const url = miniAppLink(`profile_${player.id}`);
   if (app?.openTelegramLink) {
     app.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
     return;

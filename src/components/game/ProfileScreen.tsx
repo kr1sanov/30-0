@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Metrics } from "@/lib/metrics";
-import { useTelegram } from "@/hooks/use-telegram";
+
 import Link from "next/link";
 import TelegramAvatar from "./TelegramAvatar";
 import TelegramNotifications from "./TelegramNotifications";
@@ -22,7 +22,6 @@ import { TROPHIES } from "@/lib/trophyCatalog";
 export default function ProfileScreen() {
   const t = useUiTranslation();
   const locale = useUiLanguage() === "en" ? "en-GB" : "ru-RU";
-  const { isTelegram } = useTelegram();
   const profileStats = useGameStore((state) => state.profileStats);
   const { user, resetProfile } = useAuthStore();
   const [showHistory, setShowHistory] = useState(() => typeof window !== 'undefined' && Boolean(localStorage.getItem('30-0-selected-run')));
@@ -100,9 +99,7 @@ export default function ProfileScreen() {
 
   // Total earned trophies
   const hasReferralAchievement = (referrals?.referralCount ?? 0) > 0;
-  const referralLink = isTelegram
-    ? referrals?.telegramInviteUrl
-    : referrals?.inviteUrl;
+  const referralLink = referrals?.telegramInviteUrl;
   const hasTrophy = (id: string) =>
     id === "referral_invite"
       ? hasReferralAchievement
