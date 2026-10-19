@@ -1,4 +1,5 @@
 'use client';
+import ParticipantSquadDialog from './ParticipantSquadDialog';
 import { miniAppLink } from '@/lib/miniAppLinks';
 import { useUiTranslation } from '@/hooks/use-ui-translation';
 import { useFootballNames } from '@/hooks/use-football-names';
@@ -19,7 +20,7 @@ import { localizeShareText } from '@/lib/enTranslations';
 export type Slot = { slotPosition: string; playerSeasonId: string | null; playerLastName: string | null; playerName: string | null; playerRating: number | null; playerSeasonYear: number | null; playerPosition: string | null; playerOtherPositions: string[] };
 export type Run = { id: string; formation: string; completed: boolean; rerollsLeft: number; slots: Slot[] };
 export type Seat = { id: string; forfeited: boolean; name: string; formation: string; ready: boolean; drafted: number; seriesMemberKey: string; result: { wins: number; draws: number; losses: number; points: number; overallRating: number } | null; isYou: boolean; isHost: boolean; isBot: boolean; isFriend: boolean; pickDeadline: string | null; managerName: string | null; managerRating: number | null };
-export type RoomResult = { table?: import('@/lib/multiplayerLeague').LeagueRow[]; position?: number; bestWinStreak?: number; id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[]; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
+export type RoomResult = { squad?: import('@/lib/multiplayerSquad').CompletedSquad | null; table?: import('@/lib/multiplayerLeague').LeagueRow[]; position?: number; bestWinStreak?: number; id: string; forfeited: boolean; name: string; points: number; wins: number; draws: number; losses: number; playerStats?: import('@/lib/seasonAnalytics').SeasonPlayerStat[]; goalsFor: number; goalsAgainst: number; rating: number; matches: { opponent: string; opponentId?: string; home: boolean; for: number; against: number }[] };
 export type Room = { code: string; status: string; draftStartAt: string | null; maxPlayers: number; ratingMode: string; draftMode: string; showRatings: boolean; eraFilter: keyof typeof ERA_CONFIG; eraStartYear: number; eraEndYear: number; withManager: boolean; isHost: boolean; seats: Seat[]; invitations: { name: string; status: string }[]; ownRun: Run | null; pendingSpin: (Spin & { targetSlotPosition?: string }) | null; results: RoomResult[] | null; seriesTargetWins: number; seriesRound: number; seriesScores: Record<string, { name: string; wins: number; seasonWins: number; points: number; isBot: boolean }>; seriesWinnerKey: string | null; nextRoomCode: string | null; ownResultViewed: boolean };
 export type Player = PlayerOption;
 export type Spin = SpinResult;
@@ -169,8 +170,11 @@ export function Draft({ room, run, spin, busy, remaining, onSpin, onReroll, onPi
 }
 
 export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { room: Room; run: Run | null; onReplay: () => void; onFinish: () => void; onNext: () => void; onMenu: () => void }) {
+  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null);
   const own = room.seats.find(value => value.isYou);
   const results = room.results ?? [];
+  const selectedResult = results.find(result => result.id === selectedParticipant);
+  const squadDialog = <ParticipantSquadDialog result={selectedResult ?? null} onClose={() => setSelectedParticipant(null)} />;
   const mine = results.find(value => value.id === own?.id);
   if (!mine) return <div className="text-center text-[#9CA3AF]">Загружаем результаты сезона…</div>;
   if (room.ownResultViewed) {
@@ -183,8 +187,9 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
         <p className="mt-2 text-sm text-slate-400">{winner ? `Победитель серии — ${winner.name}` : room.seriesTargetWins ? `Раунд ${room.seriesRound} · до ${room.seriesTargetWins} побед` : 'Матч завершён'}</p>
       </div>
       <div className={`${panel} p-5 sm:p-6`}><h2 className="mb-4 font-bold">{room.seriesTargetWins ? 'Счёт серии' : 'Таблица участников'}</h2>
-        {(room.seriesTargetWins ? scores.map(([key, score], index) => ({ id: key, name: score.name, wins: score.wins, points: score.points, isYou: key === own?.seriesMemberKey, isFriend: room.seats.some(seat => seat.seriesMemberKey === key && seat.isFriend), position: index + 1 })) : results.map((result, index) => ({ id: result.id, name: result.name, wins: 0, points: result.points, isYou: result.id === mine.id, isFriend: room.seats.some(seat => seat.id === result.id && seat.isFriend), position: index + 1 }))).map(item => <div key={item.id} className={`flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-0 ${item.isYou ? 'text-[#00C896]' : item.isFriend ? 'text-sky-300' : 'text-slate-200'}`}><span className="font-semibold">{item.name}</span><strong>{room.seriesTargetWins ? `${item.wins} побед` : `${results.find(result => result.id === item.id)?.position ?? item.position}-е место · ${item.points} очков`}</strong></div>)}
+        {(room.seriesTargetWins ? scores.map(([key, score], index) => ({ id: key, name: score.name, wins: score.wins, points: score.points, isYou: key === own?.seriesMemberKey, isFriend: room.seats.some(seat => seat.seriesMemberKey === key && seat.isFriend), position: index + 1 })) : results.map((result, index) => ({ id: result.id, name: result.name, wins: 0, points: result.points, isYou: result.id === mine.id, isFriend: room.seats.some(seat => seat.id === result.id && seat.isFriend), position: index + 1 }))).map(item => <div key={item.id} className={`flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-0 ${item.isYou ? 'text-[#00C896]' : item.isFriend ? 'text-sky-300' : 'text-slate-200'}`}><button type="button" className="min-h-11 text-left font-semibold underline underline-offset-4" onClick={() => setSelectedParticipant(room.seats.find(seat => seat.seriesMemberKey === item.id)?.id ?? item.id)}>{item.name}</button><strong>{room.seriesTargetWins ? `${item.wins} побед` : `${results.find(result => result.id === item.id)?.position ?? item.position}-е место · ${item.points} очков`}</strong></div>)}
       </div>
+      {squadDialog}
       {winner && <SeriesFinalDetails code={room.code}/>}
       {room.seriesTargetWins > 0 && !winner ? <button className={`${primary} w-full`} onClick={onNext}>{room.nextRoomCode ? 'Перейти к следующему раунду →' : 'Создать следующий раунд →'}</button> : <button className={`${primary} w-full`} onClick={onReplay}>{room.nextRoomCode ? 'Вернуться в новое лобби →' : 'Сыграть снова →'}</button>}
       <button onClick={onMenu} className="w-full rounded-xl border border-white/20 py-3 font-semibold hover:bg-white/5">В меню</button>
@@ -218,7 +223,7 @@ export function Results({ room, run, onReplay, onFinish, onNext, onMenu }: { roo
     <SimulationResult multiplayer={{ data: { runId: run?.id, points: mine.points, wins: mine.wins,
     draws: mine.draws, losses: mine.losses, goalsFor: mine.goalsFor, goalsAgainst: mine.goalsAgainst,
     position, bestWinStreak: mine.bestWinStreak, formation: config.formation, matches, table, playerStats: mine.table ? mine.playerStats : results.flatMap(result => result.playerStats || []) }, config, slots, friendNames: room.seats.filter(seat => seat.isFriend).map(seat => seat.name),
-    onHome: onFinish, onReplay: onFinish }}/></div>;
+    onHome: onFinish, onReplay: onFinish, onParticipantClick: setSelectedParticipant }}/>{squadDialog}</div>;
 }
 
 type SeriesDetails = { bestSquad: { name: string; rating: number } | null; bestStreak: { name: string; wins: number } | null;

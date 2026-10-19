@@ -130,7 +130,7 @@ const trophyVariants = {
 
 export default function SimulationResult({ multiplayer, startComplete = false }: { startComplete?: boolean; multiplayer?: {
   data: SeasonResultData; slots: DraftSlot[]; config: GameConfig;
-  onHome: () => void; onReplay: () => void; friendNames?: string[];
+  onHome: () => void; onReplay: () => void; friendNames?: string[]; onParticipantClick?: (id: string) => void;
 } }) {
   const { player: playerName, club: clubName } = useFootballNames();
   const store = useGameStore();
@@ -600,7 +600,7 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
                                   }`}
                                 >
                                   <td className="py-1.5 pr-2">{team.position}</td>
-                                  <td className="py-1.5">{isPlayer ? (config.gameMode === 'single_club' ? clubName(config.clubName || team.name) : team.name) : team.isHuman ? team.name : clubName(team.name)}</td>
+                                  <td className="py-1.5">{team.participantId && multiplayer?.onParticipantClick ? <button type="button" className="min-h-9 text-left font-bold underline decoration-current/40 underline-offset-4 hover:decoration-current focus-visible:outline-2 focus-visible:outline-emerald-400" onClick={() => multiplayer.onParticipantClick?.(team.participantId!)}>{team.name}</button> : isPlayer ? (config.gameMode === 'single_club' ? clubName(config.clubName || team.name) : team.name) : team.isHuman ? team.name : clubName(team.name)}</td>
                                   <td className="text-center py-1.5 px-1">{team.played}</td>
                                   <td className="text-center py-1.5 px-1">{team.won}</td>
                                   <td className="text-center py-1.5 px-1">{team.drawn}</td>
