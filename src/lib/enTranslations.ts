@@ -4,6 +4,13 @@ import { MANAGERS } from './managers.ts';
 
 /** Russian source text → English UI copy. */
 const TEXT: Record<string, string> = {
+  'Рейтинг состава': 'Squad rating',
+  'Голевые передачи': 'Assists',
+  'Лучший бомбардир': 'Top scorer',
+  'Лучший ассистент': 'Top assister',
+  'Позиция свободна': 'Empty position',
+  'Состав недоступен': 'Squad unavailable',
+
   "Не удалось загрузить игрока": "Could not load player",
   "Изменения сохранены": "Changes saved",
   "Редактор игроков": "Player editor",
