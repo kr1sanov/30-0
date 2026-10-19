@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import "lenis/dist/lenis.css";
 import { Toaster as SonnerToaster } from "sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageController } from "@/components/layout/LanguageSwitcher";
 import { TelegramAppSetup } from "@/hooks/use-telegram";
+import { MobileScrollInertia } from "@/components/layout/MobileScrollInertia";
 
 export const metadata: Metadata = {
   title: "30-0 | Драфт РПЛ",
@@ -58,6 +60,7 @@ ym(110726199, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLa
         </noscript>
         <TelegramAppSetup />
         <LanguageController />
+        <MobileScrollInertia />
         {children}
         <Toaster />
         <SonnerToaster

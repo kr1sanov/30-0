@@ -296,6 +296,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Lenis owns interpolation while enabled; CSS smoothing would fight each frame. */
+html.lenis {
+  scroll-behavior: auto !important;
+}
+
 /* Selection color */
 ::selection {
   background: #00C89644;
