@@ -152,6 +152,9 @@ cp "$DEPLOY_STAGE/.htaccess" .htaccess
 cp "$DEPLOY_STAGE/package.json" package.json
 cp -r "$DEPLOY_STAGE/prisma/." prisma/
 cp "$DEPLOY_STAGE/scripts/prepare-production-users.cjs" scripts/prepare-production-users.cjs
+cp "$DEPLOY_STAGE/scripts/reconcile-admin-player-data.mjs" scripts/
+mkdir -p scripts/admin-player-data
+cp "$DEPLOY_STAGE/scripts/admin-player-data/"*.ts scripts/admin-player-data/
 cp "$DEPLOY_STAGE/scripts/backfill-wingback-positions.mjs" scripts/backfill-wingback-positions.mjs
 cp "$DEPLOY_STAGE/scripts/backfill-2026-rpl-data.mjs" scripts/backfill-2026-rpl-data.mjs
 cp "$DEPLOY_STAGE/scripts/import-fifa10-rpl.mjs" scripts/import-fifa10-rpl.mjs
@@ -455,6 +458,13 @@ if ! node --env-file=.env .next/standalone/scripts/import-rpl-2006-2009.mjs --ap
   exit 1
 fi
 echo "✅ 2006–09 rosters imported"
+
+# Manual data survives future releases; only corroborated identities are merged.
+export MIGRATION_BACKUP_DIR="$PRIVATE_BACKUP_DIR"
+if ! node --experimental-strip-types --env-file=.env scripts/reconcile-admin-player-data.mjs --apply-safe; then
+  echo "❌ Admin player data audit failed"
+  exit 1
+fi
 
 # Run once, only after the application and source-backed roster have passed
 # verification. The reset script keeps a private snapshot and marker.

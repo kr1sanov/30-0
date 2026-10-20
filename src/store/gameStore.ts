@@ -182,7 +182,7 @@ interface GameState {
   resetGame: () => void;
   goHome: () => void;
   resumeGame: () => Promise<void>;
-  loadActiveRunFromCloud: (mode?: 'latest' | 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
+  loadActiveRunFromCloud: (mode?: 'latest' | 'classic' | 'single_club' | 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper' | 'challenge_custom', clubId?: string, issueId?: string, openDraft?: boolean) => Promise<void>;
   loadLeaderboard: () => Promise<void>;
   updateProfileStats: (result: Record<string, unknown>) => void;
   undoLastPick: () => Promise<void>;
@@ -192,7 +192,7 @@ interface GameState {
   syncProfileToCloud: () => Promise<void>;
   loadProfileFromCloud: () => Promise<void>;
   startDailyChallenge: (challenge: DailyChallenge) => void;
-  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper', issueId: string) => Promise<void>;
+  startStarChallenge: (id: 'challenge_vagner' | 'challenge_dzyuba' | 'challenge_cska_blitz' | 'challenge_akron_keeper' | 'challenge_custom', issueId: string) => Promise<void>;
   clearError: () => void;
   setError: (error: string) => void;
 }

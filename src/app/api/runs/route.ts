@@ -6,8 +6,8 @@ import { enforceRateLimit } from '@/lib/rateLimit';
 import { ensureRunAccessConfigured, setRunAccessCookie } from '@/lib/runAccess';
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionUser } from '@/lib/telegramSession';
-import { challengeSucceeded, findWeeklyChallenge } from '@/lib/weeklyChallenges';
-import { visibleChallenge } from '@/lib/challengeCatalog';
+import { challengeSucceeded } from '@/lib/weeklyChallenges';
+import { visibleChallenge, challengeCatalog } from '@/lib/challengeCatalog';
 import { getArchiveAccess } from '@/lib/challengeAccess';
 
 export async function GET(request: NextRequest) {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     if (mode === 'multiplayer') where.OR = [{ multiplayerSeat: { isNot: null } }, { multiplayerRoomCode: { not: null } }];
     if (mode === 'single_club') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = 'single_club'; }
     if (mode === 'classic') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = 'classic'; }
-    if (mode === 'challenge') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'] }; }
+    if (mode === 'challenge') { where.multiplayerRoomCode = null; where.multiplayerSeat = { is: null }; where.gameMode = { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper', 'challenge_custom'] }; }
 
     const orderBy: Record<string, string>[] =
       sort === 'points'
@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
     const clubNames = new Map(clubs.map((club) => [club.id, club.nameRu]));
 
     const historyKey = (run: typeof runs[number]) => run.multiplayerSeat?.room.seriesRootCode || run.multiplayerRoomCode || run.multiplayerSeat?.roomCode;
+    const issues = new Map((await challengeCatalog()).map(i => [i.id, i]));
     const grouped = runs.filter((run, index) => !historyKey(run) || runs.findIndex(other => historyKey(other) === historyKey(run)) === index);
     return NextResponse.json(grouped.map((run) => ({
       ...run,
@@ -71,8 +72,10 @@ export async function GET(request: NextRequest) {
       gameMode: historyKey(run) ? 'multiplayer' : run.gameMode.startsWith('challenge_') ? 'challenge' : run.clubFilter ? 'single_club' : 'classic',
       challengeId: run.gameMode.startsWith('challenge_') ? run.gameMode : null,
       challengeIssueId: run.challengeIssueId,
+      challengeTitleRu: run.challengeIssueId ? issues.get(run.challengeIssueId)?.titleRu : null,
+      challengeTitleEn: run.challengeIssueId ? issues.get(run.challengeIssueId)?.titleEn : null,
       challengeSucceeded: run.challengeIssueId && run.completed
-        ? (() => { const issue = findWeeklyChallenge(run.challengeIssueId); return issue ? challengeSucceeded(issue, run) : false; })()
+        ? (() => { const issue = issues.get(run.challengeIssueId); return issue ? challengeSucceeded(issue, run) : false; })()
         : null,
       clubName: run.clubFilter ? clubNames.get(run.clubFilter) ?? null : null,
     })));
@@ -97,7 +100,7 @@ export async function POST(request: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
     const gameMode = body.gameMode || 'classic';
     const clubFilter = gameMode === 'single_club' ? requestedClubFilter : undefined;
-    if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'].includes(gameMode)) {
+    if (nationalityFilter || !['classic', 'single_club', 'challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper', 'challenge_custom'].includes(gameMode)) {
       return NextResponse.json({ error: 'Этот режим скоро появится' }, { status: 400 });
     }
     const opponentSeasonYear = body.opponentSeasonYear;

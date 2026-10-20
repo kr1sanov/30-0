@@ -8,7 +8,7 @@ export async function GET() {
   try {
     await purgeExpiredProfiles();
     const clubCount = await db.club.count();
-    const playerCount = await db.player.count();
+    const playerCount = await db.player.count({where:{mergedIntoId:null}});
     const seasonCount = await db.season.count();
     const playerSeasonCount = await db.playerSeason.count();
     const gameRunCount = await db.gameRun.count();

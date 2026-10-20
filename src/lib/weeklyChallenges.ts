@@ -2,7 +2,7 @@
 export const FIRST_CHALLENGE_RELEASE = Date.parse('2026-10-10T09:00:00.000Z');
 export const CHALLENGE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-type Hero = 'vagner' | 'dzyuba' | 'cska_blitz' | 'akron_keeper';
+type Hero = 'vagner' | 'dzyuba' | 'cska_blitz' | 'akron_keeper' | 'custom';
 export type ChallengeMode = `challenge_${Hero}`;
 export interface WeeklyChallenge {
   id: string;
@@ -21,6 +21,12 @@ export interface WeeklyChallenge {
   featuredNames?: string[][];
   sourceUrls?: string[];
   forceOpen?: boolean;
+  achievementTitleRu?: string;
+  achievementTitleEn?: string;
+  achievementDescriptionRu?: string;
+  achievementDescriptionEn?: string;
+  achievementIcon?: string;
+  custom?: boolean;
   visibility?: 'auto' | 'open' | 'hidden' | 'archived';
   minimumGoals: number;
   minimumPoints: number;
@@ -107,14 +113,15 @@ export function challengeSucceeded(issue: WeeklyChallenge, result: {
   const ga = subset ? subset.reduce((n,m) => n+(m.isHome ? m.awayGoals : m.homeGoals),0) : result.goalsAgainst;
   const clean = subset?.filter(m => (m.isHome ? m.awayGoals : m.homeGoals) === 0).length;
   if ((issue.matchLimit || issue.minimumCleanSheets) && (!matches || matches.length < (issue.matchLimit || 30))) return false;
+  const points = issue.matchLimit && subset ? subset.reduce((n,m) => {const gf=m.isHome?m.homeGoals:m.awayGoals, ga=m.isHome?m.awayGoals:m.homeGoals; return n+(gf>ga?3:gf===ga?1:0);},0) : result.points ?? 0;
   return (issue.requireTitle === false || result.position === 1) && gf >= issue.minimumGoals
     && (issue.maximumConceded === undefined || (ga !== undefined && ga !== null && ga <= issue.maximumConceded))
     && (issue.minimumCleanSheets === undefined || (clean ?? 0) >= issue.minimumCleanSheets)
-    && (result.points ?? 0) >= issue.minimumPoints && (!issue.unbeaten || result.losses === 0);
+    && points >= issue.minimumPoints && (!issue.unbeaten || result.losses === 0);
 }
 
 /** Stable labels also cover manually opened issues before their scheduled release. */
 export function challengeModeTitle(mode: string | null | undefined, language: 'ru' | 'en' = 'ru') {
   const issue = [...issuesForWeek(0), ...issuesForWeek(1)].find(issue => issue.mode === mode);
-  return issue ? (language === 'en' ? issue.titleEn : issue.titleRu) : '';
+  return issue ? (language === 'en' ? issue.titleEn : issue.titleRu) : mode === 'challenge_custom' ? (language === 'en' ? 'Challenge' : 'Челлендж') : '';
 }

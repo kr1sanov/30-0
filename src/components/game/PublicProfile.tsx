@@ -11,6 +11,7 @@ import { useTelegram } from "@/hooks/use-telegram";
 import { sharePlayerProfile } from "@/lib/sharePlayerProfile";
 import { playerPath } from "@/lib/profileLinks";
 import { trophySections, trophySection } from "@/lib/trophySections";
+import type { CustomChallengeTrophy } from '@/lib/customChallengeAchievements';
 import { TROPHIES } from "@/lib/trophyCatalog";
 import { useGameStore } from "@/store/gameStore";
 import { toast } from "sonner";
@@ -47,6 +48,7 @@ type Player = {
     colors: { primary: string; secondary: string };
   } | null;
   achievements: string[];
+  customAchievements?: CustomChallengeTrophy[];
   friends: Friend[];
   modes: Record<string, number>;
   friendshipStatus: "none" | "friends" | "incoming" | "outgoing";
@@ -191,10 +193,10 @@ export default function PublicProfile({ id }: { id: string }) {
       ]
     : [];
   const trophies = player
-    ? TROPHIES.filter(
+    ? [...TROPHIES,...(player.customAchievements || []).map(t=>({...t,name:locale==='en-GB'?t.nameEn:t.name,desc:locale==='en-GB'?t.descEn:t.desc}))].filter(
         (t) =>
           player.achievements.includes(t.id) &&
-          (section === "all" || trophySection(t.id) === section),
+          (section === "all" || (t.id.startsWith("custom-") ? "challenge" : trophySection(t.id)) === section),
       )
     : [];
   return (

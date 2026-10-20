@@ -23,5 +23,5 @@ test('custom periods include the entire last day and reject inverted dates', () 
 test('multiplayer is identified by seat rather than the default gameMode column', () => {
   assert.deepEqual(modeWhere('multiplayer'), { OR: [{ multiplayerSeat: { isNot: null } }, { multiplayerRoomCode: { not: null } }] });
   assert.deepEqual(modeWhere('single_club'), { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: 'single_club' });
-  assert.deepEqual(modeWhere('challenge'), { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'] } });
+  assert.deepEqual(modeWhere('challenge'), { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper', 'challenge_custom'] } });
 });

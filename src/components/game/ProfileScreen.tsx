@@ -17,6 +17,7 @@ import { translateClient } from "@/lib/enTranslations";
 import FriendsPanel from "./FriendsPanel";
 import { sharePlayerProfile } from "@/lib/sharePlayerProfile";
 import { playerPath } from "@/lib/profileLinks";
+import type { CustomChallengeTrophy } from '@/lib/customChallengeAchievements';
 import { TROPHIES } from "@/lib/trophyCatalog";
 
 export default function ProfileScreen() {
@@ -62,13 +63,14 @@ export default function ProfileScreen() {
         })
         .catch(() => undefined);
   }, [user]);
+  const [customTrophies, setCustomTrophies] = useState<CustomChallengeTrophy[]>([]);
   const [extraAchievements, setExtraAchievements] = useState<string[]>([]);
   const [trophyMode, setTrophyMode] = useState("classic");
   useEffect(() => {
     if (!user) return;
     void fetch("/api/social/achievements")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data) => setExtraAchievements(data?.ids ?? []))
+      .then((data) => { setExtraAchievements(data?.ids ?? []); setCustomTrophies(data?.custom ?? []); })
       .catch(() => undefined);
   }, [user]);
   const [seriesWins, setSeriesWins] = useState(0);
@@ -107,7 +109,8 @@ export default function ProfileScreen() {
         ? seriesWins > 0
         : profileStats.achievements.includes(id) ||
           extraAchievements.includes(id);
-  const earnedTrophies = TROPHIES.filter((t) => hasTrophy(t.id)).length;
+  const allTrophies = [...TROPHIES,...customTrophies.map(t=>({...t,name:locale==='en-GB'?t.nameEn:t.name,desc:locale==='en-GB'?t.descEn:t.desc}))];
+  const earnedTrophies = allTrophies.filter((t) => hasTrophy(t.id)).length;
 
   const displayName = user?.username
     ? `@${user.username}`
@@ -307,7 +310,7 @@ export default function ProfileScreen() {
           <span className="text-xs text-[#9CA3AF]">
             {earnedTrophies}
             {t("/")}
-            {TROPHIES.length} {showTrophies ? "▲" : "▼"}
+            {allTrophies.length} {showTrophies ? "▲" : "▼"}
           </span>
         </button>
         {showTrophies && (
@@ -330,7 +333,7 @@ export default function ProfileScreen() {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {TROPHIES.filter((trophy) => {
+              {allTrophies.filter((trophy) => {
                 if (trophyMode === "single_club")
                   return (
                     trophy.id.startsWith("club_") ||
@@ -342,7 +345,7 @@ export default function ProfileScreen() {
                     trophy.id === "multiplayer_series_champion"
                   );
                 if (trophyMode === "challenge")
-                  return ["vagner_legend", "dzyuba_record"].includes(trophy.id);
+                  return ["vagner_legend", "dzyuba_record", "cska_blitz", "akron_wall"].includes(trophy.id) || trophy.id.startsWith("custom-");
                 if (trophyMode === "social")
                   return trophy.id === "referral_invite";
                 return (
@@ -351,9 +354,12 @@ export default function ProfileScreen() {
                     "neva_attack",
                     "vagner_legend",
                     "dzyuba_record",
+                    "cska_blitz",
+                    "akron_wall",
                     "referral_invite",
                     "multiplayer_series_champion",
                   ].includes(trophy.id) &&
+                  !trophy.id.startsWith("custom-") &&
                   !trophy.id.startsWith("club_") &&
                   !trophy.id.startsWith("duel_")
                 );

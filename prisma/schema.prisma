@@ -56,6 +56,10 @@ model ClubSeason {
 model Player {
   id          String  @id @default(cuid())
   lastName    String
+  firstNameRu String?
+  lastNameRu  String?
+  aliasRu     String?
+  mergedIntoId String?
   firstName   String?
   fullName    String
   alias       String?
@@ -115,6 +119,7 @@ model User {
   notificationsRevision Int @default(0)
   botLanguage String @default("ru")
   pendingNotificationPatch String?
+  moderationStatus String @default("active")
   bannedAt DateTime?
   bannedUntil DateTime?
   banReason String?

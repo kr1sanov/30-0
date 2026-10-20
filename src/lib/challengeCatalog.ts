@@ -5,8 +5,11 @@ import { challengeStatus, type ChallengeVisibility } from './challengeStatus';
 export type { ChallengeVisibility } from './challengeStatus';
 export async function challengeCatalog(now = new Date()) {
   const catalog = Array.from({ length: challengeWeekIndex(now)+2 }, (_, i) => issuesForWeek(i)).flat();
-  const settings = await db.appSetting.findMany({ where: { OR:[{key:{startsWith:'challenge-visibility:'}},{key:{startsWith:'challenge-config:'}}] } });
+  const settings = await db.appSetting.findMany({ where: { OR:[{key:{startsWith:'challenge-visibility:'}},{key:{startsWith:'challenge-config:'}},{key:{startsWith:'challenge-custom:'}}] } });
   const values = new Map(settings.map(item=>[item.key,item.value]));
+  for (const setting of settings.filter(s => s.key.startsWith('challenge-custom:'))) {
+    try { const issue = JSON.parse(setting.value) as WeeklyChallenge; if (issue.id === setting.key.slice('challenge-custom:'.length)) catalog.push(issue); } catch {}
+  }
   return catalog.map(original=>{
     let patch: Partial<WeeklyChallenge> = {};
     try { patch=JSON.parse(values.get(`challenge-config:${original.id}`)||'{}'); } catch {}

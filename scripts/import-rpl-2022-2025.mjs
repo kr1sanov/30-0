@@ -53,6 +53,8 @@ const seasonIds = snapshots.map(s => `rpl-${s.year}`);
 const db = new PrismaClient();
 try {
   const manualCards = new Set((await db.appSetting.findMany({where:{key:{startsWith:'player-card-manual:'}},select:{key:true}})).map(s=>s.key.slice('player-card-manual:'.length)));
+  const redirects = new Map((await db.appSetting.findMany({where:{key:{startsWith:'player-merge:'}}})).map(s=>[s.key.slice('player-merge:'.length),JSON.parse(s.value).targetId]));
+  const resolvePlayer = id => { const seen=new Set(); while(redirects.has(id)&&!seen.has(id)){seen.add(id);id=redirects.get(id);} return id; };
   const existingSeasons = await db.season.findMany({ where: { OR: [{ id: { in: seasonIds } }, { startYear: { in: snapshots.map(s => s.year) } }] } });
   if (existingSeasons.length) {
     if (existingSeasons.length !== 4 || existingSeasons.some(s => !seasonIds.includes(s.id))) throw new Error('Existing 2022–25 season is not this import; manual review required');
@@ -62,8 +64,8 @@ try {
     const byCard = new Map(stored.map(p => [`${p.clubSeasonId}:${p.playerId}`, p]));
     // Admin-created cards coexist with the immutable source snapshot.
     // Every imported card must still match; extra cards are never overwritten.
-    const exact = stored.length >= playerCards.length && playerCards.every(p => {
-      const card = byCard.get(`rpl-${p.year}-club-${p.clubId}:fifaindex-player-${p.sourcePlayerId}`);
+    const exact = playerCards.every(p => {
+      const card = byCard.get(`rpl-${p.year}-club-${p.clubId}:${resolvePlayer(`fifaindex-player-${p.sourcePlayerId}`)}`);
       const originalOtherPositions = p.positions.slice(1).join(',');
       const wingback = p.positions[0] === 'ПЗ' ? 'ПФЗ' : p.positions[0] === 'ЛЗ' ? 'ЛФЗ' : null;
       // The production position backfill adds the matching wing-back role to

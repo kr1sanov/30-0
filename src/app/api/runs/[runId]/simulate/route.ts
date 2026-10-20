@@ -142,7 +142,7 @@ export async function POST(
     if (run.challengeIssueId) {
       const issue = (await challengeCatalog()).find(i=>i.id===run.challengeIssueId);
       if (issue && ['cska_blitz','akron_keeper'].includes(issue.hero)) result.trophies.push({ id: issue.hero === 'cska_blitz' ? 'cska_blitz' : 'akron_wall', name: issue.hero === 'cska_blitz' ? 'Блиц 11 минут' : 'Стена Тереховского', description: issue.descriptionRu, icon: issue.hero === 'cska_blitz' ? '⚡' : '🧤', earned: challengeSucceeded(issue, result) });
-      if (issue) result.trophies.push({ id: issue.id, name: issue.titleRu, description: issue.descriptionRu, icon: '🏆', earned: challengeSucceeded(issue, result) });
+      if (issue) result.trophies.push({ id: issue.id, name: issue.achievementTitleRu || issue.titleRu, description: issue.achievementDescriptionRu || issue.descriptionRu, icon: issue.achievementIcon || '🏆', earned: challengeSucceeded(issue, result) });
     }
 
     if (run.gameMode === 'challenge_vagner' || run.gameMode === 'challenge_dzyuba') {

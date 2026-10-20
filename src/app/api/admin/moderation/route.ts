@@ -18,13 +18,14 @@ export async function GET(request: Request) {
             { id: q },
           ],
         }
-      : { bannedAt: { not: null } },
+      : { OR: [{ bannedAt: { not: null } }, { moderationStatus: { not: 'active' } }] },
     orderBy: { createdAt: "desc" },
     take: 30,
     select: {
       id: true,
       username: true,
       displayName: true,
+      moderationStatus: true,
       bannedAt: true,
       bannedUntil: true,
       banReason: true,
@@ -36,7 +37,7 @@ export async function GET(request: Request) {
     take: 100,
   });
   return NextResponse.json({
-    users: users.map((u) => ({ ...u, restriction: activeRestriction(u) })),
+    users: users.map((u) => ({ ...u, moderationStatus: u.moderationStatus === 'blocked' && !activeRestriction(u) ? 'active' : u.moderationStatus, restriction: activeRestriction(u) })),
     history,
   });
 }
@@ -54,12 +55,12 @@ export async function PATCH(request: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  if (typeof b.userId !== "string" || !["ban", "unban"].includes(b.action))
+  if (typeof b.userId !== "string" || !["ban", "unban", "warn", "note", "watch", "resolve"].includes(b.action))
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   const user = await db.user.findUnique({ where: { id: b.userId } });
   if (!user)
     return NextResponse.json({ error: "Player not found" }, { status: 404 });
-  if (user.providerId === "telegram_361912433")
+  if (user.providerId === "telegram_361912433" && ["ban", "warn", "watch"].includes(b.action))
     return NextResponse.json(
       { error: "The project owner cannot be blocked" },
       { status: 403 },
@@ -67,10 +68,14 @@ export async function PATCH(request: Request) {
   const reason = typeof b.reason === "string" ? b.reason.trim() : "";
   const durations: Record<string, number | null> = {
     "1h": 3600000,
+    "6h": 21600000,
+    "12h": 43200000,
     "1d": 86400000,
     "3d": 259200000,
     "7d": 604800000,
+    "14d": 1209600000,
     "30d": 2592000000,
+    "90d": 7776000000,
     permanent: null,
   };
   if (
@@ -92,8 +97,9 @@ export async function PATCH(request: Request) {
       where: { id: user.id },
       data:
         b.action === "ban"
-          ? { bannedAt: now, bannedUntil: until, banReason: reason }
-          : { bannedAt: null, bannedUntil: null, banReason: null },
+          ? { bannedAt: now, bannedUntil: until, banReason: reason, moderationStatus: 'blocked' }
+          : b.action === 'unban' ? { bannedAt: null, bannedUntil: null, banReason: null, moderationStatus: 'active' }
+          : b.action === 'note' ? {} : { moderationStatus: b.action === 'warn' ? 'warned' : b.action === 'watch' ? 'watch' : 'active' },
     });
     await tx.moderationAction.create({
       data: {

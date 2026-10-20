@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { registerFootballNames } from '@/lib/footballNames';
 import { localizedClubName } from "@/lib/clubDisplayName";
-import { translateInterface } from "@/lib/enTranslations";
+import { translateInterface, registerContentTranslations } from "@/lib/enTranslations";
 
 type Language = "ru" | "en";
 const originals = new WeakMap<Text, { source: string; rendered: string }>();
@@ -92,6 +93,16 @@ const LANGUAGE_EVENT = "30-0-language-change";
 
 export function LanguageController() {
   const pathname = usePathname();
+  useEffect(() => {
+    const c = new AbortController();
+    fetch('/api/player-names', { cache: 'no-store', signal: c.signal }).then(r => r.ok ? r.json() : null).then(data => {
+      if (Array.isArray(data?.names)) registerFootballNames(data.names);
+      if (Array.isArray(data?.translations)) registerContentTranslations(data.translations);
+      const isAdmin = window.location.pathname.startsWith('/admin');
+      window.dispatchEvent(new CustomEvent(isAdmin ? '30-0-admin-language-change' : '30-0-language-change', { detail: localStorage.getItem(isAdmin ? '30-0-admin-language' : '30-0-language') === 'en' ? 'en' : 'ru' }));
+    }).catch(() => undefined);
+    return () => c.abort();
+  }, [pathname]);
   const admin = pathname?.startsWith("/admin");
   useEffect(() => {
     const saved = localStorage.getItem(

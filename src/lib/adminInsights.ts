@@ -38,7 +38,7 @@ export function dateWhere(from: Date | null, to: Date | null): Prisma.DateTimeFi
 export function modeWhere(mode: AdminMode): Prisma.GameRunWhereInput {
   if (mode === 'multiplayer') return { OR: [{ multiplayerSeat: { isNot: null } }, { multiplayerRoomCode: { not: null } }] };
   if (mode === 'single_club') return { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: 'single_club' };
-  if (mode === 'challenge') return { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper'] } };
+  if (mode === 'challenge') return { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: { in: ['challenge_vagner', 'challenge_dzyuba', 'challenge_cska_blitz', 'challenge_akron_keeper', 'challenge_custom'] } };
   if (mode === 'classic') return { multiplayerSeat: null, multiplayerRoomCode: null, gameMode: 'classic' };
   return {};
 }

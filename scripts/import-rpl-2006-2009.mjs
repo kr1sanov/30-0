@@ -84,6 +84,8 @@ const backupPath = resolve(backupArgument.slice(9));
 if (existsSync(backupPath)) throw new Error('Backup path already exists');
 const db = new PrismaClient();
 try {
+  const redirects = new Map((await db.appSetting.findMany({where:{key:{startsWith:'player-card-redirect:'}}})).map(s=>[s.key.slice('player-card-redirect:'.length),s.value]));
+  const resolveCard = id => {const seen=new Set();while(redirects.has(id)&&!seen.has(id)){seen.add(id);id=redirects.get(id);}return id;};
   const manualCards = new Set((await db.appSetting.findMany({where:{key:{startsWith:'player-card-manual:'}},select:{key:true}})).map(s=>s.key.slice('player-card-manual:'.length)));
   const found = await db.season.findMany({ where: { startYear: { in: years } }, select: { id: true, startYear: true } });
   const byYear = new Map(found.map(season => [season.startYear, season]));
@@ -95,9 +97,10 @@ try {
       sourceName: true, sourcePosition: true, clubSeason: { select: { clubId: true } },
     } });
     const expectedCards = new Map(snapshot.clubs.flatMap(club => club.players.map(p => [p.id, { ...p, clubId: club.id }])));
-    return cards.length === snapshot.cards.length && cards.every(card => {
-      const source = expectedCards.get(card.id);
-      return source && card.clubSeason.clubId === source.clubId && (manualCards.has(card.id) || (card.sourceName === source.name &&
+    const byId = new Map(cards.map(c=>[c.id,c]));
+    return [...expectedCards.entries()].every(([id, source]) => {
+      const card=byId.get(resolveCard(id));
+      return card && card.clubSeason.clubId === source.clubId && (manualCards.has(card.id) || (card.sourceName === source.name &&
         card.sourcePosition === source.sourcePosition && card.rating === source.rating &&
         card.primeRating === source.potential && card.mainPosition === source.mapped[0] &&
         (card.otherPositions ?? '') === source.mapped.slice(1).join(',')));

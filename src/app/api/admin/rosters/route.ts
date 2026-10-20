@@ -1,3 +1,4 @@
+import { localizedClubName } from '@/lib/clubDisplayName';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { canAdminWrite, requireAdmin } from '@/lib/adminAuth';
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
     db.club.findMany({ orderBy: { nameRu: 'asc' }, select: { id: true, nameRu: true, nameEn: true } }),
   ]);
   return NextResponse.json({ seasons: seasons.map(s => ({ id: s.id, label: s.label, startYear: s.startYear, endYear: s.endYear, matchesPerTeam: s.matchesPerTeam,
-    clubs: s.clubSeasons.map(c => ({ id: c.id, name: c.club.nameRu, players: c._count.players })) })), clubs });
+    clubs: s.clubSeasons.map(c => ({ id: c.id, name: localizedClubName(c.club.nameRu, 'ru'), players: c._count.players })) })), clubs:clubs.map(c=>({...c,nameRu:localizedClubName(c.nameRu,'ru')})) });
  } catch { return NextResponse.json({ error: 'Не удалось загрузить составы' }, { status: 500 }); }
 }
 export async function POST(request: Request) {
