@@ -258,6 +258,10 @@ jobs:
           # hidden files by default, so it is intentionally not read from the build artifact.
           cp public/.htaccess deploy-package/.htaccess
 
+          mkdir -p deploy-package/scripts/admin-player-data
+          cp scripts/reconcile-admin-player-data.mjs deploy-package/scripts/
+          cp src/lib/playerDuplicates.ts src/lib/footballNames.ts src/lib/adminPlayerMerge.ts src/lib/positions.ts deploy-package/scripts/admin-player-data/
+
           # Keep bot credentials out of the repository and build artifact.
           # This short-lived file is included only in the SSH deployment package.
           if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_WEBHOOK_SECRET:-}" ]; then

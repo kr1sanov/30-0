@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         "single_club",
         "challenge_vagner",
         "challenge_dzyuba",
-        "challenge_cska_blitz", "challenge_akron_keeper",
+        "challenge_cska_blitz", "challenge_akron_keeper", "challenge_custom",
       ].includes(mode)
     )
       return NextResponse.json(
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
         userId,
         multiplayerSeat: null,
         multiplayerRoomCode: null,
-        gameMode: mode === 'latest' ? { in: ['classic','single_club','challenge_vagner','challenge_dzyuba','challenge_cska_blitz','challenge_akron_keeper'] } : mode,
+        gameMode: mode === 'latest' ? { in: ['classic','single_club','challenge_vagner','challenge_dzyuba','challenge_cska_blitz','challenge_akron_keeper', 'challenge_custom'] } : mode,
 
         ...(mode.startsWith("challenge_") && issueId
           ? { challengeIssueId: issueId }

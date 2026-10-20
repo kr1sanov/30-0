@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     if (kind === 'rooms') {
       const where: Prisma.MultiplayerRoomWhereInput = {
         ...(dateWhere(range.from, range.to) ? { createdAt: dateWhere(range.from, range.to) } : {}),
-        ...(status === 'active' ? { status: { in: ['lobby', 'starting', 'drafting'] } } : status === 'completed' ? { status: 'completed' } : {}),
+        ...(status === 'active' ? { status: { in: ['lobby', 'starting', 'drafting'] } } : status === 'completed' ? { status: 'completed' } : status === 'closed' ? { status: 'closed' } : status === 'stale' ? { status: { in: ['lobby', 'starting', 'drafting'] }, updatedAt: { lt: new Date(Date.now() - 1800000) } } : {}),
         ...(query ? { OR: [{ code: { contains: query.toUpperCase() } }, { seats: { some: { name: { contains: query } } } }] } : {}),
       };
       const [total, rooms] = await Promise.all([
@@ -44,6 +44,7 @@ export async function GET(request: Request) {
     }
     const conditions: Prisma.GameRunWhereInput[] = [runWhere(mode, range.from, range.to)];
     if (status === 'completed') conditions.push({ completed: true });
+    if (status === 'stale') conditions.push({ completed: false, createdAt: { lt: new Date(Date.now() - 86400000) } });
     if (status === 'active') conditions.push({ completed: false });
     if (status === 'perfect') conditions.push({ completed: true, wins: 30, draws: 0, losses: 0 });
     if (query) conditions.push({ OR: [
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
     const [total, runs] = await Promise.all([
       db.gameRun.count({ where }),
       db.gameRun.findMany({ where, take: PAGE_SIZE, skip: (page - 1) * PAGE_SIZE,
-        orderBy: [orderBy, { id: 'asc' }], select: { id: true, createdAt: true, completed: true, gameMode: true, challengeIssueId: true,
+        orderBy: [orderBy, { id: 'asc' }], select: { _count: { select: { slots: { where: { playerSeasonId: { not: null } } } } }, id: true, createdAt: true, completed: true, gameMode: true, challengeIssueId: true,
           clubFilter: true, formation: true, teamName: true, wins: true, draws: true, losses: true, points: true, position: true,
           user: { select: { id: true, displayName: true, username: true, providerId: true } },
           multiplayerSeat: { select: { roomCode: true, isBot: true, name: true, room: { select: { status: true } } } } } }),

@@ -29,7 +29,7 @@ try {
     server.on('exit', code => { clearTimeout(timeout); reject(new Error('Local server exited '+code)); });
     server.stdout.on('data', data => { if (data.toString().includes('Ready')) { clearTimeout(timeout); resolve(); } });
   });
-  for (const model of ['telegramOutbox','gameSlot','multiplayerSeat','multiplayerRoom','gameRun','playerSeason','player','clubSeason','season','club','adminCredential','appSetting','user']) await db[model].deleteMany();
+  for (const model of ['moderationAction','telegramOutbox','gameSlot','multiplayerSeat','multiplayerRoom','gameRun','playerSeason','player','clubSeason','season','club','adminCredential','appSetting','user']) await db[model].deleteMany();
   const runImport = suffix => execFileSync(process.execPath, ['scripts/import-rpl-2022-2025.mjs', '--apply', `--backup=/tmp/roster-regression-${process.pid}-${Date.now()}-${suffix}.json`], { env: process.env, stdio: 'pipe' });
   runImport('initial');
   const sourceCard = await db.playerSeason.findFirstOrThrow();
@@ -244,5 +244,72 @@ try {
   await api('/api/admin/challenges','PATCH',{id:issue,patch:{endsAt:new Date(Date.now()-1).toISOString(),startsAt:new Date(Date.now()-100000).toISOString()}},true);
   assert.ok((await api('/api/challenges')).archive.some(i=>i.id===issue));
   console.log('PASS five-season archive grant, 72h duration, editable objectives and expiry');
+  // Admin product workflows run against the isolated SQLite fixture only.
+  const newIdentity={firstName:'Admin',lastName:'Footballer',firstNameRu:'Админ',lastNameRu:'Футболист',alias:null,aliasRu:null,nationality:'Россия',birthYear:1990};
+  const createdPlayer=(await api('/api/admin/players','POST',newIdentity,true,201)).player;
+  for(const q of ['Футболист','Footballer']) assert.ok((await api('/api/admin/players?q='+encodeURIComponent(q),'GET',undefined,true)).players.some(p=>p.id===createdPlayer.id));
+  await api('/api/admin/players','POST',newIdentity,true,409);
+  const newCard={rating:78,primeRating:85,mainPosition:'ЦП',otherPositions:'АП,ОП'};
+  const playerCard=(await api(`/api/admin/players/${createdPlayer.id}/cards`,'POST',{clubSeasonId:'qa-cs-2-2025',card:newCard},true,201)).card;
+  await api(`/api/admin/players/${createdPlayer.id}/cards`,'POST',{clubSeasonId:'qa-cs-2-2025',card:newCard},true,409);
+  await api(`/api/admin/players/${createdPlayer.id}/cards`,'POST',{clubSeasonId:'qa-cs-3-2025',card:{...newCard,otherPositions:'ЦП'}},true,400);
+  const names=await api('/api/player-names');assert.ok(names.names.some(([en,ru])=>en==='Admin Footballer'&&ru==='Админ Футболист'));
+  const newSeason=(await api('/api/admin/rosters','POST',{startYear:2026,endYear:2027,label:'2026/27',matchesPerTeam:30},true,201)).season;
+  const target=(await api('/api/admin/rosters/manage','POST',{action:'addClub',seasonId:newSeason.id,clubId:'qa-club-2'},true)).clubSeason;
+  const copied=await api('/api/admin/rosters/manage','POST',{action:'copyRoster',sourceId:'qa-cs-2-2025',targetId:target.id},true);assert.equal(copied.added,25);
+  assert.equal((await api('/api/admin/rosters/manage','POST',{action:'copyRoster',sourceId:'qa-cs-2-2025',targetId:target.id},true)).added,0);
+  await api('/api/admin/rosters/manage','POST',{action:'copyRoster',sourceId:target.id,targetId:target.id},true,400);
+  await api('/api/admin/rosters/import','POST',{},true,410);
+  console.log('PASS bilingual search, player creation, seasonal copy, multiple positions and retired CSV import');
+
+  await db.player.create({data:{id:'qa-duplicate',fullName:'Footballer Admin',lastName:'Footballer',birthYear:1990,nationality:'Россия'}});
+  const duplicateCard=await db.playerSeason.create({data:{playerId:'qa-duplicate',clubSeasonId:'qa-cs-2-2025',rating:77,primeRating:80,mainPosition:'ЦП'}});
+  const completedDuplicate=await db.gameRun.create({data:{userId:'qa-host',completed:true,slots:{create:{slotPosition:'ЦП_0',playerSeasonId:duplicateCard.id,playerName:'Historical name',playerRating:77}}}});
+  const dupeAudit=await api('/api/admin/players/duplicates','GET',undefined,true);
+  assert.ok(dupeAudit.groups.some(g=>g.safe&&g.members.some(p=>p.id==='qa-duplicate')));
+  await api('/api/admin/players/duplicates','POST',{targetId:createdPlayer.id,sourceId:'qa-duplicate'},true);
+  assert.equal((await db.player.findUnique({where:{id:'qa-duplicate'}})).mergedIntoId,createdPlayer.id);
+  const historicSlot=await db.gameSlot.findFirst({where:{runId:completedDuplicate.id}});
+  assert.equal(historicSlot.playerSeasonId,playerCard.id);assert.equal(historicSlot.playerName,'Historical name');assert.equal(historicSlot.playerRating,77);
+  assert.ok(await db.appSetting.findUnique({where:{key:'player-merge:qa-duplicate'}}));
+  assert.ok(await db.appSetting.findUnique({where:{key:`player-card-redirect:${duplicateCard.id}`}}));
+  console.log('PASS duplicate merge preserves history, records a recovery snapshot and retires the source');
+
+  await api('/api/admin/moderation','PATCH',{userId:'qa-guest',action:'ban',duration:'14d',reason:'QA temporary restriction'},true);
+  const banDate=(await db.user.findUnique({where:{id:'qa-guest'}})).bannedAt;
+  await api('/api/admin/moderation','PATCH',{userId:'qa-guest',action:'note',reason:'QA note preserves restriction'},true);
+  assert.equal(+(await db.user.findUnique({where:{id:'qa-guest'}})).bannedAt,+banDate);
+  await api('/api/admin/moderation','PATCH',{userId:'qa-guest',action:'unban',reason:'QA restriction reviewed'},true);
+  await api('/api/admin/moderation','PATCH',{userId:'qa-guest',action:'watch',reason:'QA investigation'},true);
+  assert.equal((await db.user.findUnique({where:{id:'qa-guest'}})).moderationStatus,'watch');
+  assert.ok((await api('/api/admin/users?status=watch&period=all','GET',undefined,true)).users.some(u=>u.id==='qa-guest'));
+  assert.equal((await api('/api/admin/users/qa-guest','GET',undefined,true)).history.length,4);
+  const dashboard=await api('/api/admin/operations?period=14d','GET',undefined,true);assert.ok(dashboard.content.cards>0);assert.ok(dashboard.engagement.retention.length===2);
+  console.log('PASS moderation notes, watch states, user details and product operations metrics');
+
+  const customBody={titleRu:'Тестовый челлендж',titleEn:'Custom challenge',descriptionRu:'Проведи сезон со своим составом',descriptionEn:'Play a season with your own squad',startsAt:new Date(Date.now()+86400000).toISOString(),endsAt:new Date(Date.now()+7*86400000).toISOString(),minimumGoals:0,minimumPoints:0,requireTitle:false,unbeaten:false,achievementTitleRu:'Своя победа',achievementTitleEn:'Own victory',achievementIcon:'⭐'};
+  const custom=(await api('/api/admin/challenges','POST',customBody,true,201)).id;
+  assert.ok(!(await api('/api/challenges')).active.some(i=>i.id===custom));
+  await api('/api/admin/challenges','PATCH',{id:custom,visibility:'auto'},true);
+  assert.equal((await api('/api/admin/challenges','GET',undefined,true)).issues.find(i=>i.id===custom).status,'scheduled');
+  await api('/api/admin/challenges','PATCH',{id:custom,visibility:'open'},true);
+  const customRun=await api('/api/runs','POST',{gameMode:'challenge_custom',challengeIssueId:custom,formation:'4-3-3'},false,201);
+  assert.equal(customRun.slots.filter(s=>s.playerSeasonId).length,0);
+  for(let i=0;i<customRun.slots.length;i++) await db.gameSlot.update({where:{id:customRun.slots[i].id},data:{playerSeasonId:`qa-ps-0-2025-${i}`,playerName:`QA Player ${i}`,playerLastName:`Player ${i}`,playerRating:85,playerPrimeRating:90,playerPosition:customRun.slots[i].slotPosition.split('_')[0],isCompatible:true}});
+  const customResult=await api(`/api/runs/${customRun.id}/simulate`,'POST',{});
+  assert.ok(customResult.trophies.some(t=>t.id===custom&&t.name==='Своя победа'&&t.earned));
+  assert.equal((await api('/api/runs')).find(r=>r.id===customRun.id).challengeSucceeded,true);
+  assert.ok((await api('/api/social/achievements')).custom.some(t=>t.id===custom&&t.nameEn==='Own victory'));
+  assert.ok((await api('/api/social/players/qa-host')).customAchievements.some(t=>t.id===custom));
+  await api('/api/admin/challenges','PATCH',{id:custom,visibility:'archived'},true);
+  assert.ok((await api('/api/challenges')).archive.some(i=>i.id===custom));
+  console.log('PASS custom challenge draft, schedule, live game, achievement and archive');
+
+  await db.adminCredential.create({data:{username:'qa-viewer',role:'viewer',passwordHash:'unused-local-fixture',mustChangePassword:false}});
+  const viewerCookie='rpl_admin_session='+signed({sub:'qa-viewer',ver:1,exp:Date.now()+3600000},adminSecret);
+  for(const path of ['/api/admin/players','/api/admin/challenges','/api/admin/rosters/manage','/api/admin/players/duplicates']) {
+    const response=await fetch(base+path,{method:'POST',headers:{cookie:viewerCookie,origin:base,'Content-Type':'application/json'},body:JSON.stringify({})});assert.equal(response.status,403,path);
+  }
+  console.log('PASS viewer cannot mutate players, rosters, challenges or duplicate identities');
   console.log('ALL INTEGRATION SCENARIOS PASSED');
 } finally { server.kill(); await db.$disconnect(); }

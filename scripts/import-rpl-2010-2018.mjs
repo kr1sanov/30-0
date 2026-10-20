@@ -55,17 +55,13 @@ try {
   if (installedYears.length) {
     const scopedSeasons = years.map(year => `rpl-${year}`);
     const scopedCards = { clubSeason: { seasonId: { in: scopedSeasons } } };
-    const scopedCounts = await Promise.all([
-      db.clubSeason.count({ where: { seasonId: { in: scopedSeasons } } }),
-      db.playerSeason.count({ where: scopedCards }),
-      db.club.count({ where: { seasons: { some: { seasonId: { in: scopedSeasons } } } } }),
-      db.player.count({ where: { seasons: { some: scopedCards } } }),
-    ]);
-    if (installedYears.length === 9 && unique(installedYears.map(s => s.startYear)) &&
-        JSON.stringify(scopedCounts) === JSON.stringify([144, 4991, 29, 1822])) {
-      console.log('All nine seasons already installed; no database changes.');
-      await db.$disconnect();
-      process.exit(0);
+    const expectedIds = cards.map(({year,club,player:p}) => `rpl-${year}-club-${club.sourceClubId}-player-${p.sourcePlayerId}`);
+    const redirects = new Map((await db.appSetting.findMany({where:{key:{startsWith:'player-card-redirect:'}}})).map(s=>[s.key.slice('player-card-redirect:'.length),s.value]));
+    const storedIds = new Set((await db.playerSeason.findMany({where:scopedCards,select:{id:true}})).map(p=>p.id));
+    const resolveId = id => { const visited=new Set(); while(redirects.has(id)&&!visited.has(id)){visited.add(id);id=redirects.get(id);} return id; };
+    if (installedYears.length === 9 && unique(installedYears.map(s => s.startYear)) && expectedIds.every(id=>storedIds.has(resolveId(id)))) {
+      console.log('All nine source rosters verified; admin additions and merges preserved.');
+      await db.$disconnect(); process.exit(0);
     }
     throw new Error('Обнаружен неполный исторический импорт; требуется ручная проверка');
   }

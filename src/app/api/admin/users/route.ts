@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/lib/db';
+import { activeRestriction } from '@/lib/moderation';
 import { requireAdmin } from '@/lib/adminAuth';
 import { adminMode, adminRange, dateWhere, runWhere } from '@/lib/adminInsights';
 
@@ -26,9 +27,14 @@ export async function GET(request: Request) {
   ] };
   const conditions: Prisma.UserWhereInput[] = [];
   if (query) conditions.push({ OR: [
-    { displayName: { contains: query } }, { username: { contains: query } },
+    { id: query }, { displayName: { contains: query } }, { username: { contains: query } },
     { firstName: { contains: query } }, { lastName: { contains: query } }, { providerId: { contains: query } },
   ] });
+  if (status === 'blocked') conditions.push({ bannedAt: { not: null }, OR: [{ bannedUntil: null }, { bannedUntil: { gt: new Date() } }] });
+  if (status === 'watch') conditions.push({ moderationStatus: { in: ['watch', 'warned'] } });
+  if (status === 'deleting') conditions.push({ deletionRequestedAt: { not: null } });
+  if (status === 'bot_missing') conditions.push({ telegramChatStarted: false });
+  if (status === 'no_games') conditions.push({ runs: { none: {} } });
   if (status === 'active') conditions.push(active);
   if (status === 'inactive') conditions.push({ NOT: active });
   if (status === 'new' && dateWhere(range.from, range.to)) conditions.push({ createdAt: dateWhere(range.from, range.to) });
@@ -43,6 +49,7 @@ export async function GET(request: Request) {
       db.user.count({ where }),
       db.user.findMany({ where, orderBy: [orderBy, { id: 'asc' }], skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE,
         select: { id: true, provider: true, providerId: true, username: true, displayName: true, firstName: true, lastName: true,
+          bannedAt: true, bannedUntil: true, banReason: true, moderationStatus: true, deletionRequestedAt: true, telegramChatStarted: true,
           createdAt: true, lastActiveAt: true, referralCount: true, _count: { select: { runs: true } },
           runs: { orderBy: { createdAt: 'desc' }, take: 1, select: { createdAt: true } } } }),
     ]);
@@ -56,6 +63,7 @@ export async function GET(request: Request) {
     const doneById = new Map(completed.map(row => [row.userId, row._count.id]));
     const perfectById = new Map(perfect.map(row => [row.userId, row._count.id]));
     return NextResponse.json({ total, page, pageSize: PAGE_SIZE, users: users.map(user => ({
+      restriction: activeRestriction(user), moderationStatus: user.moderationStatus === 'blocked' && !activeRestriction(user) ? 'active' : user.moderationStatus, deletionRequestedAt: user.deletionRequestedAt, telegramChatStarted: user.telegramChatStarted,
       id: user.id, provider: user.provider, telegramId: user.provider === 'telegram' ? user.providerId.replace(/^telegram_/, '') : null,
       username: user.username, displayName: user.displayName, firstName: user.firstName, lastName: user.lastName,
       createdAt: user.createdAt, lastActiveAt: user.lastActiveAt, lastGameAt: user.runs[0]?.createdAt ?? null,

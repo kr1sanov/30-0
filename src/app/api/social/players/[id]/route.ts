@@ -1,3 +1,4 @@
+import { customChallengeAchievements } from '@/lib/customChallengeAchievements';
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sessionUser } from "@/lib/telegramSession";
@@ -187,8 +188,11 @@ export async function GET(request: Request, { params }: Context) {
         : incoming?.status === "pending"
           ? "incoming"
           : "none";
+  const customAchievements = await customChallengeAchievements(user.id);
+  for (const trophy of customAchievements) achievements.add(trophy.id);
   return NextResponse.json(
     {
+      customAchievements,
       id: user.id,
       path: playerPath(user),
       displayName: user.displayName,

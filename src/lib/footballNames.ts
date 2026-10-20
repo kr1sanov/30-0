@@ -95,8 +95,21 @@ const enOverrides = new Map<string,string>();
 for(const [en,ru] of Object.entries({...spellings,...nicknames})) if(!enOverrides.has(key(ru))) enOverrides.set(key(ru),en);
 function titleCase(s: string) { return s ? s[0].toLocaleUpperCase()+s.slice(1) : s; }
 
+const manualRu = new Map<string, string>();
+const manualEn = new Map<string, string>();
+let namesVersion = 0;
+const namesListeners = new Set<() => void>();
+export const footballNamesVersion = () => namesVersion;
+export function subscribeFootballNames(listener: () => void) { namesListeners.add(listener); return () => { namesListeners.delete(listener); }; }
+export function registerFootballNames(names: [string, string][]) {
+  manualRu.clear(); manualEn.clear();
+  for (const [en, ru] of names) { if (en && ru) { manualRu.set(key(en), ru); manualEn.set(key(ru), en); } }
+  namesVersion++; for (const listener of namesListeners) listener();
+}
 export function localizePlayerName(value: string | null | undefined, language: FootballLanguage): string {
   if (!value) return '';
+  const manual = (language === 'ru' ? manualRu : manualEn).get(key(value));
+  if (manual) return manual;
   const override = (language === 'ru' ? ruOverrides : enOverrides).get(key(value));
   if (override) return override;
   return value.split(/([\s\-’']+)/).map(token => {

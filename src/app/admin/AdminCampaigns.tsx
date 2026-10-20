@@ -47,6 +47,8 @@ async function api(path: string, method = "GET", body?: unknown) {
   return data;
 }
 export default function AdminCampaigns() {
+  const [editing, setEditing] = useState(false);
+  const [filter, setFilter] = useState("all");
   const textarea = useRef<HTMLTextAreaElement>(null);
   const [items, setItems] = useState<Campaign[]>([]),
     [draft, setDraft] = useState<Campaign>(empty),
@@ -76,13 +78,18 @@ export default function AdminCampaigns() {
     setDraft((previous) => ({ ...previous, ...patch }));
   return (
     <div className="grid items-start gap-5 lg:grid-cols-2">
-      <section className="rounded-2xl border border-white/10 bg-white/5 p-5">
-        <h2 className="text-xl font-bold">
-          {draft.id ? "Редактировать рассылку" : "Новая рассылка"}
-        </h2>
+      <details
+        open={editing}
+        onToggle={(e) => setEditing(e.currentTarget.open)}
+        className="rounded-2xl border border-white/10 bg-white/5 p-5"
+      >
+        <summary className="cursor-pointer text-xl font-bold">
+          {draft.id ? "Редактировать рассылку" : "Создать рассылку"}
+        </summary>
         <p className="mt-2 text-sm text-white/50">
-Рассылки получают только игроки, которые запустили бота и включили новости проекта. Время указано в твоём часовом поясе.
-</p>
+          Рассылки получают только игроки, которые запустили бота и включили
+          новости проекта. Время указано в твоём часовом поясе.
+        </p>
         {error && (
           <p role="alert" className="mt-3 text-red-300">
             {error}
@@ -106,14 +113,54 @@ export default function AdminCampaigns() {
         >
           <fieldset className="space-y-3 rounded-xl border border-white/15 p-3">
             <legend>Английская версия поста</legend>
-            <label className="block text-sm">Заголовок EN<input data-no-translate required minLength={2} maxLength={120} className={field} value={draft.titleEn || ""} onChange={e => setDraft({ ...draft, titleEn: e.target.value })} /></label>
-            <label className="block text-sm">Сообщение EN<textarea data-no-translate required minLength={2} maxLength={draft.imageId ? 800 : 3500} className={field} value={draft.messageEn || ""} onChange={e => setDraft({ ...draft, messageEn: e.target.value })} /></label>
-            <label className="block text-sm">Текст кнопки EN<input data-no-translate required maxLength={40} className={field} value={draft.buttonTextEn || ""} onChange={e => setDraft({ ...draft, buttonTextEn: e.target.value })} /></label>
-            <p className="text-xs text-white/50">Бот отправит версию на языке, выбранном получателем.</p>
+            <label className="block text-sm">
+              Заголовок EN
+              <input
+                data-no-translate
+                required
+                minLength={2}
+                maxLength={120}
+                className={field}
+                value={draft.titleEn || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, titleEn: e.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Сообщение EN
+              <textarea
+                data-no-translate
+                required
+                minLength={2}
+                maxLength={draft.imageId ? 800 : 3500}
+                className={field}
+                value={draft.messageEn || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, messageEn: e.target.value })
+                }
+              />
+            </label>
+            <label className="block text-sm">
+              Текст кнопки EN
+              <input
+                data-no-translate
+                required
+                maxLength={40}
+                className={field}
+                value={draft.buttonTextEn || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, buttonTextEn: e.target.value })
+                }
+              />
+            </label>
+            <p className="text-xs text-white/50">
+              Бот отправит версию на языке, выбранном получателем.
+            </p>
           </fieldset>
           <label className="block text-sm">
-Заголовок
-<input
+            Заголовок
+            <input
               required
               minLength={2}
               maxLength={120}
@@ -123,8 +170,8 @@ export default function AdminCampaigns() {
             />
           </label>
           <label className="block text-sm">
-Триггер
-<select
+            Триггер
+            <select
               className={field}
               value={draft.cadence}
               onChange={(e) => update({ cadence: e.target.value })}
@@ -152,8 +199,8 @@ export default function AdminCampaigns() {
           </label>
           {draft.cadence === "scheduled" && (
             <label className="block text-sm">
-Дата отправки
-<input
+              Дата отправки
+              <input
                 required
                 type="datetime-local"
                 className={field}
@@ -178,21 +225,19 @@ export default function AdminCampaigns() {
             </label>
           )}
           <label className="block text-sm">
-Форматирование
-<select
+            Форматирование
+            <select
               className={field}
               value={draft.format}
               onChange={(e) => update({ format: e.target.value })}
             >
-              <option value="text">
-Обычный текст
-</option>
+              <option value="text">Обычный текст</option>
               <option value="html">Telegram HTML</option>
             </select>
           </label>
           <label className="block text-sm">
-Сообщение
-<textarea
+            Сообщение
+            <textarea
               ref={textarea}
               required
               rows={7}
@@ -237,12 +282,13 @@ export default function AdminCampaigns() {
             </div>
           )}
           <p className="text-xs text-white/50">
-            Переменные: {"{{name}}, {{username}}"}. HTML поддерживает b, i, u, s, code, pre, blockquote и HTTPS-ссылки. {draft.message.length}/
+            Переменные: {"{{name}}, {{username}}"}. HTML поддерживает b, i, u,
+            s, code, pre, blockquote и HTTPS-ссылки. {draft.message.length}/
             {draft.imageId ? 800 : 3500}
           </p>
           <label className="block text-sm">
-Картинка поста
-<input
+            Картинка поста
+            <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
               disabled={busy}
@@ -277,13 +323,13 @@ export default function AdminCampaigns() {
                 className={button}
                 onClick={() => update({ imageId: null })}
               >
-Удалить картинку
-</button>
+                Удалить картинку
+              </button>
             </div>
           )}
           <label className="block text-sm">
-Текст кнопки
-<input
+            Текст кнопки
+            <input
               required
               maxLength={40}
               value={draft.buttonText}
@@ -292,8 +338,8 @@ export default function AdminCampaigns() {
             />
           </label>
           <label className="block text-sm">
-HTTPS-ссылка кнопки
-<input
+            HTTPS-ссылка кнопки
+            <input
               required
               type="url"
               value={draft.buttonUrl}
@@ -307,28 +353,28 @@ HTTPS-ссылка кнопки
               checked={draft.enabled}
               onChange={(e) => update({ enabled: e.target.checked })}
             />
-Включить автоматический триггер
-</label>
+            Включить автоматический триггер
+          </label>
           <div className="flex flex-wrap gap-2">
             <button
               disabled={busy}
               className={`${button} bg-emerald-500 text-black`}
             >
-Сохранить рассылку
-</button>
+              Сохранить рассылку
+            </button>
             <button
               type="button"
               className={button}
               onClick={() => setDraft(empty)}
             >
-Новый черновик
-</button>
+              Новый черновик
+            </button>
           </div>
         </form>
         <details className="mt-5">
           <summary className="cursor-pointer text-sm">
-Предпросмотр текста
-</summary>
+            Предпросмотр текста
+          </summary>
           <div className="mt-3 whitespace-pre-wrap break-words rounded-xl bg-black/30 p-4">
             <strong>{draft.title}</strong>
             {draft.format === "html" && validTelegramHtml(draft.message) ? (
@@ -344,104 +390,150 @@ HTTPS-ссылка кнопки
             </span>
           </div>
         </details>
-      </section>
+      </details>
       <section className="space-y-3">
-        <h2 className="text-xl font-bold">
-Рассылки
-</h2>
-        {!items.length && <p className="text-white/50">
-Пока нет рассылок.
-</p>}
-        {items.map((c) => (
-          <article
-            key={c.id}
-            className="rounded-2xl border border-white/10 bg-white/5 p-5"
+        <h2 className="text-xl font-bold">Рассылки</h2>
+        {!items.length && <p className="text-white/50">Пока нет рассылок.</p>}
+        <label className="block max-w-xs text-sm">
+          Показывать
+          <select
+            className={`${field} mt-2`}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
           >
-            <h3 className="font-bold">{c.title}</h3>
-            <p className="mt-1 text-sm text-white/50">
-              {c.cadence} · {c.enabled ? "Активна" : "На паузе"}
-              {c.scheduledAt
-                ? ` · ${new Date(c.scheduledAt).toLocaleString()}`
-                : ""}
-            </p>
-            <p className="mt-3 text-xs text-white/60">
-              Отправлено: {c.stats?.sent || 0} · В очереди: {c.stats?.pending || 0} · Ошибки: {c.stats?.failed || 0} · Пропущено: {c.stats?.skipped || 0}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                className={button}
-                disabled={busy}
-                onClick={() => setDraft(c)}
-              >
-Изменить
-</button>
-              <button
-                className={button}
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    await api("/api/admin/campaigns", "POST", {
-                      ...c,
-                      enabled: !c.enabled,
-                    });
-                  })
-                }
-              >
-                {c.enabled ? "Приостановить" : "Включить"}
-              </button>
-              <button
-                className={button}
-                disabled={busy}
-                onClick={() => {
-                  if (
-                    confirm(
-                      translateClient(`Отправить «${c.title}» всем подписчикам сейчас?`),
-                    )
-                  )
-                    void run(async () => {
-                      await api("/api/admin/campaigns", "POST", {
-                        action: "send",
-                        id: c.id,
-                        requestId: crypto.randomUUID(),
-                      });
-                      setNotice("Рассылка добавлена в очередь для подписчиков.");
-                    });
-                }}
-              >
-Отправить сейчас
-</button>
-              {Boolean(c.stats?.failed) && (
+            <option value="all">Все рассылки</option>
+            <option value="active">Включённые</option>
+            <option value="paused">На паузе</option>
+            <option value="retention">Возврат в игру</option>
+          </select>
+        </label>
+        {items
+          .filter(
+            (c) =>
+              filter === "all" ||
+              (filter === "active" && c.enabled) ||
+              (filter === "paused" && !c.enabled) ||
+              (filter === "retention" && c.cadence.startsWith("return_")),
+          )
+          .map((c) => (
+            <article
+              key={c.id}
+              className="rounded-2xl border border-white/10 bg-white/5 p-5"
+            >
+              <h3 className="font-bold">{c.title}</h3>
+              <p className="mt-1 text-sm text-white/50">
+                {(
+                  {
+                    manual: "Вручную",
+                    scheduled: "По расписанию",
+                    daily: "Каждый день",
+                    weekly: "Каждую неделю",
+                    monthly: "Каждый месяц",
+                    return_3: "Возврат через 3 дня",
+                    return_7: "Возврат через 7 дней",
+                    return_10: "Возврат через 10 дней",
+                    return_30: "Возврат через месяц",
+                  } as Record<string, string>
+                )[c.cadence] || c.cadence}{" "}
+                · {c.enabled ? "Активна" : "На паузе"}
+                {c.scheduledAt
+                  ? ` · ${new Date(c.scheduledAt).toLocaleString()}`
+                  : ""}
+              </p>
+              <p className="mt-3 text-xs text-white/60">
+                Отправлено: {c.stats?.sent || 0} · В очереди:{" "}
+                {c.stats?.pending || 0} · Ошибки: {c.stats?.failed || 0} ·
+                Пропущено: {c.stats?.skipped || 0}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  className={button}
+                  disabled={busy}
+                  onClick={() => {
+                    setDraft(c);
+                    setEditing(true);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  Изменить
+                </button>
                 <button
                   className={button}
                   disabled={busy}
                   onClick={() =>
                     void run(async () => {
                       await api("/api/admin/campaigns", "POST", {
-                        action: "retry",
-                        id: c.id,
+                        ...c,
+                        enabled: !c.enabled,
                       });
                     })
                   }
                 >
-Повторить с ошибками
-</button>
-              )}
-              <button
-                className={`${button} text-red-300`}
-                disabled={busy}
-                onClick={() => {
-                  if (confirm("Архивировать рассылку и отменить неотправленные сообщения?"))
-                    void run(async () => {
-                      await api("/api/admin/campaigns", "DELETE", { id: c.id });
-                      if (draft.id === c.id) setDraft(empty);
-                    });
-                }}
-              >
-В архив
-</button>
-            </div>
-          </article>
-        ))}
+                  {c.enabled ? "Приостановить" : "Включить"}
+                </button>
+                <button
+                  className={button}
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      confirm(
+                        translateClient(
+                          `Отправить «${c.title}» всем подписчикам сейчас?`,
+                        ),
+                      )
+                    )
+                      void run(async () => {
+                        await api("/api/admin/campaigns", "POST", {
+                          action: "send",
+                          id: c.id,
+                          requestId: crypto.randomUUID(),
+                        });
+                        setNotice(
+                          "Рассылка добавлена в очередь для подписчиков.",
+                        );
+                      });
+                  }}
+                >
+                  Отправить сейчас
+                </button>
+                {Boolean(c.stats?.failed) && (
+                  <button
+                    className={button}
+                    disabled={busy}
+                    onClick={() =>
+                      void run(async () => {
+                        await api("/api/admin/campaigns", "POST", {
+                          action: "retry",
+                          id: c.id,
+                        });
+                      })
+                    }
+                  >
+                    Повторить с ошибками
+                  </button>
+                )}
+                <button
+                  className={`${button} text-red-300`}
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      confirm(
+                        "Архивировать рассылку и отменить неотправленные сообщения?",
+                      )
+                    )
+                      void run(async () => {
+                        await api("/api/admin/campaigns", "DELETE", {
+                          id: c.id,
+                        });
+                        if (draft.id === c.id) setDraft(empty);
+                      });
+                  }}
+                >
+                  В архив
+                </button>
+              </div>
+            </article>
+          ))}
       </section>
     </div>
   );

@@ -1,3 +1,4 @@
+import { customChallengeAchievements } from '@/lib/customChallengeAchievements';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sessionUser } from '@/lib/telegramSession';
@@ -19,5 +20,6 @@ export async function GET(request: Request) {
   earned(human.some(seat => seat.run?.position === 1), 'duel_winner');
   earned(human.some(seat => seat.run?.position === 1 && seat.run?.losses === 0), 'duel_unbeaten');
   earned(human.filter(seat => seat.run?.position === 1).length >= 3, 'duel_hat_trick');
-  return NextResponse.json({ ids });
+  const custom = await customChallengeAchievements(userId);
+  return NextResponse.json({ ids: [...ids, ...custom.map(t=>t.id)], custom });
 }
