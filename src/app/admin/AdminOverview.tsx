@@ -309,7 +309,9 @@ export default function AdminOverview() {
                   "#campaigns",
                   ops.processes.oldestPendingAt
                     ? `Самое старое: ${new Date(ops.processes.oldestPendingAt).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })} МСК`
-                    : "Нет ожидающих отправки",
+                    : ops.processes.queue.pending
+                      ? "Запланированы; срок отправки ещё не наступил"
+                      : "Нет ожидающих отправки",
                 ],
                 [
                   "Ошибки доставки",

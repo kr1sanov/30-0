@@ -10,6 +10,7 @@ import {
   type RosterChoice,
 } from "./adminUi";
 import AdminPlayers from "./AdminPlayers";
+import { localizePlayerName } from "@/lib/footballNames";
 type Season = RosterChoice & { startYear: number; endYear: number };
 type Club = { id: string; nameRu: string };
 type Roster = {
@@ -254,7 +255,7 @@ export default function AdminRosterManager({
                     <strong className="block">
                       {[p.player.firstNameRu, p.player.lastNameRu]
                         .filter(Boolean)
-                        .join(" ") || p.player.fullName}
+                        .join(" ") || localizePlayerName(p.player.fullName, "ru")}
                     </strong>
                     <span className="text-xs text-white/45">
                       {p.player.fullName}
