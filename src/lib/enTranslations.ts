@@ -1434,6 +1434,7 @@ Object.assign(TEXT, {
   "Текущее состояние ·": "Current status ·",
   "Уведомления в очереди": "Queued notifications",
   "Нет ожидающих отправки": "Nothing waiting to be sent",
+  "Запланированы; срок отправки ещё не наступил": "Scheduled; not due to be sent yet",
   "Ошибки доставки": "Delivery failures",
   "Исчерпаны попытки; проверь доставку": "Attempts exhausted; check delivery",
   "Запросы на удаление": "Deletion requests",
