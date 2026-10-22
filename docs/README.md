@@ -9,7 +9,7 @@
 | Игрок и посетитель репозитория | [README](../README.md), [English](../README.en.md), [галерея](media/README.md) |
 | Владелец продукта | [Состояние](../PROJECT_STATUS.md), [аудит](audits/2026-10-22.md), [приоритеты](../ROADMAP.md) |
 | Разработчик | [Архитектура](../ARCHITECTURE.md), [локальный запуск и тесты](../DEVELOPMENT.md) |
-| Эксплуатация | [Jino, CI/CD и Telegram](../DEPLOYMENT.md) |
+| Эксплуатация | [Jino, CI/CD и Telegram](../DEPLOYMENT.md), [мониторинг](../MONITORING.md) |
 | Редактор базы | [Качество и источники](DATA_QUALITY.md) |
 | История | [Изменения](../CHANGELOG.md) |
 
