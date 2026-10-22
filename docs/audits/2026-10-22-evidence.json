@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-22",
+  "baselineCommit": "9c217ba790c0f3e4d025020f2e268d7ddc49d222",
+  "primaryProductUrl": "https://t.me/RPL30_bot?startapp",
+  "scope": "code, isolated integration, source validators, selected live desktop flows",
+  "runtime": {
+    "localNode": "24.19.0",
+    "ciNode": "22",
+    "productionHost": "Jino"
+  },
+  "checks": {
+    "unitTests": {
+      "passed": 147,
+      "failed": 0
+    },
+    "integration": "all scenarios passed",
+    "typescript": "passed",
+    "productionBuild": "passed",
+    "lint": {
+      "errors": 0,
+      "warnings": 3
+    },
+    "prismaValidation": [
+      "sqlite",
+      "mysql",
+      "postgresql"
+    ],
+    "productionDependencyAudit": {
+      "critical": 0,
+      "high": 0,
+      "moderate": 0,
+      "low": 0
+    },
+    "fullDependencyAudit": {
+      "critical": 0,
+      "highPackageEntries": 5,
+      "underlyingAdvisory": "GHSA-vfj7-8cjw-p6xm",
+      "scope": "development dependency chain"
+    }
+  },
+  "productionSnapshot": {
+    "at": "2026-10-22T13:07:14Z",
+    "beforeAuditDraft": true,
+    "health": "ok",
+    "database": "connected",
+    "responseTimeMs": 18,
+    "clubs": 39,
+    "players": 3462,
+    "playerSeasons": 9642,
+    "seasons": 20,
+    "range": "2006-2025",
+    "gameRuns": 251,
+    "users": 20
+  },
+  "sourceCards": {
+    "2006-2009": 1805,
+    "2010-2018": 4991,
+    "2019-2021": 1165,
+    "2022-2025": 1680,
+    "total": 9641,
+    "appliedDuringAudit": false
+  },
+  "legacyJsonAudit": {
+    "records": 9923,
+    "uniqueIdentitiesWithinLegacySet": 1604,
+    "clubSeasonPairs": 432,
+    "errors": 40,
+    "warnings": 0,
+    "isProductionDatabaseAudit": false
+  },
+  "deployment": {
+    "runId": 39422911389,
+    "quality": "success",
+    "integration": "success",
+    "build": "success",
+    "sshUpload": "failure",
+    "productionVerify": "skipped",
+    "baselineInstalledConfirmed": false
+  },
+  "limitations": [
+    "No production data import or duplicate merge",
+    "No real-device Telegram notification delivery confirmation",
+    "No two-device multiplayer match",
+    "No native mobile or full accessibility audit",
+    "No load test or penetration test",
+    "No full manual review of player names"
+  ]
+}
