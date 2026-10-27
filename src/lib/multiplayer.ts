@@ -27,8 +27,21 @@ export async function syncLobbyCountdown(code: string) {
 }
 
 export async function publicRoom(code: string, userId: string) {
-  const room = await db.multiplayerRoom.findUnique({ where: { code }, include: {
-    seats: { orderBy: { joinedAt: 'asc' }, include: { run: { include: { slots: { orderBy: { slotPosition: 'asc' } } } } } },
+  const room = await db.multiplayerRoom.findUnique({ where: { code }, select: {
+    code: true, status: true, draftStartAt: true, maxPlayers: true, ratingMode: true,
+    seriesTargetWins: true, seriesRound: true, seriesScoreJson: true, seriesWinnerKey: true,
+    nextRoomCode: true, eraStartYear: true, eraEndYear: true, eraFilter: true,
+    draftMode: true, showRatings: true, hostUserId: true, resultJson: true,
+    // Neither archived series JSON nor each run's seasonResultJson is needed
+    // for polling. Finished squads use their immutable slot snapshots.
+    seats: { orderBy: { joinedAt: 'asc' }, select: {
+      id: true, userId: true, name: true, formation: true, ready: true, forfeited: true,
+      seriesMemberKey: true, isBot: true, pickDeadline: true, resultViewedAt: true, pendingSpinJson: true,
+      run: { select: { id: true, formation: true, completed: true, rerollsTotal: true, rerollsUsed: true,
+        wins: true, draws: true, losses: true, points: true, overallRating: true,
+        slots: { orderBy: { slotPosition: 'asc' } },
+      } },
+    } },
   } });
   if (!room || !room.seats.some(seat => seat.userId === userId)) return null;
   const own = room.seats.find(seat => seat.userId === userId);

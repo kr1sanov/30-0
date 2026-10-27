@@ -1,18 +1,24 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { purgeExpiredProfiles } from '@/lib/profileDeletion';
+import { cachedValue } from '@/lib/asyncWork';
+
+const counts = cachedValue(async () => {
+  const [clubs, players, seasons, playerSeasons, gameRuns, users] = await Promise.all([
+    db.club.count(), db.player.count({ where: { mergedIntoId: null } }), db.season.count(),
+    db.playerSeason.count(), db.gameRun.count(), db.user.count(),
+  ]);
+  return { clubs, players, seasons, playerSeasons, gameRuns, users };
+}, 15_000);
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const startTime = Date.now();
 
   try {
-    await purgeExpiredProfiles();
-    const clubCount = await db.club.count();
-    const playerCount = await db.player.count({where:{mergedIntoId:null}});
-    const seasonCount = await db.season.count();
-    const playerSeasonCount = await db.playerSeason.count();
-    const gameRunCount = await db.gameRun.count();
-    const userCount = await db.user.count();
+    // Always probe the database, even when aggregate counters are cached.
+    await db.$queryRaw`SELECT 1`;
+    const stats = await counts();
 
     const responseTime = Date.now() - startTime;
 
@@ -20,18 +26,12 @@ export async function GET() {
       status: 'ok',
       database: 'connected',
       version: process.env.NODE_ENV || 'development',
+      revision: process.env.APP_REVISION || 'unversioned',
       responseTime: `${responseTime}ms`,
       timestamp: new Date().toISOString(),
-      stats: {
-        clubs: clubCount,
-        players: playerCount,
-        playerSeasons: playerSeasonCount,
-        seasons: seasonCount,
-        gameRuns: gameRunCount,
-        users: userCount,
-      },
-    });
-  } catch (error) {
+      stats,
+    }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch {
     const responseTime = Date.now() - startTime;
 
     return NextResponse.json(
@@ -40,9 +40,9 @@ export async function GET() {
         database: 'disconnected',
         responseTime: `${responseTime}ms`,
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: 'Database temporarily unavailable',
       },
-      { status: 500 },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }
 }

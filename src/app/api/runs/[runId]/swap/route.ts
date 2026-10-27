@@ -1,3 +1,4 @@
+import { DraftConflict } from '@/lib/draftSelection';
 import { db } from '@/lib/db';
 import { canFillSlotStrict } from '@/lib/positions';
 import type { Position } from '@/lib/positions';
@@ -64,6 +65,7 @@ export async function POST(
     // Save original data for swapping — include ALL fields
     const fromData = {
       playerSeasonId: fromSlot.playerSeasonId,
+      playerSeasonYear: fromSlot.playerSeasonYear,
       playerName: fromSlot.playerName,
       playerLastName: fromSlot.playerLastName,
       playerRating: fromSlot.playerRating,
@@ -75,6 +77,7 @@ export async function POST(
 
     const toData = {
       playerSeasonId: toSlot.playerSeasonId,
+      playerSeasonYear: toSlot.playerSeasonYear,
       playerName: toSlot.playerName,
       playerLastName: toSlot.playerLastName,
       playerRating: toSlot.playerRating,
@@ -126,37 +129,22 @@ export async function POST(
       }
     }
 
-    // Swap in database — use a transaction to ensure atomicity
-    await db.$transaction([
-      db.gameSlot.update({
-        where: { id: fromSlot.id },
-        data: {
-          playerSeasonId: toData.playerSeasonId,
-          playerName: toData.playerName,
-          playerLastName: toData.playerLastName,
-          playerRating: toData.playerRating,
-          playerPrimeRating: toData.playerPrimeRating,
-          playerPosition: toData.playerPosition,
-          playerOtherPositions: toData.playerOtherPositions,
-          playerNationality: toData.playerNationality,
-          isCompatible: true, // Strict matching — always full compatibility
-        },
-      }),
-      db.gameSlot.update({
-        where: { id: toSlot.id },
-        data: {
-          playerSeasonId: fromData.playerSeasonId,
-          playerName: fromData.playerName,
-          playerLastName: fromData.playerLastName,
-          playerRating: fromData.playerRating,
-          playerPrimeRating: fromData.playerPrimeRating,
-          playerPosition: fromData.playerPosition,
-          playerOtherPositions: fromData.playerOtherPositions,
-          playerNationality: fromData.playerNationality,
-          isCompatible: true, // Strict matching — always full compatibility
-        },
-      }),
-    ]);
+    // Reject stale snapshots rather than overwrite a concurrent pick or move.
+    await db.$transaction(async tx => {
+      const locked = await tx.gameRun.updateMany({ where: { id: runId, completed: false }, data: { rerollsUsed: { increment: 0 } } });
+      if (!locked.count) throw new DraftConflict('Драфт уже завершён');
+      if (multiplayerSeat) {
+        const active = await tx.multiplayerSeat.findFirst({ where: { id: multiplayerSeat.id,
+          pickDeadline: { gt: new Date() }, room: { status: 'drafting' } }, select: { id: true } });
+        if (!active) throw new DraftConflict('Время драфта истекло');
+      }
+      const moved = await tx.gameSlot.updateMany({ where: { id: fromSlot.id, ...fromData }, data: { ...toData, isCompatible: true } });
+      if (!moved.count) throw new DraftConflict('Состав изменился. Повтори перемещение');
+      if (toSlot.id !== fromSlot.id) {
+        const replaced = await tx.gameSlot.updateMany({ where: { id: toSlot.id, ...toData }, data: { ...fromData, isCompatible: true } });
+        if (!replaced.count) throw new DraftConflict('Состав изменился. Повтори перемещение');
+      }
+    });
 
     // Return the updated run
     const updatedRun = await db.gameRun.findUnique({
@@ -166,6 +154,7 @@ export async function POST(
 
     return NextResponse.json(updatedRun);
   } catch (error) {
+    if (error instanceof DraftConflict) return NextResponse.json({ error: error.message }, { status: 409 });
     console.error('Failed to swap slots:', error);
     return NextResponse.json(
       { error: 'Failed to swap slots' },

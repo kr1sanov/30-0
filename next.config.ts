@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
+const candidateRevision = process.env.APP_REVISION || process.env.GITHUB_SHA || '';
 const nextConfig: NextConfig = {
+  // Public build identity, inlined into the standalone server for release checks.
+  env: { APP_REVISION: /^[a-f0-9]{40}$/i.test(candidateRevision) ? candidateRevision : 'unversioned' },
   // Use standalone output for Docker deployments
   output: "standalone",
 

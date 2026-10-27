@@ -13,8 +13,8 @@ export const dynamic = 'force-dynamic';
 const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' as const, path: '/' };
 
 export async function GET(request: Request) {
-  await purgeExpiredProfiles();
   const userId = sessionUser(request);
+  if (userId) await purgeExpiredProfiles({ id: userId });
   const user = userId ? await db.user.findUnique({ where: { id: userId } }) : null;
   const siteReferral = new URL(request.url).searchParams.get('ref');
   const safeSiteReferral = siteReferral && /^[a-z0-9]{6,32}$/i.test(siteReferral) ? siteReferral : null;
@@ -58,7 +58,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  await purgeExpiredProfiles();
   if (!sameOrigin(request)) return NextResponse.json({ error: 'Недопустимый источник запроса' }, { status: 403 });
   const limited = enforceRateLimit(request, 'telegram:login', { limit: 15, windowMs: 60_000 });
   if (limited) return limited;
@@ -83,6 +82,7 @@ export async function POST(request: Request) {
           ? verifyLoginWidget(authData, process.env.TELEGRAM_BOT_TOKEN)
           : null;
     if (!verified) return NextResponse.json({ error: 'Не удалось подтвердить вход через Telegram' }, { status: 401 });
+    await purgeExpiredProfiles({ providerId: `telegram_${verified.id}` });
     const data = { firstName: verified.firstName, lastName: verified.lastName ?? null, username: verified.username ?? null,
       ...(verified.photoUrl ? { photoUrl: verified.photoUrl } : {}) };
     // Telegram signs start_param inside initData. Only attribute a referral after

@@ -65,21 +65,8 @@ try {
     }
     throw new Error('Обнаружен неполный исторический импорт; требуется ручная проверка');
   }
-  const recentRuns = await db.gameRun.count({ where: {
-    completed: false, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-  } });
-  const preserveLegacy = recentRuns > 0;
-  if (preserveLegacy) {
-    const legacy = await Promise.all([
-      db.season.count(), db.club.count(), db.clubSeason.count(),
-      db.player.count(), db.playerSeason.count(),
-    ]);
-    if (JSON.stringify(legacy) !== JSON.stringify([1, 16, 16, 469, 469])) {
-      throw new Error(`Активные драфты с неожиданным составом старой базы: ${legacy.join('/')}`);
-    }
-    console.log(`Preserving the 2009 archive for ${recentRuns} recent unfinished drafts.`);
-  }
-
+  // Add this period without resetting rosters, identities or manual edits from
+  // other imports. An incomplete overlapping import above still fails closed.
   const backup = {
     clubs: await db.club.findMany(), seasons: await db.season.findMany(),
     clubSeasons: await db.clubSeason.findMany(), players: await db.player.findMany(),
@@ -90,53 +77,28 @@ try {
   console.log(`Private backup saved: ${backupPath}`);
 
   await db.$transaction(async tx => {
-    if (!preserveLegacy) {
-      await tx.playerSeason.deleteMany();
-      await tx.clubSeason.deleteMany();
-      await tx.player.deleteMany();
-      await tx.club.deleteMany();
-      await tx.season.deleteMany();
-    }
-
     await tx.season.createMany({ data: years.map(year => ({
       id: `rpl-${year}`, startYear: year, endYear: year, label: String(year), matchesPerTeam: 30,
     })) });
-    const existingClubs = preserveLegacy
-      ? new Map((await tx.club.findMany()).map(c => [c.id, c]))
-      : new Map();
+    const existingClubs = new Map((await tx.club.findMany()).map(c => [c.id, c]));
     await tx.club.createMany({ data: clubEntries.filter(([id]) => !existingClubs.has(`fifaindex-club-${id}`)).map(([id, c]) => ({
       id: `fifaindex-club-${id}`, nameRu: c.canonicalName, nameEn: c.canonicalName,
     })) });
-    for (const [id, club] of clubEntries) {
-      const old = existingClubs.get(`fifaindex-club-${id}`);
-      if (old && (old.nameRu !== club.canonicalName || old.nameEn !== club.canonicalName || old.logoUrl)) {
-        await tx.club.update({ where: { id: old.id }, data: {
-          nameRu: club.canonicalName, nameEn: club.canonicalName, logoUrl: null,
-        } });
-      }
-    }
     await tx.clubSeason.createMany({ data: seasons.flatMap(s => s.clubs.map(c => ({
       id: `rpl-${s.year}-club-${c.sourceClubId}`, clubId: `fifaindex-club-${c.sourceClubId}`,
       seasonId: `rpl-${s.year}`, sourceName: c.sourceName,
     }))) });
-    const existingPlayers = preserveLegacy
-      ? new Map((await tx.player.findMany()).map(p => [p.id, p]))
-      : new Map();
+    const existingPlayers = new Map((await tx.player.findMany()).map(p => [p.id, p]));
+    if (playerEntries.some(([id]) => existingPlayers.get(`fifaindex-player-${id}`)?.mergedIntoId)) {
+      throw new Error('Source identities already merged; review mappings before adding historical cards');
+    }
     for (let offset = 0; offset < playerEntries.length; offset += 100) {
       await tx.player.createMany({ data: playerEntries.slice(offset, offset + 100)
         .filter(([id]) => !existingPlayers.has(`fifaindex-player-${id}`)).map(([id, p]) => ({
         id: `fifaindex-player-${id}`, fullName: p.canonicalName,
-        lastName: p.canonicalName,
+        lastName: p.canonicalName === 'Vagner Love' ? p.canonicalName : p.canonicalName.split(' ').at(-1),
         nationality: cards.find(c => c.player.sourcePlayerId === id)?.player.nationality ?? null,
       })) });
-    }
-    for (const [id, player] of playerEntries) {
-      const old = existingPlayers.get(`fifaindex-player-${id}`);
-      if (old && (old.fullName !== player.canonicalName || old.lastName !== player.canonicalName)) {
-        await tx.player.update({ where: { id: old.id }, data: {
-          fullName: player.canonicalName, lastName: player.canonicalName,
-        } });
-      }
     }
     for (let offset = 0; offset < cards.length; offset += 100) {
       await tx.playerSeason.createMany({ data: cards.slice(offset, offset + 100).map(({ year, club, player: p }) => ({

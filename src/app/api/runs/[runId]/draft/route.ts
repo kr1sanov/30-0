@@ -1,3 +1,4 @@
+import { DraftConflict } from '@/lib/draftSelection';
 import { getRosterPositions } from '@/lib/rosterPositions';
 import { db } from '@/lib/db';
 import { canFillSlotStrict } from '@/lib/positions';
@@ -84,28 +85,11 @@ export async function POST(
       );
     }
 
-    // Check unique person rule by ID. Distinct people may share a name.
-    const draftedSlots = run.slots.filter((s) => s.playerSeasonId);
-    const draftedPlayerSeasons = await db.playerSeason.findMany({
-      where: { id: { in: draftedSlots.map((s) => s.playerSeasonId!).filter(Boolean) } },
-      select: { playerId: true },
-    });
-    if (draftedPlayerSeasons.some((s) => s.playerId === playerSeason.playerId)) {
-      return NextResponse.json(
-        { error: 'This player has already been drafted (unique person rule)' },
-        { status: 400 },
-      );
-    }
-
-    // Check if this specific playerSeason is already drafted
-    const alreadyDraftedSeason = draftedSlots.find(
-      (s) => s.playerSeasonId === playerSeasonId,
-    );
-    if (alreadyDraftedSeason) {
-      return NextResponse.json(
-        { error: 'This player season has already been drafted' },
-        { status: 400 },
-      );
+    const year = playerSeason.clubSeason.season.startYear;
+    if (playerSeason.player.mergedIntoId ||
+      (run.clubFilter ? playerSeason.clubSeason.clubId !== run.clubFilter : year < run.eraStartYear || year > run.eraEndYear) ||
+      (run.nationalityFilter && (playerSeason.nationality ?? playerSeason.player.nationality) !== run.nationalityFilter)) {
+      return NextResponse.json({ error: 'Игрок не соответствует условиям этого драфта' }, { status: 400 });
     }
 
     // Use the same advertised roles as the wheel, card and pitch.
@@ -130,10 +114,19 @@ export async function POST(
 
     // Update the game slot with player info — including otherPositions, nationality and primeRating
     await db.$transaction(async (tx) => {
+      // Serialize picks on the run before checking uniqueness. Two requests for
+      // different slots must not draft the same person from different seasons.
+      const locked = await tx.gameRun.updateMany({ where: { id: runId, completed: false }, data: { rerollsUsed: { increment: 0 } } });
+      if (!locked.count) throw new DraftConflict('Драфт уже завершён');
+      const occupied = await tx.gameSlot.findMany({ where: { runId, playerSeasonId: { not: null } }, select: { playerSeasonId: true } });
+      const duplicate = occupied.length && await tx.playerSeason.findFirst({
+        where: { id: { in: occupied.map(slot => slot.playerSeasonId!) }, playerId: playerSeason.playerId }, select: { id: true },
+      });
+      if (duplicate) throw new DraftConflict('Этот игрок уже выбран');
       if (multiplayerSeat) {
         const claimed = await tx.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id,
           pendingSpinJson: multiplayerSeat.pendingSpinJson, ready: false, pickDeadline: { gt: new Date() }, room: { status: 'drafting' } }, data: { pendingSpinJson: null } });
-        if (!claimed.count) throw new Error('Результат прокрута уже использован');
+        if (!claimed.count) throw new DraftConflict('Результат прокрута уже использован');
       }
       const placed = await tx.gameSlot.updateMany({
         where: { id: slot.id, playerSeasonId: null }, data: {
@@ -149,7 +142,7 @@ export async function POST(
         isCompatible,
         },
       });
-      if (!placed.count) throw new Error('Позиция уже занята');
+      if (!placed.count) throw new DraftConflict('Позиция уже занята');
     });
 
     // Return updated run with slots
@@ -160,6 +153,7 @@ export async function POST(
 
     return NextResponse.json(updatedRun);
   } catch (error) {
+    if (error instanceof DraftConflict) return NextResponse.json({ error: error.message }, { status: 409 });
     console.error('Failed to draft player:', error);
     return NextResponse.json(
       { error: 'Failed to draft player' },

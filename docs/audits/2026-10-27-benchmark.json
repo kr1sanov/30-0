@@ -1,0 +1,20 @@
+{
+  "database": "local SQLite, imported source cards",
+  "iterations": 7,
+  "includesHttpOrNetworkLatency": false,
+  "results": {
+    "before": {
+      "medianQueryMs": 303.33,
+      "serializedBytes": 6321769,
+      "clubSeasons": 320,
+      "cards": 9641
+    },
+    "after": {
+      "medianQueryMs": 149.31,
+      "serializedBytes": 2214026,
+      "clubSeasons": 320,
+      "cards": 9641
+    }
+  },
+  "payloadReductionPercent": 65
+}

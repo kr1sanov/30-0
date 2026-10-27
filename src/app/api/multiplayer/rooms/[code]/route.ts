@@ -25,35 +25,39 @@ export async function GET(request: Request, { params }: Context) {
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });
   const { code } = await params;
-  const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } } });
+  const authorized = await db.multiplayerSeat.findUnique({ where: { roomCode_userId: { roomCode: code.toUpperCase(), userId } }, select: { id: true, room: { select: { status: true } } } });
   if (!authorized) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
-  await syncLobbyCountdown(code.toUpperCase());
-  await db.multiplayerSeat.update({ where: { id: authorized.id }, data: { lastSeenAt: new Date() } });
-  const allReady = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false, room: { status: 'drafting' } } }) === 0;
-  if (allReady) {
-    const deadline = new Date(Date.now() + 10_000);
-    await db.multiplayerSeat.updateMany({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: deadline } },
-      data: { pickDeadline: deadline } });
+  if (authorized.room.status === 'lobby') await syncLobbyCountdown(code.toUpperCase());
+  if (['lobby', 'drafting'].includes(authorized.room.status)) {
+    await db.multiplayerSeat.update({ where: { id: authorized.id }, data: { lastSeenAt: new Date() } });
   }
-  const expired = await db.multiplayerSeat.findMany({ where: { roomCode: code.toUpperCase(),
-    isBot: false, pickDeadline: { lte: new Date() },
-    room: { status: 'drafting' } }, include: { room: true } });
-  for (const seat of expired) {
-    if (!seat.runId) continue;
-    const claimed = await db.multiplayerSeat.updateMany({ where: { id: seat.id, pickDeadline: seat.pickDeadline },
-      data: { pickDeadline: null } });
-    if (!claimed.count) continue;
-    try {
-      const count = await db.gameSlot.count({ where: { runId: seat.runId, playerSeasonId: { not: null } } });
-      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true, forfeited: count < 11, pendingSpinJson: null } });
-    } catch (error) {
-      console.error('Multiplayer auto finish:', error);
-      await db.multiplayerSeat.update({ where: { id: seat.id }, data: { pickDeadline: seat.pickDeadline } });
+  if (authorized.room.status === 'drafting') {
+    const allReady = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false, room: { status: 'drafting' } } }) === 0;
+    if (allReady) {
+      const deadline = new Date(Date.now() + 10_000);
+      await db.multiplayerSeat.updateMany({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: deadline } },
+        data: { pickDeadline: deadline } });
     }
+    const expired = await db.multiplayerSeat.findMany({ where: { roomCode: code.toUpperCase(),
+      isBot: false, pickDeadline: { lte: new Date() },
+      room: { status: 'drafting' } }, include: { room: true } });
+    for (const seat of expired) {
+      if (!seat.runId) continue;
+      const claimed = await db.multiplayerSeat.updateMany({ where: { id: seat.id, pickDeadline: seat.pickDeadline },
+        data: { pickDeadline: null } });
+      if (!claimed.count) continue;
+      try {
+        const count = await db.gameSlot.count({ where: { runId: seat.runId, playerSeasonId: { not: null } } });
+        await db.multiplayerSeat.update({ where: { id: seat.id }, data: { ready: true, forfeited: count < 11, pendingSpinJson: null } });
+      } catch (error) {
+        console.error('Multiplayer auto finish:', error);
+        await db.multiplayerSeat.update({ where: { id: seat.id }, data: { pickDeadline: seat.pickDeadline } });
+      }
+    }
+    const waiting = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false } });
+    const activeClocks = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: new Date() } } });
+    if (!waiting && !activeClocks) await resolveRoom(code.toUpperCase()).catch(error => console.error('Multiplayer resolve:', error));
   }
-  const waiting = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), ready: false } });
-  const activeClocks = await db.multiplayerSeat.count({ where: { roomCode: code.toUpperCase(), isBot: false, pickDeadline: { gt: new Date() } } });
-  if (!waiting && !activeClocks) await resolveRoom(code.toUpperCase()).catch(error => console.error('Multiplayer resolve:', error));
   const room = await publicRoom(code.toUpperCase(), userId);
   if (!room) return NextResponse.json({ error: 'Комната недоступна' }, { status: 404 });
   const response = NextResponse.json(room, { headers: { 'Cache-Control': 'no-store' } });

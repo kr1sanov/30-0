@@ -60,3 +60,7 @@
 Зафиксируйте commit, успешные quality/integration/build/upload/verify, статус health и smoke-проход ключевого сценария. Для изменений Telegram отдельно проверьте тестовую доставку. Для схемы — резервную копию и сохранение идентификаторов/истории. В отчёте различайте «код в main», «сборка готова» и «релиз установлен».
 
 [Актуальный статус](PROJECT_STATUS.md) · [Аудит](docs/audits/2026-10-22.md) · [Разработка](DEVELOPMENT.md)
+
+## Дополнение 27 октября: обслуживание профилей
+
+`profile-retention.yml` выполняет `scripts/profile-retention.mjs` через отдельный POST `/api/maintenance/profiles` с `X-30-0-Worker`. Используются уже настроенные `TELEGRAM_SERVERLESS_BRIDGE_SECRET` либо производный секрет из `TGCLOUD_TOKEN`; если они не заданы, workflow явно завершается ошибкой. Публичный health больше не запускает очистку. Поле `revision` health содержит git SHA, встроенный при CI build через `GITHUB_SHA`. При приёмке сверяйте его с коммитом релиза.

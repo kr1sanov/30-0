@@ -11,13 +11,12 @@ export async function GET() {
       orderBy: [
         { points: 'desc' },
         { position: 'asc' },
+        { id: 'asc' },
       ],
       take: 50,
-      include: {
-        slots: {
-          where: { playerSeasonId: { not: null } },
-          orderBy: { slotPosition: 'asc' },
-        },
+      select: {
+        id: true, formation: true, difficulty: true, overallRating: true,
+        points: true, position: true, createdAt: true,
       },
     });
 
