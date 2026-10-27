@@ -172,7 +172,10 @@ jobs:
   # ─── Stage 3: Deploy (only on push to main) ───
   deploy:
     name: Deploy to Jino
-    runs-on: ubuntu-latest
+    # The Ubuntu runner repeatedly times out reaching Jino SSH. Transfer the
+    # Linux-built artifact from an independent runner network; do not rebuild
+    # native dependencies on this runner.
+    runs-on: macos-latest
     needs: [build, integration]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment: production
@@ -301,7 +304,7 @@ jobs:
           echo "Static files count: $(find deploy-package/.next/standalone/.next/static/ -type f 2>/dev/null | wc -l)"
 
           # Create tarball
-          cd deploy-package && tar -czf ../deploy.tar.gz . && cd ..
+          cd deploy-package && COPYFILE_DISABLE=1 tar -czf ../deploy.tar.gz . && cd ..
           rm -f deploy-package/telegram-runtime.env
           echo "Package size: $(du -sh deploy.tar.gz)"
 
