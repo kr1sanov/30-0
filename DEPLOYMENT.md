@@ -64,3 +64,7 @@
 ## Дополнение 27 октября: обслуживание профилей
 
 `profile-retention.yml` выполняет `scripts/profile-retention.mjs` через отдельный POST `/api/maintenance/profiles` с `X-30-0-Worker`. Используются уже настроенные `TELEGRAM_SERVERLESS_BRIDGE_SECRET` либо производный секрет из `TGCLOUD_TOKEN`; если они не заданы, workflow явно завершается ошибкой. Публичный health больше не запускает очистку. Поле `revision` health содержит git SHA, встроенный при CI build через `GITHUB_SHA`. При приёмке сверяйте его с коммитом релиза.
+
+## SSH-сеть runner · 27 октября
+
+Проверки и production build остаются на Ubuntu/Linux. Job передачи на Jino использует `macos-latest` как независимую сеть после повторных таймаутов Ubuntu runner. Он скачивает готовый Linux standalone artifact, упаковывает и передаёт его; нативные зависимости на macOS не пересобираются. Ключ, пользователь, SSH-порт, проверки и rollback Jino остаются прежними. Это изменение сети отправителя не гарантирует доступность хостинга; итог проверяется по upload и revision.
