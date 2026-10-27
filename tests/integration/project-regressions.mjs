@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
+import { readFileSync } from 'node:fs';
 if (!process.env.DATABASE_URL?.includes('30-0-regression')) throw new Error('An isolated regression database is required');
 const base = process.env.REGRESSION_BASE_URL || 'http://127.0.0.1:3400';
 if (!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(base)) throw new Error('Local server required');
@@ -30,6 +31,22 @@ try {
     server.stdout.on('data', data => { if (data.toString().includes('Ready')) { clearTimeout(timeout); resolve(); } });
   });
   for (const model of ['moderationAction','telegramOutbox','gameSlot','multiplayerSeat','multiplayerRoom','gameRun','playerSeason','player','clubSeason','season','club','adminCredential','appSetting','user']) await db[model].deleteMany();
+  // Importing an older period must never wipe another edition or manual data.
+  await db.season.create({data:{id:'qa-preserve-season',startYear:2001,endYear:2001,label:'2001'}});
+  await db.club.create({data:{id:'qa-preserve-club',nameRu:'Ручной клуб'}});
+  await db.clubSeason.create({data:{id:'qa-preserve-cs',clubId:'qa-preserve-club',seasonId:'qa-preserve-season'}});
+  await db.player.create({data:{id:'qa-preserve-player',fullName:'Manual Player',lastName:'Player',aliasRu:'Ручное имя'}});
+  await db.playerSeason.create({data:{id:'qa-preserve-card',playerId:'qa-preserve-player',clubSeasonId:'qa-preserve-cs',rating:91,mainPosition:'ВР'}});
+  const sourceIdentity=Object.keys(JSON.parse(readFileSync('docs/research/rpl-2010-2018/registry.json','utf8')).players)[0];
+  await db.player.create({data:{id:`fifaindex-player-${sourceIdentity}`,fullName:'Edited Existing Player',lastName:'Edited',aliasRu:'Ручной псевдоним'}});
+  const importHistory = suffix => execFileSync(process.execPath,['scripts/import-rpl-2010-2018.mjs','--apply',`--backup=/tmp/history-regression-${process.pid}-${Date.now()}-${suffix}.json`],{env:process.env,stdio:'pipe'});
+  importHistory('first'); importHistory('repeat');
+  assert.equal(await db.playerSeason.count(),4992);
+  assert.equal((await db.player.findUnique({where:{id:`fifaindex-player-${sourceIdentity}`}})).fullName,'Edited Existing Player');
+  assert.equal((await db.player.findUnique({where:{id:'qa-preserve-player'}})).aliasRu,'Ручное имя');
+  assert.equal((await db.playerSeason.findUnique({where:{id:'qa-preserve-card'}})).rating,91);
+  console.log('PASS historical import preserves other editions and manual identities');
+  for (const model of ['playerSeason','player','clubSeason','season','club']) await db[model].deleteMany();
   const runImport = suffix => execFileSync(process.execPath, ['scripts/import-rpl-2022-2025.mjs', '--apply', `--backup=/tmp/roster-regression-${process.pid}-${Date.now()}-${suffix}.json`], { env: process.env, stdio: 'pipe' });
   runImport('initial');
   const sourceCard = await db.playerSeason.findFirstOrThrow();
@@ -53,6 +70,21 @@ try {
       for(const year of years) await db.playerSeason.create({data:{id:`qa-ps-${club}-${year}-${i}`,playerId:`qa-p-${club}-${i}`,clubSeasonId:`qa-cs-${club}-${year}`,rating:75+i%10,primeRating:85+i%5,mainPosition:positions[i%12]}});
     }
   }
+  await db.user.create({data:{id:'qa-expired-profile',providerId:'telegram_999900',deleteAfterAt:new Date(Date.now()-1000)}});
+  await db.gameRun.create({data:{id:'qa-expired-run',userId:'qa-expired-profile'}});
+  const health=await fetch(base+'/api/health'); assert.equal(health.status,200);
+  await fetch(base+'/api/auth/telegram');
+  assert.ok(await db.user.findUnique({where:{id:'qa-expired-profile'}}));
+  assert.ok(await db.gameRun.findUnique({where:{id:'qa-expired-run'}}));
+  const maintenance=async secret=>fetch(base+'/api/maintenance/profiles',{method:'POST',headers:{'X-30-0-Worker':secret}});
+  assert.equal((await maintenance('')).status,401);
+  assert.equal((await maintenance('é'.repeat(process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET.length))).status,401);
+  const removed=await maintenance(process.env.TELEGRAM_SERVERLESS_BRIDGE_SECRET); assert.equal(removed.status,200);assert.equal((await removed.json()).deleted,1);
+  assert.equal(await db.user.findUnique({where:{id:'qa-expired-profile'}}),null);
+  assert.equal(await db.gameRun.findUnique({where:{id:'qa-expired-run'}}),null);
+  for(const limit of ['NaN','0','-1','1.5','bad']) await api('/api/runs?limit='+limit,'GET',undefined,false,400);
+  console.log('PASS read-only health, scoped login cleanup, authenticated maintenance and invalid history limits');
+
   const clubs=await api('/api/clubs');
   // The mode endpoint wraps candidates in {clubs}.
   assert.ok(JSON.stringify(clubs).includes('qa-club-0'));
@@ -127,6 +159,38 @@ try {
   const classicClean = await api('/api/runs','POST',{gameMode:'classic',formation:'4-3-3',teamName:'Команда Вагнера'},false,201);
   assert.ok(classicClean.teamName !== 'Команда Вагнера');
   console.log('PASS latest empty one-club draft, exact save identity, prime mode and mode name isolation');
+  // Duplicate identity and mode restrictions are enforced by the server.
+  const draftRun=await api('/api/runs','POST',{gameMode:'single_club',clubFilter:'qa-club-0',formation:'4-3-3'},false,201);
+  await api(`/api/runs/${draftRun.id}/draft`,'POST',{playerSeasonId:'qa-ps-1-2025-6',slotPosition:'ЦП_5'},false,400);
+  await api(`/api/runs/${draftRun.id}/draft`,'POST',{playerSeasonId:'qa-ps-0-2025-6',slotPosition:'ЦП_5'});
+  await api(`/api/runs/${draftRun.id}/draft`,'POST',{playerSeasonId:'qa-ps-0-2024-6',slotPosition:'ЦП_6'},false,409);
+  const rolled=await api(`/api/runs/${draftRun.id}/spin`,'POST');
+  assert.ok(rolled.players.length);
+  assert.ok(rolled.players.every(p=>!p.playerSeasonId.endsWith('-6')));
+  const rerolled=await api(`/api/runs/${draftRun.id}/reroll`,'POST');assert.equal(rerolled.rerollsUsed,1);
+  await api(`/api/runs/${draftRun.id}/reroll`,'POST',{},false,400);
+  console.log('PASS shared spin pool, unique identity, club restriction and reroll accounting');
+  const moved=await api(`/api/runs/${draftRun.id}/swap`,'POST',{fromSlotPosition:'ЦП_5',toSlotPosition:'ЦП_6'});
+  assert.equal(moved.slots.find(s=>s.slotPosition==='ЦП_6').playerSeasonYear,2025);
+  assert.equal(moved.slots.find(s=>s.slotPosition==='ЦП_5').playerSeasonYear,null);
+  const racing=await api('/api/runs','POST',{gameMode:'single_club',clubFilter:'qa-club-0',formation:'4-3-3'},false,201);
+  const racePick=(card,slot)=>fetch(base+`/api/runs/${racing.id}/draft`,{method:'POST',headers:{cookie,origin:base,'Content-Type':'application/json'},body:JSON.stringify({playerSeasonId:card,slotPosition:slot})});
+  const races=await Promise.all([racePick('qa-ps-0-2025-6','ЦП_5'),racePick('qa-ps-0-2024-6','ЦП_6')]);
+  assert.deepEqual(races.map(r=>r.status).sort(),[200,409]);
+  assert.equal(await db.gameSlot.count({where:{runId:racing.id,playerSeasonId:{not:null}}}),1);
+  const mp=await api('/api/runs','POST',{gameMode:'classic',formation:'4-3-3'},false,201);
+  await db.multiplayerRoom.create({data:{code:'QAROLL',hostUserId:'qa-host',status:'drafting',seatCount:1,seats:{create:{id:'qa-reroll-seat',userId:'qa-host',runId:mp.id,name:'Reroll QA',pickDeadline:new Date(Date.now()+60000)}}}});
+  await db.gameRun.update({where:{id:mp.id},data:{rerollsTotal:3}});
+  await api(`/api/runs/${mp.id}/spin`,'POST');
+  const mpRoll=await api(`/api/runs/${mp.id}/reroll`,'POST');
+  assert.deepEqual(await api(`/api/runs/${mp.id}/spin`,'POST'),mpRoll);
+  await db.multiplayerSeat.update({where:{id:'qa-reroll-seat'},data:{ready:true}});
+  await api(`/api/runs/${mp.id}/reroll`,'POST',{},false,409);
+  assert.equal((await db.gameRun.findUnique({where:{id:mp.id}})).rerollsUsed,1);
+  await db.multiplayerRoom.delete({where:{code:'QAROLL'}});
+  console.log('PASS concurrent unique picks, year-preserving swaps and atomic multiplayer reroll rollback');
+
+
   const simulation=await db.gameRun.create({data:{id:'qa-simulation',userId:'qa-host',teamName:'QA XI',eraStartYear:2025,eraEndYear:2025,
     slots:{create:positions.slice(0,11).map((position,i)=>({slotPosition:`${position}_${i}`,playerSeasonId:`qa-ps-0-2025-${i}`,playerName:i===0?'Maksim Borisko':i===6?'Ivan Oblyakov':`QA Player 0-${i}`,playerRating:85,playerPrimeRating:90,playerPosition:position}))}}});
   const season=await api(`/api/runs/${simulation.id}/simulate`,'POST',{});
@@ -143,6 +207,11 @@ try {
   assert.ok(past.players.every(p=>p.rating===90));
   assert.ok(past.playerStats.filter(p=>p.team==='Club 1').every(p=>p.name.includes('QA') || p.name==='Тереховский Игнат'));
   console.log('PASS real historical opponents, selected club identity, prime ratings and scorer/assist totals');
+  const publicLeaders=await (await fetch(base+'/api/leaderboard')).json();
+  assert.ok(publicLeaders.length);
+  for(const row of publicLeaders) assert.deepEqual(Object.keys(row).sort(),['id','formation','difficulty','overallRating','points','position','createdAt'].sort());
+  console.log('PASS leaderboard exposes only the public result summary');
+
 
 
   // A real timeout must preserve the unfinished XI and record technical defeats.

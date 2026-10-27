@@ -1,7 +1,9 @@
 'use client';
 import { translateClient } from '@/lib/enTranslations';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { serialRefresh } from '@/lib/asyncWork';
 import { motion } from 'framer-motion';
 import { useAutoAuth } from '@/hooks/use-telegram-auth';
 import { useAuthStore } from '@/store/authStore';
@@ -23,18 +25,23 @@ type Menu = {
 };
 
 async function json<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
-  const response = await fetch(path, {
-    method, cache: 'no-store',
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  const data = await response.json();
-  if (!response.ok) throw Object.assign(new Error(data.error || 'Ошибка соединения'), { status: response.status });
-  return data as T;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(path, {
+      method, cache: 'no-store', signal: controller.signal,
+      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await response.json();
+    if (!response.ok) throw Object.assign(new Error(data.error || 'Ошибка соединения'), { status: response.status });
+    return data as T;
+  } finally { clearTimeout(timeout); }
 }
 
 export default function MultiplayerPage() {
   useAutoAuth();
+  const router = useRouter();
   const { user, _hasHydrated } = useAuthStore();
   const [name, setName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -110,7 +117,7 @@ export default function MultiplayerPage() {
   }, [user]);
 
   const refreshVersion = useRef(0);
-  const refresh = useCallback(async () => {
+  const refreshRoom = useMemo(() => serialRefresh(async () => {
     if (!code || document.hidden) return;
     const version = ++refreshVersion.current;
     try {
@@ -119,8 +126,12 @@ export default function MultiplayerPage() {
       setRoom(value);
       if (value.status === 'completed') setSpin(null);
       else if (value.status === 'drafting') setSpin(value.pendingSpin);
-    } catch (error) { if (currentRoomCode.current === code) setError((error as Error).message); }
-  }, [code]);
+    } catch (error) { if (currentRoomCode.current === code && version === refreshVersion.current) setError((error as Error).message); }
+  }), [code]);
+  const refresh = useCallback((fresh = false) => {
+    if (fresh) refreshVersion.current++;
+    return refreshRoom(fresh);
+  }, [refreshRoom]);
 
   useEffect(() => {
     if (!code) return;
@@ -145,7 +156,7 @@ export default function MultiplayerPage() {
     startedCountdown.current = key;
     void json(`/api/multiplayer/rooms/${code}/start`, 'POST')
       .catch(() => { startedCountdown.current = ''; })
-      .finally(() => void refresh());
+      .finally(() => void refresh(true));
   }, [code, room?.status, room?.draftStartAt, now, refresh]);
 
   async function action(task: () => Promise<void>): Promise<boolean> {
@@ -208,16 +219,17 @@ export default function MultiplayerPage() {
       seriesTargetWins: room.seriesTargetWins,
       ...changes,
     });
-    await refresh();
+    await refresh(true);
   });
 
   const home = () => {
     if (currentRoomCode.current) sessionStorage.setItem('30-0-room-invite-consumed', currentRoomCode.current);
-    location.href = '/';
+    useGameStore.getState().setScreen('home');
+    router.push('/');
   };
   const profile = () => {
     if (currentRoomCode.current) sessionStorage.setItem('30-0-room-invite-consumed', currentRoomCode.current);
-    useGameStore.getState().setScreen('profile'); location.href = '/';
+    useGameStore.getState().setScreen('profile'); router.push('/');
   };
   const roomChoices = menu?.activeRooms ?? [];
   const invitationList = invitations.length > 0 && <section className={`${card} space-y-3`}><h2 className="font-bold">Приглашения в игру · {invitations.length}</h2>{invitations.map(invite => <div key={invite.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-white/10 p-3"><div className="min-w-0 flex-1"><strong className="block truncate">{invite.from?.username ? `@${invite.from.username}` : invite.from?.displayName || 'Игрок'} приглашает тебя</strong><span className="text-xs text-slate-400">Лобби · {invite.code}</span></div><button onClick={() => void action(async () => { const result = await json<{ code: string }>('/api/multiplayer/invitations', 'PATCH', { id: invite.id, action: 'accept' }); openRoom(result.code); setInvitations(old => old.filter(item => item.id !== invite.id)); })} className="rounded-lg bg-[#00C896] px-3 py-2 text-sm font-bold text-black">Присоединиться</button><button onClick={() => void action(async () => { await json('/api/multiplayer/invitations', 'PATCH', { id: invite.id, action: 'decline' }); setInvitations(old => old.filter(item => item.id !== invite.id)); })} className="rounded-lg border border-white/20 px-3 py-2 text-sm">Отклонить</button></div>)}</section>;
@@ -276,21 +288,21 @@ export default function MultiplayerPage() {
       {code && room?.status === 'closed' && <div role="status" className={`${card} mx-auto max-w-xl text-center`}><h1 className="text-2xl font-bold">Комната закрыта</h1><p className="mt-2 text-[#9CA3AF]">Организатор завершил игру.</p><button onClick={backToMenu} className={`${button} mt-5`}>К выбору игры</button></div>}
       {code && room?.status === 'lobby' && <Lobby room={room} busy={busy} now={now}
         onClose={closeRoom}
-        onSeat={(ready, formation) => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'seat', ready, formation, name }); await refresh(); })}
+        onSeat={(ready, formation) => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'seat', ready, formation, name }); await refresh(true); })}
         onSettings={updateSettings}
-        onBot={() => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'bot' }); await refresh(); })}
-        onRemoveBot={botId => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'remove-bot', botId }); await refresh(); })}/>}
+        onBot={() => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'bot' }); await refresh(true); })}
+        onRemoveBot={botId => void action(async () => { await json(`/api/multiplayer/rooms/${code}`, 'PATCH', { action: 'remove-bot', botId }); await refresh(true); })}/>}
       {code && room?.status === 'drafting' && run && <>
         <h1 className="sr-only">Драфт · комната {room.code}</h1>
         <Draft room={room} run={run} spin={spin} busy={busy} remaining={remaining}
           onSpin={async target => { await action(async () => { setSpin(await json<Spin>(`/api/runs/${run.id}/spin`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined)); }); }}
-          onReroll={async target => { await action(async () => { const next = await json<Spin>(`/api/runs/${run.id}/reroll`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined); setSpin(next); await refresh(); }); }}
-          onPick={(player: Player, slot: Slot) => action(async () => { await json(`/api/runs/${run.id}/draft`, 'POST', { playerSeasonId: player.playerSeasonId, slotPosition: slot.slotPosition }); setSpin(null); await refresh(); })}
-          onMove={(from: Slot, to: Slot) => void action(async () => { await json(`/api/runs/${run.id}/swap`, 'POST', { fromSlotPosition: from.slotPosition, toSlotPosition: to.slotPosition }); await refresh(); })}
-          onSkip={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/skip`, 'POST'); setSpin(null); await refresh(); })} onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/finish`, 'POST'); await refresh(); })}/>
+          onReroll={async target => { await action(async () => { const next = await json<Spin>(`/api/runs/${run.id}/reroll`, 'POST', target ? { targetSlotPosition: target.slotPosition } : undefined); setSpin(next); await refresh(true); }); }}
+          onPick={(player: Player, slot: Slot) => action(async () => { await json(`/api/runs/${run.id}/draft`, 'POST', { playerSeasonId: player.playerSeasonId, slotPosition: slot.slotPosition }); setSpin(null); await refresh(true); })}
+          onMove={(from: Slot, to: Slot) => void action(async () => { await json(`/api/runs/${run.id}/swap`, 'POST', { fromSlotPosition: from.slotPosition, toSlotPosition: to.slotPosition }); await refresh(true); })}
+          onSkip={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/skip`, 'POST'); setSpin(null); await refresh(true); })} onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/finish`, 'POST'); await refresh(true); })}/>
       </>}
       {code && room?.status === 'completed' && <Results room={room} run={run || null}
-        onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/viewed`, 'POST'); await refresh(); })}
+        onFinish={() => void action(async () => { await json(`/api/multiplayer/rooms/${room.code}/viewed`, 'POST'); await refresh(true); })}
         onNext={() => nextRound(room.code)} onReplay={() => rematch(room.code)} onMenu={backToMenu}/>}
       {code && room && !['lobby', 'drafting', 'completed', 'closed'].includes(room.status) && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center text-[#9CA3AF]">Готовим сезон…</motion.p>}
     </div>

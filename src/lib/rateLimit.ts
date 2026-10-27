@@ -1,29 +1,16 @@
 import { NextResponse } from 'next/server';
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
+import { FixedWindowLimit } from './fixedWindowLimit';
 
-interface RateLimitOptions {
-  limit: number;
-  windowMs: number;
-}
-
-const globalRateLimit = globalThis as typeof globalThis & {
-  __rateLimitStore?: Map<string, RateLimitEntry>;
-};
-
-const store = globalRateLimit.__rateLimitStore ?? new Map<string, RateLimitEntry>();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalRateLimit.__rateLimitStore = store;
-}
+interface RateLimitOptions { limit: number; windowMs: number }
+const globalRateLimit = globalThis as typeof globalThis & { __fixedWindowLimit?: FixedWindowLimit };
+const store = globalRateLimit.__fixedWindowLimit ?? new FixedWindowLimit();
+if (process.env.NODE_ENV !== 'production') globalRateLimit.__fixedWindowLimit = store;
 
 function clientAddress(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
-  return request.headers.get('x-real-ip') || 'unknown';
+  if (forwarded) return forwarded.split(',')[0].trim().slice(0, 128);
+  return (request.headers.get('x-real-ip') || 'unknown').slice(0, 128);
 }
 
 export function enforceRateLimit(
@@ -32,20 +19,8 @@ export function enforceRateLimit(
   { limit, windowMs }: RateLimitOptions,
 ): NextResponse | null {
   const now = Date.now();
-  // Drop expired address keys instead of retaining old IPs for the life of
-  // a warm server process.
-  for (const [key, entry] of store) {
-    if (entry.resetAt <= now) store.delete(key);
-  }
-  const key = `${scope}:${clientAddress(request)}`;
-  const current = store.get(key);
-
-  if (!current || current.resetAt <= now) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return null;
-  }
-
-  if (current.count >= limit) {
+  const current = store.consume(`${scope}:${clientAddress(request)}`, { limit, windowMs }, now);
+  if (!current.allowed) {
     const retryAfter = Math.max(1, Math.ceil((current.resetAt - now) / 1000));
     return NextResponse.json(
       { error: 'Too many requests' },
@@ -61,6 +36,5 @@ export function enforceRateLimit(
     );
   }
 
-  current.count += 1;
   return null;
 }

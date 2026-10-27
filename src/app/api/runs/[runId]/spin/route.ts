@@ -1,7 +1,5 @@
-import { getRosterPositions } from '@/lib/rosterPositions';
+import { selectDraftPlayers, DraftConflict } from '@/lib/draftSelection';
 import { db } from '@/lib/db';
-import { filterCompatibleClubSeasons, spinWheel } from '@/lib/wheel';
-import { getClubSeasonOptions } from '@/lib/clubAvailability';
 import { enforceRateLimit } from '@/lib/rateLimit';
 import { authorizeRun } from '@/lib/runAccess';
 import { NextResponse } from 'next/server';
@@ -65,129 +63,16 @@ export async function POST(
       targetSlotPosition = target.slotPosition;
     }
 
-    // Identify people by stable player ID; names can legitimately coincide.
-    const draftedSlots = run.slots.filter((s) => s.playerSeasonId);
-    const draftedPlayerSeasonIds = new Set(
-      draftedSlots.map((s) => s.playerSeasonId).filter(Boolean) as string[],
+    const selection = await selectDraftPlayers(run, openPositions);
+    if (!selection) return NextResponse.json(
+      { error: 'Нет подходящих составов для свободных позиций и выбранных фильтров' }, { status: 400 },
     );
-    const draftedPlayerIds = new Set((await db.playerSeason.findMany({
-      where: { id: { in: [...draftedPlayerSeasonIds] } }, select: { playerId: true },
-    })).map((ps) => ps.playerId));
-
-    const startYear = run.eraStartYear ?? 2006;
-    const endYear = run.eraEndYear ?? 2026;
-
-    // Build the where clause for ClubSeasons
-    // If clubFilter is set (single_club mode), only return club-seasons for that club
-    const clubSeasonWhere: Record<string, unknown> = run.clubFilter
-      ? { clubId: run.clubFilter, players: { some: {} } }
-      : { season: { startYear: { gte: startYear, lte: endYear } } };
-
-    // Get all ClubSeasons with their players for the given era
-    const clubSeasons = await db.clubSeason.findMany({
-      where: clubSeasonWhere,
-      include: {
-        club: true,
-        season: true,
-        players: {
-          include: {
-            player: true,
-          },
-        },
-      },
-    });
-
-    let clubSeasonOptions = getClubSeasonOptions(
-      clubSeasons, openPositions, draftedPlayerIds, draftedPlayerSeasonIds, run.nationalityFilter,
-    );
-    let compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
-
-    // A selected club can have no fresh candidates inside a narrow era after
-    // several picks. Keep the run playable by widening only that club to its
-    // full recorded history. The returned season label makes the chosen era clear.
-    if (compatible.length === 0 && run.clubFilter) {
-      const historicalClubSeasons = await db.clubSeason.findMany({
-        where: { clubId: run.clubFilter },
-        include: { club: true, season: true, players: { include: { player: true } } },
-      });
-      clubSeasonOptions = getClubSeasonOptions(
-        historicalClubSeasons, openPositions, draftedPlayerIds, draftedPlayerSeasonIds, run.nationalityFilter,
-      );
-      compatible = filterCompatibleClubSeasons(openPositions, clubSeasonOptions);
-    }
-
-    if (compatible.length === 0) {
-      // Check if database is empty — give a more helpful error
-      const totalClubs = await db.club.count();
-      if (totalClubs === 0) {
-        return NextResponse.json(
-          { error: 'База данных пуста. Запусти сид: POST /api/seed', needsSeed: true },
-          { status: 503 },
-        );
-      }
-      return NextResponse.json(
-        { error: 'No compatible club-seasons available for the selected era/filters' },
-        { status: 400 },
-      );
-    }
-
-    // Spin the wheel
-    const selected = spinWheel(compatible);
-
-    // Get the full player data for the selected club-season
-    const selectedClubSeason = await db.clubSeason.findUnique({
-      where: { id: selected.clubSeasonId },
-      include: {
-        club: true,
-        season: true,
-        players: {
-          include: {
-            player: true,
-          },
-        },
-      },
-    });
-
-    if (!selectedClubSeason) {
-      return NextResponse.json(
-        { error: 'Selected club-season not found' },
-        { status: 500 },
-      );
-    }
-
-    // Filter players - exclude already drafted, unique person rule, and nationality filter
-    const eligiblePlayers = selectedClubSeason.players.filter((ps) => {
-      if (draftedPlayerSeasonIds.has(ps.id)) return false;
-      if (draftedPlayerIds.has(ps.playerId)) return false;
-      // In nations_cup mode, only include players of the selected nationality
-      if (run.nationalityFilter && (ps.nationality ?? ps.player.nationality) !== run.nationalityFilter) return false;
-      return true;
-    });
-
-    // Build player options — include primeRating and primeSeason for prime mode
-    const players = eligiblePlayers.map((ps) => ({
-      playerSeasonId: ps.id,
-      fullName: ps.player.alias || ps.player.fullName,
-      lastName: ps.player.alias || ps.player.lastName,
-      rating: run.difficulty === 'hard' ? 0 : ps.rating,
-      primeRating: ps.primeRating || ps.rating,
-      primeSeason: ps.primeSeason || selectedClubSeason.season.label,
-      mainPosition: ps.mainPosition,
-      otherPositions: getRosterPositions(ps, selectedClubSeason.club.nameRu, selectedClubSeason.season.startYear).filter(pos => pos !== ps.mainPosition),
-      nationality: ps.nationality ?? ps.player.nationality,
-    }));
-
     const result = {
-      clubSeasonId: selectedClubSeason.id,
-      clubName: selectedClubSeason.season.startYear < 2010
-        ? selectedClubSeason.sourceName || selectedClubSeason.club.nameRu
-        : selectedClubSeason.club.nameRu,
-      seasonLabel: selectedClubSeason.season.label,
-      players,
+      ...selection,
       ...(targetSlotPosition ? { targetSlotPosition } : {}),
     };
     if (multiplayerSeat) {
-      const saved = await db.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id, pendingSpinJson: null, ready: false },
+      const saved = await db.multiplayerSeat.updateMany({ where: { id: multiplayerSeat.id, pendingSpinJson: null, ready: false, pickDeadline: { gt: new Date() }, room: { status: 'drafting' } },
         data: { pendingSpinJson: JSON.stringify(result) } });
       if (!saved.count) {
         const current = await db.multiplayerSeat.findUnique({ where: { id: multiplayerSeat.id } });
@@ -197,6 +82,7 @@ export async function POST(
     }
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof DraftConflict) return NextResponse.json({ error: error.message }, { status: 409 });
     console.error('Failed to spin wheel:', error);
     return NextResponse.json(
       { error: 'Failed to spin wheel' },

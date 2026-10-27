@@ -6,7 +6,7 @@ import { purgeExpiredProfiles } from '@/lib/profileDeletion';
 export async function GET(request: Request) {
   const userId = sessionUser(request);
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  await purgeExpiredProfiles();
+  await purgeExpiredProfiles({ id: userId });
   const user = await db.user.findUnique({ where: { id: userId }, select: { deletionRequestedAt: true, deleteAfterAt: true } });
   if (!user) return NextResponse.json({ error: 'Profile deleted' }, { status: 404 });
   return NextResponse.json({ deleteAfterAt: user.deleteAfterAt?.toISOString() ?? null }, { headers: { 'Cache-Control': 'no-store' } });

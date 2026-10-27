@@ -41,6 +41,6 @@ Next.js 16, React 19, TypeScript, Tailwind CSS 4, Zustand and Prisma 6. Producti
 
 ## Verification and open work
 
-Audit of commit `9c217ba`: 147 tests, all isolated integration scenarios, type checking and a production build passed. ESLint reports three navigation warnings. Production dependencies have no known vulnerabilities in the audit snapshot; a high-severity advisory affects a development dependency chain. The latest deployment failed during SSH upload, so current main is not confirmed installed. [Full audit and limitations](docs/audits/2026-10-22.md).
+Verification after the 27 October refactor: 153 tests, all isolated integration scenarios, lint, type checking and production build passed. Next.js is updated to 16.4.3; the full dependency audit reports no known vulnerabilities at this date. Draft conflicts, rerolls, historical imports and health checks were corrected. The local eligibility-query benchmark reduced the serialized selection by 65%; this is not a production latency claim. Deployment to Jino is verified separately. [Audit, measurements and remaining work](docs/audits/2026-10-27.md).
 
 This is a fan-made game. No source-code redistribution licence has been declared. Club names and marks belong to their respective owners.

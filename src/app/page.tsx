@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { useFootballNames } from '@/hooks/use-football-names';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -285,6 +286,7 @@ function RecentResults() {
 
 /* ─── Home Page (38-0.app style) ─── */
 function HomePage() {
+  const router = useRouter();
   const { setScreen, setConfig, profileStats, runId, slots, config, lastConfig, resumeGame } = useGameStore();
   const { user } = useAuthStore();
   const [showHowToPlay, setShowHowToPlay] = useState(false);
@@ -418,7 +420,7 @@ function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 + i * 0.08 }}
               onClick={() => {
-                if (mode.gameMode === 'multiplayer' || mode.gameMode === 'challenges') { location.href = `/${mode.gameMode}`; return; }
+                if (mode.gameMode === 'multiplayer' || mode.gameMode === 'challenges') { router.push(`/${mode.gameMode}`); return; }
                 setConfig({ gameMode: mode.gameMode, clubFilter: undefined, clubName: undefined, nationalityFilter: undefined, teamName: undefined, challengeIssueId: undefined, opponentSeasonYear: undefined });
                 setScreen('setup');
               }}

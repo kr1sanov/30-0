@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { secretsMatch } from '@/lib/secretComparison';
 import {
   workerSecret,
   verifyCloudPreferences,
@@ -10,9 +10,7 @@ export async function POST(request: Request) {
   const secret = workerSecret(),
     supplied = request.headers.get("X-30-0-Worker") || "";
   if (
-    !secret ||
-    secret.length !== supplied.length ||
-    !timingSafeEqual(Buffer.from(secret), Buffer.from(supplied))
+    !secretsMatch(secret, supplied)
   )
     return Response.json({ error: "Access denied" }, { status: 401 });
   try {
@@ -32,9 +30,7 @@ export async function GET(request: Request) {
   const secret = workerSecret(),
     supplied = request.headers.get("X-30-0-Worker") || "";
   if (
-    !secret ||
-    secret.length !== supplied.length ||
-    !timingSafeEqual(Buffer.from(secret), Buffer.from(supplied))
+    !secretsMatch(secret, supplied)
   )
     return Response.json({ error: "Access denied" }, { status: 401 });
   try {

@@ -12,7 +12,6 @@ import ResultShareCard from '@/components/share/ResultShareCard';
 import AchievementUnlocked from '@/components/game/AchievementUnlocked';
 import { useTelegram } from '@/hooks/use-telegram';
 import { Metrics } from '@/lib/metrics';
-import html2canvas from 'html2canvas-pro';
 import type { DraftSlot, GameConfig } from '@/lib/types';
 
 // ---------------------------------------------------------------------------
@@ -208,7 +207,8 @@ export default function SimulationResult({ multiplayer, startComplete = false }:
       try {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         if (cancelled || !telegramCardRef.current) return;
-        const canvas = await html2canvas(telegramCardRef.current, {
+        const { default: html2canvas } = await import('html2canvas-pro');
+      const canvas = await html2canvas(telegramCardRef.current, {
           scale: 2,
           backgroundColor: '#0A0A0A',
           logging: false,

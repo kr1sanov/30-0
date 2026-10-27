@@ -3,9 +3,23 @@ on:
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: profile-retention
+  cancel-in-progress: false
 jobs:
   purge-expired:
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
     steps:
-      - name: Trigger expired profile cleanup
-        run: curl --fail --silent --show-error --max-time 30 https://30-0.xn--p1ai/api/health >/dev/null
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Remove expired profiles through authenticated maintenance
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+          TELEGRAM_SERVERLESS_BRIDGE_SECRET: ${{ secrets.TELEGRAM_SERVERLESS_BRIDGE_SECRET }}
+        run: node scripts/profile-retention.mjs

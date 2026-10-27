@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import html2canvas from 'html2canvas-pro';
 
 export function useShare() {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -9,6 +8,7 @@ export function useShare() {
   const captureCard = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
     try {
+      const { default: html2canvas } = await import('html2canvas-pro');
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: '#0A0A0A',
         scale: 2,

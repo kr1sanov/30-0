@@ -17,7 +17,9 @@ export async function GET(request: NextRequest) {
     const difficulty = searchParams.get('difficulty');
     const mode = searchParams.get('mode');
     const sort = searchParams.get('sort') || 'date'; // 'date' | 'points'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+    const requestedLimit = Number(searchParams.get('limit') ?? '50');
+    if (!Number.isSafeInteger(requestedLimit) || requestedLimit < 1) return NextResponse.json({ error: 'Invalid limit' }, { status: 400 });
+    const limit = Math.min(requestedLimit, 100);
 
     const userId = sessionUser(request);
     if (!userId) return NextResponse.json({ error: 'Войди через Telegram' }, { status: 401 });

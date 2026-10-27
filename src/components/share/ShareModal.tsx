@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import html2canvas from 'html2canvas-pro';
 import { Metrics } from '@/lib/metrics';
 import { toast } from 'sonner';
 import { localizeShareText } from '@/lib/enTranslations';
@@ -34,6 +33,7 @@ export default function ShareModal({ isOpen, onClose, shareText, cardContent, ru
   const captureCard = useCallback(async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
     try {
+      const { default: html2canvas } = await import('html2canvas-pro');
       const canvas = await html2canvas(cardRef.current, {
         backgroundColor: BG,
         scale: 2,
